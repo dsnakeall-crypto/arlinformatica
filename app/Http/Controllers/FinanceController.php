@@ -64,7 +64,7 @@ class FinanceController extends Controller
     public function transactions(Request $request): JsonResponse
     {
         [$start, $end] = $this->dayBounds($request->input('date'));
-        $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')->leftJoin('users', 'users.id', '=', 'financial_transactions.user_id')->whereBetween('occurred_at', [$start->utc(), $end->utc()])->select('financial_transactions.*', 'payments.method', 'service_orders.number as order_number', 'users.name as user_name')->orderByDesc('occurred_at')->get();
+        $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')->leftJoin('users', 'users.id', '=', 'financial_transactions.user_id')->whereBetween('occurred_at', [$start->utc(), $end->utc()])->addSelect('payments.method', 'service_orders.number as order_number', 'users.name as user_name')->orderByDesc('occurred_at')->get();
 
         return response()->json(['date' => $start->format('Y-m-d'), 'timezone' => self::TZ, 'total_cents' => $rows->sum('effective_cents'), 'transactions' => $rows]);
     }
@@ -73,7 +73,7 @@ class FinanceController extends Controller
     {
         $period = $request->validate(['period' => ['nullable', 'date_format:Y-m']])['period'] ?? now(self::TZ)->format('Y-m');
         $start = CarbonImmutable::createFromFormat('Y-m-d H:i:s', "$period-01 00:00:00", self::TZ);
-        $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')->whereBetween('occurred_at', [$start->utc(), $start->endOfMonth()->utc()])->select('financial_transactions.*', 'payments.method', 'payments.service_order_id')->get();
+        $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')->whereBetween('occurred_at', [$start->utc(), $start->endOfMonth()->utc()])->addSelect('payments.method', 'payments.service_order_id')->get();
         $orders = $rows->where('origin', 'service_order');
         $orderIds = $orders->pluck('service_order_id')->filter();
         $items = DB::table('service_order_items')->whereIn('service_order_id', $orderIds)->select('description', DB::raw('SUM(quantity) as quantity'), DB::raw('SUM(subtotal_cents) as total_cents'))->groupBy('description')->get();
