@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
@@ -6,5 +7,9 @@ use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void {}
-    public function boot(): void { date_default_timezone_set(config('app.timezone', 'America/Sao_Paulo')); }
+
+    public function boot(): void
+    {
+        date_default_timezone_set(config('app.timezone', 'America/Sao_Paulo'));
+    }
 }
