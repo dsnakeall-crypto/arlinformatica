@@ -76,7 +76,7 @@ class StageFiveTest extends TestCase
 
     private function user(string $role, string $login): User
     {
-        return User::create(['role_id' => DB::table('roles')->where('name', $role)->value('id'), 'name' => $role, 'login' => $login, 'password' => Hash::make('password-password')]);
+        return User::create(['role_id' => DB::table('roles')->where('name', $role)->value('id'), 'name' => $role, 'login' => $login, 'password' => Hash::make('password-password'), 'active' => true]);
     }
 
     private function newOrder(int $index): ServiceOrder
