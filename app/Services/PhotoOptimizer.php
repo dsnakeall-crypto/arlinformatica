@@ -35,6 +35,6 @@ final class PhotoOptimizer
             throw ValidationException::withMessages(['photo' => 'Não foi possível reduzir a foto a 100 KB.']);
         }
 
-return $data;
+        return $data;
     }
 }
