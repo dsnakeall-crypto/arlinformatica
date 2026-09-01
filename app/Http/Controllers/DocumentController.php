@@ -13,6 +13,7 @@ class DocumentController extends Controller
     {
         return response()->json(DB::table('generated_documents')->leftJoin('users', 'users.id', '=', 'generated_documents.issued_by')->where('service_order_id', $order->id)->select('generated_documents.id', 'generated_documents.type', 'generated_documents.revision', 'generated_documents.issued_at', 'users.name as issued_by_name')->orderByDesc('generated_documents.issued_at')->get());
     }
+
     public function term(Request $request, ServiceOrder $order, DocumentService $documents)
     {
         $existing = DB::table('generated_documents')->where(['service_order_id' => $order->id, 'type' => 'term', 'revision' => 1])->exists();
