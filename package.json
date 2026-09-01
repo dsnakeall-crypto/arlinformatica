@@ -2,6 +2,23 @@
   "private": true,
   "type": "module",
   "scripts": {"dev": "vite", "build": "tsc -b && vite build", "lint": "eslint . --max-warnings=0", "typecheck": "tsc -b --pretty false"},
-  "dependencies": {"@vitejs/plugin-react": "latest", "vite": "latest", "typescript": "latest", "react": "latest", "react-dom": "latest", "lucide-react": "latest"},
-  "devDependencies": {"@eslint/js": "latest", "eslint": "latest", "eslint-plugin-react-hooks": "latest", "eslint-plugin-react-refresh": "latest", "globals": "latest", "typescript-eslint": "latest"}
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/react": "^19.0.3",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "laravel-vite-plugin": "^1.2.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.2",
+    "vite": "^6.0.5"
+  }
 }

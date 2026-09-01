@@ -2,6 +2,7 @@
   "name": "arl-informatica/gestao",
   "type": "project",
   "description": "Gestão de assistência técnica ARL Informática",
+  "license": "proprietary",
   "require": {
     "php": "^8.2",
     "laravel/framework": "^12.0",
