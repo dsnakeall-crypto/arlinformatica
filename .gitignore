@@ -7,6 +7,12 @@
 /storage/framework/sessions/*
 /storage/framework/views/*
 /storage/logs/*
+!/storage/framework/cache/.gitignore
+!/storage/framework/sessions/.gitignore
+!/storage/framework/views/.gitignore
+!/storage/logs/.gitignore
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
 /database/*.sqlite
 npm-debug.log*
 .DS_Store
