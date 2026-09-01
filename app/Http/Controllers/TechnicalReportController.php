@@ -53,7 +53,7 @@ class TechnicalReportController extends Controller
         $photoIds = $content['photo_ids'] ?? [];
         $photos = $order->photos()->whereIn('id', $photoIds)->get()->map(fn ($photo) => ['mime' => $photo->mime, 'data' => base64_encode(Storage::disk($photo->disk)->get($photo->path))])->all();
         $snapshot = ['company' => $settings->snapshot(), 'order' => $order->toArray(), 'template' => (array) $template, 'content' => $content, 'photos' => $photos];
-        DB::transaction(function () use ($report, $snapshot, $request, $order) {
+        DB::transaction(function () use ($report, $snapshot, $request) {
             DB::table('technical_reports')->where('id', $report->id)->update(['status' => 'issued', 'snapshot' => json_encode($snapshot), 'issued_at' => now(), 'issued_by' => $request->user()->id, 'updated_at' => now()]);
             DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'technical_report.issued', 'subject_type' => 'technical_report', 'subject_id' => $report->id, 'after' => json_encode(['revision' => $report->revision]), 'ip_address' => $request->ip(), 'created_at' => now()]);
         });
