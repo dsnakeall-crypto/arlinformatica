@@ -34,7 +34,7 @@ class BudgetController extends Controller
                 DB::table('budget_items')->insert(['budget_id' => $id, 'catalog_id' => $item['catalog_id'] ?? null, 'description' => $item['description'], 'quantity' => $item['quantity'], 'unit_price_cents' => $item['unit_price_cents'], 'subtotal_cents' => $item['subtotal_cents'], 'warranty_snapshot' => $item['warranty_snapshot'], 'created_at' => now(), 'updated_at' => now()]);
             }
 
-return DB::table('budgets')->find($id);
+            return DB::table('budgets')->find($id);
         });
         $items = DB::table('budget_items')->where('budget_id', $budget->id)->get()->map(fn ($x) => (array) $x)->all();
         $snapshot = json_decode($budget->snapshot, true);

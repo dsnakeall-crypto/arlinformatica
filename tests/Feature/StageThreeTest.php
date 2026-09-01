@@ -71,6 +71,6 @@ class StageThreeTest extends TestCase
         DB::table('service_order_snapshots')->where('service_order_id', $this->order->id)->update(['term_text' => 'Texto novo']);
         $this->actingAs($this->user)->get("/api/orders/{$this->order->id}/term")->assertOk();
         $snapshot = json_decode(DB::table('generated_documents')->where(['service_order_id' => $this->order->id, 'type' => 'term'])->value('snapshot'), true);
-        $this->assertSame('Termo histórico',$snapshot['snapshot']['term_text']);
+        $this->assertSame('Termo histórico', $snapshot['snapshot']['term_text']);
     }
 }
