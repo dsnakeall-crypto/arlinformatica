@@ -1,0 +1,49 @@
+name: Fix Stage 3 CI
+
+on:
+  push:
+    branches:
+      - codex/implementar-tela-de-configuracoes
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/implementar-tela-de-configuracoes
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo
+          coverage: none
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Fix React effect typing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('resources/js/main.tsx')
+          s = p.read_text()
+          old = "useEffect(load,[order.id]);"
+          new = "useEffect(()=>{void load()},[order.id]);"
+          if old not in s:
+              raise SystemExit('expected BudgetBox useEffect pattern not found')
+          p.write_text(s.replace(old, new, 1))
+          PY
+      - name: Format PHP with Pint
+        run: vendor/bin/pint
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app routes tests resources/js/main.tsx
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "fix: corrigir Pint e typecheck da etapa 3"
+            git push origin HEAD:codex/implementar-tela-de-configuracoes
+          fi
