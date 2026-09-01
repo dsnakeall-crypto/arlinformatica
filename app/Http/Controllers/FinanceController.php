@@ -51,11 +51,11 @@ class FinanceController extends Controller
     {
         [$start, $end] = $this->dayBounds($request->input('date'));
         $monthStart = $start->startOfMonth();
-        $rows = $this->effective()->whereBetween('occurred_at', [$monthStart->utc(), $end->utc()])->get();
-        $daily = $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at)->setTimezone(self::TZ)->format('Y-m-d'))->map(fn ($day) => $day->sum('effective_cents'))->sortKeys();
+        $rows = $this->effective()->whereBetween('occurred_at', [$monthStart, $end])->get();
+        $daily = $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, self::TZ)->format('Y-m-d'))->map(fn ($day) => $day->sum('effective_cents'))->sortKeys();
         $today = (int) ($daily[$start->format('Y-m-d')] ?? 0);
         $yesterday = (int) ($daily[$start->subDay()->format('Y-m-d')] ?? 0);
-        $todayOrders = $rows->filter(fn ($row) => $row->origin === 'service_order' && CarbonImmutable::parse($row->occurred_at)->betweenIncluded($start->utc(), $end->utc()))->count();
+        $todayOrders = $rows->filter(fn ($row) => $row->origin === 'service_order' && CarbonImmutable::parse($row->occurred_at, self::TZ)->betweenIncluded($start, $end))->count();
         $best = $daily->sortDesc();
 
         return response()->json(['timezone' => self::TZ, 'today_cents' => $today, 'paid_orders_today' => $todayOrders, 'average_ticket_today_cents' => $todayOrders ? intdiv($today, $todayOrders) : 0, 'month_total_cents' => $daily->sum(), 'yesterday_cents' => $yesterday, 'today_vs_yesterday_cents' => $today - $yesterday, 'daily_average_cents' => $daily->count() ? intdiv($daily->sum(), $daily->count()) : 0, 'best_day' => $best->isEmpty() ? null : ['date' => $best->keys()->first(), 'amount_cents' => $best->first()], 'paid_orders_month' => $rows->where('origin', 'service_order')->count(), 'daily' => $daily->map(fn ($amount, $date) => ['date' => $date, 'amount_cents' => $amount])->values()]);
@@ -64,7 +64,7 @@ class FinanceController extends Controller
     public function transactions(Request $request): JsonResponse
     {
         [$start, $end] = $this->dayBounds($request->input('date'));
-        $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')->leftJoin('users', 'users.id', '=', 'financial_transactions.user_id')->whereBetween('occurred_at', [$start->utc(), $end->utc()])->select('financial_transactions.*', 'payments.method', 'service_orders.number as order_number', 'users.name as user_name')->orderByDesc('occurred_at')->get();
+        $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')->leftJoin('users', 'users.id', '=', 'financial_transactions.user_id')->whereBetween('occurred_at', [$start, $end])->select('financial_transactions.*', 'payments.method', 'service_orders.number as order_number', 'users.name as user_name')->orderByDesc('occurred_at')->get();
 
         return response()->json(['date' => $start->format('Y-m-d'), 'timezone' => self::TZ, 'total_cents' => $rows->sum('effective_cents'), 'transactions' => $rows]);
     }
@@ -73,13 +73,13 @@ class FinanceController extends Controller
     {
         $period = $request->validate(['period' => ['nullable', 'date_format:Y-m']])['period'] ?? now(self::TZ)->format('Y-m');
         $start = CarbonImmutable::createFromFormat('Y-m-d H:i:s', "$period-01 00:00:00", self::TZ);
-        $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')->whereBetween('occurred_at', [$start->utc(), $start->endOfMonth()->utc()])->select('financial_transactions.*', 'payments.method', 'payments.service_order_id')->get();
+        $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')->whereBetween('occurred_at', [$start, $start->endOfMonth()])->select('financial_transactions.*', 'payments.method', 'payments.service_order_id')->get();
         $orders = $rows->where('origin', 'service_order');
         $orderIds = $orders->pluck('service_order_id')->filter();
         $items = DB::table('service_order_items')->whereIn('service_order_id', $orderIds)->select('description', DB::raw('SUM(quantity) as quantity'), DB::raw('SUM(subtotal_cents) as total_cents'))->groupBy('description')->get();
         $discount = DB::table('service_orders')->whereIn('id', $orderIds)->sum('discount_cents');
 
-        return response()->json(['period' => $period, 'total_cents' => $rows->sum('effective_cents'), 'service_orders_cents' => $orders->sum('effective_cents'), 'quick_entries_cents' => $rows->where('origin', 'quick_entry')->sum('effective_cents'), 'paid_orders' => $orders->count(), 'average_ticket_cents' => $orders->count() ? intdiv($orders->sum('effective_cents'), $orders->count()) : 0, 'discount_cents' => $discount, 'daily' => $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at)->setTimezone(self::TZ)->format('Y-m-d'))->map(fn ($day) => $day->sum('effective_cents'))->sortKeys(), 'methods' => $orders->groupBy('method')->map(fn ($method) => ['quantity' => $method->count(), 'total_cents' => $method->sum('effective_cents')]), 'transactions' => $rows->sortBy('occurred_at')->values(), 'items' => $items]);
+        return response()->json(['period' => $period, 'total_cents' => $rows->sum('effective_cents'), 'service_orders_cents' => $orders->sum('effective_cents'), 'quick_entries_cents' => $rows->where('origin', 'quick_entry')->sum('effective_cents'), 'paid_orders' => $orders->count(), 'average_ticket_cents' => $orders->count() ? intdiv($orders->sum('effective_cents'), $orders->count()) : 0, 'discount_cents' => $discount, 'daily' => $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, self::TZ)->format('Y-m-d'))->map(fn ($day) => $day->sum('effective_cents'))->sortKeys(), 'methods' => $orders->groupBy('method')->map(fn ($method) => ['quantity' => $method->count(), 'total_cents' => $method->sum('effective_cents')]), 'transactions' => $rows->sortBy('occurred_at')->values(), 'items' => $items]);
     }
 
     public function adjust(Request $request, int $transaction): JsonResponse
