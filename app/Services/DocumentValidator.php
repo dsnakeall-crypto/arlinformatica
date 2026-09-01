@@ -28,7 +28,7 @@ final class DocumentValidator
                 }
             }
 
-return true;
+            return true;
         }
         if (strlen($n) === 14) {
             $weights = [[5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2], [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]];
@@ -42,7 +42,7 @@ return true;
                 }
             }
 
-return true;
+            return true;
         }
 
         return false;
