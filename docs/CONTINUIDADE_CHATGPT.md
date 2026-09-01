@@ -274,11 +274,11 @@ Também foram implementados modelos iniciais editáveis de laudo, criação/edi�
 
 Testes da Etapa 4 cobrem bloqueio da conclusão direta, reparo e não reparo, valores, orçamento aprovado, snapshots de catálogo/garantia, PDF, laudos/revisões, dano elétrico e proibição de exclusão da OS.
 
-## Próxima etapa prioritária — Etapa 5: Pagamento e Financeiro
+## Etapa 5 — Pagamento e Financeiro (implementada na branch, ainda não mergeada)
 
-A próxima etapa deve seguir as seções 30 a 33 do `docs/PROJETO_MESTRE.md` e os itens pendentes do `CHECKLIST_FINAL.md`.
+Implementada na branch `codex/implementar-pagamento-e-financeiro`, aguardando revisão, CI e merge por Pull Request. Não considerar esta etapa incorporada à `main` até a PR ser aprovada e mergeada.
 
-Escopo prioritário:
+Escopo entregue:
 
 - pagamento separado do status operacional da OS;
 - formas Pix, Dinheiro, Débito, Crédito, Transferência e Outro;
@@ -290,7 +290,11 @@ Escopo prioritário:
 - fechamento mensal com total de OS, Entrada Rápida, ticket médio, descontos, formas de pagamento, serviços/produtos e totais;
 - PDF `RELATÓRIO FINANCEIRO — MÊS/ANO`;
 - testes de pagamento, Entrada Rápida, caixa diário, visão mensal, correções e relatório financeiro;
-- interface desktop/mobile ligada ao backend real, com estados de carregamento, erro e vazio.
+- interface desktop/mobile ligada ao backend real, com estados de carregamento, erro e vazio;
+- valores persistidos em centavos, proteção única por OS e chave de idempotência;
+- relatório mensal privado preservado em `generated_documents`, com snapshot, SHA-256 e revisões;
+- autorização de correção financeira no backend somente para Master/Administrador;
+- testes automatizados concentrados em `tests/Feature/StageFiveTest.php`.
 
 Não incluir Pós-Venda, Web Push, Backup/Restore ou administração completa de usuários nesta etapa, salvo dependência técnica mínima necessária.
 
@@ -300,7 +304,6 @@ Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implem
 
 Entre as principais pendências reais após a Etapa 4:
 
-- pagamento, Entrada Rápida, correções auditáveis, caixa diário, visão mensal e relatório financeiro;
 - telas administrativas completas de Serviços, fabricantes, equipamentos e templates de checklist;
 - edição de cliente pela interface;
 - observação livre/`Outro` no checklist quando previsto;
