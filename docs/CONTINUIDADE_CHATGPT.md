@@ -32,12 +32,12 @@ Arquitetura definida:
 - MySQL/MariaDB em produção;
 - React + TypeScript + Vite no frontend;
 - sem processo Node permanente em produção;
-- PDFs com base compatível com shared hosting/Dompdf;
+- PDFs compatíveis com shared hosting/Dompdf;
 - fotos privadas reduzidas para no máximo 100 KB;
 - PWA/mobile próprio;
 - GitHub como fonte oficial do código.
 
-## Regras funcionais importantes já confirmadas
+## Regras funcionais importantes confirmadas
 
 - Perfis Master, Administrador e Funcionário, com autorização real no backend.
 - Painel focado em OS abertas/concluídas, sem faturamento em destaque.
@@ -70,9 +70,8 @@ Arquitetura definida:
 
 Links padrão:
 
-Instagram: `https://www.instagram.com/allanluttembarck`
-
-Google Review: `https://g.page/r/CSxkz5Y88MaJEBM/review`
+- Instagram: `https://www.instagram.com/allanluttembarck`
+- Google Review: `https://g.page/r/CSxkz5Y88MaJEBM/review`
 
 ## Referências visuais
 
@@ -84,7 +83,7 @@ Mapeadas em `docs/REFERENCIAS_VISUAIS.md`:
 - seletor de status;
 - PDF final A4;
 - Pós-Venda;
-- TIMBRADO.png para orçamento e laudos;
+- `TIMBRADO.png` para orçamento e laudos;
 - logo ARL separada, quando fornecida.
 
 Se um novo chat precisar comparar visualmente e não tiver os anexos antigos, pedir ao usuário para anexá-los novamente.
@@ -93,13 +92,17 @@ Se um novo chat precisar comparar visualmente e não tiver os anexos antigos, pe
 
 O projeto foi reiniciado do zero usando GitHub + Codex Cloud para evitar dependência de arquivos somente no PC.
 
-A PR #1 criou a fundação Laravel/React, schema inicial, APIs básicas, documentação e shell visual. Durante a PR #1 houve falhas de CI por lockfiles ausentes, bloqueio HTTP 403 do ambiente do Codex para Packagist/npm e problemas de formatação Pint. GitHub Actions foi usado para gerar `composer.lock`, `package-lock.json` e formatar a base.
+### PR #1 — fundação
 
-A PR #1 foi mergeada antes do backend ficar verde. Merge commit: `19da11941426d7565ac771998fe0c6e6be464d0d`.
+Criou a fundação Laravel/React, schema inicial, APIs básicas, documentação e shell visual. Houve falhas iniciais de CI por lockfiles ausentes, bloqueio HTTP 403 no ambiente Codex para Packagist/npm e problemas de Pint. GitHub Actions foi usado para estabilizar a base.
 
-Depois foi criada a PR #2: `fix: corrigir CI do backend e remover workflow temporário`.
+A PR #1 foi mergeada antes do backend ficar totalmente verde.
 
-Na PR #2 foram corrigidos os últimos problemas de Pint, removido o workflow temporário e criado `tests/Feature/SmokeTest.php` para tornar válida a suíte PHPUnit Feature.
+### PR #2 — correção da CI
+
+PR: `fix: corrigir CI do backend e remover workflow temporário`.
+
+Foram corrigidos os últimos problemas de Pint, removido o workflow temporário e criado `tests/Feature/SmokeTest.php`.
 
 Antes do merge da PR #2, a CI passou completamente:
 
@@ -114,51 +117,100 @@ Antes do merge da PR #2, a CI passou completamente:
 
 PR #2 mergeada com sucesso em 01/09/2026.
 
-Merge commit atual da `main`: `ecc508815d191c455bac8989e4604b2b7db7f9a5`.
+### PR #3 — Etapa 2: operação funcional de clientes e OS
 
-## Estado atual da fundação
+PR: `feat: operação funcional de clientes e abertura/visualização de OS`.
 
-A `main` está novamente estável após a correção da CI.
+Implementado e incorporado à `main`:
 
-Já existem bases para:
+- interface real ligada ao backend para Clientes;
+- cadastro e busca de clientes;
+- normalização/validação de CPF/CNPJ e prevenção de duplicidade;
+- ViaCEP com fallback para preenchimento manual;
+- endpoints e fluxo funcional de clientes;
+- catálogos necessários para equipamento, fabricantes, serviços e checklist;
+- abertura transacional de OS;
+- escolha entre Análise na Bancada e Atendimento Externo;
+- checklist por equipamento, com nenhuma avaria = `CHECKLIST 100% OK`;
+- upload privado de fotos usando `PhotoOptimizer`, com teto de 100 KB;
+- listagem de OS com dados reais;
+- visualização de OS com cliente, problema, checklist, fotos e histórico;
+- teste de fluxo operacional em `tests/Feature/OperationFlowTest.php`;
+- telas responsivas para o fluxo operacional inicial.
 
-- arquitetura Laravel/PHP + React/TypeScript;
-- modelagem inicial extensa do banco;
-- login/sessão e perfis iniciais;
+A primeira execução da CI da PR #3 falhou apenas por:
+
+- ordenação de imports em `routes/api.php` exigida pelo Pint;
+- parâmetro `id` sem tipo explícito no TypeScript.
+
+As duas correções foram feitas diretamente na branch da PR sem usar créditos adicionais do Codex.
+
+Depois das correções, a CI da PR #3 passou completamente:
+
+- backend: OK;
+- frontend: OK;
+- migrations + seed: OK;
+- Pint: OK;
+- testes PHP: OK;
+- `npm ci`: OK;
+- TypeScript/typecheck: OK;
+- build: OK.
+
+PR #3 mergeada com sucesso em 01/09/2026.
+
+Merge commit da Etapa 2 na `main`: `a721049d168982ebf553152aacabf18d0da1aa7e`.
+
+## Estado atual do sistema
+
+A `main` está estável e com CI verde no marco da Etapa 2.
+
+Já existem de forma funcional ou estrutural:
+
+- Laravel/PHP + React/TypeScript;
+- autenticação/sessão e perfis iniciais;
 - instalador CLI para primeiro Master;
-- API inicial de clientes;
-- validação CPF/CNPJ;
-- API inicial de OS;
-- número transacional de OS;
+- schema amplo do banco;
+- clientes reais ligados à interface;
+- CPF/CNPJ validado e sem duplicidade;
+- ViaCEP com fallback manual;
+- abertura e listagem real de OS;
+- numeração transacional de OS;
 - snapshots iniciais;
 - histórico de status;
 - regra estrutural de não excluir OS;
-- PhotoOptimizer com teto de 100 KB;
-- shell visual desktop/mobile inicial;
+- Bancada/Atendimento Externo;
+- checklist de entrada com regra 100% OK;
+- fotos privadas ligadas à OS e otimizadas para até 100 KB;
+- catálogos básicos necessários à abertura da OS;
+- visualização inicial da OS;
+- layout desktop/mobile operacional inicial;
 - PWA manifest inicial;
 - documentação de arquitetura e KingHost;
 - CI funcional para backend e frontend.
 
-Ainda faltam muitas funcionalidades reais, conforme `CHECKLIST_FINAL.md`, entre elas:
+## Pendências principais para as próximas etapas
 
-- ViaCEP;
-- UI funcional ligada ao backend;
-- CRUD completo de serviços/categorias/fabricantes/checklists;
-- fotos ligadas à UI;
-- WhatsApp/Maps;
-- termos/PDFs;
-- orçamento;
-- laudos;
+Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implementar.
+
+Entre as principais pendências:
+
+- telas administrativas completas de Serviços, fabricantes, equipamentos e templates de checklist;
+- edição de cliente pela interface;
+- observação livre/`Outro` no checklist quando previsto;
+- WhatsApp e Google Maps;
+- termo de recebimento/retirada e PDFs;
+- orçamento com PDF timbrado, versões e aprovação/recusa;
 - garantias completas;
-- conclusão de OS;
-- pagamento/financeiro;
+- laudos técnicos;
+- fluxo de conclusão da OS;
+- pagamento e financeiro;
 - pós-venda;
 - notificações/Web Push;
-- backup/restore;
-- configurações completas;
-- administração de usuários/permissões;
-- comparação visual final;
-- testes E2E.
+- backup/restore e limpeza segura de fotos;
+- configurações completas, incluindo dados da empresa, logomarca e layouts;
+- administração completa de usuários/permissões;
+- comparação visual final com as referências;
+- testes E2E Playwright.
 
 ## Regra de trabalho daqui para frente
 
@@ -173,13 +225,7 @@ Ainda faltam muitas funcionalidades reais, conforme `CHECKLIST_FINAL.md`, entre 
 
 Nunca interpretar `Able to merge` como aprovação dos testes; isso só indica ausência de conflito de Git.
 
-## Marco da Etapa 2 — operação de clientes e OS
-
-Na branch `feat/operacao-clientes-os`, a interface demonstrativa foi substituída pelo fluxo real de clientes e ordens de serviço. A entrega inclui cadastro/busca de clientes, ViaCEP com fallback manual, abertura transacional de OS, tipo Bancada/Externo, catálogos necessários, checklist por equipamento (nenhuma avaria = 100% OK), upload privado otimizado para até 100 KB, listagem responsiva e visualização com snapshot, fotos e histórico.
-
-Permanecem pendentes nesta área: telas administrativas completas para editar/desativar catálogos e templates, edição de cliente pela interface, observação livre em "Outro", WhatsApp/Maps e E2E. Financeiro, pós-venda, laudos, PDFs finais e backup continuam deliberadamente fora desta etapa.
-
-O ambiente Codex bloqueou os downloads do Composer com HTTP 403; a validação integral deve ser executada pelo GitHub Actions usando os lockfiles versionados.
+Se o Codex Cloud bloquear Packagist/npm por HTTP 403, não repetir instalações várias vezes. Registrar a limitação e deixar a validação final para o GitHub Actions usando os lockfiles versionados.
 
 ## Prompt pronto para continuar em um NOVO CHAT
 
@@ -203,7 +249,9 @@ Esses arquivos são a fonte oficial do projeto. Não reconstrua requisitos por m
 
 Depois verifique o estado real do GitHub: branch `main`, outras branches, PRs e GitHub Actions.
 
-O último marco confirmado é: PR #2 mergeada com CI verde para backend e frontend. A `main` está na fundação estável após as correções iniciais. Continue a implementação funcional a partir do `CHECKLIST_FINAL.md` e do `PROJETO_MESTRE.md`.
+O último marco confirmado é: PR #3 (`feat: operação funcional de clientes e abertura/visualização de OS`) mergeada em 01/09/2026 após CI totalmente verde para backend e frontend. Merge commit da Etapa 2: `a721049d168982ebf553152aacabf18d0da1aa7e`.
+
+Clientes, ViaCEP, abertura/listagem/visualização inicial de OS, Bancada/Externo, checklist de entrada e fotos privadas até 100 KB já possuem fluxo funcional inicial. Continue pelas pendências reais de `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` sem refazer a base.
 
 Explique tudo em linguagem simples e diga passo a passo onde clicar quando houver ação manual.
 
