@@ -24,8 +24,8 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 ## Documentos e financeiro
 - [OK] Geração privada de PDF do termo e orçamento A4 com Dompdf, snapshot de conteúdo/empresa/logo, checksum e histórico de revisões.
 - [OK] PDFs privados de laudo e fechamento, com snapshot, fotos incorporadas, checksum SHA-256, revisão e ações de visualizar/imprimir/baixar.
-- [PENDENTE] PDF de relatório financeiro.
-- [PENDENTE] Pagamento, Entrada Rápida, correção auditável, painéis e fechamento mensal.
+- [OK] PDF privado de relatório financeiro mensal, com snapshot, checksum, revisões, empresa atual na emissão, resumos, formas, faturamento diário e itens.
+- [OK] Pagamento separado do status operacional, Entrada Rápida, correção auditável, Visão Geral, Caixa Diário automático, movimentações e fechamento mensal ligados às transações reais.
 - [OK] Dados da empresa persistentes, logo privada em seis variantes proporcionais e documentos timbrados com dados dinâmicos.
 - [OK] Laudo geral e de dano elétrico com responsabilidade técnica explícita, timbrado dinâmico e registro fotográfico.
 - [PENDENTE] Comparação visual final de todos os documentos em ambiente de navegador com dependências instaladas.
@@ -43,5 +43,5 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Documentação de arquitetura e deploy KingHost.
 - [OK] CI preparada para PHP, lint, testes, TypeScript e build.
 - [OK] Telas operacionais de clientes, Nova OS, listagem e visualização de OS usam backend real, com estados de carregamento, erro, vazio e validação.
-- [PENDENTE] Implementar rotas/telas dos módulos de etapas futuras, administração completa de catálogos e E2E Playwright.
+- [PENDENTE] Implementar rotas/telas dos módulos posteriores à Etapa 5, administração completa de catálogos e E2E Playwright.
 - [PENDENTE] Comparação final em navegador com todas as referências e testes funcionais completos do Projeto Mestre.

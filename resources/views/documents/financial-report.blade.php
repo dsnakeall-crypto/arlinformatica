@@ -1,0 +1,13 @@
+@extends('documents.base')
+@section('title', 'RELATÓRIO FINANCEIRO — '.substr($report['period'], 5, 2).'/'.substr($report['period'], 0, 4))
+@section('content')
+<h1>RELATÓRIO FINANCEIRO — {{ substr($report['period'], 5, 2) }}/{{ substr($report['period'], 0, 4) }}</h1>
+<p><strong>Período:</strong> 01/{{ substr($report['period'], 5, 2) }}/{{ substr($report['period'], 0, 4) }} até o fim do mês · <strong>Gerado:</strong> {{ $generated_at }}</p>
+<h2>Resumo</h2>
+<table><tr><th>Faturamento total</th><th>OS</th><th>Entrada Rápida</th><th>OS pagas</th><th>Ticket médio</th><th>Descontos</th></tr><tr><td>R$ {{ number_format($report['total_cents']/100, 2, ',', '.') }}</td><td>R$ {{ number_format($report['service_orders_cents']/100, 2, ',', '.') }}</td><td>R$ {{ number_format($report['quick_entries_cents']/100, 2, ',', '.') }}</td><td>{{ $report['paid_orders'] }}</td><td>R$ {{ number_format($report['average_ticket_cents']/100, 2, ',', '.') }}</td><td>R$ {{ number_format($report['discount_cents']/100, 2, ',', '.') }}</td></tr></table>
+<h2>Formas de pagamento</h2><table><tr><th>Forma</th><th>Quantidade</th><th>Total</th></tr>@forelse($report['methods'] as $method => $data)<tr><td>{{ ucfirst($method) }}</td><td>{{ $data['quantity'] }}</td><td>R$ {{ number_format($data['total_cents']/100, 2, ',', '.') }}</td></tr>@empty<tr><td colspan="3">Sem pagamentos de OS.</td></tr>@endforelse</table>
+<h2>Faturamento diário</h2><table><tr><th>Dia</th><th>Total</th></tr>@forelse($report['daily'] as $date => $total)<tr><td>{{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}</td><td>R$ {{ number_format($total/100, 2, ',', '.') }}</td></tr>@empty<tr><td colspan="2">Sem movimentações.</td></tr>@endforelse</table>
+<h2>Movimentos detalhados</h2><table><tr><th>Data/hora</th><th>Origem</th><th>Descrição</th><th>Total</th></tr>@forelse($report['transactions'] as $transaction)<tr><td>{{ \Carbon\Carbon::parse($transaction['occurred_at'])->timezone($timezone)->format('d/m/Y H:i') }}</td><td>{{ $transaction['origin'] === 'service_order' ? 'OS' : 'Entrada Rápida' }}</td><td>{{ $transaction['description'] }}</td><td>R$ {{ number_format($transaction['effective_cents']/100, 2, ',', '.') }}</td></tr>@empty<tr><td colspan="4">Sem movimentações.</td></tr>@endforelse</table>
+<h2>Serviços e produtos</h2><table><tr><th>Descrição</th><th>Quantidade</th><th>Total</th></tr>@forelse($report['items'] as $item)<tr><td>{{ $item['description'] }}</td><td>{{ $item['quantity'] }}</td><td>R$ {{ number_format($item['total_cents']/100, 2, ',', '.') }}</td></tr>@empty<tr><td colspan="3">Nenhum item vinculado.</td></tr>@endforelse</table>
+<h2>Total do mês: R$ {{ number_format($report['total_cents']/100, 2, ',', '.') }}</h2>
+@endsection
