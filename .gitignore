@@ -1,0 +1,12 @@
+/.env
+/vendor/
+/node_modules/
+/public/build/
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+/database/*.sqlite
+npm-debug.log*
+.DS_Store
