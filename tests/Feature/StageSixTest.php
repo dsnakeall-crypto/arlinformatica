@@ -18,6 +18,7 @@ class StageSixTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private int $client;
 
     protected function setUp(): void
