@@ -1,9 +1,9 @@
-name: Bootstrap foundation
+name: Fix backend formatting
 
 on:
   push:
     branches:
-      - codex/iniciar-projeto-arl-informatica-do-zero
+      - fix/ci-backend-pint
     paths:
       - .github/workflows/bootstrap-foundation.yml
 
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  prepare-lockfiles-and-format:
+  format-and-cleanup:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -24,23 +24,19 @@ jobs:
           extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo
           coverage: none
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Generate Composer lockfile and install PHP dependencies
-        run: composer update --no-interaction --prefer-dist --no-progress
+      - name: Run Pint twice and verify clean result
+        run: |
+          vendor/bin/pint
+          vendor/bin/pint
+          vendor/bin/pint --test
 
-      - name: Generate npm lockfile and install frontend dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: Format PHP with Laravel Pint
-        run: vendor/bin/pint
-
-      - name: Commit generated lockfiles and formatting
+      - name: Remove temporary formatter workflow and commit fixes
         shell: bash
         run: |
+          rm .github/workflows/bootstrap-foundation.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
@@ -48,5 +44,5 @@ jobs:
             echo "No changes to commit."
             exit 0
           fi
-          git commit -m "chore: generate lockfiles and format foundation"
+          git commit -m "fix: finish Pint formatting and remove bootstrap workflow"
           git push
