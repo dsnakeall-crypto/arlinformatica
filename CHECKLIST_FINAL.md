@@ -31,17 +31,18 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [PENDENTE] Comparação visual final de todos os documentos em ambiente de navegador com dependências instaladas.
 
 ## Relacionamento, plataforma e administração
-- [PENDENTE] Pós-venda com confirmação, lembrete de 5 dias e ciclo de 60 dias.
-- [PENDENTE] Central interna, Web Push, service worker/offline e catch-up.
+- [OK] Pós-venda real e simplificado com três confirmações independentes, snapshots, auditoria, lembrete idempotente após 5 dias e substituição do ciclo após 60 dias sem apagar a OS.
+- [OK] Central interna com sino, contador, leitura individual/global e eventos de cliente, OS e pós-venda; PWA instalável, service worker, inscrições Web Push por dispositivo e catch-up com throttle.
+- [PENDENTE] Disparo Web Push criptografado pelo backend (as inscrições, VAPID e recebimento no service worker estão preparados, mas a biblioteca PHP não pôde ser adicionada neste ambiente sem acesso ao Packagist).
 - [PENDENTE] Backup/restore executável, limpeza segura de fotos e armazenamento/diagnóstico.
 - [OK] Central de Configurações em cards com Dados da Empresa, Identidade Visual, Documentos e Layout básico; escrita restrita a Master/Administrador.
 - [PENDENTE] Administração completa de usuários/permissões, armazenamento e backup/hospedagem.
 
 ## Interface, qualidade e entrega
 - [OK] Shell desktop responsivo com identidade verde, menu, cards, filtros, tabela e cards mobile próprios.
-- [OK] Manifesto PWA inicial.
+- [OK] PWA instalável com manifesto completo, ícones 192/512, service worker e tratamento de notificações recebidas.
 - [OK] Documentação de arquitetura e deploy KingHost.
 - [OK] CI preparada para PHP, lint, testes, TypeScript e build.
 - [OK] Telas operacionais de clientes, Nova OS, listagem e visualização de OS usam backend real, com estados de carregamento, erro, vazio e validação.
-- [PENDENTE] Implementar rotas/telas dos módulos posteriores à Etapa 5, administração completa de catálogos e E2E Playwright.
+- [PENDENTE] Implementar módulos posteriores à Etapa 6, administração completa de catálogos e E2E Playwright.
 - [PENDENTE] Comparação final em navegador com todas as referências e testes funcionais completos do Projeto Mestre.

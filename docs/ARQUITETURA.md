@@ -22,3 +22,9 @@ Uploads ficam no disco privado. Fotos são decodificadas, orientadas e reamostra
 ## Produção compartilhada
 
 O document root aponta para `public/`. `storage` fica fora da web e gravável pelo PHP. Scheduler é acionado por cron; rotinas de pós-venda também fazem *catch-up*. Backups possuem manifesto, checksum e versão do schema. Veja `docs/KINGHOST_DEPLOY.md`.
+
+## Pós-venda, notificações e PWA
+
+`PostSaleService` concentra as regras idempotentes: somente conclusão com `repair_completed`, elegibilidade após cinco dias, trava pessimista no cliente e apenas um ciclo ativo. Uma nova conclusão separada por pelo menos 60 dias arquiva exclusivamente o ciclo anterior. As três ações preservam mensagem, usuário e horário de confirmação; abrir WhatsApp nunca confirma envio.
+
+Notificações internas são individuais, possuem chave de deduplicação e continuam sendo a fonte primária. O scheduler executa `post-sale:check`; Painel e Pós-Venda fazem catch-up limitado por cache. A PWA guarda apenas ativos estáticos públicos no cache, nunca respostas autenticadas. Inscrições Push pertencem ao usuário e segredos VAPID permanecem no `.env`; a entrega Web Push criptografada pelo backend requer a biblioteca PHP padrão e segue pendente enquanto o ambiente de dependências estiver bloqueado.

@@ -2,4 +2,4 @@
 
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('notifications:post-sale')->hourly()->withoutOverlapping();
+Schedule::command('post-sale:check')->hourly()->withoutOverlapping();

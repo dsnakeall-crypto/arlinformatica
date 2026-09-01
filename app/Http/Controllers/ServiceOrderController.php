@@ -6,8 +6,10 @@ use App\Models\Client;
 use App\Models\ServiceOrder;
 use App\Models\StatusHistory;
 use App\Services\CompanySettings;
+use App\Services\NotificationService;
 use App\Services\OrderNumber;
 use App\Services\PhotoOptimizer;
+use App\Services\PostSaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +17,9 @@ use Illuminate\Support\Facades\Storage;
 
 class ServiceOrderController extends Controller
 {
-    public function index(Request $r): JsonResponse
+    public function index(Request $r, PostSaleService $postSales): JsonResponse
     {
+        $postSales->catchUp(true);
         $q = ServiceOrder::query()->with('client:id,name,phone,city,state')->latest('received_at');
         if ($status = $r->query('status')) {
             $q->where('status', $status);
@@ -27,7 +30,7 @@ class ServiceOrderController extends Controller
         return response()->json($q->paginate(20));
     }
 
-    public function store(Request $r, OrderNumber $numbers): JsonResponse
+    public function store(Request $r, OrderNumber $numbers, NotificationService $notifications): JsonResponse
     {
         $data = $r->validate(['client_id' => 'required|exists:clients,id', 'equipment_type_id' => 'required|exists:equipment_types,id', 'manufacturer_id' => 'nullable|exists:manufacturers,id', 'attendance_type' => 'required|in:bench,external', 'reported_problem' => 'required|string|max:10000', 'checklist' => 'array', 'checklist.*.label' => 'required|string|max:255', 'checklist.*.note' => 'nullable|string|max:255']);
         $order = DB::transaction(function () use ($data, $numbers, $r) {
@@ -39,6 +42,7 @@ class ServiceOrderController extends Controller
 
             return $order;
         });
+        $notifications->notifyUsers('order_created', 'Nova OS aberta', "OS {$order->number} — {$order->client->name}", "/orders/{$order->id}", "order-created:{$order->id}", ['service_order_id' => $order->id]);
 
         return response()->json($order->load('client'), 201);
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Services\DocumentValidator;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -20,10 +21,11 @@ class ClientController extends Controller
         return response()->json($q->paginate(20));
     }
 
-    public function store(Request $r): JsonResponse
+    public function store(Request $r, NotificationService $notifications): JsonResponse
     {
         $data = $this->validated($r);
         $client = Client::create($data);
+        $notifications->notifyUsers('client_created', 'Novo cliente cadastrado', $client->name, "/clients?client={$client->id}", "client-created:{$client->id}", ['client_id' => $client->id]);
 
         return response()->json($client, 201);
     }
