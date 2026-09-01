@@ -160,9 +160,42 @@ PR #3 mergeada com sucesso em 01/09/2026.
 
 Merge commit da Etapa 2 na `main`: `a721049d168982ebf553152aacabf18d0da1aa7e`.
 
+### PR #4 — Etapa 3: configurações, documentos, orçamento e garantia
+
+PR: `feat: configurações, identidade visual, documentos e orçamentos (Etapa 3)`.
+
+Implementado e incorporado à `main`:
+
+- central de Configurações em cards;
+- dados persistentes da empresa;
+- identidade visual com upload privado de logomarca;
+- geração de seis variantes proporcionais da logo em WebP;
+- textos configuráveis de documentos e termo;
+- infraestrutura reutilizável de documentos A4 com Dompdf;
+- armazenamento privado de PDFs com checksum SHA-256;
+- snapshots para preservação histórica;
+- termo da OS preservado historicamente;
+- orçamento dentro da OS;
+- revisões imutáveis de orçamento;
+- cálculo financeiro em centavos;
+- garantia opcional por item em dias, meses ou anos;
+- snapshot da garantia;
+- registro auditável de envio, aprovação e recusa;
+- testes automatizados em `tests/Feature/StageThreeTest.php`.
+
+Durante a estabilização da PR #4 foram corrigidos diretamente na branch, sem novo consumo do Codex:
+
+- formatação PHP exigida pelo Pint;
+- tipagem do `useEffect` no frontend;
+- fixture PNG inválida no teste de variantes da logomarca.
+
+Depois das correções, a CI da PR #4 passou completamente para backend e frontend. A PR foi mergeada em 01/09/2026 e a execução da CI na própria `main` após o merge também terminou com sucesso.
+
+Merge commit da Etapa 3 na `main`: `6299c6d17fd2160538d147986e9c5f9ae37bec3d`.
+
 ## Estado atual do sistema
 
-A `main` está estável e com CI verde no marco da Etapa 2.
+A `main` está estável e com CI verde no marco da Etapa 3.
 
 Já existem de forma funcional ou estrutural:
 
@@ -175,14 +208,18 @@ Já existem de forma funcional ou estrutural:
 - ViaCEP com fallback manual;
 - abertura e listagem real de OS;
 - numeração transacional de OS;
-- snapshots iniciais;
-- histórico de status;
+- snapshots e histórico de status;
 - regra estrutural de não excluir OS;
 - Bancada/Atendimento Externo;
 - checklist de entrada com regra 100% OK;
 - fotos privadas ligadas à OS e otimizadas para até 100 KB;
 - catálogos básicos necessários à abertura da OS;
 - visualização inicial da OS;
+- central de Configurações com Dados da Empresa, Identidade Visual, Documentos e Layout básico;
+- logo privada em seis variantes proporcionais;
+- termo e orçamento A4 privados gerados com Dompdf;
+- documentos com snapshot, checksum e preservação histórica;
+- orçamento dentro da OS com revisões, aprovação/recusa e garantia opcional por item;
 - layout desktop/mobile operacional inicial;
 - PWA manifest inicial;
 - documentação de arquitetura e KingHost;
@@ -190,33 +227,35 @@ Já existem de forma funcional ou estrutural:
 
 ## Etapa 3 — Configurações, documentos, orçamento e garantia
 
-Implementado na branch `feat/configuracoes-documentos-orcamento`: dados configuráveis da empresa; upload privado da logo com seis variantes sem deformação; central responsiva de Configurações; versionamento do termo; infraestrutura Dompdf privada com snapshot e SHA-256; termo da OS; orçamento A4 com revisões; cálculo em centavos; garantia opcional em dias, meses ou anos; registro auditável de envio, aprovação ou recusa. Documentos emitidos preservam empresa, logo, texto e dados usados.
+Concluída e mergeada pela PR #4 a partir da branch `codex/implementar-tela-de-configuracoes`.
 
-Permanecem fora desta etapa: laudos completos, financeiro, pós-venda, backup/restore, administração completa de usuários e conclusão final da OS. A validação PHP/Laravel ficou destinada ao GitHub Actions porque o ambiente local recebeu HTTP 403 ao baixar dependências do Composer.
+A implementação inclui dados configuráveis da empresa; upload privado da logo com seis variantes sem deformação; central responsiva de Configurações; textos configuráveis do termo; infraestrutura Dompdf privada com snapshot e SHA-256; termo da OS; orçamento A4 com revisões; cálculo em centavos; garantia opcional em dias, meses ou anos; e registro auditável de envio, aprovação ou recusa. Documentos emitidos preservam empresa, logo, texto e dados usados.
+
+A validação final foi feita no GitHub Actions. Antes do merge, backend e frontend ficaram verdes; após o merge, a CI da `main` também passou integralmente.
+
+Permanecem fora desta etapa: laudos completos, conclusão final da OS, financeiro, pós-venda, backup/restore, administração completa de usuários e demais módulos futuros do Projeto Mestre.
 
 ## Pendências principais para as próximas etapas
 
 Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implementar.
 
-Entre as principais pendências:
+Entre as principais pendências reais após a Etapa 3:
 
 - telas administrativas completas de Serviços, fabricantes, equipamentos e templates de checklist;
 - edição de cliente pela interface;
 - observação livre/`Outro` no checklist quando previsto;
 - WhatsApp e Google Maps;
-- termo de recebimento/retirada e PDFs;
-- orçamento com PDF timbrado, versões e aprovação/recusa;
-- garantias completas;
-- laudos técnicos;
-- fluxo de conclusão da OS;
-- pagamento e financeiro;
-- pós-venda;
-- notificações/Web Push;
-- backup/restore e limpeza segura de fotos;
-- configurações completas, incluindo dados da empresa, logomarca e layouts;
+- laudos técnicos e respectivos PDFs;
+- conclusão completa da OS;
+- cópia de itens aprovados do orçamento para a OS;
+- pagamento, Entrada Rápida, correções auditáveis, caixa diário, visão mensal e relatórios;
+- pós-venda com confirmação, lembrete de 5 dias e novo ciclo após 60 dias;
+- central interna de notificações, Web Push, service worker/offline e catch-up;
+- backup/restore executável, limpeza segura de fotos, armazenamento e diagnóstico;
 - administração completa de usuários/permissões;
+- policies completas e recuperação de senha;
 - comparação visual final com as referências;
-- testes E2E Playwright.
+- testes E2E Playwright e testes funcionais finais do Projeto Mestre.
 
 ## Regra de trabalho daqui para frente
 
@@ -255,9 +294,9 @@ Esses arquivos são a fonte oficial do projeto. Não reconstrua requisitos por m
 
 Depois verifique o estado real do GitHub: branch `main`, outras branches, PRs e GitHub Actions.
 
-O último marco confirmado é: PR #3 (`feat: operação funcional de clientes e abertura/visualização de OS`) mergeada em 01/09/2026 após CI totalmente verde para backend e frontend. Merge commit da Etapa 2: `a721049d168982ebf553152aacabf18d0da1aa7e`.
+O último marco confirmado é: PR #4 (`feat: configurações, identidade visual, documentos e orçamentos (Etapa 3)`) mergeada em 01/09/2026 após CI totalmente verde para backend e frontend. A CI da `main` após o merge também passou. Merge commit da Etapa 3: `6299c6d17fd2160538d147986e9c5f9ae37bec3d`.
 
-Clientes, ViaCEP, abertura/listagem/visualização inicial de OS, Bancada/Externo, checklist de entrada e fotos privadas até 100 KB já possuem fluxo funcional inicial. Continue pelas pendências reais de `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` sem refazer a base.
+Clientes, ViaCEP, abertura/listagem/visualização inicial de OS, Bancada/Externo, checklist de entrada, fotos privadas até 100 KB, Configurações, identidade visual, termo/PDF, orçamento com revisões e garantia por item já possuem fluxo funcional inicial. Continue pelas pendências reais de `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` sem refazer a base.
 
 Explique tudo em linguagem simples e diga passo a passo onde clicar quando houver ação manual.
 
