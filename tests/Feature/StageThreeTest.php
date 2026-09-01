@@ -42,7 +42,15 @@ class StageThreeTest extends TestCase
     public function test_logo_variants_are_generated(): void
     {
         Storage::fake('local');
-        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLQAAAAAElFTkSuQmCC');
+        $image = imagecreatetruecolor(2, 2);
+        $white = imagecolorallocate($image, 255, 255, 255);
+        imagefill($image, 0, 0, $white);
+        ob_start();
+        imagepng($image);
+        $png = ob_get_clean();
+        imagedestroy($image);
+        $this->assertIsString($png);
+
         $response = $this->actingAs($this->user)->post('/api/settings/logo', ['logo' => UploadedFile::fake()->createWithContent('logo.png', $png)]);
         $response->assertCreated();
         foreach (['app', 'menu', 'term', 'a4', 'budget', 'report'] as $variant) {
