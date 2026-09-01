@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ServiceOrderController;

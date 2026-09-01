@@ -19,6 +19,7 @@ class CompanySettings
     {
         $values = array_replace(self::DEFAULTS, DB::table('settings')->pluck('value', 'key')->all());
         $values['term_text'] = (string) DB::table('versioned_templates')->where('type', 'term')->where('active', true)->latest('version')->value('body');
+
         return $values;
     }
 
@@ -26,6 +27,7 @@ class CompanySettings
     {
         $values = $this->all();
         $values['logo'] = DB::table('settings')->where('key', 'logo_budget')->value('value');
+
         return $values;
     }
 }
