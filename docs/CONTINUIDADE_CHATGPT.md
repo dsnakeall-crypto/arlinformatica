@@ -223,7 +223,7 @@ Merge commit da Etapa 4 na `main`: `3d15295240692f7bbfbb40c512468385c704f81f`.
 
 ## Estado atual do sistema
 
-A `main` está estável e com CI verde no marco da Etapa 4.
+A `main` está estável e com CI verde no marco da Etapa 5. A PR #6 foi mergeada e validada.
 
 Já existem de forma funcional ou estrutural:
 
@@ -274,42 +274,24 @@ Também foram implementados modelos iniciais editáveis de laudo, criação/edi�
 
 Testes da Etapa 4 cobrem bloqueio da conclusão direta, reparo e não reparo, valores, orçamento aprovado, snapshots de catálogo/garantia, PDF, laudos/revisões, dano elétrico e proibição de exclusão da OS.
 
-## Etapa 5 — Pagamento e Financeiro (implementada na branch, ainda não mergeada)
+## Etapa 5 — Pagamento e Financeiro (concluída e mergeada)
 
-Implementada na branch `codex/implementar-pagamento-e-financeiro`, aguardando revisão, CI e merge por Pull Request. Não considerar esta etapa incorporada à `main` até a PR ser aprovada e mergeada.
+A PR #6 foi concluída e mergeada na `main`. Merge commit: `195afdb13405f618c21744fe4455cbe44b4026bd`. A CI da `main` após o merge passou integralmente. Pagamento separado do status, Entrada Rápida, caixa diário, visão financeira, correções auditáveis e relatório mensal PDF fazem parte da base atual.
 
-Escopo entregue:
+## Etapa 6 — Pós-venda, notificações e PWA (implementada na branch, ainda não mergeada)
 
-- pagamento separado do status operacional da OS;
-- formas Pix, Dinheiro, Débito, Crédito, Transferência e Outro;
-- registro de OS, valor, forma, data/hora e usuário, com proteção contra duplicidade;
-- Financeiro com Visão Geral, Caixa Diário, Movimentações, Mensal e Relatórios;
-- caixa diário automático de 00:00:00 a 23:59:59 em `America/Sao_Paulo`, usando transações como fonte da verdade;
-- Entrada Rápida com somente valor obrigatório e origem `Serviço rápido não cadastrado`;
-- correções financeiras auditáveis por Admin/Master, sem apagar silenciosamente;
-- fechamento mensal com total de OS, Entrada Rápida, ticket médio, descontos, formas de pagamento, serviços/produtos e totais;
-- PDF `RELATÓRIO FINANCEIRO — MÊS/ANO`;
-- testes de pagamento, Entrada Rápida, caixa diário, visão mensal, correções e relatório financeiro;
-- interface desktop/mobile ligada ao backend real, com estados de carregamento, erro e vazio;
-- valores persistidos em centavos, proteção única por OS e chave de idempotência;
-- relatório mensal privado preservado em `generated_documents`, com snapshot, SHA-256 e revisões;
-- autorização de correção financeira no backend somente para Master/Administrador;
-- testes automatizados concentrados em `tests/Feature/StageFiveTest.php`.
-
-Não incluir Pós-Venda, Web Push, Backup/Restore ou administração completa de usuários nesta etapa, salvo dependência técnica mínima necessária.
+Branch: `feat/pos-venda-notificacoes-pwa`. Entrega pós-venda simplificado ligado ao backend, regras idempotentes de 5/60 dias, confirmações manuais independentes com snapshot e auditoria, WhatsApp/Maps centralizados, central interna, scheduler/catch-up, PWA, service worker e gerenciamento seguro de inscrições Web Push. O disparo Web Push criptografado no backend continua explicitamente pendente porque o ambiente bloqueou Packagist com HTTP 403; não considerar entrega push real confirmada até a dependência padrão ser instalada e validada. A Etapa 6 ainda não foi mergeada na `main`.
 
 ## Pendências principais para as próximas etapas
 
 Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implementar.
 
-Entre as principais pendências reais após a Etapa 4:
+Entre as principais pendências reais após a Etapa 6:
 
 - telas administrativas completas de Serviços, fabricantes, equipamentos e templates de checklist;
 - edição de cliente pela interface;
 - observação livre/`Outro` no checklist quando previsto;
-- WhatsApp e Google Maps;
-- pós-venda com confirmação, lembrete de 5 dias e novo ciclo após 60 dias;
-- central interna de notificações, Web Push, service worker/offline e catch-up;
+- entrega Web Push criptografada no backend e validação em dispositivos reais;
 - backup/restore executável, limpeza segura de fotos, armazenamento e diagnóstico;
 - administração completa de usuários/permissões;
 - policies completas e recuperação de senha;
@@ -333,44 +315,4 @@ Se o Codex Cloud bloquear Packagist/npm por HTTP 403, não repetir instalações
 
 ## Prompt pronto para continuar em um NOVO CHAT
 
-Copiar e colar:
-
----
-
-Estou continuando o projeto ARL Informática que já está no meu GitHub privado `dsnakeall-crypto/arlinformatica`.
-
-Use o conector GitHub e, antes de qualquer alteração, leia integralmente:
-
-- `AGENTS.md`
-- `docs/PROJETO_MESTRE.md`
-- `docs/REFERENCIAS_VISUAIS.md`
-- `docs/CONTINUIDADE_CHATGPT.md`
-- `CHECKLIST_FINAL.md`
-- `docs/ARQUITETURA.md`
-- `docs/KINGHOST_DEPLOY.md`
-
-Esses arquivos são a fonte oficial do projeto. Não reconstrua requisitos por memória.
-
-Depois verifique o estado real do GitHub: branch `main`, outras branches, PRs e GitHub Actions.
-
-O último marco confirmado é a PR #5 (`feat: finalização de OS, PDF final A4 e módulo de laudos técnicos`), mergeada em 01/09/2026 após CI totalmente verde para backend e frontend. A CI da `main` após o merge também passou integralmente. Merge commit da Etapa 4: `3d15295240692f7bbfbb40c512468385c704f81f`.
-
-Clientes, ViaCEP, abertura/listagem/visualização de OS, Bancada/Externo, checklist de entrada, fotos privadas até 100 KB, Configurações, identidade visual, termo/PDF, orçamento com revisões e garantia por item, finalização da OS, PDF final e laudos técnicos já possuem fluxo funcional inicial.
-
-A próxima prioridade é a Etapa 5 — Pagamento e Financeiro, conforme seções 30 a 33 do `docs/PROJETO_MESTRE.md` e `CHECKLIST_FINAL.md`: pagamento separado do status, Entrada Rápida, caixa diário automático, movimentações, visão mensal, correções auditáveis e relatório financeiro em PDF.
-
-Explique tudo em linguagem simples e diga passo a passo onde clicar quando houver ação manual.
-
-Não faça merge se algum check estiver vermelho.
-
----
-
-## Como usar este arquivo
-
-Se esta conversa travar ou atingir limite:
-
-1. abrir um chat novo;
-2. colar o prompt acima;
-3. o novo chat lê os arquivos indicados no GitHub;
-4. se precisar comparar imagens antigas, anexá-las novamente;
-5. continuar a partir do estado real do repositório.
+Use a `main` real do GitHub como fonte. A Etapa 5 foi mergeada pela PR #6 no commit `195afdb13405f618c21744fe4455cbe44b4026bd`, com CI verde. A Etapa 6 está na branch `feat/pos-venda-notificacoes-pwa`, ainda não mergeada. Leia todos os documentos obrigatórios e verifique PR/CI antes de continuar; não implemente Backup/Restore como parte da Etapa 6.

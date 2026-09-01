@@ -1,1 +1,15 @@
-{"name":"ARL Informática","short_name":"ARL","start_url":"/","display":"standalone","background_color":"#f5f7f8","theme_color":"#063b2d","icons":[]}
+{
+  "name": "ARL Informática",
+  "short_name": "ARL",
+  "description": "Gestão operacional da ARL Informática",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f8f7",
+  "theme_color": "#063b2d",
+  "icons": [
+    {"src":"/icons/arl.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}

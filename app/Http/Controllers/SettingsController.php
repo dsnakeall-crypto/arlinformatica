@@ -26,6 +26,7 @@ class SettingsController extends Controller
             'complement' => 'nullable|string|max:100', 'instagram' => 'nullable|url|max:255', 'google_review' => 'nullable|url|max:255',
             'budget_validity_days' => 'required|integer|min:1|max:365', 'budget_observation' => 'nullable|string|max:2000', 'budget_institutional_text' => 'required|string|max:1000', 'term_text' => 'required|string|max:10000',
             'layout_mode' => 'required|in:automatic,desktop,mobile', 'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
+            'post_sale_follow_up' => 'required|string|max:5000', 'post_sale_google' => 'required|string|max:5000', 'post_sale_instagram' => 'required|string|max:5000',
         ]);
         DB::transaction(function () use ($data, $request) {
             $term = $data['term_text'];
