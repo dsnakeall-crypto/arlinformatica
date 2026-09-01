@@ -21,7 +21,7 @@ class ServiceOrderController extends Controller
             $q->where(fn ($x) => $x->where('number', 'like', "%$search%")->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%$search%")));
         }
 
-return response()->json($q->paginate(20));
+        return response()->json($q->paginate(20));
     }
 
     public function store(Request $r, OrderNumber $numbers): JsonResponse
