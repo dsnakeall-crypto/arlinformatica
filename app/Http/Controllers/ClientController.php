@@ -22,15 +22,31 @@ class ClientController extends Controller
 
     public function store(Request $r): JsonResponse
     {
+        $data = $this->validated($r);
+        $client = Client::create($data);
+
+        return response()->json($client, 201);
+    }
+
+    public function update(Request $r, Client $client): JsonResponse
+    {
+        $data = $this->validated($r, $client->id);
+        $client->update($data);
+
+        return response()->json($client->fresh());
+    }
+
+    private function validated(Request $r, ?int $ignore = null): array
+    {
         $data = $r->validate(['name' => 'required|string|max:255', 'document' => ['required', function ($a, $v, $fail) {
             if (! DocumentValidator::valid($v)) {
                 $fail('CPF/CNPJ inválido.');
             }
-        }], 'phone' => 'required|string|max:20', 'postal_code' => 'required|string', 'street' => 'required|string', 'number' => 'required|string', 'district' => 'required|string', 'city' => 'required|string', 'state' => 'required|string|size:2', 'complement' => 'nullable|string']);
+        }], 'phone' => 'required|string|max:20', 'postal_code' => 'required|string|size:8', 'street' => 'required|string|max:255', 'number' => 'required|string|max:30', 'district' => 'required|string|max:255', 'city' => 'required|string|max:255', 'state' => 'required|string|size:2', 'complement' => 'nullable|string|max:255']);
         $data['document'] = DocumentValidator::normalize($data['document']);
-        validator($data, ['document' => Rule::unique('clients', 'document')])->validate();
-        $client = Client::create($data);
+        $data['postal_code'] = preg_replace('/\D/', '', $data['postal_code']);
+        validator($data, ['document' => Rule::unique('clients', 'document')->ignore($ignore)])->validate();
 
-        return response()->json($client, 201);
+        return $data;
     }
 }

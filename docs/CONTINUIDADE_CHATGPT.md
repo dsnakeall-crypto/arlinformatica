@@ -173,6 +173,14 @@ Ainda faltam muitas funcionalidades reais, conforme `CHECKLIST_FINAL.md`, entre 
 
 Nunca interpretar `Able to merge` como aprovação dos testes; isso só indica ausência de conflito de Git.
 
+## Marco da Etapa 2 — operação de clientes e OS
+
+Na branch `feat/operacao-clientes-os`, a interface demonstrativa foi substituída pelo fluxo real de clientes e ordens de serviço. A entrega inclui cadastro/busca de clientes, ViaCEP com fallback manual, abertura transacional de OS, tipo Bancada/Externo, catálogos necessários, checklist por equipamento (nenhuma avaria = 100% OK), upload privado otimizado para até 100 KB, listagem responsiva e visualização com snapshot, fotos e histórico.
+
+Permanecem pendentes nesta área: telas administrativas completas para editar/desativar catálogos e templates, edição de cliente pela interface, observação livre em "Outro", WhatsApp/Maps e E2E. Financeiro, pós-venda, laudos, PDFs finais e backup continuam deliberadamente fora desta etapa.
+
+O ambiente Codex bloqueou os downloads do Composer com HTTP 403; a validação integral deve ser executada pelo GitHub Actions usando os lockfiles versionados.
+
 ## Prompt pronto para continuar em um NOVO CHAT
 
 Copiar e colar:

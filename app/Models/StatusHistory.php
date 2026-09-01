@@ -11,4 +11,9 @@ class StatusHistory extends Model
     protected $table = 'status_history';
 
     protected $fillable = ['service_order_id', 'from_status', 'to_status', 'user_id'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
