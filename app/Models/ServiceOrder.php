@@ -35,6 +35,11 @@ class ServiceOrder extends Model
         return $this->hasMany(ServiceOrderChecklist::class);
     }
 
+    public function photos(): HasMany
+    {
+        return $this->hasMany(ServiceOrderPhoto::class);
+    }
+
     public function snapshot()
     {
         return $this->hasOne(ServiceOrderSnapshot::class);

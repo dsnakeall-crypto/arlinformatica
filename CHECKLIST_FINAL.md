@@ -10,11 +10,13 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [PENDENTE] Policies completas, recuperação de senha e diagnóstico.
 
 ## Operação
-- [OK] API autenticada para listar/cadastrar clientes, normalizar/validar/bloquear CPF/CNPJ e buscar/paginar.
+- [OK] API e interface autenticadas para listar/cadastrar clientes, normalizar/validar/bloquear CPF/CNPJ, buscar e paginar; endereço tem ViaCEP com fallback manual.
 - [OK] API autenticada para criar/listar OS, gerar número transacional, snapshot e histórico inicial.
 - [OK] Impedimento explícito de exclusão de OS e separação estrutural de pagamento/status.
-- [OK] Otimizador de foto no servidor com reamostragem, remoção de metadados e teto de 100 KB.
-- [PENDENTE] CEP/ViaCEP, upload ligado à UI, catálogo CRUD, checklist configurável completo e WhatsApp/Maps.
+- [OK] Otimizador de foto no servidor com reamostragem, remoção de metadados e teto de 100 KB, ligado à abertura e visualização da OS.
+- [OK] Abertura e consulta de OS reais com cliente, Bancada/Externo, equipamento, fabricante, problema, snapshot, histórico, checklist 100% OK/avarias e foto privada.
+- [OK] Catálogos backend de equipamentos, fabricantes e Serviços, e templates iniciais completos do checklist por equipamento.
+- [PENDENTE] Interface administrativa completa para editar/desativar catálogos e checklist; edição de clientes, WhatsApp/Maps e campo de observação do item "Outro".
 - [PENDENTE] Fluxos funcionais de orçamento, aprovação, laudo/revisão, conclusão e garantias.
 
 ## Documentos e financeiro
@@ -33,5 +35,6 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Manifesto PWA inicial.
 - [OK] Documentação de arquitetura e deploy KingHost.
 - [OK] CI preparada para PHP, lint, testes, TypeScript e build.
-- [PENDENTE] Trocar dados demonstrativos da tela pelo backend, implementar rotas/telas restantes e E2E Playwright.
+- [OK] Telas operacionais de clientes, Nova OS, listagem e visualização de OS usam backend real, com estados de carregamento, erro, vazio e validação.
+- [PENDENTE] Implementar rotas/telas dos módulos de etapas futuras, administração completa de catálogos e E2E Playwright.
 - [PENDENTE] Comparação final em navegador com todas as referências e testes funcionais completos do Projeto Mestre.

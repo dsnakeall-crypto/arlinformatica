@@ -6,9 +6,11 @@ use App\Models\Client;
 use App\Models\ServiceOrder;
 use App\Models\StatusHistory;
 use App\Services\OrderNumber;
+use App\Services\PhotoOptimizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceOrderController extends Controller
 {
@@ -38,6 +40,30 @@ class ServiceOrderController extends Controller
         });
 
         return response()->json($order->load('client'), 201);
+    }
+
+    public function show(ServiceOrder $order): JsonResponse
+    {
+        return response()->json($order->load(['client', 'checklists', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']));
+    }
+
+    public function uploadPhoto(Request $request, ServiceOrder $order, PhotoOptimizer $optimizer): JsonResponse
+    {
+        $request->validate(['photo' => 'required|file|max:15360']);
+        $data = $optimizer->optimize($request->file('photo'));
+        $path = 'orders/'.$order->id.'/'.str()->uuid().'.webp';
+        Storage::disk('local')->put($path, $data);
+        [$width, $height] = getimagesizefromstring($data);
+        $photo = $order->photos()->create(['disk' => 'local', 'path' => $path, 'mime' => 'image/webp', 'bytes' => strlen($data), 'width' => $width, 'height' => $height, 'uploaded_by' => $request->user()->id]);
+
+        return response()->json($photo, 201);
+    }
+
+    public function photo(ServiceOrder $order, int $photo)
+    {
+        $record = $order->photos()->findOrFail($photo);
+
+        return Storage::disk($record->disk)->response($record->path, "OS-{$order->number}-{$record->id}.webp", ['Content-Type' => $record->mime, 'Cache-Control' => 'private, max-age=3600']);
     }
 
     public function updateStatus(Request $r, ServiceOrder $order): JsonResponse
