@@ -1,0 +1,304 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('roles', function (Blueprint $t) {
+            $t->id();
+            $t->string('name')->unique();
+            $t->json('permissions');
+            $t->timestamps();
+        });
+        Schema::create('users', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('role_id')->constrained();
+            $t->string('name');
+            $t->string('login')->unique();
+            $t->string('email')->nullable()->unique();
+            $t->string('password');
+            $t->boolean('active')->default(true);
+            $t->rememberToken();
+            $t->timestamps();
+        });
+        Schema::create('clients', function (Blueprint $t) {
+            $t->id();
+            $t->string('name')->index();
+            $t->string('document', 14)->unique();
+            $t->string('phone', 20)->index();
+            $t->string('postal_code', 8);
+            $t->string('street');
+            $t->string('number', 30);
+            $t->string('district');
+            $t->string('city')->index();
+            $t->char('state', 2);
+            $t->string('complement')->nullable();
+            $t->timestamps();
+            $t->softDeletes();
+        });
+        Schema::create('service_catalog', function (Blueprint $t) {
+            $t->id();
+            $t->string('name')->index();
+            $t->enum('category', ['service', 'product'])->nullable();
+            $t->unsignedBigInteger('price_cents');
+            $t->boolean('warranty_enabled')->default(false);
+            $t->unsignedInteger('warranty_term')->nullable();
+            $t->enum('warranty_unit', ['days', 'months', 'years'])->nullable();
+            $t->boolean('active')->default(true);
+            $t->timestamps();
+        });
+        Schema::create('equipment_types', function (Blueprint $t) {
+            $t->id();
+            $t->string('name')->unique();
+            $t->boolean('active')->default(true);
+            $t->timestamps();
+        });
+        Schema::create('manufacturers', function (Blueprint $t) {
+            $t->id();
+            $t->string('name')->unique();
+            $t->boolean('active')->default(true);
+            $t->timestamps();
+        });
+        Schema::create('checklist_templates', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('equipment_type_id')->constrained();
+            $t->string('label');
+            $t->boolean('allows_note')->default(false);
+            $t->boolean('active')->default(true);
+            $t->timestamps();
+        });
+        Schema::create('counters', function (Blueprint $t) {
+            $t->string('name')->primary();
+            $t->unsignedBigInteger('value')->default(0);
+            $t->timestamps();
+        });
+        Schema::create('service_orders', function (Blueprint $t) {
+            $t->id();
+            $t->string('number', 12)->unique();
+            $t->foreignId('client_id')->constrained();
+            $t->foreignId('equipment_type_id')->constrained();
+            $t->foreignId('manufacturer_id')->nullable()->constrained();
+            $t->enum('attendance_type', ['bench', 'external'])->index();
+            $t->enum('status', ['analysis', 'waiting_part', 'in_service', 'completed', 'interrupted'])->default('analysis')->index();
+            $t->text('reported_problem');
+            $t->dateTime('received_at')->index();
+            $t->dateTime('completed_at')->nullable()->index();
+            $t->string('result')->nullable();
+            $t->text('technical_report')->nullable();
+            $t->unsignedBigInteger('subtotal_cents')->default(0);
+            $t->unsignedBigInteger('discount_cents')->default(0);
+            $t->unsignedBigInteger('total_cents')->default(0);
+            $t->boolean('archived')->default(false);
+            $t->foreignId('created_by')->constrained('users');
+            $t->timestamps();
+            $t->index(['status', 'received_at']);
+        });
+        Schema::create('service_order_snapshots', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('service_order_id')->unique()->constrained()->cascadeOnDelete();
+            $t->json('client');
+            $t->json('company');
+            $t->json('equipment');
+            $t->longText('term_text');
+            $t->json('warranty')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('service_order_checklists', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('service_order_id')->constrained()->cascadeOnDelete();
+            $t->string('label');
+            $t->string('note')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('service_order_items', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('service_order_id')->constrained()->cascadeOnDelete();
+            $t->foreignId('catalog_id')->nullable()->constrained('service_catalog')->nullOnDelete();
+            $t->string('description');
+            $t->unsignedInteger('quantity');
+            $t->unsignedBigInteger('unit_price_cents');
+            $t->unsignedBigInteger('subtotal_cents');
+            $t->json('warranty_snapshot')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('service_order_photos', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('service_order_id')->constrained()->cascadeOnDelete();
+            $t->string('disk');
+            $t->string('path')->unique();
+            $t->string('mime', 50);
+            $t->unsignedInteger('bytes');
+            $t->unsignedInteger('width');
+            $t->unsignedInteger('height');
+            $t->foreignId('uploaded_by')->constrained('users');
+            $t->timestamps();
+        });
+        Schema::create('status_history', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('service_order_id')->constrained()->cascadeOnDelete();
+            $t->string('from_status')->nullable();
+            $t->string('to_status');
+            $t->foreignId('user_id')->constrained();
+            $t->timestamp('created_at')->useCurrent();
+            $t->index(['service_order_id', 'created_at']);
+        });
+        Schema::create('budgets', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('service_order_id')->constrained();
+            $t->unsignedInteger('revision');
+            $t->enum('status', ['waiting', 'approved', 'refused'])->default('waiting');
+            $t->text('diagnosis');
+            $t->text('proposal');
+            $t->unsignedSmallInteger('validity_days')->default(7);
+            $t->unsignedBigInteger('total_cents');
+            $t->foreignId('created_by')->constrained('users');
+            $t->timestamp('decided_at')->nullable();
+            $t->timestamps();
+            $t->unique(['service_order_id', 'revision']);
+        });
+        Schema::create('budget_items', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('budget_id')->constrained()->cascadeOnDelete();
+            $t->string('description');
+            $t->unsignedInteger('quantity');
+            $t->unsignedBigInteger('unit_price_cents');
+            $t->unsignedBigInteger('subtotal_cents');
+            $t->timestamps();
+        });
+        Schema::create('technical_report_templates', function (Blueprint $t) {
+            $t->id();
+            $t->string('name');
+            $t->longText('body');
+            $t->boolean('active')->default(true);
+            $t->timestamps();
+        });
+        Schema::create('technical_reports', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('service_order_id')->constrained();
+            $t->foreignId('template_id')->nullable()->constrained('technical_report_templates');
+            $t->unsignedInteger('revision');
+            $t->json('content');
+            $t->timestamp('issued_at')->nullable();
+            $t->foreignId('created_by')->constrained('users');
+            $t->timestamps();
+            $t->unique(['service_order_id', 'revision']);
+        });
+        Schema::create('payments', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('service_order_id')->constrained();
+            $t->unsignedBigInteger('amount_cents');
+            $t->enum('method', ['pix', 'cash', 'debit', 'credit', 'transfer', 'other']);
+            $t->timestamp('paid_at')->index();
+            $t->foreignId('user_id')->constrained();
+            $t->string('idempotency_key')->unique();
+            $t->timestamps();
+        });
+        Schema::create('financial_transactions', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('payment_id')->nullable()->constrained();
+            $t->enum('origin', ['service_order', 'quick_entry', 'adjustment']);
+            $t->bigInteger('amount_cents');
+            $t->timestamp('occurred_at')->index();
+            $t->foreignId('user_id')->constrained();
+            $t->timestamps();
+        });
+        Schema::create('financial_adjustments', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('transaction_id')->constrained('financial_transactions');
+            $t->bigInteger('previous_cents');
+            $t->bigInteger('new_cents');
+            $t->text('reason');
+            $t->foreignId('user_id')->constrained();
+            $t->timestamps();
+        });
+        Schema::create('notifications', function (Blueprint $t) {
+            $t->uuid('id')->primary();
+            $t->foreignId('user_id')->nullable()->constrained();
+            $t->string('type');
+            $t->string('title');
+            $t->string('url')->nullable();
+            $t->json('data')->nullable();
+            $t->timestamp('read_at')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('post_sale_cycles', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('client_id')->constrained();
+            $t->foreignId('service_order_id')->unique()->constrained();
+            $t->boolean('active')->default(true)->index();
+            $t->timestamp('eligible_at')->index();
+            $t->timestamps();
+        });
+        Schema::create('post_sale_actions', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('cycle_id')->constrained('post_sale_cycles');
+            $t->enum('type', ['follow_up', 'google', 'instagram']);
+            $t->timestamp('confirmed_at')->nullable();
+            $t->foreignId('confirmed_by')->nullable()->constrained('users');
+            $t->timestamps();
+            $t->unique(['cycle_id', 'type']);
+        });
+        Schema::create('settings', function (Blueprint $t) {
+            $t->string('key')->primary();
+            $t->longText('value');
+            $t->string('type')->default('string');
+            $t->timestamps();
+        });
+        Schema::create('versioned_templates', function (Blueprint $t) {
+            $t->id();
+            $t->string('type')->index();
+            $t->string('name');
+            $t->unsignedInteger('version');
+            $t->longText('body');
+            $t->boolean('active')->default(true);
+            $t->foreignId('created_by')->nullable()->constrained('users');
+            $t->timestamps();
+            $t->unique(['type', 'name', 'version']);
+        });
+        Schema::create('generated_documents', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('service_order_id')->nullable()->constrained();
+            $t->string('type');
+            $t->unsignedInteger('revision')->default(1);
+            $t->string('path');
+            $t->char('sha256', 64);
+            $t->json('snapshot');
+            $t->timestamp('issued_at');
+            $t->foreignId('issued_by')->constrained('users');
+            $t->timestamps();
+            $t->unique(['service_order_id', 'type', 'revision']);
+        });
+        Schema::create('audit_logs', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('user_id')->nullable()->constrained();
+            $t->string('action')->index();
+            $t->string('subject_type');
+            $t->unsignedBigInteger('subject_id')->nullable();
+            $t->json('before')->nullable();
+            $t->json('after')->nullable();
+            $t->ipAddress('ip_address')->nullable();
+            $t->timestamp('created_at')->useCurrent()->index();
+        });
+        Schema::create('backups', function (Blueprint $t) {
+            $t->id();
+            $t->string('path');
+            $t->char('sha256', 64);
+            $t->unsignedBigInteger('bytes');
+            $t->json('manifest');
+            $t->enum('status', ['creating', 'ready', 'failed', 'restored']);
+            $t->foreignId('created_by')->nullable()->constrained('users');
+            $t->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        foreach (['backups', 'audit_logs', 'generated_documents', 'versioned_templates', 'settings', 'post_sale_actions', 'post_sale_cycles', 'notifications', 'financial_adjustments', 'financial_transactions', 'payments', 'technical_reports', 'technical_report_templates', 'budget_items', 'budgets', 'status_history', 'service_order_photos', 'service_order_items', 'service_order_checklists', 'service_order_snapshots', 'service_orders', 'counters', 'checklist_templates', 'manufacturers', 'equipment_types', 'service_catalog', 'clients', 'users', 'roles'] as $table) {
+            Schema::dropIfExists($table);
+        }
+    }
+};

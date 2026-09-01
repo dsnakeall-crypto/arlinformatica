@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class ServiceOrder extends Model
+{
+    protected $fillable = ['number', 'client_id', 'equipment_type_id', 'manufacturer_id', 'attendance_type', 'status', 'reported_problem', 'received_at', 'created_by'];
+
+    protected function casts(): array
+    {
+        return ['received_at' => 'datetime', 'completed_at' => 'datetime'];
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(ServiceOrderItem::class);
+    }
+
+    public function histories(): HasMany
+    {
+        return $this->hasMany(StatusHistory::class);
+    }
+
+    public function checklists(): HasMany
+    {
+        return $this->hasMany(ServiceOrderChecklist::class);
+    }
+
+    public function snapshot()
+    {
+        return $this->hasOne(ServiceOrderSnapshot::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(fn () => throw new \LogicException('Ordens de serviço preservam o histórico e não podem ser excluídas.'));
+    }
+}

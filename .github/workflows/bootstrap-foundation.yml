@@ -1,0 +1,52 @@
+name: Bootstrap foundation
+
+on:
+  push:
+    branches:
+      - codex/iniciar-projeto-arl-informatica-do-zero
+    paths:
+      - .github/workflows/bootstrap-foundation.yml
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-lockfiles-and-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate Composer lockfile and install PHP dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Generate npm lockfile and install frontend dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Format PHP with Laravel Pint
+        run: vendor/bin/pint
+
+      - name: Commit generated lockfiles and formatting
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: generate lockfiles and format foundation"
+          git push
