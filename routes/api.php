@@ -4,8 +4,11 @@ use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\FinalizationController;
 use App\Http\Controllers\ServiceOrderController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\TechnicalReportController;
+use App\Http\Controllers\TechnicalReportTemplateController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
@@ -22,6 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders/{order}/photos', [ServiceOrderController::class, 'uploadPhoto']);
     Route::get('/orders/{order}/photos/{photo}', [ServiceOrderController::class, 'photo']);
     Route::patch('/orders/{order}/status', [ServiceOrderController::class, 'updateStatus']);
+    Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store']);
     Route::get('/settings', [SettingsController::class, 'show']);
     Route::put('/settings', [SettingsController::class, 'update']);
     Route::post('/settings/logo', [SettingsController::class, 'logo']);
@@ -31,4 +35,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders/{order}/budgets', [BudgetController::class, 'store']);
     Route::patch('/orders/{order}/budgets/{revision}/status', [BudgetController::class, 'status']);
     Route::get('/orders/{order}/budgets/{revision}/pdf', [DocumentController::class, 'budget']);
+    Route::get('/orders/{order}/documents', [DocumentController::class, 'index']);
+    Route::get('/orders/{order}/final/{revision}/pdf', [DocumentController::class, 'finalDocument']);
+    Route::get('/orders/{order}/reports', [TechnicalReportController::class, 'index']);
+    Route::post('/orders/{order}/reports', [TechnicalReportController::class, 'store']);
+    Route::put('/orders/{order}/reports/{revision}', [TechnicalReportController::class, 'update']);
+    Route::post('/orders/{order}/reports/{revision}/issue', [TechnicalReportController::class, 'issue']);
+    Route::get('/orders/{order}/reports/{revision}/pdf', [DocumentController::class, 'technicalReport']);
+    Route::get('/report-templates', [TechnicalReportTemplateController::class, 'index']);
+    Route::post('/report-templates', [TechnicalReportTemplateController::class, 'store']);
+    Route::put('/report-templates/{template}', [TechnicalReportTemplateController::class, 'update']);
+    Route::post('/report-templates/{template}/duplicate', [TechnicalReportTemplateController::class, 'duplicate']);
 });

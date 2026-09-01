@@ -235,6 +235,14 @@ A validação final foi feita no GitHub Actions. Antes do merge, backend e front
 
 Permanecem fora desta etapa: laudos completos, conclusão final da OS, financeiro, pós-venda, backup/restore, administração completa de usuários e demais módulos futuros do Projeto Mestre.
 
+## Etapa 4 — finalização, PDF final e laudos técnicos
+
+Implementada na branch `feat/finalizacao-laudos-pdf-final`: o backend impede conclusão direta; a finalização transacional registra resultado, relato, itens, preços, desconto, total, garantia, usuário/data e snapshots; orçamento aprovado pode originar os itens uma única vez. A emissão cria PDF final privado e imutável, inclusive sem reparo e total zero, com checksum, snapshot, fotos incorporadas e histórico em `generated_documents`.
+
+Também foram implementados seis modelos iniciais editáveis de laudo, criação/edição/duplicação/ativação, laudos em rascunho e revisões emitidas imutáveis, PDF timbrado com fotos e fluxo específico de dano elétrico. A conclusão elétrica é sempre uma seleção humana obrigatória; o sistema não atribui responsabilidade a concessionária ou terceiro. A página da OS organiza Termo, Orçamentos, PDF Final e Laudos com ações de visualização, impressão e download, inclusive em layout mobile.
+
+Testes da Etapa 4 cobrem bloqueio da conclusão direta, reparo e não reparo, valores, orçamento aprovado, snapshots de catálogo/garantia, PDF, laudos/revisões, dano elétrico e proibição de exclusão da OS. Financeiro, Pós-Venda, Web Push e Backup permanecem pendentes e não foram incluídos nesta etapa.
+
 ## Pendências principais para as próximas etapas
 
 Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implementar.
@@ -245,9 +253,6 @@ Entre as principais pendências reais após a Etapa 3:
 - edição de cliente pela interface;
 - observação livre/`Outro` no checklist quando previsto;
 - WhatsApp e Google Maps;
-- laudos técnicos e respectivos PDFs;
-- conclusão completa da OS;
-- cópia de itens aprovados do orçamento para a OS;
 - pagamento, Entrada Rápida, correções auditáveis, caixa diário, visão mensal e relatórios;
 - pós-venda com confirmação, lembrete de 5 dias e novo ciclo após 60 dias;
 - central interna de notificações, Web Push, service worker/offline e catch-up;

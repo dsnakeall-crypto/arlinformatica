@@ -1,0 +1,16 @@
+@extends('documents.base')
+@section('title', 'ORDEM DE SERVIÇO — RELATÓRIO TÉCNICO')
+@section('content')
+<div class="head"><div class="brand">@if(!empty($company['logo']))<img src="{{ storage_path('app/private/'.$company['logo']) }}">@else<h1>ARL</h1>@endif</div><div class="company"><h1>{{ $company['company_name'] }}</h1><div>{{ $company['street'] }}, {{ $company['number'] }} · {{ $company['city'] }}/{{ $company['state'] }}</div><div>{{ $company['phone'] }} · {{ $company['email'] }}</div></div></div>
+<div class="hero"><div><b>OS Nº {{ $order['number'] }}</b><br><small>Entrada: {{ \Carbon\Carbon::parse($order['received_at'])->format('d/m/Y H:i') }} · Fechamento: {{ \Carbon\Carbon::parse($finalization['completed_at'])->format('d/m/Y H:i') }}</small></div></div>
+<h2>DADOS DO CLIENTE</h2><p><b>{{ $order['client']['name'] }}</b><br>CPF/CNPJ: {{ $order['client']['document'] }} · Telefone: {{ $order['client']['phone'] }}<br>{{ $order['client']['street'] }}, {{ $order['client']['number'] }} — {{ $order['client']['city'] }}/{{ $order['client']['state'] }}</p>
+<table><tr><td><b>EQUIPAMENTO</b><br>{{ data_get($order, 'snapshot.equipment.name', data_get($order, 'snapshot.equipment.type_id', 'Informado na OS')) }}</td><td><b>ATENDIMENTO</b><br>{{ $order['attendance_type'] === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo' }}</td></tr></table>
+<h2>PROBLEMA RELATADO</h2><p>{{ $order['reported_problem'] }}</p>
+<h2>CHECKLIST DE ENTRADA</h2>@if(count($order['checklists'])) @foreach($order['checklists'] as $check)<p>• {{ $check['label'] }}{{ $check['note'] ? ': '.$check['note'] : '' }}</p>@endforeach @else <p><b>CHECKLIST DE ENTRADA: 100% OK</b></p> @endif
+<h2>RESULTADO DO ATENDIMENTO</h2><p><b>{{ $result_label }}</b></p>
+<h2>LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO</h2><p>{!! nl2br(e($finalization['technical_report'] ?: 'Atendimento concluído conforme itens discriminados.')) !!}</p>
+<h2>SERVIÇOS / PRODUTOS</h2>@if(count($items))<table><thead><tr><th>Descrição</th><th>Qtd.</th><th>Valor unitário</th><th>Subtotal</th></tr></thead><tbody>@foreach($items as $item)<tr><td>{{ $item['description'] }}@if($item['warranty_snapshot'])<br><small>Garantia: {{ data_get(json_decode($item['warranty_snapshot'], true), 'term') }} {{ ['days'=>'dias','months'=>'meses','years'=>'anos'][data_get(json_decode($item['warranty_snapshot'], true), 'unit')] }}</small>@endif</td><td>{{ $item['quantity'] }}</td><td>R$ {{ number_format($item['unit_price_cents']/100, 2, ',', '.') }}</td><td>R$ {{ number_format($item['subtotal_cents']/100, 2, ',', '.') }}</td></tr>@endforeach</tbody></table>@else<p><b>Nenhum serviço realizado</b></p>@endif
+<div class="totals"><p>Subtotal: R$ {{ number_format($finalization['subtotal_cents']/100, 2, ',', '.') }}</p><p>Desconto: R$ {{ number_format($finalization['discount_cents']/100, 2, ',', '.') }}</p><strong>TOTAL: R$ {{ number_format($finalization['total_cents']/100, 2, ',', '.') }}</strong></div>
+@if(count($photos))<h2>REGISTRO FOTOGRÁFICO</h2>@foreach($photos as $photo)<img style="width:180px;max-height:140px;object-fit:contain;margin:5px" src="data:{{ $photo['mime'] }};base64,{{ $photo['data'] }}">@endforeach @endif
+<div class="footer">{{ $company['instagram'] }}</div>
+@endsection

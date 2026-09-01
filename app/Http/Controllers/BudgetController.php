@@ -13,7 +13,11 @@ class BudgetController extends Controller
 {
     public function index(ServiceOrder $order): JsonResponse
     {
-        return response()->json(DB::table('budgets')->where('service_order_id', $order->id)->orderByDesc('revision')->get());
+        return response()->json(DB::table('budgets')->where('service_order_id', $order->id)->orderByDesc('revision')->get()->map(function ($budget) {
+            $budget->items = DB::table('budget_items')->where('budget_id', $budget->id)->get();
+
+            return $budget;
+        }));
     }
 
     public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents): JsonResponse
