@@ -1,6 +1,6 @@
 # Checklist final — estado desta entrega
 
-Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuação. A tela inicial usa dados demonstrativos somente para validar a composição visual e, por isso, não conta como funcionalidade concluída.
+Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuação. A validação final de backend, testes, TypeScript e build é feita pelo GitHub Actions antes do merge; itens apenas visuais ou demonstrativos não contam como funcionalidade concluída.
 
 ## Base e segurança
 - [OK] Arquitetura Laravel/PHP + MySQL/MariaDB e React/TypeScript, sem Supabase/OpenAI e sem Node permanente.
