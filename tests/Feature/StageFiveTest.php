@@ -17,7 +17,9 @@ class StageFiveTest extends TestCase
     use RefreshDatabase;
 
     private User $master;
+
     private User $employee;
+
     private ServiceOrder $order;
 
     protected function setUp(): void
