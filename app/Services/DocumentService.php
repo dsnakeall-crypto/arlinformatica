@@ -14,8 +14,9 @@ class DocumentService
         $pdf = Pdf::loadView("documents.$type", $snapshot)->setPaper('a4');
         $bytes = $pdf->output();
         $path = "documents/orders/{$order->id}/$type-r$revision.pdf";
+        abort_if(DB::table('generated_documents')->where(['service_order_id' => $order->id, 'type' => $type, 'revision' => $revision])->exists(), 409, 'Uma revisão emitida não pode ser sobrescrita.');
         Storage::disk('local')->put($path, $bytes);
-        DB::table('generated_documents')->updateOrInsert(['service_order_id' => $order->id, 'type' => $type, 'revision' => $revision], ['path' => $path, 'sha256' => hash('sha256', $bytes), 'snapshot' => json_encode($snapshot), 'issued_at' => now(), 'issued_by' => $userId, 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('generated_documents')->insert(['service_order_id' => $order->id, 'type' => $type, 'revision' => $revision, 'path' => $path, 'sha256' => hash('sha256', $bytes), 'snapshot' => json_encode($snapshot), 'issued_at' => now(), 'issued_by' => $userId, 'created_at' => now(), 'updated_at' => now()]);
     }
 
     public function response(ServiceOrder $order, string $type, int $revision = 1)

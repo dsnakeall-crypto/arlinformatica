@@ -45,7 +45,7 @@ class ServiceOrderController extends Controller
 
     public function show(ServiceOrder $order): JsonResponse
     {
-        return response()->json($order->load(['client', 'checklists', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']));
+        return response()->json($order->load(['client', 'checklists', 'items', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']));
     }
 
     public function uploadPhoto(Request $request, ServiceOrder $order, PhotoOptimizer $optimizer): JsonResponse

@@ -18,21 +18,24 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Catálogos backend de equipamentos, fabricantes e Serviços, e templates iniciais completos do checklist por equipamento.
 - [PENDENTE] Interface administrativa completa para editar/desativar catálogos e checklist; edição de clientes, WhatsApp/Maps e campo de observação do item "Outro".
 - [OK] Orçamento funcional dentro da OS, cálculo em centavos, revisões imutáveis, aprovação/recusa auditável e snapshot opcional de garantia por item (dias/meses/anos).
-- [PENDENTE] Laudos técnicos, conclusão completa da OS e cópia de itens aprovados para a OS.
+- [OK] Finalização obrigatória antes do status Concluído, com resultado estruturado, laudo condicional, itens/snapshots, desconto validado em centavos, garantia e cópia idempotente de orçamento aprovado.
+- [OK] Laudos técnicos com modelos configuráveis, fluxo rascunho/emissão, revisões imutáveis, fotos existentes e avaliação de dano elétrico escolhida pelo técnico.
 
 ## Documentos e financeiro
 - [OK] Geração privada de PDF do termo e orçamento A4 com Dompdf, snapshot de conteúdo/empresa/logo, checksum e histórico de revisões.
-- [PENDENTE] PDFs de laudo, fechamento e relatório financeiro.
+- [OK] PDFs privados de laudo e fechamento, com snapshot, fotos incorporadas, checksum SHA-256, revisão e ações de visualizar/imprimir/baixar.
+- [PENDENTE] PDF de relatório financeiro.
 - [PENDENTE] Pagamento, Entrada Rápida, correção auditável, painéis e fechamento mensal.
 - [OK] Dados da empresa persistentes, logo privada em seis variantes proporcionais e documentos timbrados com dados dinâmicos.
-- [PENDENTE] Laudo completo e comparação visual final de todos os documentos.
+- [OK] Laudo geral e de dano elétrico com responsabilidade técnica explícita, timbrado dinâmico e registro fotográfico.
+- [PENDENTE] Comparação visual final de todos os documentos em ambiente de navegador com dependências instaladas.
 
 ## Relacionamento, plataforma e administração
 - [PENDENTE] Pós-venda com confirmação, lembrete de 5 dias e ciclo de 60 dias.
 - [PENDENTE] Central interna, Web Push, service worker/offline e catch-up.
 - [PENDENTE] Backup/restore executável, limpeza segura de fotos e armazenamento/diagnóstico.
 - [OK] Central de Configurações em cards com Dados da Empresa, Identidade Visual, Documentos e Layout básico; escrita restrita a Master/Administrador.
-- [PENDENTE] Administração completa de usuários/permissões, armazenamento, backup/hospedagem e laudos.
+- [PENDENTE] Administração completa de usuários/permissões, armazenamento e backup/hospedagem.
 
 ## Interface, qualidade e entrega
 - [OK] Shell desktop responsivo com identidade verde, menu, cards, filtros, tabela e cards mobile próprios.

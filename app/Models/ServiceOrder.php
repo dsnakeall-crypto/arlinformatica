@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ServiceOrder extends Model
 {
-    protected $fillable = ['number', 'client_id', 'equipment_type_id', 'manufacturer_id', 'attendance_type', 'status', 'reported_problem', 'received_at', 'created_by'];
+    protected $fillable = ['number', 'client_id', 'equipment_type_id', 'manufacturer_id', 'attendance_type', 'status', 'reported_problem', 'received_at', 'completed_at', 'result', 'technical_report', 'subtotal_cents', 'discount_cents', 'total_cents', 'created_by'];
 
     protected function casts(): array
     {
