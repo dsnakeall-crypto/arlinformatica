@@ -17,7 +17,7 @@ class ClientController extends Controller
             $q->where(fn ($x) => $x->where('name', 'like', "%$s%")->orWhere('phone', 'like', "%$s%")->orWhere('document', 'like', '%'.DocumentValidator::normalize($s).'%'));
         }
 
-return response()->json($q->paginate(20));
+        return response()->json($q->paginate(20));
     }
 
     public function store(Request $r): JsonResponse
