@@ -193,9 +193,37 @@ Depois das correções, a CI da PR #4 passou completamente para backend e fronte
 
 Merge commit da Etapa 3 na `main`: `6299c6d17fd2160538d147986e9c5f9ae37bec3d`.
 
+### PR #5 — Etapa 4: finalização, PDF final e laudos técnicos
+
+PR: `feat: finalização de OS, PDF final A4 e módulo de laudos técnicos`.
+
+Implementado e incorporado à `main`:
+
+- bloqueio da conclusão direta da OS, exigindo fluxo obrigatório de finalização;
+- finalização transacional com resultado estruturado, laudo condicional, itens, desconto, total, garantias, snapshots e auditoria;
+- cópia idempotente de itens do orçamento aprovado;
+- PDF final A4 privado, histórico e imutável, inclusive em finalização sem reparo e total zero;
+- fotos incorporadas ao PDF, checksum SHA-256 e histórico em `generated_documents`;
+- modelos editáveis de laudos técnicos, rascunho/emissão e revisões imutáveis;
+- laudo de dano elétrico com conclusão escolhida obrigatoriamente pelo técnico;
+- PDFs timbrados de laudo com fotos e responsabilidade técnica explícita;
+- interface da OS com Finalização, Laudos e Documentos, incluindo visualizar, imprimir e baixar;
+- testes automatizados em `tests/Feature/StageFourTest.php`.
+
+Durante a estabilização da PR #5 foram corrigidos diretamente na branch, sem novo consumo do Codex:
+
+- formatação exigida pelo Pint em controllers;
+- importação PHP não utilizada;
+- tipagem/`useEffect` no frontend;
+- workflow temporário de correção removido antes do merge.
+
+A CI da PR #5 passou integralmente antes do merge. A PR foi mergeada em 01/09/2026 e a CI da `main` no merge também passou integralmente: Composer, migrations + seed, Pint, testes PHP, `npm ci`, TypeScript/typecheck e build.
+
+Merge commit da Etapa 4 na `main`: `3d15295240692f7bbfbb40c512468385c704f81f`.
+
 ## Estado atual do sistema
 
-A `main` está estável e com CI verde no marco da Etapa 3.
+A `main` está estável e com CI verde no marco da Etapa 4.
 
 Já existem de forma funcional ou estrutural:
 
@@ -215,15 +243,18 @@ Já existem de forma funcional ou estrutural:
 - fotos privadas ligadas à OS e otimizadas para até 100 KB;
 - catálogos básicos necessários à abertura da OS;
 - visualização inicial da OS;
-- central de Configurações com Dados da Empresa, Identidade Visual, Documentos e Layout básico;
+- central de Configurações com Dados da Empresa, Identidade Visual, Documentos, Layout e Laudos;
 - logo privada em seis variantes proporcionais;
 - termo e orçamento A4 privados gerados com Dompdf;
 - documentos com snapshot, checksum e preservação histórica;
 - orçamento dentro da OS com revisões, aprovação/recusa e garantia opcional por item;
+- finalização obrigatória da OS com resultado, valores, snapshots e auditoria;
+- PDF final A4 privado e histórico;
+- laudos técnicos configuráveis, inclusive dano elétrico com decisão humana;
 - layout desktop/mobile operacional inicial;
 - PWA manifest inicial;
 - documentação de arquitetura e KingHost;
-- CI funcional para backend e frontend.
+- CI funcional e verde para backend e frontend.
 
 ## Etapa 3 — Configurações, documentos, orçamento e garantia
 
@@ -233,27 +264,47 @@ A implementação inclui dados configuráveis da empresa; upload privado da logo
 
 A validação final foi feita no GitHub Actions. Antes do merge, backend e frontend ficaram verdes; após o merge, a CI da `main` também passou integralmente.
 
-Permanecem fora desta etapa: laudos completos, conclusão final da OS, financeiro, pós-venda, backup/restore, administração completa de usuários e demais módulos futuros do Projeto Mestre.
-
 ## Etapa 4 — finalização, PDF final e laudos técnicos
 
-Implementada na branch `feat/finalizacao-laudos-pdf-final`: o backend impede conclusão direta; a finalização transacional registra resultado, relato, itens, preços, desconto, total, garantia, usuário/data e snapshots; orçamento aprovado pode originar os itens uma única vez. A emissão cria PDF final privado e imutável, inclusive sem reparo e total zero, com checksum, snapshot, fotos incorporadas e histórico em `generated_documents`.
+Concluída e mergeada pela PR #5 a partir da branch `codex/implementar-finalizacao-da-os-e-pdf`.
 
-Também foram implementados seis modelos iniciais editáveis de laudo, criação/edição/duplicação/ativação, laudos em rascunho e revisões emitidas imutáveis, PDF timbrado com fotos e fluxo específico de dano elétrico. A conclusão elétrica é sempre uma seleção humana obrigatória; o sistema não atribui responsabilidade a concessionária ou terceiro. A página da OS organiza Termo, Orçamentos, PDF Final e Laudos com ações de visualização, impressão e download, inclusive em layout mobile.
+O backend impede conclusão direta; a finalização transacional registra resultado, relato, itens, preços, desconto, total, garantia, usuário/data e snapshots; orçamento aprovado pode originar os itens uma única vez. A emissão cria PDF final privado e imutável, inclusive sem reparo e total zero, com checksum, snapshot, fotos incorporadas e histórico em `generated_documents`.
 
-Testes da Etapa 4 cobrem bloqueio da conclusão direta, reparo e não reparo, valores, orçamento aprovado, snapshots de catálogo/garantia, PDF, laudos/revisões, dano elétrico e proibição de exclusão da OS. Financeiro, Pós-Venda, Web Push e Backup permanecem pendentes e não foram incluídos nesta etapa.
+Também foram implementados modelos iniciais editáveis de laudo, criação/edição/duplicação/ativação, laudos em rascunho e revisões emitidas imutáveis, PDF timbrado com fotos e fluxo específico de dano elétrico. A conclusão elétrica é sempre uma seleção humana obrigatória; o sistema não atribui responsabilidade a concessionária ou terceiro. A página da OS organiza Termo, Orçamentos, PDF Final e Laudos com ações de visualização, impressão e download, inclusive em layout mobile.
+
+Testes da Etapa 4 cobrem bloqueio da conclusão direta, reparo e não reparo, valores, orçamento aprovado, snapshots de catálogo/garantia, PDF, laudos/revisões, dano elétrico e proibição de exclusão da OS.
+
+## Próxima etapa prioritária — Etapa 5: Pagamento e Financeiro
+
+A próxima etapa deve seguir as seções 30 a 33 do `docs/PROJETO_MESTRE.md` e os itens pendentes do `CHECKLIST_FINAL.md`.
+
+Escopo prioritário:
+
+- pagamento separado do status operacional da OS;
+- formas Pix, Dinheiro, Débito, Crédito, Transferência e Outro;
+- registro de OS, valor, forma, data/hora e usuário, com proteção contra duplicidade;
+- Financeiro com Visão Geral, Caixa Diário, Movimentações, Mensal e Relatórios;
+- caixa diário automático de 00:00:00 a 23:59:59 em `America/Sao_Paulo`, usando transações como fonte da verdade;
+- Entrada Rápida com somente valor obrigatório e origem `Serviço rápido não cadastrado`;
+- correções financeiras auditáveis por Admin/Master, sem apagar silenciosamente;
+- fechamento mensal com total de OS, Entrada Rápida, ticket médio, descontos, formas de pagamento, serviços/produtos e totais;
+- PDF `RELATÓRIO FINANCEIRO — MÊS/ANO`;
+- testes de pagamento, Entrada Rápida, caixa diário, visão mensal, correções e relatório financeiro;
+- interface desktop/mobile ligada ao backend real, com estados de carregamento, erro e vazio.
+
+Não incluir Pós-Venda, Web Push, Backup/Restore ou administração completa de usuários nesta etapa, salvo dependência técnica mínima necessária.
 
 ## Pendências principais para as próximas etapas
 
 Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implementar.
 
-Entre as principais pendências reais após a Etapa 3:
+Entre as principais pendências reais após a Etapa 4:
 
+- pagamento, Entrada Rápida, correções auditáveis, caixa diário, visão mensal e relatório financeiro;
 - telas administrativas completas de Serviços, fabricantes, equipamentos e templates de checklist;
 - edição de cliente pela interface;
 - observação livre/`Outro` no checklist quando previsto;
 - WhatsApp e Google Maps;
-- pagamento, Entrada Rápida, correções auditáveis, caixa diário, visão mensal e relatórios;
 - pós-venda com confirmação, lembrete de 5 dias e novo ciclo após 60 dias;
 - central interna de notificações, Web Push, service worker/offline e catch-up;
 - backup/restore executável, limpeza segura de fotos, armazenamento e diagnóstico;
@@ -299,9 +350,11 @@ Esses arquivos são a fonte oficial do projeto. Não reconstrua requisitos por m
 
 Depois verifique o estado real do GitHub: branch `main`, outras branches, PRs e GitHub Actions.
 
-O último marco confirmado é: PR #4 (`feat: configurações, identidade visual, documentos e orçamentos (Etapa 3)`) mergeada em 01/09/2026 após CI totalmente verde para backend e frontend. A CI da `main` após o merge também passou. Merge commit da Etapa 3: `6299c6d17fd2160538d147986e9c5f9ae37bec3d`.
+O último marco confirmado é a PR #5 (`feat: finalização de OS, PDF final A4 e módulo de laudos técnicos`), mergeada em 01/09/2026 após CI totalmente verde para backend e frontend. A CI da `main` após o merge também passou integralmente. Merge commit da Etapa 4: `3d15295240692f7bbfbb40c512468385c704f81f`.
 
-Clientes, ViaCEP, abertura/listagem/visualização inicial de OS, Bancada/Externo, checklist de entrada, fotos privadas até 100 KB, Configurações, identidade visual, termo/PDF, orçamento com revisões e garantia por item já possuem fluxo funcional inicial. Continue pelas pendências reais de `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` sem refazer a base.
+Clientes, ViaCEP, abertura/listagem/visualização de OS, Bancada/Externo, checklist de entrada, fotos privadas até 100 KB, Configurações, identidade visual, termo/PDF, orçamento com revisões e garantia por item, finalização da OS, PDF final e laudos técnicos já possuem fluxo funcional inicial.
+
+A próxima prioridade é a Etapa 5 — Pagamento e Financeiro, conforme seções 30 a 33 do `docs/PROJETO_MESTRE.md` e `CHECKLIST_FINAL.md`: pagamento separado do status, Entrada Rápida, caixa diário automático, movimentações, visão mensal, correções auditáveis e relatório financeiro em PDF.
 
 Explique tudo em linguagem simples e diga passo a passo onde clicar quando houver ação manual.
 
