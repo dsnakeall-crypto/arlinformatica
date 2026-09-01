@@ -188,6 +188,12 @@ Já existem de forma funcional ou estrutural:
 - documentação de arquitetura e KingHost;
 - CI funcional para backend e frontend.
 
+## Etapa 3 — Configurações, documentos, orçamento e garantia
+
+Implementado na branch `feat/configuracoes-documentos-orcamento`: dados configuráveis da empresa; upload privado da logo com seis variantes sem deformação; central responsiva de Configurações; versionamento do termo; infraestrutura Dompdf privada com snapshot e SHA-256; termo da OS; orçamento A4 com revisões; cálculo em centavos; garantia opcional em dias, meses ou anos; registro auditável de envio, aprovação ou recusa. Documentos emitidos preservam empresa, logo, texto e dados usados.
+
+Permanecem fora desta etapa: laudos completos, financeiro, pós-venda, backup/restore, administração completa de usuários e conclusão final da OS. A validação PHP/Laravel ficou destinada ao GitHub Actions porque o ambiente local recebeu HTTP 403 ao baixar dependências do Composer.
+
 ## Pendências principais para as próximas etapas
 
 Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implementar.

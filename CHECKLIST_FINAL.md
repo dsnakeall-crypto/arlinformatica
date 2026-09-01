@@ -17,18 +17,22 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Abertura e consulta de OS reais com cliente, Bancada/Externo, equipamento, fabricante, problema, snapshot, histórico, checklist 100% OK/avarias e foto privada.
 - [OK] Catálogos backend de equipamentos, fabricantes e Serviços, e templates iniciais completos do checklist por equipamento.
 - [PENDENTE] Interface administrativa completa para editar/desativar catálogos e checklist; edição de clientes, WhatsApp/Maps e campo de observação do item "Outro".
-- [PENDENTE] Fluxos funcionais de orçamento, aprovação, laudo/revisão, conclusão e garantias.
+- [OK] Orçamento funcional dentro da OS, cálculo em centavos, revisões imutáveis, aprovação/recusa auditável e snapshot opcional de garantia por item (dias/meses/anos).
+- [PENDENTE] Laudos técnicos, conclusão completa da OS e cópia de itens aprovados para a OS.
 
 ## Documentos e financeiro
-- [PENDENTE] Geração/preview dos PDFs de termo, orçamento, laudo, fechamento e relatório financeiro.
+- [OK] Geração privada de PDF do termo e orçamento A4 com Dompdf, snapshot de conteúdo/empresa/logo, checksum e histórico de revisões.
+- [PENDENTE] PDFs de laudo, fechamento e relatório financeiro.
 - [PENDENTE] Pagamento, Entrada Rápida, correção auditável, painéis e fechamento mensal.
-- [PENDENTE] Logo/configurações versionadas e incorporação de TIMBRADO.
+- [OK] Dados da empresa persistentes, logo privada em seis variantes proporcionais e documentos timbrados com dados dinâmicos.
+- [PENDENTE] Laudo completo e comparação visual final de todos os documentos.
 
 ## Relacionamento, plataforma e administração
 - [PENDENTE] Pós-venda com confirmação, lembrete de 5 dias e ciclo de 60 dias.
 - [PENDENTE] Central interna, Web Push, service worker/offline e catch-up.
 - [PENDENTE] Backup/restore executável, limpeza segura de fotos e armazenamento/diagnóstico.
-- [PENDENTE] Configurações, usuários e permissões administrativas completos.
+- [OK] Central de Configurações em cards com Dados da Empresa, Identidade Visual, Documentos e Layout básico; escrita restrita a Master/Administrador.
+- [PENDENTE] Administração completa de usuários/permissões, armazenamento, backup/hospedagem e laudos.
 
 ## Interface, qualidade e entrega
 - [OK] Shell desktop responsivo com identidade verde, menu, cards, filtros, tabela e cards mobile próprios.

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\ServiceOrder;
 use App\Models\StatusHistory;
+use App\Services\CompanySettings;
 use App\Services\OrderNumber;
 use App\Services\PhotoOptimizer;
 use Illuminate\Http\JsonResponse;
@@ -82,7 +83,7 @@ class ServiceOrderController extends Controller
 
     private function companySnapshot(): array
     {
-        return ['name' => 'ARL Informática', 'instagram' => config('arl.instagram')];
+        return app(CompanySettings::class)->snapshot();
     }
 
     private function term(): string
