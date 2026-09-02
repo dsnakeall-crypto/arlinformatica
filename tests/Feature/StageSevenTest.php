@@ -34,7 +34,9 @@ class StageSevenTest extends TestCase
         $response = $this->actingAs($master)->postJson('/api/users', $payload)->assertCreated()->assertJsonMissingPath('password');
         $created = User::findOrFail($response->json('id'));
         $this->assertTrue(Hash::check('Senha#Forte123', $created->password));
-        $this->getJson('/api/users')->assertOk()->assertJsonMissing('Senha#Forte123')->assertJsonMissing($created->password);
+        $index = $this->getJson('/api/users')->assertOk();
+        $this->assertStringNotContainsString('Senha#Forte123', $index->getContent());
+        $this->assertStringNotContainsString($created->password, $index->getContent());
         $this->assertDatabaseHas('audit_logs', ['action' => 'user.created', 'subject_id' => $created->id]);
     }
 
