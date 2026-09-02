@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\BackupService;
+use App\Services\NotificationService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -76,7 +77,11 @@ class StageEightTest extends TestCase
         $master = $this->user('Master', 'master');
         $this->actingAs($master)->post('/api/backups/upload', ['backup' => UploadedFile::fake()->create('invalid.zip', 1, 'application/zip')])->assertSessionHasErrors('backup');
         $path = tempnam(sys_get_temp_dir(), 'arl-');
-        $zip = new ZipArchive; $zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE); $zip->addFromString('../attack.php', '<?php'); $zip->addFromString('manifest.json', '{}'); $zip->close();
+        $zip = new ZipArchive;
+        $zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $zip->addFromString('../attack.php', '<?php');
+        $zip->addFromString('manifest.json', '{}');
+        $zip->close();
         $this->expectExceptionMessage('caminho inseguro');
         app(BackupService::class)->validate($path);
     }
@@ -100,7 +105,7 @@ class StageEightTest extends TestCase
         $master = $this->user('Master', 'master');
         $response = $this->actingAs($master)->getJson('/api/diagnostics')->assertOk()->assertJsonPath('database.connected', true);
         $this->assertStringNotContainsString('VERY-PRIVATE-SECRET', $response->getContent());
-        app(\App\Services\NotificationService::class)->notifyUsers('client_created', 'Novo cliente', 'Texto curto', '/clients', 'stage-eight-push');
+        app(NotificationService::class)->notifyUsers('client_created', 'Novo cliente', 'Texto curto', '/clients', 'stage-eight-push');
         $this->assertDatabaseHas('notifications', ['deduplication_key' => 'stage-eight-push']);
         $this->postJson('/api/diagnostics/push-test')->assertOk()->assertJsonPath('status', 'not_configured');
     }
