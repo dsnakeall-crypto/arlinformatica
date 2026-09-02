@@ -27,7 +27,10 @@ composer test
 vendor/bin/pint --test
 npm run typecheck
 npm run build
+npm run test:e2e
 ```
+
+O E2E usa SQLite descartável, migrations/seeds e servidor Laravel local. Instale o Chromium uma vez com `npx playwright install chromium`. O workflow manual **Preparar release** gera o pacote de produção sem secrets nem dados privados.
 
 ## Produção
 
@@ -35,4 +38,4 @@ Nunca publique `.env`, banco, backups, fotos ou PDFs. O document root é `public
 
 ## Estado
 
-O primeiro marco entrega modelagem relacional ampla, núcleo autenticado de clientes/OS, sequencial transacional, snapshots, limite de foto e uma interface responsiva fiel à direção visual. Consulte [`CHECKLIST_FINAL.md`](CHECKLIST_FINAL.md): itens não implementados estão explicitamente pendentes, sem mocks declarados como prontos.
+O sistema já cobre as etapas funcionais de operação, documentos, financeiro, pós-venda, administração, backup/diagnóstico e Web Push no backend. A PR #10 da Etapa 9 acrescenta Playwright E2E versionado e preparação manual de release. Consulte [`CHECKLIST_FINAL.md`](CHECKLIST_FINAL.md): validações externas ou ainda não concluídas permanecem explicitamente como `[PENDENTE]`.

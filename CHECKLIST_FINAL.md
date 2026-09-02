@@ -50,5 +50,9 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] CI preparada para PHP, lint, testes, TypeScript e build.
 - [OK] Telas operacionais de clientes, Nova OS, listagem e visualização de OS usam backend real, com estados de carregamento, erro, vazio e validação.
 - [OK] Etapa 7 administrativa ligada ao backend real, com telas responsivas e testes de segurança, históricos, catálogos, checklist e fotos.
-- [PENDENTE] Validação do Web Push em dispositivos reais e E2E Playwright; backend Web Push, backup/restore e diagnóstico estão funcionais e cobertos por CI/testes automatizados.
-- [PENDENTE] Comparação final em navegador com todas as referências e testes funcionais completos do Projeto Mestre.
+- [OK] Playwright E2E versionado no `package.json`/`package-lock.json`, com SQLite isolado, seed próprio, servidor Laravel local, fluxo operacional principal, autorização por perfis, viewport mobile e `retries: 0`; execução real validada pelo GitHub Actions.
+- [PENDENTE] Validação física do Web Push em Android/iPhone com HTTPS e VAPID reais; roteiro em `docs/HOMOLOGACAO_WEB_PUSH.md`.
+- [PENDENTE] Comparação visual final: as oito referências foram fornecidas nesta tarefa, mas a captura/comparação automatizada completa e a homologação de impressão física ainda precisam ser concluídas.
+- [PENDENTE] Deploy real na KingHost; o workflow manual de release está preparado, porém não foi executado no GitHub Actions nesta branch.
+- [PENDENTE] Preferência Aparência e Layout por dispositivo ainda requer validação/ajuste funcional completo.
+- [PENDENTE] Recuperação pública de senha por e-mail é opcional e não foi implementada; o reset administrativo Master permanece funcional.

@@ -27,7 +27,11 @@ O document root aponta para `public/`. `storage` fica fora da web e gravável pe
 
 `PostSaleService` concentra as regras idempotentes: somente conclusão com `repair_completed`, elegibilidade após cinco dias, trava pessimista no cliente e apenas um ciclo ativo. Uma nova conclusão separada por pelo menos 60 dias arquiva exclusivamente o ciclo anterior. As três ações preservam mensagem, usuário e horário de confirmação; abrir WhatsApp nunca confirma envio.
 
-Notificações internas são individuais, possuem chave de deduplicação e continuam sendo a fonte primária. `WebPushService` é um complemento tolerante a falhas: usa a implementação padrão `minishlink/web-push` quando instalada, envia somente payload mínimo e remove inscrições apenas quando o provedor confirma expiração. A chave VAPID privada permanece exclusivamente no `.env`. A instalação da biblioteca não foi versionada nesta entrega porque o Packagist respondeu HTTP 403 e não seria seguro criar um `composer.lock` manual; até a dependência ser adicionada em ambiente com acesso, o diagnóstico informa “não configurado” e a central interna segue operacional.
+Notificações internas são individuais, possuem chave de deduplicação e continuam sendo a fonte primária. `WebPushService` usa `minishlink/web-push` v11, versionado em `composer.json` e `composer.lock`, envia somente payload mínimo e remove inscrições apenas quando o provedor confirma expiração. A chave VAPID privada permanece exclusivamente no `.env`; VAPID real e a entrega em Android/iPhone físico ainda exigem homologação no ambiente HTTPS.
+
+## Homologação e release
+
+O Playwright usa SQLite descartável, migrations e seed E2E próprios, inicia o Laravel localmente e encerra o servidor com o runner. A CI separa backend, frontend e navegador. O workflow manual de release repete lint, testes e build e publica um artefato identificado pelo commit, com `vendor` e `public/build`, excluindo ambiente, banco, dados privados, testes e `node_modules`.
 
 ## Backup, restauração e diagnóstico
 
