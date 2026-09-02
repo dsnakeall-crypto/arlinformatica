@@ -1,7 +1,14 @@
 {
   "private": true,
   "type": "module",
-  "scripts": {"dev": "vite", "build": "tsc -b && vite build", "lint": "eslint . --max-warnings=0", "typecheck": "tsc -b --pretty false"},
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc -b --pretty false",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
+  },
   "dependencies": {
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",

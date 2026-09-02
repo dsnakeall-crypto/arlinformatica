@@ -27,7 +27,10 @@ composer test
 vendor/bin/pint --test
 npm run typecheck
 npm run build
+npm run test:e2e
 ```
+
+O E2E usa SQLite descartável, migrations/seeds e servidor Laravel local. Instale o Chromium uma vez com `npx playwright install chromium`. O workflow manual **Preparar release** gera o pacote de produção sem secrets nem dados privados.
 
 ## Produção
 

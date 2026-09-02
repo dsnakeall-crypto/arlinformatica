@@ -14,5 +14,7 @@
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore
 /database/*.sqlite
+/playwright-report/
+/test-results/
 npm-debug.log*
 .DS_Store

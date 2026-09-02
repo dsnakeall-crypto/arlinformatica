@@ -11,7 +11,7 @@ Este roteiro serve para KingHost, outro *shared hosting* ou VPS. Limites de disc
 
 ## 2. Gerar e enviar a release
 
-O GitHub é a fonte oficial. Há três opções seguras:
+O GitHub é a fonte oficial. O workflow manual **Preparar release** gera um artefato com manifesto, commit, `vendor` e `public/build`, sem `.env`, banco ou arquivos privados. Há três opções seguras:
 
 - Git/SSH disponível: faça checkout do commit/tag de release em uma pasta nova;
 - CI: gere um pacote de release sem `.env`, `.git`, `node_modules`, testes nem arquivos privados, mas com `public/build`, código, migrations e `vendor` quando Composer não existir no servidor;
@@ -71,7 +71,7 @@ O scheduler grava heartbeat a cada minuto, verifica pós-venda e executa `backup
 
 ## 5. VAPID e Web Push
 
-HTTPS é obrigatório fora de `localhost`. Em uma máquina com Composer/Packagist disponível, adicione e valide `minishlink/web-push` com PHP 8.2, commitando juntos `composer.json` e `composer.lock`. O ambiente desta entrega recebeu HTTP 403 do Packagist; nenhum lockfile foi inventado e o diagnóstico manterá Push como não configurado enquanto a biblioteca não existir.
+HTTPS é obrigatório fora de `localhost`. `minishlink/web-push` ^11.0 já está em `composer.json`/`composer.lock`; a CI da Etapa 8 instalou a versão 11.0.0. O diagnóstico continuará indicando Push não configurado enquanto as chaves VAPID reais não existirem no ambiente.
 
 Depois, gere as chaves com a ferramenta documentada pela biblioteca e configure somente no `.env`:
 
