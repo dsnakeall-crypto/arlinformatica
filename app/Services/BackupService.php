@@ -110,7 +110,13 @@ class BackupService
         $zip = new ZipArchive;
         $zip->open($archive);
         try {
-            Schema::disableForeignKeyConstraints();
+            $sqlite = DB::getDriverName() === 'sqlite';
+            if ($sqlite) {
+                DB::statement('PRAGMA defer_foreign_keys = ON');
+            } else {
+                Schema::disableForeignKeyConstraints();
+            }
+
             try {
                 DB::transaction(function () use ($zip) {
                     $tables = array_values(array_filter(
@@ -134,7 +140,11 @@ class BackupService
                     }
                 });
             } finally {
-                Schema::enableForeignKeyConstraints();
+                if ($sqlite) {
+                    DB::statement('PRAGMA defer_foreign_keys = OFF');
+                } else {
+                    Schema::enableForeignKeyConstraints();
+                }
             }
             $this->restoreStorage($zip);
             $source->update(['status' => 'restored']);
