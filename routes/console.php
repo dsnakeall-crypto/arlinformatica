@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('post-sale:check')->hourly()->withoutOverlapping();
 Schedule::command('scheduler:heartbeat')->everyMinute()->withoutOverlapping();
 
-$frequency = config('backup.frequency');
+$frequency = app(\App\Services\BackupService::class)->automaticSettings()['frequency'];
 $backup = Schedule::command('backup:run')->withoutOverlapping(120);
 match ($frequency) {
     'weekly' => $backup->weeklyOn(1, '02:00'),

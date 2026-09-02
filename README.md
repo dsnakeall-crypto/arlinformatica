@@ -38,4 +38,8 @@ Nunca publique `.env`, banco, backups, fotos ou PDFs. O document root é `public
 
 ## Estado
 
-O sistema já cobre as etapas funcionais de operação, documentos, financeiro, pós-venda, administração, backup/diagnóstico e Web Push no backend. A PR #10 da Etapa 9 acrescenta Playwright E2E versionado e preparação manual de release. Consulte [`CHECKLIST_FINAL.md`](CHECKLIST_FINAL.md): validações externas ou ainda não concluídas permanecem explicitamente como `[PENDENTE]`.
+O sistema já cobre as etapas funcionais de operação, documentos, financeiro, pós-venda, administração, backup/diagnóstico e Web Push no backend. A PR #10 da Etapa 9 foi mergeada pelo commit `558a520421c8f290b970dcbc50ff03f2b1161784`, com CI verde após o merge, e acrescenta Playwright E2E versionado e preparação manual de release. Consulte [`CHECKLIST_FINAL.md`](CHECKLIST_FINAL.md): validações externas ou ainda não concluídas permanecem explicitamente como `[PENDENTE]`.
+
+## Etapa 10
+
+A Etapa 9 foi mergeada pela PR #10 no commit `558a520421c8f290b970dcbc50ff03f2b1161784`, com CI integralmente verde na `main`. A Etapa 10 fecha fluxos de Painel/Mesa, status e finalização, histórico do cliente, decisões de orçamento pela interface, layout local por dispositivo e configuração persistida/auditada de backup automático, além de endurecer a restauração por snapshot.

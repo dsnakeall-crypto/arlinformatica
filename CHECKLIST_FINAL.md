@@ -56,3 +56,16 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [PENDENTE] Deploy real na KingHost; o workflow manual de release está preparado, porém não foi executado no GitHub Actions nesta branch.
 - [PENDENTE] Preferência Aparência e Layout por dispositivo ainda requer validação/ajuste funcional completo.
 - [PENDENTE] Recuperação pública de senha por e-mail é opcional e não foi implementada; o reset administrativo Master permanece funcional.
+
+## Auditoria da Etapa 10
+- [OK] Painel operacional sem faturamento, com indicadores de OS, ações rápidas, dados reais, busca, filtro e paginação.
+- [OK] Mesa de Chamados com OS abertas agrupadas pelos status operacionais reais.
+- [OK] Seletor de status na OS; escolher Concluído encaminha obrigatoriamente à finalização.
+- [OK] Visualização do cliente com dados atuais e histórico decrescente, valor, OS e PDF final quando emitido.
+- [OK] Orçamento usa validade configurada e permite marcar enviado, aprovar/copiar itens ou recusar pela interface.
+- [OK] Preferência Automático/Web-PC/Mobile-Tablet persistida localmente por dispositivo e aplicada ao shell.
+- [OK] Backup automático persistido no banco, configurável somente pelo Master, auditado e respeitado pelo comando/scheduler.
+- [OK] Zip Slip cobre barras invertidas, segmentos `..`, absolutos, drive letter, byte nulo, PHP e `.env`; restauração usa staging e semântica de snapshot apenas no domínio privado gerenciado.
+- [PENDENTE] Homologação Web Push em Android/iPhone físico e deploy real na KingHost dependem de ambiente externo.
+- [PENDENTE] Recuperação pública por e-mail permanece opcional enquanto SMTP não estiver definido.
+- [PENDENTE] Comparação visual final e impressão física: as imagens do prompt não estão disponíveis como arquivos no ambiente para captura automatizada lado a lado, e a instalação foi bloqueada pelo proxy externo.

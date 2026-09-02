@@ -20,14 +20,19 @@ class ServiceOrderController extends Controller
     public function index(Request $r, PostSaleService $postSales): JsonResponse
     {
         $postSales->catchUp(true);
-        $q = ServiceOrder::query()->with('client:id,name,phone,city,state')->latest('received_at');
+        $q = ServiceOrder::query()->with('client:id,name,phone,street,number,district,city,state')->latest('received_at');
         if ($status = $r->query('status')) {
             $q->where('status', $status);
         } if ($search = trim((string) $r->query('q'))) {
-            $q->where(fn ($x) => $x->where('number', 'like', "%$search%")->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%$search%")));
+            $q->where(fn ($x) => $x->where('number', 'like', "%$search%")->orWhere('reported_problem', 'like', "%$search%")->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%$search%")->orWhere('phone', 'like', "%$search%")->orWhere('street', 'like', "%$search%")));
         }
 
-        return response()->json($q->paginate(20));
+        $summary = [
+            'open' => ServiceOrder::whereNotIn('status', ['completed', 'interrupted'])->count(),
+            'completed_week' => ServiceOrder::where('status', 'completed')->where('completed_at', '>=', now()->startOfWeek())->count(),
+        ];
+
+        return response()->json([...$q->paginate(20)->toArray(), 'summary' => $summary]);
     }
 
     public function store(Request $r, OrderNumber $numbers, NotificationService $notifications): JsonResponse

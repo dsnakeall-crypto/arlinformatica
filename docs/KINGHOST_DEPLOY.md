@@ -92,3 +92,7 @@ Nunca envie a chave privada ao frontend/API/Git. Confirme `/manifest.webmanifest
 5. Teste login, banco, migrations, escrita privada, fotos, PDFs, backup, heartbeat, HTTPS, PWA e Push no Diagnóstico.
 
 Se falhar, preserve logs e o backup de segurança, volte o código ao release/commit anterior e reverta migration somente quando ela tiver um `down()` comprovadamente seguro. Para perda/corrupção de dados, valide o manifesto antes de restaurar pela interface; a restauração cria outro backup de segurança. Nunca apague o banco atual antes de possuir cópia verificada.
+
+## Configuração automática persistida
+
+As variáveis `BACKUP_*` são apenas defaults de instalação. Depois do primeiro acesso, o Master configura ativação, frequência e retenção em **Configurações > Backup e Restauração**; os valores ficam na tabela `settings`, são auditados e lidos por `schedule:run`. A interface nunca altera `.env` e continua compatível com cron de hospedagem compartilhada.

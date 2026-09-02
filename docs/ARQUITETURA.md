@@ -40,3 +40,9 @@ O Playwright usa SQLite descartável, migrations e seed E2E próprios, inicia o 
 O upload apenas valida e cadastra; a restauração exige a frase forte, cria antes um backup de segurança protegido, revalida o arquivo, restaura o banco em transação e só então os arquivos. Entradas absolutas, `..`, drive letter, byte nulo e PHP são recusados. As rotas de criação, download, remoção, restauração e teste Push são exclusivas de Master.
 
 O scheduler atualiza um heartbeat persistente a cada minuto e executa `backup:run` na frequência configurada, sem worker residente. A retenção remove somente backups automáticos prontos e desprotegidos. `DiagnosticService` testa consulta ao banco, latência, migrations, escrita/limpeza de arquivo temporário, espaço, PWA, HTTPS, fila, Push, backup e heartbeat sem retornar host, usuário, senha ou chave privada.
+
+## Etapa 10 — fechamento funcional
+
+A preferência de experiência (`automatic`, `desktop` ou `mobile`) é local ao navegador/dispositivo e não integra snapshots empresariais. O painel e a Mesa de Chamados consomem a listagem paginada real de OS. A configuração de backup automático passou do `.env` para `settings`, com auditoria; o cron continua sem worker permanente e lê essa preferência persistida a cada execução do scheduler.
+
+A restauração privada trata o ZIP como snapshot do domínio gerenciado: valida todas as entradas, extrai em staging e remove somente arquivos gerenciados posteriores ausentes no snapshot. Backups, staging de recuperação, `storage/framework`, logs, `.env`, PHP e arquivos fora do domínio gerenciado permanecem intocados.

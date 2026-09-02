@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/storage/photos', [StorageController::class, 'purge']);
         Route::delete('/photos/{photo}', [StorageController::class, 'destroy']);
         Route::get('/backups', [BackupController::class, 'index']);
+        Route::put('/backups/automatic', [BackupController::class, 'updateAutomatic']);
         Route::post('/backups', [BackupController::class, 'store'])->middleware('throttle:2,10');
         Route::post('/backups/upload', [BackupController::class, 'upload'])->middleware('throttle:2,10');
         Route::get('/backups/{backup}/download', [BackupController::class, 'download']);
@@ -72,6 +73,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/settings/logo', [SettingsController::class, 'logo']);
     });
     Route::get('/settings/logo/{variant}', [SettingsController::class, 'logoFile']);
+    Route::get('/operational-settings', [SettingsController::class, 'operational']);
     Route::get('/orders/{order}/term', [DocumentController::class, 'term']);
     Route::get('/orders/{order}/budgets', [BudgetController::class, 'index']);
     Route::post('/orders/{order}/budgets', [BudgetController::class, 'store']);

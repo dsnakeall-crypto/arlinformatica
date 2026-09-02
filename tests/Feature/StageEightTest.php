@@ -11,6 +11,8 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\DataProvider;
+use ReflectionMethod;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -95,6 +97,27 @@ class StageEightTest extends TestCase
         $this->assertDatabaseHas('backups', ['id' => $protected->id]);
         $this->artisan('scheduler:heartbeat')->assertSuccessful();
         $this->assertDatabaseHas('settings', ['key' => 'scheduler_heartbeat_at']);
+    }
+
+    public function test_master_can_persist_automatic_backup_configuration_with_audit(): void
+    {
+        $master = $this->user('Master', 'master');
+        $this->actingAs($master)->putJson('/api/backups/automatic', ['enabled' => true, 'frequency' => 'weekly', 'retention' => 12])
+            ->assertOk()->assertJson(['enabled' => true, 'frequency' => 'weekly', 'retention' => 12]);
+        $this->assertDatabaseHas('settings', ['key' => 'backup_frequency', 'value' => 'weekly']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'backup.automatic_settings_updated']);
+    }
+
+    #[DataProvider('unsafeBackupPaths')]
+    public function test_every_unsafe_zip_path_shape_is_rejected(string $path): void
+    {
+        $method = new ReflectionMethod(BackupService::class, 'safeEntry');
+        $this->assertFalse($method->invoke(app(BackupService::class), $path), "Path should be unsafe: $path");
+    }
+
+    public static function unsafeBackupPaths(): array
+    {
+        return [['..'], ['a/..'], ['../arquivo'], ['a/../arquivo'], ['..\\arquivo'], ['a\\..\\arquivo'], ['/absoluto'], ['C:\\arquivo'], ["arquivo\0oculto"], ['arquivo.php'], ['storage/.env']];
     }
 
     public function test_diagnostics_do_not_expose_secrets_and_push_failure_does_not_block_notification(): void

@@ -161,13 +161,31 @@ class BackupService
 
     public function applyRetention(): int
     {
-        $eligible = Backup::where('kind', 'automatic')->where('protected', false)->where('status', 'ready')->latest()->get()->slice(max(1, config('backup.retention')));
+        $eligible = Backup::where('kind', 'automatic')->where('protected', false)->where('status', 'ready')->latest()->get()->slice($this->automaticSettings()['retention']);
         foreach ($eligible as $backup) {
             Storage::disk(config('backup.disk'))->delete($backup->path);
             $backup->delete();
         }
 
         return $eligible->count();
+    }
+
+    public function automaticSettings(): array
+    {
+        $values = DB::table('settings')->whereIn('key', ['backup_automatic', 'backup_frequency', 'backup_retention'])->pluck('value', 'key');
+
+        return [
+            'enabled' => filter_var($values['backup_automatic'] ?? config('backup.automatic'), FILTER_VALIDATE_BOOL),
+            'frequency' => in_array($values['backup_frequency'] ?? null, ['daily', 'weekly', 'monthly'], true) ? $values['backup_frequency'] : config('backup.frequency'),
+            'retention' => max(1, (int) ($values['backup_retention'] ?? config('backup.retention'))),
+        ];
+    }
+
+    public function saveAutomaticSettings(array $settings): void
+    {
+        foreach (['backup_automatic' => $settings['enabled'] ? '1' : '0', 'backup_frequency' => $settings['frequency'], 'backup_retention' => (string) $settings['retention']] as $key => $value) {
+            DB::table('settings')->updateOrInsert(['key' => $key], ['value' => $value, 'created_at' => now(), 'updated_at' => now()]);
+        }
     }
 
     private function copyPrivateStorage(string $work, array &$checksums): void
@@ -201,6 +219,9 @@ class BackupService
     private function restoreStorage(ZipArchive $zip): void
     {
         $root = Storage::disk('local')->path('');
+        $staging = storage_path('app/restore-staging/'.Str::uuid());
+        File::ensureDirectoryExists($staging);
+        $snapshotFiles = [];
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $name = $zip->getNameIndex($i);
             if (! str_starts_with($name, 'storage/') || str_ends_with($name, '/')) {
@@ -208,15 +229,54 @@ class BackupService
             }
             $relative = substr($name, 8);
             throw_unless($this->safeEntry($relative) && ! preg_match('/(^|\/)\.env$|\.php$/i', $relative), RuntimeException::class, 'Arquivo privado inseguro.');
-            $target = "$root/$relative";
+            $target = "$staging/$relative";
             File::ensureDirectoryExists(dirname($target));
             File::put($target, $zip->getFromIndex($i));
+            $snapshotFiles[] = $relative;
+        }
+        try {
+            // The ZIP is a snapshot of the managed private domain, not an additive patch.
+            // Framework state, logs, backups and temporary recovery data are deliberately excluded.
+            foreach (File::allFiles($root) as $file) {
+                $relative = str_replace('\\', '/', $file->getRelativePathname());
+                if ($this->managedPrivateFile($relative) && ! in_array($relative, $snapshotFiles, true)) {
+                    File::delete($file->getPathname());
+                }
+            }
+            foreach (File::allFiles($staging) as $file) {
+                $relative = str_replace('\\', '/', $file->getRelativePathname());
+                $target = "$root/$relative";
+                File::ensureDirectoryExists(dirname($target));
+                File::copy($file->getPathname(), $target);
+            }
+        } finally {
+            File::deleteDirectory($staging);
         }
     }
 
     private function safeEntry(string $name): bool
     {
-        return $name !== '' && ! str_contains($name, "\0") && ! str_contains(str_replace('\\', '/', $name), '../') && ! str_starts_with($name, '/') && ! preg_match('/^[A-Za-z]:/', $name);
+        $normalized = str_replace('\\', '/', $name);
+        $segments = explode('/', $normalized);
+
+        return $normalized !== ''
+            && ! str_contains($normalized, "\0")
+            && ! str_starts_with($normalized, '/')
+            && ! preg_match('/^[A-Za-z]:/', $normalized)
+            && ! in_array('..', $segments, true)
+            && ! preg_match('/(^|\/)\.env($|\/)|\.php$/i', $normalized);
+    }
+
+    private function managedPrivateFile(string $relative): bool
+    {
+        $relative = str_replace('\\', '/', $relative);
+
+        return $this->safeEntry($relative)
+            && ! str_starts_with($relative, config('backup.directory').'/')
+            && ! str_starts_with($relative, 'backup-work/')
+            && ! str_starts_with($relative, 'restore-staging/')
+            && ! str_starts_with($relative, 'framework/')
+            && ! str_starts_with($relative, 'logs/');
     }
 
     private function logicalTableName(string $table): string

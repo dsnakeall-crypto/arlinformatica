@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
+    public function operational(CompanySettings $settings): JsonResponse
+    {
+        $all = $settings->all();
+
+        return response()->json(['budget_validity_days' => (int) $all['budget_validity_days']]);
+    }
+
     public function show(CompanySettings $settings): JsonResponse
     {
         return response()->json($settings->all());
