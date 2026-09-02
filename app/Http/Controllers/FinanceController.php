@@ -6,6 +6,7 @@ use App\Models\ServiceOrder;
 use App\Services\CompanySettings;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
+use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -54,7 +55,8 @@ class FinanceController extends Controller
         $rows = $this->effective()->whereBetween('occurred_at', [$monthStart->utc(), $end->utc()])->get();
         $daily = $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))->map(fn ($day) => $day->sum('effective_cents'))->sortKeys();
         $today = (int) ($daily[$start->format('Y-m-d')] ?? 0);
-        $yesterday = (int) ($daily[$start->subDay()->format('Y-m-d')] ?? 0);
+        $yesterdayKey = DateTimeImmutable::createFromInterface($start)->modify('-1 day')->format('Y-m-d');
+        $yesterday = (int) ($daily[$yesterdayKey] ?? 0);
         $todayOrders = $rows->filter(fn ($row) => $row->origin === 'service_order' && CarbonImmutable::parse($row->occurred_at, 'UTC')->betweenIncluded($start->utc(), $end->utc()))->count();
         $best = $daily->sortDesc();
 
