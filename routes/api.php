@@ -45,7 +45,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/backups', [BackupController::class, 'store'])->middleware('throttle:2,10');
         Route::post('/backups/upload', [BackupController::class, 'upload'])->middleware('throttle:2,10');
         Route::get('/backups/{backup}/download', [BackupController::class, 'download']);
-        Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware('throttle:1,10');
+        Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware('throttle:2,10');
         Route::delete('/backups/{backup}', [BackupController::class, 'destroy']);
         Route::get('/diagnostics', [DiagnosticController::class, 'show']);
         Route::post('/diagnostics/push-test', [DiagnosticController::class, 'testPush'])->middleware('throttle:3,10');
