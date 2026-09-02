@@ -50,7 +50,7 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] CI preparada para PHP, lint, testes, TypeScript e build.
 - [OK] Telas operacionais de clientes, Nova OS, listagem e visualização de OS usam backend real, com estados de carregamento, erro, vazio e validação.
 - [OK] Etapa 7 administrativa ligada ao backend real, com telas responsivas e testes de segurança, históricos, catálogos, checklist e fotos.
-- [PENDENTE] Playwright configurado com SQLite isolado, seed próprio, servidor local, fluxo operacional principal, autorização por perfis e viewport mobile; a instalação/lockfile e a execução real ficaram bloqueadas por HTTP 403 do npm neste ambiente e não são marcadas como homologadas.
+- [OK] Playwright E2E versionado no `package.json`/`package-lock.json`, com SQLite isolado, seed próprio, servidor Laravel local, fluxo operacional principal, autorização por perfis, viewport mobile e `retries: 0`; execução real validada pelo GitHub Actions.
 - [PENDENTE] Validação física do Web Push em Android/iPhone com HTTPS e VAPID reais; roteiro em `docs/HOMOLOGACAO_WEB_PUSH.md`.
 - [PENDENTE] Comparação visual final: as oito referências foram fornecidas nesta tarefa, mas a captura/comparação automatizada completa e a homologação de impressão física ainda precisam ser concluídas.
 - [PENDENTE] Deploy real na KingHost; o workflow manual de release está preparado, porém não foi executado no GitHub Actions nesta branch.

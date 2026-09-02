@@ -222,7 +222,7 @@ Merge commit da Etapa 4 na `main`: `3d15295240692f7bbfbb40c512468385c704f81f`.
 
 ## Estado atual do sistema
 
-A `main` está estável e com CI verde até a Etapa 8. A PR #9 foi mergeada pelo commit `c1704153861d31c056e7cc8fa663d876c210285b`, e a CI da `main` após o merge passou integralmente. A Etapa 9 está implementada na branch `codex/etapa-9-homologacao-e2e-release` e aguarda PR e merge.
+A `main` está estável e com CI verde até a Etapa 8. A PR #9 foi mergeada pelo commit `c1704153861d31c056e7cc8fa663d876c210285b`, e a CI da `main` após o merge passou integralmente. A Etapa 9 está na PR #10, branch `codex/adicionar-homologacao-final-e-e2e`; backend, frontend e E2E já passaram juntos no GitHub Actions e a PR aguarda validação final das últimas correções e merge.
 
 Já existem de forma funcional ou estrutural:
 
@@ -295,14 +295,14 @@ Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implem
 
 ## Etapa 9 — Homologação, E2E e release
 
-**IMPLEMENTADA NA BRANCH / AGUARDANDO PR E MERGE.** A branch `codex/etapa-9-homologacao-e2e-release` adiciona ambiente Playwright isolado, cobertura de fluxo principal/perfis/mobile, job E2E, workflow manual de release e documentação de homologação.
+**IMPLEMENTADA NA PR #10 / AGUARDANDO MERGE.** A branch `codex/adicionar-homologacao-final-e-e2e` adiciona ambiente Playwright isolado, cobertura de fluxo principal/perfis/mobile, job E2E, workflow manual de release e documentação de homologação. O Playwright está versionado no lockfile, usa `retries: 0` e já teve execução real bem-sucedida no GitHub Actions.
 
 Pendências externas mantidas honestamente:
 
 - validar Web Push em dispositivos reais suportados;
 - recuperação pública opcional por e-mail;
 - comparação visual final com as referências;
-- testes E2E Playwright e testes funcionais finais do Projeto Mestre.
+- testes funcionais manuais finais do Projeto Mestre.
 
 ## Regra de trabalho daqui para frente
 
@@ -321,4 +321,4 @@ Se o Codex Cloud bloquear Packagist/npm por HTTP 403, não repetir instalações
 
 ## Prompt pronto para continuar em um NOVO CHAT
 
-Use a `main` real do GitHub como fonte. A Etapa 8 foi concluída e mergeada pela PR #9 no commit `c1704153861d31c056e7cc8fa663d876c210285b`, com CI verde. A Etapa 9 está implementada na branch `codex/etapa-9-homologacao-e2e-release` e aguarda PR/CI/merge. Leia todos os documentos obrigatórios e verifique o estado real antes de continuar.
+Use a `main` real do GitHub como fonte. A Etapa 8 foi concluída e mergeada pela PR #9 no commit `c1704153861d31c056e7cc8fa663d876c210285b`, com CI verde. A Etapa 9 está na PR #10, branch `codex/adicionar-homologacao-final-e-e2e`, com Playwright E2E versionado e execução real verde no GitHub Actions; a PR ainda não foi mergeada. Leia todos os documentos obrigatórios e verifique o estado real antes de continuar.
