@@ -3,7 +3,7 @@ on: { workflow_dispatch: {} }
 permissions: { contents: read }
 jobs:
   package:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -16,6 +16,17 @@ jobs:
       - run: php artisan test
       - run: npm run typecheck
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: release-playwright-report-${{ github.sha }}
+          path: |
+            playwright-report/
+            storage/logs/laravel.log
+          if-no-files-found: warn
+          retention-days: 7
       - name: Montar pacote sem dados privados
         shell: bash
         run: |
