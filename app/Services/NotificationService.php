@@ -19,7 +19,9 @@ class NotificationService
                 'title' => $title, 'description' => $description, 'url' => $url, 'data' => json_encode($data),
                 'active' => true, 'created_at' => now(), 'updated_at' => now(),
             ]);
-            if ($inserted) $recipients[] = $user->id;
+            if ($inserted) {
+                $recipients[] = $user->id;
+            }
         });
         $this->push->sendToUsers($recipients, ['title' => $title, 'body' => $description, 'url' => $url, 'type' => $type, 'id' => $data['service_order_id'] ?? $data['client_id'] ?? null]);
     }
