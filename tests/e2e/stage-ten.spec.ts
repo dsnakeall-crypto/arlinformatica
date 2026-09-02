@@ -5,7 +5,7 @@ test('painel e mesa expõem o fluxo operacional real', async ({ page }) => {
   await login(page);
   await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
   await expect(page.getByText('OS abertas')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Nova OS' })).toBeVisible();
+  await expect(page.getByRole('main').getByRole('button', { name: 'Nova OS' })).toBeVisible();
   await page.locator('aside').getByRole('button', { name: 'Mesa de Chamados' }).click();
   await expect(page.getByRole('heading', { name: 'Mesa de Chamados' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Em Análise' })).toBeVisible();
