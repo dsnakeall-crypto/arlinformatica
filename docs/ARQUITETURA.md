@@ -43,6 +43,6 @@ O scheduler atualiza um heartbeat persistente a cada minuto e executa `backup:ru
 
 ## Etapa 10 — fechamento funcional
 
-A preferência de experiência (`automatic`, `desktop` ou `mobile`) é local ao navegador/dispositivo e não integra snapshots empresariais. O painel e a Mesa de Chamados consomem a listagem paginada real de OS. A configuração de backup automático passou do `.env` para `settings`, com auditoria; o cron continua sem worker permanente e lê essa preferência persistida a cada execução do scheduler.
+A preferência de experiência (`automatic`, `desktop` ou `mobile`) é local ao navegador/dispositivo e não integra snapshots empresariais. O Painel consome a listagem paginada real de OS com resumo operacional; a Mesa de Chamados usa o endpoint dedicado `/orders/desk`, sem paginação, para garantir todas as OS abertas. A configuração de backup automático passou do `.env` para `settings`, com auditoria; o cron continua sem worker permanente e lê essa preferência persistida a cada execução do scheduler.
 
 A restauração privada trata o ZIP como snapshot do domínio gerenciado: valida todas as entradas, extrai em staging e remove somente arquivos gerenciados posteriores ausentes no snapshot. Backups, staging de recuperação, `storage/framework`, logs, `.env`, PHP e arquivos fora do domínio gerenciado permanecem intocados.

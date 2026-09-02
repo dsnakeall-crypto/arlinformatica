@@ -34,7 +34,9 @@ test('layout é persistido por dispositivo e os três modos alteram o shell', as
 
 test('Funcionário vê somente operação e o backend continua sendo a autoridade', async ({ page }) => {
   await login(page, 'e2e.funcionario');
-  await expect(page.locator('.profile').getByText('Funcionário', { exact: true })).toBeVisible();
+  const me = await api(page, '/me');
+  expect(me.status).toBe(200);
+  expect(me.body.role).toBe('Funcionário');
   const nav = page.locator('aside nav');
   await expect(nav.getByRole('button', { name: 'Nova OS' })).toBeVisible();
   await expect(nav.getByRole('button', { name: 'Financeiro' })).toBeVisible();
@@ -48,7 +50,9 @@ test('Funcionário vê somente operação e o backend continua sendo a autoridad
 
 test('Administrador acessa administração permitida sem funções exclusivas do Master', async ({ page }) => {
   await login(page, 'e2e.admin');
-  await expect(page.locator('.profile').getByText('Administrador', { exact: true })).toBeVisible();
+  const me = await api(page, '/me');
+  expect(me.status).toBe(200);
+  expect(me.body.role).toBe('Administrador');
   const nav = page.locator('aside nav');
   await expect(nav.getByRole('button', { name: 'Serviços' })).toBeVisible();
   await expect(nav.getByRole('button', { name: 'Configurações' })).toBeVisible();
@@ -83,7 +87,7 @@ test('Serviços e Produtos cria e edita tipo, preço e garantia adicional', asyn
   await page.locator('aside').getByRole('button', { name: 'Serviços', exact: true }).click();
   const heading = page.getByRole('heading', { name: 'Serviços e Produtos' });
   await expect(heading).toBeVisible();
-  const card = heading.locator('..');
+  const card = page.locator('section.form-card.admin-list').filter({ has: heading });
 
   await card.getByLabel('Nome / descrição').fill('Garantia E2E');
   await card.getByLabel('Valor em R$').fill('89,90');
@@ -91,9 +95,11 @@ test('Serviços e Produtos cria e edita tipo, preço e garantia adicional', asyn
   await card.getByRole('checkbox', { name: 'Garantia adicional' }).check();
   await card.getByLabel('Duração da garantia').fill('6');
   await card.getByLabel('Unidade da garantia').selectOption('months');
+  const createResponsePromise = page.waitForResponse((response) => response.url().endsWith('/api/catalogs/services') && response.request().method() === 'POST');
   await card.getByRole('button', { name: 'Adicionar' }).click();
+  expect((await createResponsePromise).status()).toBe(201);
 
-  const row = card.locator('article').filter({ hasText: 'Garantia E2E' });
+  const row = page.locator('section.form-card.admin-list article').filter({ hasText: 'Garantia E2E' });
   await expect(row).toBeVisible();
   await expect(row).toContainText('Produto');
   await expect(row).toContainText('Garantia 6 meses');
@@ -105,7 +111,9 @@ test('Serviços e Produtos cria e edita tipo, preço e garantia adicional', asyn
   await modal.getByLabel('Valor em R$').fill('99,90');
   await modal.getByLabel('Duração da garantia').fill('2');
   await modal.getByLabel('Unidade da garantia').selectOption('years');
+  const updateResponsePromise = page.waitForResponse((response) => response.url().includes('/api/catalogs/services/') && response.request().method() === 'PATCH');
   await modal.getByRole('button', { name: 'Salvar' }).click();
+  expect((await updateResponsePromise).status()).toBe(200);
 
   await expect(row).toContainText('Serviço');
   await expect(row).toContainText('R$ 99.90');
