@@ -1,0 +1,83 @@
+name: Temporary Stage 8 Test Fix
+
+on:
+  push:
+    branches:
+      - codex/implementar-etapa-8-backup-e-web-push
+    paths:
+      - .github/workflows/fix-stage8-tests.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/implementar-etapa-8-backup-e-web-push
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip
+          coverage: none
+      - name: Apply targeted fixes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('app/Services/BackupService.php')
+          text = path.read_text()
+          old = '''            foreach ($tables as $table) {
+                $json = json_encode(DB::table($table)->orderBy($this->primaryKey($table))->get()->map(fn ($row) => (array) $row)->all(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+                File::put("$work/database/$table.json", $json);
+                $checksums["database/$table.json"] = hash('sha256', $json);
+                $counts[$table] = DB::table($table)->count();
+            }'''
+          new = '''            foreach ($tables as $table) {
+                $fileTable = Str::afterLast($table, '.');
+                $json = json_encode(DB::table($table)->orderBy($this->primaryKey($table))->get()->map(fn ($row) => (array) $row)->all(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+                File::put("$work/database/$fileTable.json", $json);
+                $checksums["database/$fileTable.json"] = hash('sha256', $json);
+                $counts[$fileTable] = DB::table($table)->count();
+            }'''
+          if old not in text:
+              raise SystemExit('create-table block not found')
+          text = text.replace(old, new, 1)
+
+          old = '''                    foreach ($tables as $table) {
+                        $content = $zip->getFromName("database/$table.json");'''
+          new = '''                    foreach ($tables as $table) {
+                        $fileTable = Str::afterLast($table, '.');
+                        $content = $zip->getFromName("database/$fileTable.json");'''
+          if old not in text:
+              raise SystemExit('restore-table block not found')
+          text = text.replace(old, new, 1)
+          path.write_text(text)
+
+          path = Path('app/Services/WebPushService.php')
+          text = path.read_text()
+          old = "if (! class_exists(WebPush::class) || ! filled(config('webpush.private_key'))) {"
+          new = "if (! class_exists(WebPush::class) || ! filled(config('webpush.subject')) || ! filled(config('webpush.public_key')) || ! filled(config('webpush.private_key'))) {"
+          if old not in text:
+              raise SystemExit('webpush configuration check not found')
+          path.write_text(text.replace(old, new, 1))
+
+          path = Path('routes/api.php')
+          text = path.read_text()
+          old = "Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware('throttle:1,10');"
+          new = "Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware('throttle:2,10');"
+          if old not in text:
+              raise SystemExit('restore throttle route not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: vendor/bin/pint app/Services/BackupService.php app/Services/WebPushService.php routes/api.php
+      - name: Commit targeted fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/Services/BackupService.php app/Services/WebPushService.php routes/api.php
+          git commit -m "fix: estabilizar backup restore e Web Push da etapa 8"
+          git push origin HEAD:codex/implementar-etapa-8-backup-e-web-push
