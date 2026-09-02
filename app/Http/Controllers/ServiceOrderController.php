@@ -32,7 +32,17 @@ class ServiceOrderController extends Controller
 
     public function store(Request $r, OrderNumber $numbers, NotificationService $notifications): JsonResponse
     {
-        $data = $r->validate(['client_id' => 'required|exists:clients,id', 'equipment_type_id' => 'required|exists:equipment_types,id', 'manufacturer_id' => 'nullable|exists:manufacturers,id', 'attendance_type' => 'required|in:bench,external', 'reported_problem' => 'required|string|max:10000', 'checklist' => 'array', 'checklist.*.label' => 'required|string|max:255', 'checklist.*.note' => 'nullable|string|max:255']);
+        $data = $r->validate(['client_id' => 'required|exists:clients,id', 'equipment_type_id' => 'required|exists:equipment_types,id', 'manufacturer_id' => 'nullable|exists:manufacturers,id', 'attendance_type' => 'required|in:bench,external', 'reported_problem' => 'required|string|max:10000', 'checklist' => 'array', 'checklist.*.template_id' => 'nullable|integer', 'checklist.*.label' => 'nullable|string|max:255', 'checklist.*.note' => 'nullable|string|max:255']);
+        $requested = collect($data['checklist'] ?? []);
+        $templates = DB::table('checklist_templates')->where('equipment_type_id', $data['equipment_type_id'])->where('active', true)
+            ->where(fn ($q) => $q->whereIn('id', $requested->pluck('template_id')->filter())->orWhereIn('label', $requested->pluck('label')->filter()))->get();
+        abort_unless($templates->count() === $requested->count(), 422, 'Uma opção do checklist não é válida para este equipamento.');
+        $data['checklist'] = collect($data['checklist'] ?? [])->map(function ($item) use ($templates) {
+            $template = $templates->first(fn ($option) => isset($item['template_id']) ? $option->id === $item['template_id'] : $option->label === ($item['label'] ?? null));
+            abort_if($template->allows_note && blank($item['note'] ?? null), 422, "Descreva a avaria em {$template->label}.");
+
+            return ['label' => $template->label, 'note' => $template->allows_note ? trim($item['note']) : null];
+        })->all();
         $order = DB::transaction(function () use ($data, $numbers, $r) {
             $client = Client::findOrFail($data['client_id']);
             $order = ServiceOrder::create([...$data, 'number' => $numbers->next(), 'status' => 'analysis', 'received_at' => now(), 'created_by' => $r->user()->id]);

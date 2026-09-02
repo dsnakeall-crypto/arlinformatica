@@ -278,9 +278,13 @@ Testes da Etapa 4 cobrem bloqueio da conclusão direta, reparo e não reparo, va
 
 A PR #6 foi concluída e mergeada na `main`. Merge commit: `195afdb13405f618c21744fe4455cbe44b4026bd`. A CI da `main` após o merge passou integralmente. Pagamento separado do status, Entrada Rápida, caixa diário, visão financeira, correções auditáveis e relatório mensal PDF fazem parte da base atual.
 
-## Etapa 6 — Pós-venda, notificações e PWA (implementada na branch, ainda não mergeada)
+## Etapa 6 — Pós-venda, notificações e PWA (concluída e mergeada)
 
-Branch: `feat/pos-venda-notificacoes-pwa`. Entrega pós-venda simplificado ligado ao backend, regras idempotentes de 5/60 dias, confirmações manuais independentes com snapshot e auditoria, WhatsApp/Maps centralizados, central interna, scheduler/catch-up, PWA, service worker e gerenciamento seguro de inscrições Web Push. O disparo Web Push criptografado no backend continua explicitamente pendente porque o ambiente bloqueou Packagist com HTTP 403; não considerar entrega push real confirmada até a dependência padrão ser instalada e validada. A Etapa 6 ainda não foi mergeada na `main`.
+A PR #7 foi mergeada na `main` pelo commit `cedcbf252b7c8b0345242cb33bdbbb704d0ad594`, e a CI da `main` após o merge passou integralmente. A entrega inclui pós-venda simplificado ligado ao backend, regras idempotentes de 5/60 dias, confirmações manuais independentes com snapshot e auditoria, WhatsApp/Maps centralizados, central interna, scheduler/catch-up, PWA, service worker e gerenciamento seguro de inscrições Web Push. O disparo Web Push criptografado no backend continua explicitamente pendente.
+
+## Etapa 7 — Administração, segurança, cadastros e fotos
+
+**IMPLEMENTADA NA BRANCH / AGUARDANDO PR E MERGE.** A branch `codex/etapa-7-administracao-seguranca-cadastros` acrescenta administração exclusiva de usuários pelo Master, autorização backend das mutações administrativas, edição auditada de clientes, CRUD com inativação de Serviços/equipamentos/fabricantes/checklist, observação obrigatória de “Outro”, métricas reais e limpeza segura de fotos. A recuperação pública por e-mail não foi criada porque exigiria configuração externa; o reset administrativo pelo Master é funcional. Não afirmar que esta etapa está mergeada antes da PR e CI.
 
 ## Pendências principais para as próximas etapas
 
@@ -288,13 +292,9 @@ Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implem
 
 Entre as principais pendências reais após a Etapa 6:
 
-- telas administrativas completas de Serviços, fabricantes, equipamentos e templates de checklist;
-- edição de cliente pela interface;
-- observação livre/`Outro` no checklist quando previsto;
 - entrega Web Push criptografada no backend e validação em dispositivos reais;
-- backup/restore executável, limpeza segura de fotos, armazenamento e diagnóstico;
-- administração completa de usuários/permissões;
-- policies completas e recuperação de senha;
+- backup/restore executável e diagnóstico;
+- recuperação pública opcional por e-mail;
 - comparação visual final com as referências;
 - testes E2E Playwright e testes funcionais finais do Projeto Mestre.
 
@@ -315,4 +315,4 @@ Se o Codex Cloud bloquear Packagist/npm por HTTP 403, não repetir instalações
 
 ## Prompt pronto para continuar em um NOVO CHAT
 
-Use a `main` real do GitHub como fonte. A Etapa 5 foi mergeada pela PR #6 no commit `195afdb13405f618c21744fe4455cbe44b4026bd`, com CI verde. A Etapa 6 está na branch `feat/pos-venda-notificacoes-pwa`, ainda não mergeada. Leia todos os documentos obrigatórios e verifique PR/CI antes de continuar; não implemente Backup/Restore como parte da Etapa 6.
+Use a `main` real do GitHub como fonte. A Etapa 6 foi mergeada pela PR #7 no commit `cedcbf252b7c8b0345242cb33bdbbb704d0ad594`, com CI verde. A Etapa 7 está implementada em branch e aguarda PR/CI/merge. Leia todos os documentos obrigatórios e verifique o estado real no GitHub antes de continuar.

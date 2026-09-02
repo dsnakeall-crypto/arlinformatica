@@ -40,6 +40,11 @@ class ServiceOrder extends Model
         return $this->hasMany(ServiceOrderPhoto::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(\App\Models\GeneratedDocument::class);
+    }
+
     public function snapshot()
     {
         return $this->hasOne(ServiceOrderSnapshot::class);
