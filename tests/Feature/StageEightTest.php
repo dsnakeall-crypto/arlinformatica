@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Backup;
 use App\Models\Client;
 use App\Models\Role;
 use App\Models\User;
@@ -11,7 +10,6 @@ use App\Services\NotificationService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use ZipArchive;
