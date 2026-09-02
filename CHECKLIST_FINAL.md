@@ -36,7 +36,7 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 ## Relacionamento, plataforma e administração
 - [OK] Pós-venda real e simplificado com três confirmações independentes, snapshots, auditoria, lembrete idempotente após 5 dias e substituição do ciclo após 60 dias sem apagar a OS.
 - [OK] Central interna com sino, contador, leitura individual/global e eventos de cliente, OS e pós-venda; PWA instalável, service worker, inscrições Web Push por dispositivo e catch-up com throttle.
-- [PENDENTE] Ativação do disparo Web Push criptografado: o serviço backend, eventos, payload, falhas, remoção de inscrição inválida e teste individual estão implementados, mas `minishlink/web-push` ainda precisa ser adicionado a `composer.json`/lock em ambiente com Packagist (HTTP 403 neste ambiente). Não se afirma entrega em dispositivo real.
+- [OK] Disparo Web Push criptografado pelo backend com `minishlink/web-push` v11, VAPID por configuração segura, integração aos eventos, payload mínimo, tratamento de falhas/inscrições expiradas e teste individual; `composer.json`/`composer.lock` foram validados pela CI. Não se afirma entrega em dispositivo físico sem teste real.
 - [OK] Métricas reais de fotos/arquivos privados, prévia e limpeza de fotos exclusiva do Master com confirmação forte e auditoria, sem excluir a OS.
 - [OK] Backup/restore ZIP executável com dados e arquivos privados, manifesto, checksums, validação, confirmação forte, backup de segurança, autorização Master, download privado, proteção Zip Slip e auditoria.
 - [OK] Central de Configurações em cards com Dados da Empresa, Identidade Visual, Documentos e Layout básico; escrita restrita a Master/Administrador.
@@ -50,5 +50,5 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] CI preparada para PHP, lint, testes, TypeScript e build.
 - [OK] Telas operacionais de clientes, Nova OS, listagem e visualização de OS usam backend real, com estados de carregamento, erro, vazio e validação.
 - [OK] Etapa 7 administrativa ligada ao backend real, com telas responsivas e testes de segurança, históricos, catálogos, checklist e fotos.
-- [PENDENTE] Dependência/validação real do Web Push criptografado e E2E Playwright; backup/restore e diagnóstico estão funcionais e cobertos por testes automatizados.
+- [PENDENTE] Validação do Web Push em dispositivos reais e E2E Playwright; backend Web Push, backup/restore e diagnóstico estão funcionais e cobertos por CI/testes automatizados.
 - [PENDENTE] Comparação final em navegador com todas as referências e testes funcionais completos do Projeto Mestre.
