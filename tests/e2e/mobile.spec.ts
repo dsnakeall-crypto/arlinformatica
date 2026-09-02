@@ -56,6 +56,18 @@ test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem m
 
   const actions = page.locator('[aria-label="Atalhos do atendimento externo"]');
   await expect(actions).toBeVisible();
+  const actionBoxes = await actions.locator(':scope > a, :scope > label, :scope > button').evaluateAll((elements) => elements.map((element) => {
+    const rect = element.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+  }));
+  for (let i = 0; i < actionBoxes.length; i += 1) {
+    for (let j = i + 1; j < actionBoxes.length; j += 1) {
+      const a = actionBoxes[i];
+      const b = actionBoxes[j];
+      const overlaps = Math.min(a.right, b.right) > Math.max(a.left, b.left) && Math.min(a.bottom, b.bottom) > Math.max(a.top, b.top);
+      expect(overlaps).toBeFalsy();
+    }
+  }
   const whatsapp = actions.getByRole('link', { name: 'WhatsApp' });
   const maps = actions.getByRole('link', { name: 'Maps' });
   await expect(whatsapp).toHaveAttribute('target', '_blank');
