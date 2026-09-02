@@ -11,7 +11,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: 22, cache: npm}
       - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer audit --locked --no-dev
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
       - run: vendor/bin/pint --test
       - run: php artisan test
       - run: npm run typecheck
@@ -27,14 +29,19 @@ jobs:
             storage/logs/laravel.log
           if-no-files-found: warn
           retention-days: 7
+      - name: Preparar dependências PHP de produção
+        run: |
+          composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+          composer check-platform-reqs --no-dev
       - name: Montar pacote sem dados privados
         shell: bash
         run: |
           set -euo pipefail
           RELEASE="arl-informatica-${GITHUB_SHA}"
           mkdir -p "release/${RELEASE}"
-          rsync -a ./ "release/${RELEASE}/" --exclude='.git' --exclude='.github' --exclude='.env' --exclude='node_modules' --exclude='database/*.sqlite' --exclude='storage/app/private' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' --exclude='tests' --exclude='release'
+          rsync -a ./ "release/${RELEASE}/" --exclude='.git' --exclude='.github' --exclude='.env' --exclude='node_modules' --exclude='database/*.sqlite' --exclude='storage/app/private' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' --exclude='tests' --exclude='playwright-report' --exclude='test-results' --exclude='release'
           printf 'Projeto: ARL Informática\nCommit: %s\nData UTC: %s\nVersão: %s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "$GITHUB_REF_NAME" > "release/${RELEASE}/RELEASE_MANIFEST.txt"
           tar -C release -czf "release/${RELEASE}.tar.gz" "${RELEASE}"
+          sha256sum "release/${RELEASE}.tar.gz" > "release/${RELEASE}.tar.gz.sha256"
       - uses: actions/upload-artifact@v4
-        with: {name: 'arl-informatica-${{ github.sha }}', path: 'release/*.tar.gz', if-no-files-found: error, retention-days: 14}
+        with: {name: 'arl-informatica-${{ github.sha }}', path: 'release/*.tar.gz*', if-no-files-found: error, retention-days: 14}
