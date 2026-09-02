@@ -80,7 +80,7 @@ test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem m
 
   const photo = actions.getByLabel('Foto do atendimento externo');
   await expect(photo).toHaveAttribute('capture', 'environment');
-  await actions.getByRole('button', { name: 'Status' }).click();
+  await page.locator('#external-status-action').click();
   await expect(page.locator('.status-picker select')).toBeFocused();
   await actions.getByRole('button', { name: 'Finalizar' }).click();
   const finalModal = page.locator('.modal-card').filter({ hasText: 'FINALIZAÇÃO DA OS' });
