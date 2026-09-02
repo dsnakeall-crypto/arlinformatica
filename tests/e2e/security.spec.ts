@@ -3,9 +3,16 @@ import { api, login } from './helpers';
 
 for (const [loginName, expected] of [['e2e.admin', 403], ['e2e.funcionario', 403]] as const) {
   test(`${loginName} não administra usuários nem restaura backup`, async ({ page }) => {
+    await login(page);
+    const backup = await api(page, '/backups', 'POST');
+    expect(backup.status).toBe(201);
+    const backupId = backup.body?.id;
+    expect(backupId).toBeTruthy();
+
+    await page.context().clearCookies();
     await login(page, loginName);
     expect((await api(page, '/users')).status).toBe(expected);
-    expect((await api(page, '/backups/999/restore', 'POST', { confirmation: 'RESTAURAR BACKUP' })).status).toBe(expected);
+    expect((await api(page, `/backups/${backupId}/restore`, 'POST', { confirmation: 'RESTAURAR BACKUP' })).status).toBe(expected);
     expect((await api(page, '/orders')).status).toBe(200);
   });
 }
