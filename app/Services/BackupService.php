@@ -110,28 +110,45 @@ class BackupService
             try {
                 DB::transaction(function () use ($zip) {
                     $tables = array_values(array_diff(Schema::getTableListing(), self::EXCLUDED_TABLES));
-                    foreach (array_reverse($tables) as $table) DB::table($table)->delete();
+                    foreach (array_reverse($tables) as $table) {
+                        DB::table($table)->delete();
+                    }
                     foreach ($tables as $table) {
                         $content = $zip->getFromName("database/$table.json");
-                        if ($content === false) continue;
-                        foreach (array_chunk(json_decode($content, true, 512, JSON_THROW_ON_ERROR), 250) as $rows) if ($rows) DB::table($table)->insert($rows);
+                        if ($content === false) {
+                            continue;
+                        }
+                        foreach (array_chunk(json_decode($content, true, 512, JSON_THROW_ON_ERROR), 250) as $rows) {
+                            if ($rows) {
+                                DB::table($table)->insert($rows);
+                            }
+                        }
                     }
                 });
-            } finally { Schema::enableForeignKeyConstraints(); }
+            } finally {
+                Schema::enableForeignKeyConstraints();
+            }
             $this->restoreStorage($zip);
             $source->update(['status' => 'restored']);
             $this->audit($user, 'backup.restore_completed', $source->id, ['safety_backup_id' => $safety->id]);
+
             return $safety;
         } catch (Throwable $e) {
             $this->audit($user, 'backup.restore_failed', $source->id, ['safety_backup_id' => $safety->id, 'error' => Str::limit($e->getMessage(), 500)]);
             throw $e;
-        } finally { $zip->close(); }
+        } finally {
+            $zip->close();
+        }
     }
 
     public function applyRetention(): int
     {
         $eligible = Backup::where('kind', 'automatic')->where('protected', false)->where('status', 'ready')->latest()->get()->slice(max(1, config('backup.retention')));
-        foreach ($eligible as $backup) { Storage::disk(config('backup.disk'))->delete($backup->path); $backup->delete(); }
+        foreach ($eligible as $backup) {
+            Storage::disk(config('backup.disk'))->delete($backup->path);
+            $backup->delete();
+        }
+
         return $eligible->count();
     }
 
@@ -140,26 +157,58 @@ class BackupService
         $root = Storage::disk('local')->path('');
         foreach (File::allFiles($root) as $file) {
             $relative = str_replace('\\', '/', $file->getRelativePathname());
-            if (str_starts_with($relative, config('backup.directory').'/') || str_starts_with($relative, 'backup-work/') || preg_match('/(^|\/)\.env$|\.php$/i', $relative)) continue;
-            $target = "$work/storage/$relative"; File::ensureDirectoryExists(dirname($target)); File::copy($file->getPathname(), $target);
+            if (str_starts_with($relative, config('backup.directory').'/') || str_starts_with($relative, 'backup-work/') || preg_match('/(^|\/)\.env$|\.php$/i', $relative)) {
+                continue;
+            }
+            $target = "$work/storage/$relative";
+            File::ensureDirectoryExists(dirname($target));
+            File::copy($file->getPathname(), $target);
             $checksums["storage/$relative"] = hash_file('sha256', $target);
         }
     }
 
     private function zipDirectory(string $work, string $archive, string $skip): void
     {
-        $zip = new ZipArchive; throw_unless($zip->open($archive, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true, RuntimeException::class, 'Não foi possível criar o ZIP.');
-        foreach (File::allFiles($work) as $file) { $relative = str_replace('\\', '/', $file->getRelativePathname()); if ($relative !== $skip) $zip->addFile($file->getPathname(), $relative); }
+        $zip = new ZipArchive;
+        throw_unless($zip->open($archive, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true, RuntimeException::class, 'Não foi possível criar o ZIP.');
+        foreach (File::allFiles($work) as $file) {
+            $relative = str_replace('\\', '/', $file->getRelativePathname());
+            if ($relative !== $skip) {
+                $zip->addFile($file->getPathname(), $relative);
+            }
+        }
         throw_unless($zip->close(), RuntimeException::class, 'Não foi possível finalizar o ZIP.');
     }
 
     private function restoreStorage(ZipArchive $zip): void
     {
         $root = Storage::disk('local')->path('');
-        for ($i = 0; $i < $zip->numFiles; $i++) { $name = $zip->getNameIndex($i); if (! str_starts_with($name, 'storage/') || str_ends_with($name, '/')) continue; $relative = substr($name, 8); throw_unless($this->safeEntry($relative) && ! preg_match('/(^|\/)\.env$|\.php$/i', $relative), RuntimeException::class, 'Arquivo privado inseguro.'); $target = "$root/$relative"; File::ensureDirectoryExists(dirname($target)); File::put($target, $zip->getFromIndex($i)); }
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if (! str_starts_with($name, 'storage/') || str_ends_with($name, '/')) {
+                continue;
+            }
+            $relative = substr($name, 8);
+            throw_unless($this->safeEntry($relative) && ! preg_match('/(^|\/)\.env$|\.php$/i', $relative), RuntimeException::class, 'Arquivo privado inseguro.');
+            $target = "$root/$relative";
+            File::ensureDirectoryExists(dirname($target));
+            File::put($target, $zip->getFromIndex($i));
+        }
     }
 
-    private function safeEntry(string $name): bool { return $name !== '' && ! str_contains($name, "\0") && ! str_contains(str_replace('\\', '/', $name), '../') && ! str_starts_with($name, '/') && ! preg_match('/^[A-Za-z]:/', $name); }
-    private function primaryKey(string $table): string { return Schema::hasColumn($table, 'id') ? 'id' : (Schema::hasColumn($table, 'key') ? 'key' : Schema::getColumnListing($table)[0]); }
-    private function audit(?User $user, string $action, int $id, array $after): void { $userId = $user && DB::table('users')->where('id', $user->id)->exists() ? $user->id : null; DB::table('audit_logs')->insert(['user_id' => $userId, 'action' => $action, 'subject_type' => 'backup', 'subject_id' => $id, 'after' => json_encode($after), 'created_at' => now()]); }
+    private function safeEntry(string $name): bool
+    {
+        return $name !== '' && ! str_contains($name, "\0") && ! str_contains(str_replace('\\', '/', $name), '../') && ! str_starts_with($name, '/') && ! preg_match('/^[A-Za-z]:/', $name);
+    }
+
+    private function primaryKey(string $table): string
+    {
+        return Schema::hasColumn($table, 'id') ? 'id' : (Schema::hasColumn($table, 'key') ? 'key' : Schema::getColumnListing($table)[0]);
+    }
+
+    private function audit(?User $user, string $action, int $id, array $after): void
+    {
+        $userId = $user && DB::table('users')->where('id', $user->id)->exists() ? $user->id : null;
+        DB::table('audit_logs')->insert(['user_id' => $userId, 'action' => $action, 'subject_type' => 'backup', 'subject_id' => $id, 'after' => json_encode($after), 'created_at' => now()]);
+    }
 }
