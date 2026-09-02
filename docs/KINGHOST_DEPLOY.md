@@ -11,17 +11,29 @@ Este roteiro serve para KingHost, outro *shared hosting* ou VPS. Limites de disc
 
 ## 2. Gerar e enviar a release
 
-O GitHub é a fonte oficial. O workflow manual **Preparar release** gera um artefato com manifesto, commit, `vendor` e `public/build`, sem `.env`, banco ou arquivos privados. Há três opções seguras:
+O GitHub é a fonte oficial. A CI da PR valida o backend em SQLite e também executa a suíte PHP contra MySQL 8 para reduzir diferenças em relação à produção. O workflow manual **Preparar release** só monta o artefato depois de passar Pint, testes PHP, auditoria Composer das dependências de runtime, auditoria npm para vulnerabilidades altas/críticas de runtime, TypeScript, build e Playwright E2E com `retries: 0`.
+
+Depois das validações, o workflow reinstala o `vendor` com `--no-dev --optimize-autoloader`, verifica os requisitos de plataforma do Composer e gera o pacote com manifesto e arquivo `.sha256`. O pacote não inclui `.env`, banco, arquivos privados, `node_modules`, testes nem relatórios do Playwright.
+
+Antes de enviar o arquivo à hospedagem, valide sua integridade no ambiente onde ele foi baixado:
+
+```bash
+sha256sum -c arl-informatica-<commit>.tar.gz.sha256
+```
+
+Há três opções seguras:
 
 - Git/SSH disponível: faça checkout do commit/tag de release em uma pasta nova;
-- CI: gere um pacote de release sem `.env`, `.git`, `node_modules`, testes nem arquivos privados, mas com `public/build`, código, migrations e `vendor` quando Composer não existir no servidor;
+- CI: use o pacote de release já construído e validado pelo workflow;
 - sem Git/SSH: envie esse mesmo pacote pronto por SFTP/FTP. Não use o PC como fonte definitiva nem envie arquivos privados da produção.
 
-Em ambiente com rede, execute:
+Em ambiente com rede, se for necessário reconstruir o pacote fora do workflow oficial, execute:
 
 ```bash
 composer install --no-dev --prefer-dist --optimize-autoloader
+composer check-platform-reqs --no-dev
 npm ci
+npm audit --omit=dev --audit-level=high
 npm run typecheck
 npm run build
 ```
