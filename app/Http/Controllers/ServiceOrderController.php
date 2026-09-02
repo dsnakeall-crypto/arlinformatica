@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\ServiceOrder;
 use App\Models\StatusHistory;
 use App\Services\CompanySettings;
+use App\Services\ContactLinks;
 use App\Services\NotificationService;
 use App\Services\OrderNumber;
 use App\Services\PhotoOptimizer;
@@ -23,7 +24,8 @@ class ServiceOrderController extends Controller
         $q = ServiceOrder::query()->with('client:id,name,phone,street,number,district,city,state')->latest('received_at');
         if ($status = $r->query('status')) {
             $q->where('status', $status);
-        } if ($search = trim((string) $r->query('q'))) {
+        }
+        if ($search = trim((string) $r->query('q'))) {
             $q->where(fn ($x) => $x->where('number', 'like', "%$search%")->orWhere('reported_problem', 'like', "%$search%")->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%$search%")->orWhere('phone', 'like', "%$search%")->orWhere('street', 'like', "%$search%")));
         }
 
@@ -33,6 +35,18 @@ class ServiceOrderController extends Controller
         ];
 
         return response()->json([...$q->paginate(20)->toArray(), 'summary' => $summary]);
+    }
+
+    public function desk(PostSaleService $postSales): JsonResponse
+    {
+        $postSales->catchUp(true);
+        $orders = ServiceOrder::query()
+            ->with('client:id,name,phone,street,number,district,city,state')
+            ->whereIn('status', ['analysis', 'waiting_part', 'in_service'])
+            ->oldest('received_at')
+            ->get();
+
+        return response()->json($orders);
     }
 
     public function store(Request $r, OrderNumber $numbers, NotificationService $notifications): JsonResponse
@@ -64,7 +78,22 @@ class ServiceOrderController extends Controller
 
     public function show(ServiceOrder $order): JsonResponse
     {
-        return response()->json($order->load(['client', 'checklists', 'items', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']));
+        $order->load(['client', 'checklists', 'items', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']);
+        $payload = $order->toArray();
+        if ($order->attendance_type === 'external') {
+            $damages = $order->checklists->map(fn ($check) => '• '.$check->label.($check->note ? ': '.$check->note : ''));
+            $message = "Olá, {$order->client->name}. Aqui é a ARL Informática sobre a OS #{$order->number}.";
+            if ($damages->isNotEmpty()) {
+                $message .= "\n\nAvarias registradas na abertura:\n".$damages->implode("\n");
+            }
+            $message .= "\n\nEstamos em atendimento externo e podemos continuar o contato por aqui.";
+            $payload['mobile_actions'] = [
+                'whatsapp_url' => ContactLinks::whatsapp($order->client->phone, $message),
+                'maps_url' => ContactLinks::maps($order->client->toArray()),
+            ];
+        }
+
+        return response()->json($payload);
     }
 
     public function uploadPhoto(Request $request, ServiceOrder $order, PhotoOptimizer $optimizer): JsonResponse
@@ -91,7 +120,8 @@ class ServiceOrderController extends Controller
         $data = $r->validate(['status' => 'required|in:analysis,waiting_part,in_service,completed,interrupted']);
         if ($data['status'] === 'completed') {
             abort(422, 'Use a finalização para concluir a OS.');
-        } DB::transaction(function () use ($order, $data, $r) {
+        }
+        DB::transaction(function () use ($order, $data, $r) {
             $before = $order->status;
             $order->update(['status' => $data['status']]);
             StatusHistory::create(['service_order_id' => $order->id, 'from_status' => $before, 'to_status' => $data['status'], 'user_id' => $r->user()->id]);

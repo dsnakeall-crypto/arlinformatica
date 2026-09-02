@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class SettingsController extends Controller
 {
@@ -32,19 +33,25 @@ class SettingsController extends Controller
             'number' => 'nullable|string|max:30', 'district' => 'nullable|string|max:100', 'city' => 'nullable|string|max:100', 'state' => ['nullable', 'regex:/^[A-Z]{2}$/'],
             'complement' => 'nullable|string|max:100', 'instagram' => 'nullable|url|max:255', 'google_review' => 'nullable|url|max:255',
             'budget_validity_days' => 'required|integer|min:1|max:365', 'budget_observation' => 'nullable|string|max:2000', 'budget_institutional_text' => 'required|string|max:1000', 'term_text' => 'required|string|max:10000',
-            'layout_mode' => 'required|in:automatic,desktop,mobile', 'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
+            'warranty_general_enabled' => 'required|boolean', 'warranty_general_text' => 'nullable|string|max:5000', 'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
             'post_sale_follow_up' => 'sometimes|required|string|max:5000', 'post_sale_google' => 'sometimes|required|string|max:5000', 'post_sale_instagram' => 'sometimes|required|string|max:5000',
         ]);
+        if ($request->boolean('warranty_general_enabled') && blank($data['warranty_general_text'] ?? null)) {
+            throw ValidationException::withMessages(['warranty_general_text' => 'Informe o texto da garantia geral quando ela estiver ativada.']);
+        }
         DB::transaction(function () use ($data, $request) {
             $term = $data['term_text'];
             unset($data['term_text']);
             foreach ($data as $key => $value) {
-                DB::table('settings')->updateOrInsert(['key' => $key], ['value' => (string) ($value ?? ''), 'updated_at' => now(), 'created_at' => now()]);
-            } $current = DB::table('versioned_templates')->where('type', 'term')->where('active', true)->latest('version')->first();
+                $stored = is_bool($value) ? ($value ? '1' : '0') : (string) ($value ?? '');
+                DB::table('settings')->updateOrInsert(['key' => $key], ['value' => $stored, 'updated_at' => now(), 'created_at' => now()]);
+            }
+            $current = DB::table('versioned_templates')->where('type', 'term')->where('active', true)->latest('version')->first();
             if (! $current || $current->body !== $term) {
                 DB::table('versioned_templates')->where('type', 'term')->update(['active' => false]);
                 DB::table('versioned_templates')->insert(['type' => 'term', 'name' => 'Termo de recebimento', 'version' => (($current->version ?? 0) + 1), 'body' => $term, 'active' => true, 'created_by' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
-            } DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'settings.updated', 'subject_type' => 'settings', 'after' => json_encode([...$data, 'term_text' => $term]), 'ip_address' => $request->ip(), 'created_at' => now()]);
+            }
+            DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'settings.updated', 'subject_type' => 'settings', 'after' => json_encode([...$data, 'term_text' => $term]), 'ip_address' => $request->ip(), 'created_at' => now()]);
         });
 
         return response()->json($settings->all());

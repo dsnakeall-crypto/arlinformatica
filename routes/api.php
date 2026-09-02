@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CatalogController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
     Route::get('/clients', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::get('/clients/{client}', [ClientController::class, 'show']);
@@ -52,6 +54,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/diagnostics/push-test', [DiagnosticController::class, 'testPush'])->middleware('throttle:3,10');
     });
     Route::get('/orders', [ServiceOrderController::class, 'index']);
+    Route::get('/orders/desk', [ServiceOrderController::class, 'desk']);
     Route::post('/orders', [ServiceOrderController::class, 'store']);
     Route::get('/orders/{order}', [ServiceOrderController::class, 'show']);
     Route::post('/orders/{order}/photos', [ServiceOrderController::class, 'uploadPhoto']);
