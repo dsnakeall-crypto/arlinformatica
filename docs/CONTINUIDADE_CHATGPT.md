@@ -284,16 +284,19 @@ A PR #7 foi mergeada na `main` pelo commit `cedcbf252b7c8b0345242cb33bdbbb704d0a
 
 ## Etapa 7 — Administração, segurança, cadastros e fotos
 
-**IMPLEMENTADA NA BRANCH / AGUARDANDO PR E MERGE.** A branch `codex/etapa-7-administracao-seguranca-cadastros` acrescenta administração exclusiva de usuários pelo Master, autorização backend das mutações administrativas, edição auditada de clientes, CRUD com inativação de Serviços/equipamentos/fabricantes/checklist, observação obrigatória de “Outro”, métricas reais e limpeza segura de fotos. A recuperação pública por e-mail não foi criada porque exigiria configuração externa; o reset administrativo pelo Master é funcional. Não afirmar que esta etapa está mergeada antes da PR e CI.
+**CONCLUÍDA E MERGEADA.** A PR #8 foi mergeada na `main` pelo commit `2c709ba699ca05c8a7faf29c56e87bf77423f787`, e a CI da `main` após o merge passou integralmente. A entrega acrescentou administração exclusiva de usuários pelo Master, autorização backend das mutações administrativas, edição auditada de clientes, CRUD com inativação de Serviços/equipamentos/fabricantes/checklist, observação obrigatória de “Outro”, métricas reais e limpeza segura de fotos. A recuperação pública por e-mail não foi criada porque exigiria configuração externa; o reset administrativo pelo Master é funcional.
+
+## Etapa 8 — Backup, diagnóstico, Push e hospedagem
+
+**IMPLEMENTADA NA BRANCH / AGUARDANDO PR E MERGE.** A branch `codex/etapa-8-backup-diagnostico-push` entrega backup ZIP privado manual/automático, manifesto e checksums, download Master, upload validado, restauração com confirmação e backup de segurança, retenção, heartbeat, diagnóstico real e guia de migração/KingHost. O serviço de envio Web Push, integração aos eventos e teste individual existem, porém a dependência padrão não pôde ser adicionada porque o Packagist respondeu HTTP 403; `composer.json` e `composer.lock` foram preservados consistentes. Portanto, Push criptografado e validação em dispositivo real continuam pendentes, sem afetar notificações internas.
 
 ## Pendências principais para as próximas etapas
 
 Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implementar.
 
-Entre as principais pendências reais após a Etapa 6:
+Entre as principais pendências reais após a Etapa 8:
 
-- entrega Web Push criptografada no backend e validação em dispositivos reais;
-- backup/restore executável e diagnóstico;
+- adicionar/validar `minishlink/web-push` em ambiente com Packagist e testar dispositivos reais;
 - recuperação pública opcional por e-mail;
 - comparação visual final com as referências;
 - testes E2E Playwright e testes funcionais finais do Projeto Mestre.
@@ -315,4 +318,4 @@ Se o Codex Cloud bloquear Packagist/npm por HTTP 403, não repetir instalações
 
 ## Prompt pronto para continuar em um NOVO CHAT
 
-Use a `main` real do GitHub como fonte. A Etapa 6 foi mergeada pela PR #7 no commit `cedcbf252b7c8b0345242cb33bdbbb704d0ad594`, com CI verde. A Etapa 7 está implementada em branch e aguarda PR/CI/merge. Leia todos os documentos obrigatórios e verifique o estado real no GitHub antes de continuar.
+Use a `main` real do GitHub como fonte. A Etapa 7 foi mergeada pela PR #8 no commit `2c709ba699ca05c8a7faf29c56e87bf77423f787`, com CI verde. A Etapa 8 está implementada na branch `codex/etapa-8-backup-diagnostico-push` e aguarda PR/CI/merge. Leia todos os documentos obrigatórios e verifique o estado real antes de continuar.

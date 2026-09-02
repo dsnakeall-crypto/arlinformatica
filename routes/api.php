@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DiagnosticController;
 use App\Http\Controllers\FinalizationController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\NotificationController;
@@ -39,6 +41,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/storage/photos/preview', [StorageController::class, 'preview']);
         Route::delete('/storage/photos', [StorageController::class, 'purge']);
         Route::delete('/photos/{photo}', [StorageController::class, 'destroy']);
+        Route::get('/backups', [BackupController::class, 'index']);
+        Route::post('/backups', [BackupController::class, 'store'])->middleware('throttle:2,10');
+        Route::post('/backups/upload', [BackupController::class, 'upload'])->middleware('throttle:2,10');
+        Route::get('/backups/{backup}/download', [BackupController::class, 'download']);
+        Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware('throttle:1,10');
+        Route::delete('/backups/{backup}', [BackupController::class, 'destroy']);
+        Route::get('/diagnostics', [DiagnosticController::class, 'show']);
+        Route::post('/diagnostics/push-test', [DiagnosticController::class, 'testPush'])->middleware('throttle:3,10');
     });
     Route::get('/orders', [ServiceOrderController::class, 'index']);
     Route::post('/orders', [ServiceOrderController::class, 'store']);

@@ -8,7 +8,8 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Perfis modelados e login protegido por sessão, CSRF e rate limit.
 - [OK] Instalador CLI de uso único para o primeiro Master, com senha forte e hash seguro.
 - [OK] Autorização backend por perfil nas rotas administrativas, com administração de usuários exclusiva do Master e proteção do último Master ativo.
-- [PENDENTE] Recuperação pública de senha por e-mail e diagnóstico completo; a redefinição administrativa segura pelo Master está funcional sem exigir SMTP.
+- [PENDENTE] Recuperação pública de senha por e-mail; a redefinição administrativa segura pelo Master está funcional sem exigir SMTP.
+- [OK] Diagnóstico administrativo real de banco, migrations, storage, espaço, backup, scheduler, fila, HTTPS, PWA e Web Push, sem expor secrets.
 
 ## Operação
 - [OK] API e interface autenticadas para listar/cadastrar clientes, normalizar/validar/bloquear CPF/CNPJ, buscar e paginar; endereço tem ViaCEP com fallback manual.
@@ -35,12 +36,12 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 ## Relacionamento, plataforma e administração
 - [OK] Pós-venda real e simplificado com três confirmações independentes, snapshots, auditoria, lembrete idempotente após 5 dias e substituição do ciclo após 60 dias sem apagar a OS.
 - [OK] Central interna com sino, contador, leitura individual/global e eventos de cliente, OS e pós-venda; PWA instalável, service worker, inscrições Web Push por dispositivo e catch-up com throttle.
-- [PENDENTE] Disparo Web Push criptografado pelo backend (as inscrições, VAPID e recebimento no service worker estão preparados, mas a biblioteca PHP não pôde ser adicionada neste ambiente sem acesso ao Packagist).
+- [PENDENTE] Ativação do disparo Web Push criptografado: o serviço backend, eventos, payload, falhas, remoção de inscrição inválida e teste individual estão implementados, mas `minishlink/web-push` ainda precisa ser adicionado a `composer.json`/lock em ambiente com Packagist (HTTP 403 neste ambiente). Não se afirma entrega em dispositivo real.
 - [OK] Métricas reais de fotos/arquivos privados, prévia e limpeza de fotos exclusiva do Master com confirmação forte e auditoria, sem excluir a OS.
-- [PENDENTE] Backup/restore executável e diagnóstico completo.
+- [OK] Backup/restore ZIP executável com dados e arquivos privados, manifesto, checksums, validação, confirmação forte, backup de segurança, autorização Master, download privado, proteção Zip Slip e auditoria.
 - [OK] Central de Configurações em cards com Dados da Empresa, Identidade Visual, Documentos e Layout básico; escrita restrita a Master/Administrador.
 - [OK] Usuários com pesquisa, criação, edição, perfis, ativação, proteção do último Master e redefinição de senha forte com hash/auditoria.
-- [PENDENTE] Backup/hospedagem executável.
+- [OK] Backup manual/automático, retenção protegida, heartbeat e guia de hospedagem/migração executáveis sem processo residente.
 
 ## Interface, qualidade e entrega
 - [OK] Shell desktop responsivo com identidade verde, menu, cards, filtros, tabela e cards mobile próprios.
@@ -49,5 +50,5 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] CI preparada para PHP, lint, testes, TypeScript e build.
 - [OK] Telas operacionais de clientes, Nova OS, listagem e visualização de OS usam backend real, com estados de carregamento, erro, vazio e validação.
 - [OK] Etapa 7 administrativa ligada ao backend real, com telas responsivas e testes de segurança, históricos, catálogos, checklist e fotos.
-- [PENDENTE] Backup/restore, Web Push criptografado e E2E Playwright.
+- [PENDENTE] Dependência/validação real do Web Push criptografado e E2E Playwright; backup/restore e diagnóstico estão funcionais e cobertos por testes automatizados.
 - [PENDENTE] Comparação final em navegador com todas as referências e testes funcionais completos do Projeto Mestre.
