@@ -17,6 +17,7 @@ class BackupController extends Controller
     public function index(): JsonResponse
     {
         $backups = Backup::latest()->get()->map(fn (Backup $backup) => $this->resource($backup));
+
         return response()->json(['data' => $backups, 'total_bytes' => $backups->sum('bytes'), 'automatic' => ['enabled' => (bool) config('backup.automatic'), 'frequency' => config('backup.frequency'), 'retention' => config('backup.retention')]]);
     }
 
@@ -30,6 +31,7 @@ class BackupController extends Controller
         abort_unless($backup->status === 'ready' || $backup->status === 'restored', 404);
         abort_unless(Storage::disk(config('backup.disk'))->exists($backup->path), 404);
         $audit->record($request, 'backup.downloaded', 'backup', $backup->id, null, ['sha256' => $backup->sha256]);
+
         return Storage::disk(config('backup.disk'))->download($backup->path, basename($backup->path), ['Content-Type' => 'application/zip', 'X-Content-Type-Options' => 'nosniff']);
     }
 
@@ -44,6 +46,7 @@ class BackupController extends Controller
         $name = 'uploaded-'.now()->format('Ymd-His').'-'.bin2hex(random_bytes(4)).'.zip';
         $path = $data['backup']->storeAs(config('backup.directory'), $name, config('backup.disk'));
         $backup = Backup::create(['kind' => 'uploaded', 'path' => $path, 'sha256' => hash_file('sha256', $data['backup']->getRealPath()), 'bytes' => $data['backup']->getSize(), 'manifest' => $manifest, 'status' => 'ready', 'protected' => true, 'created_by' => $request->user()->id]);
+
         return response()->json($this->resource($backup), 201);
     }
 
@@ -51,6 +54,7 @@ class BackupController extends Controller
     {
         $request->validate(['confirmation' => ['required', Rule::in(['RESTAURAR BACKUP'])]]);
         $safety = $service->restore($backup, $request->user());
+
         return response()->json(['message' => 'Restauração concluída e verificada.', 'safety_backup_id' => $safety->id]);
     }
 
@@ -60,6 +64,7 @@ class BackupController extends Controller
         Storage::disk(config('backup.disk'))->delete($backup->path);
         $audit->record($request, 'backup.deleted', 'backup', $backup->id, $this->resource($backup));
         $backup->delete();
+
         return response()->json(['message' => 'Backup removido.']);
     }
 
