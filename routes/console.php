@@ -1,13 +1,15 @@
 <?php
 
+use App\Services\BackupService;
 use Illuminate\Support\Facades\Schedule;
+use Throwable;
 
 Schedule::command('post-sale:check')->hourly()->withoutOverlapping();
 Schedule::command('scheduler:heartbeat')->everyMinute()->withoutOverlapping();
 
 try {
-    $frequency = app(\App\Services\BackupService::class)->automaticSettings()['frequency'];
-} catch (\Throwable) {
+    $frequency = app(BackupService::class)->automaticSettings()['frequency'];
+} catch (Throwable) {
     $frequency = (string) config('backup.frequency', 'daily');
 }
 
