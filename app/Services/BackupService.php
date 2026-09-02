@@ -193,7 +193,7 @@ class BackupService
         $root = Storage::disk('local')->path('');
         foreach (File::allFiles($root) as $file) {
             $relative = str_replace('\\', '/', $file->getRelativePathname());
-            if (str_starts_with($relative, config('backup.directory').'/') || str_starts_with($relative, 'backup-work/') || preg_match('/(^|\/)\.env$|\.php$/i', $relative)) {
+            if (! $this->managedPrivateFile($relative)) {
                 continue;
             }
             $target = "$work/storage/$relative";
@@ -228,7 +228,10 @@ class BackupService
                 continue;
             }
             $relative = substr($name, 8);
-            throw_unless($this->safeEntry($relative) && ! preg_match('/(^|\/)\.env$|\.php$/i', $relative), RuntimeException::class, 'Arquivo privado inseguro.');
+            throw_unless($this->safeEntry($relative), RuntimeException::class, 'Arquivo privado inseguro.');
+            if (! $this->managedPrivateFile($relative)) {
+                continue;
+            }
             $target = "$staging/$relative";
             File::ensureDirectoryExists(dirname($target));
             File::put($target, $zip->getFromIndex($i));
