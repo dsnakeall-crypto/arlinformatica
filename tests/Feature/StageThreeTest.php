@@ -25,7 +25,7 @@ class StageThreeTest extends TestCase
         parent::setUp();
         $this->seed(DatabaseSeeder::class);
         $role = DB::table('roles')->where('name', 'Master')->value('id');
-        $this->user = User::create(['role_id' => $role, 'name' => 'Master', 'login' => 'master', 'password' => Hash::make('password-password')]);
+        $this->user = User::create(['role_id' => $role, 'name' => 'Master', 'login' => 'master', 'password' => Hash::make('password-password'), 'active' => true]);
         $client = DB::table('clients')->insertGetId(['name' => 'Cliente Teste', 'document' => '52998224725', 'phone' => '35999999999', 'postal_code' => '37160000', 'street' => 'Rua A', 'number' => '1', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG', 'created_at' => now(), 'updated_at' => now()]);
         $equipment = DB::table('equipment_types')->value('id');
         $this->order = ServiceOrder::create(['number' => '0000001', 'client_id' => $client, 'equipment_type_id' => $equipment, 'attendance_type' => 'bench', 'status' => 'analysis', 'reported_problem' => 'Não liga', 'received_at' => now(), 'created_by' => $this->user->id]);
