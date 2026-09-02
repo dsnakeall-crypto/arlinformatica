@@ -216,14 +216,13 @@ Durante a estabilização da PR #5 foram corrigidos diretamente na branch, sem n
 - importação PHP não utilizada;
 - tipagem/`useEffect` no frontend;
 - workflow temporário de correção removido antes do merge.
-
 A CI da PR #5 passou integralmente antes do merge. A PR foi mergeada em 01/09/2026 e a CI da `main` no merge também passou integralmente: Composer, migrations + seed, Pint, testes PHP, `npm ci`, TypeScript/typecheck e build.
 
 Merge commit da Etapa 4 na `main`: `3d15295240692f7bbfbb40c512468385c704f81f`.
 
 ## Estado atual do sistema
 
-A `main` está estável e com CI verde no marco da Etapa 5. A PR #6 foi mergeada e validada.
+A `main` está estável e com CI verde até a Etapa 7, incluindo a PR #8 já mergeada. A Etapa 8 está na PR #9, branch `codex/implementar-etapa-8-backup-e-web-push`, aguardando merge. A implementação funcional da Etapa 8 passou integralmente na CI da PR #9 no commit `47ec97ab7937f7ee7e5c52f975c036101ee64a5e`; alterações documentais finais ainda devem passar pela CI antes do merge.
 
 Já existem de forma funcional ou estrutural:
 
@@ -280,7 +279,7 @@ A PR #6 foi concluída e mergeada na `main`. Merge commit: `195afdb13405f618c217
 
 ## Etapa 6 — Pós-venda, notificações e PWA (concluída e mergeada)
 
-A PR #7 foi mergeada na `main` pelo commit `cedcbf252b7c8b0345242cb33bdbbb704d0ad594`, e a CI da `main` após o merge passou integralmente. A entrega inclui pós-venda simplificado ligado ao backend, regras idempotentes de 5/60 dias, confirmações manuais independentes com snapshot e auditoria, WhatsApp/Maps centralizados, central interna, scheduler/catch-up, PWA, service worker e gerenciamento seguro de inscrições Web Push. O disparo Web Push criptografado no backend continua explicitamente pendente.
+A PR #7 foi mergeada na `main` pelo commit `cedcbf252b7c8b0345242cb33bdbbb704d0ad594`, e a CI da `main` após o merge passou integralmente. A entrega inclui pós-venda simplificado ligado ao backend, regras idempotentes de 5/60 dias, confirmações manuais independentes com snapshot e auditoria, WhatsApp/Maps centralizados, central interna, scheduler/catch-up, PWA, service worker e gerenciamento seguro de inscrições Web Push. Naquele marco, o disparo Web Push criptografado ainda estava pendente; ele foi implementado posteriormente na Etapa 8/PR #9.
 
 ## Etapa 7 — Administração, segurança, cadastros e fotos
 
@@ -288,7 +287,7 @@ A PR #7 foi mergeada na `main` pelo commit `cedcbf252b7c8b0345242cb33bdbbb704d0a
 
 ## Etapa 8 — Backup, diagnóstico, Push e hospedagem
 
-**IMPLEMENTADA NA BRANCH / AGUARDANDO PR E MERGE.** A branch `codex/etapa-8-backup-diagnostico-push` entrega backup ZIP privado manual/automático, manifesto e checksums, download Master, upload validado, restauração com confirmação e backup de segurança, retenção, heartbeat, diagnóstico real e guia de migração/KingHost. O serviço de envio Web Push, integração aos eventos e teste individual existem, porém a dependência padrão não pôde ser adicionada porque o Packagist respondeu HTTP 403; `composer.json` e `composer.lock` foram preservados consistentes. Portanto, Push criptografado e validação em dispositivo real continuam pendentes, sem afetar notificações internas.
+**IMPLEMENTADA NA PR #9 / AGUARDANDO MERGE.** A branch real é `codex/implementar-etapa-8-backup-e-web-push`. A entrega inclui backup ZIP privado manual/automático, manifesto e checksums, download Master, upload validado, restauração com confirmação e backup de segurança, retenção, heartbeat, diagnóstico real e guia de migração/KingHost. O envio Web Push criptografado foi implementado com `minishlink/web-push` v11, a dependência está em `composer.json` e `composer.lock`, e o GitHub Actions instalou a biblioteca e validou backend/frontend com sucesso no commit `47ec97ab7937f7ee7e5c52f975c036101ee64a5e`. A validação em dispositivos físicos reais continua pendente e não se afirma entrega em iPhone/Android sem teste manual.
 
 ## Pendências principais para as próximas etapas
 
@@ -296,7 +295,7 @@ Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implem
 
 Entre as principais pendências reais após a Etapa 8:
 
-- adicionar/validar `minishlink/web-push` em ambiente com Packagist e testar dispositivos reais;
+- validar Web Push em dispositivos reais suportados;
 - recuperação pública opcional por e-mail;
 - comparação visual final com as referências;
 - testes E2E Playwright e testes funcionais finais do Projeto Mestre.
@@ -318,4 +317,4 @@ Se o Codex Cloud bloquear Packagist/npm por HTTP 403, não repetir instalações
 
 ## Prompt pronto para continuar em um NOVO CHAT
 
-Use a `main` real do GitHub como fonte. A Etapa 7 foi mergeada pela PR #8 no commit `2c709ba699ca05c8a7faf29c56e87bf77423f787`, com CI verde. A Etapa 8 está implementada na branch `codex/etapa-8-backup-diagnostico-push` e aguarda PR/CI/merge. Leia todos os documentos obrigatórios e verifique o estado real antes de continuar.
+Use a `main` real do GitHub como fonte. A Etapa 7 foi mergeada pela PR #8 no commit `2c709ba699ca05c8a7faf29c56e87bf77423f787`, com CI verde. A Etapa 8 está implementada na PR #9, branch `codex/implementar-etapa-8-backup-e-web-push`; a implementação funcional passou CI integralmente no commit `47ec97ab7937f7ee7e5c52f975c036101ee64a5e`, a dependência `minishlink/web-push` está instalada e versionada, e a PR aguarda apenas a validação final das últimas alterações documentais e o merge. Leia todos os documentos obrigatórios e verifique o estado real antes de continuar.
