@@ -21,26 +21,47 @@ class FinalizationController extends Controller
         $data = $request->validate([
             'result' => 'required|in:'.implode(',', self::RESULTS), 'result_other' => 'nullable|required_if:result,other|string|max:255',
             'technical_report' => 'nullable|string|max:20000', 'discount_cents' => 'required|integer|min:0|max:999999999',
-            'items' => 'array|max:100', 'items.*.catalog_id' => 'nullable|exists:service_catalog,id', 'items.*.description' => 'required|string|max:255',
-            'items.*.quantity' => 'required|integer|min:1|max:999', 'items.*.unit_price_cents' => 'required|integer|min:0|max:999999999',
-            'items.*.warranty_enabled' => 'boolean', 'items.*.warranty_term' => 'nullable|required_if:items.*.warranty_enabled,true|integer|min:1|max:999',
-            'items.*.warranty_unit' => 'nullable|required_if:items.*.warranty_enabled,true|in:days,months,years', 'items.*.warranty_description' => 'nullable|string|max:500',
             'approved_budget_id' => 'nullable|exists:budgets,id', 'photo_ids' => 'array', 'photo_ids.*' => 'integer',
         ]);
+
+        if (! empty($data['approved_budget_id'])) {
+            $approved = DB::table('budgets')->where(['id' => $data['approved_budget_id'], 'service_order_id' => $order->id, 'status' => 'approved'])->first();
+            abort_unless($approved, 422, 'O orçamento informado não está aprovado para esta OS.');
+            abort_if(DB::table('service_order_items')->where('source_budget_id', $approved->id)->exists(), 409, 'Os itens deste orçamento já foram usados.');
+            $data['items'] = DB::table('budget_items')->where('budget_id', $approved->id)->orderBy('id')->get()->map(function ($item) {
+                $warranty = $item->warranty_snapshot ? json_decode($item->warranty_snapshot, true) : null;
+
+                return [
+                    'catalog_id' => $item->catalog_id,
+                    'description' => $item->description,
+                    'quantity' => (int) $item->quantity,
+                    'unit_price_cents' => (int) $item->unit_price_cents,
+                    'warranty_enabled' => ! empty($warranty),
+                    'warranty_term' => $warranty['term'] ?? null,
+                    'warranty_unit' => $warranty['unit'] ?? null,
+                    'warranty_description' => $warranty['description'] ?? null,
+                ];
+            })->all();
+            abort_if(count($data['items']) > 100, 422, 'O orçamento aprovado excede o limite de 100 itens para finalização.');
+        } else {
+            $itemData = $request->validate([
+                'items' => 'array|max:100', 'items.*.catalog_id' => 'nullable|exists:service_catalog,id', 'items.*.description' => 'required|string|max:255',
+                'items.*.quantity' => 'required|integer|min:1|max:999', 'items.*.unit_price_cents' => 'required|integer|min:0|max:999999999',
+                'items.*.warranty_enabled' => 'boolean', 'items.*.warranty_term' => 'nullable|required_if:items.*.warranty_enabled,true|integer|min:1|max:999',
+                'items.*.warranty_unit' => 'nullable|required_if:items.*.warranty_enabled,true|in:days,months,years', 'items.*.warranty_description' => 'nullable|string|max:500',
+            ]);
+            $data['items'] = $itemData['items'] ?? [];
+        }
+
         if ($data['result'] !== 'repair_completed' && blank($data['technical_report'] ?? null)) {
             throw ValidationException::withMessages(['technical_report' => 'O laudo/motivo é obrigatório quando não houve reparo.']);
         }
         if ($data['result'] === 'repair_completed' && empty($data['items'])) {
             throw ValidationException::withMessages(['items' => 'Informe ao menos um serviço ou produto para um reparo realizado.']);
         }
-        $subtotal = collect($data['items'] ?? [])->sum(fn ($item) => (int) $item['quantity'] * (int) $item['unit_price_cents']);
+        $subtotal = collect($data['items'])->sum(fn ($item) => (int) $item['quantity'] * (int) $item['unit_price_cents']);
         if ((int) $data['discount_cents'] > $subtotal) {
             throw ValidationException::withMessages(['discount_cents' => 'O desconto não pode superar o subtotal.']);
-        }
-        if (! empty($data['approved_budget_id'])) {
-            $approved = DB::table('budgets')->where(['id' => $data['approved_budget_id'], 'service_order_id' => $order->id, 'status' => 'approved'])->exists();
-            abort_unless($approved, 422, 'O orçamento informado não está aprovado para esta OS.');
-            abort_if(DB::table('service_order_items')->where('source_budget_id', $data['approved_budget_id'])->exists(), 409, 'Os itens deste orçamento já foram usados.');
         }
         $total = max(0, $subtotal - (int) $data['discount_cents']);
         $resultLabel = $this->resultLabel($data['result'], $data['result_other'] ?? null);
@@ -52,7 +73,7 @@ class FinalizationController extends Controller
         $snapshot = ['company' => $company, 'order' => $order->toArray(), 'result_label' => $resultLabel, 'photos' => $photos];
         $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot) {
             $id = DB::table('service_order_finalizations')->insertGetId(['service_order_id' => $order->id, 'revision' => 1, 'result' => $data['result'], 'result_other' => $data['result_other'] ?? null, 'technical_report' => $data['technical_report'] ?? null, 'subtotal_cents' => $subtotal, 'discount_cents' => $data['discount_cents'], 'total_cents' => $total, 'snapshot' => json_encode($snapshot), 'completed_by' => $request->user()->id, 'completed_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
-            foreach ($data['items'] ?? [] as $item) {
+            foreach ($data['items'] as $item) {
                 $warranty = ! empty($item['warranty_enabled']) ? ['enabled' => true, 'term' => (int) $item['warranty_term'], 'unit' => $item['warranty_unit'], 'description' => $item['warranty_description'] ?? null] : null;
                 DB::table('service_order_items')->insert(['service_order_id' => $order->id, 'finalization_id' => $id, 'catalog_id' => $item['catalog_id'] ?? null, 'source_budget_id' => $data['approved_budget_id'] ?? null, 'description' => $item['description'], 'quantity' => $item['quantity'], 'unit_price_cents' => $item['unit_price_cents'], 'subtotal_cents' => $item['quantity'] * $item['unit_price_cents'], 'warranty_snapshot' => $warranty ? json_encode($warranty) : null, 'created_at' => now(), 'updated_at' => now()]);
             }

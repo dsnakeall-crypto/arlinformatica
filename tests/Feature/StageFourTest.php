@@ -59,11 +59,20 @@ class StageFourTest extends TestCase
         $this->finalize(['result' => 'repair_completed', 'technical_report' => 'Reparo', 'discount_cents' => 101, 'items' => [['description' => 'Serviço', 'quantity' => 1, 'unit_price_cents' => 100, 'warranty_enabled' => false]]])->assertUnprocessable()->assertJsonValidationErrors('discount_cents');
     }
 
-    public function test_approved_budget_is_copied_only_once(): void
+    public function test_approved_budget_is_server_source_and_cannot_be_used_for_another_order(): void
     {
         $budget = DB::table('budgets')->insertGetId(['service_order_id' => $this->order->id, 'revision' => 1, 'status' => 'approved', 'diagnosis' => 'Falha', 'proposal' => 'Reparo', 'validity_days' => 7, 'total_cents' => 5000, 'created_by' => $this->user->id, 'created_at' => now(), 'updated_at' => now()]);
-        $payload = ['result' => 'repair_completed', 'technical_report' => 'Reparo', 'discount_cents' => 0, 'approved_budget_id' => $budget, 'items' => [['description' => 'Reparo', 'quantity' => 1, 'unit_price_cents' => 5000, 'warranty_enabled' => false]]];
-        $this->finalize($payload)->assertCreated();
+        DB::table('budget_items')->insert(['budget_id' => $budget, 'description' => 'Reparo aprovado', 'quantity' => 1, 'unit_price_cents' => 5000, 'subtotal_cents' => 5000, 'warranty_snapshot' => json_encode(['enabled' => true, 'term' => 90, 'unit' => 'days']), 'created_at' => now(), 'updated_at' => now()]);
+        $payload = ['result' => 'repair_completed', 'technical_report' => 'Reparo', 'discount_cents' => 0, 'approved_budget_id' => $budget, 'items' => [['description' => 'ITEM MANIPULADO NO NAVEGADOR', 'quantity' => 99, 'unit_price_cents' => 1, 'warranty_enabled' => false]]];
+
+        $this->finalize($payload)->assertCreated()->assertJsonPath('finalization.subtotal_cents', 5000)->assertJsonPath('finalization.total_cents', 5000);
+        $item = DB::table('service_order_items')->where('service_order_id', $this->order->id)->first();
+        $this->assertSame('Reparo aprovado', $item->description);
+        $this->assertSame(1, $item->quantity);
+        $this->assertSame(5000, $item->unit_price_cents);
+        $this->assertSame($budget, $item->source_budget_id);
+        $this->assertSame(90, json_decode($item->warranty_snapshot, true)['term']);
+
         $otherOrder = $this->order->replicate(['number']);
         $otherOrder->number = '0000101';
         $otherOrder->status = 'analysis';

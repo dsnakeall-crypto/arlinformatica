@@ -97,7 +97,8 @@ test.describe.serial('fluxo operacional principal', () => {
     await finalModal.getByRole('button', { name: 'USAR ITENS DO ORÇAMENTO APROVADO' }).click();
     await finalModal.locator('textarea').fill('Equipamento testado e funcionando.');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
-    await expect(page.getByText('Concluído', { exact: true }).first()).toBeVisible();
+    await expect(statusSelect).toHaveValue('completed');
+    await expect(page.locator('.completion').getByText('Concluído', { exact: true })).toBeVisible();
     await expect(page.getByText('PDF Final')).toBeVisible();
 
     await page.getByRole('button', { name: 'Registrar pagamento' }).click();
