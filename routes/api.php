@@ -11,18 +11,35 @@ use App\Http\Controllers\PostSaleController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\ServiceOrderController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\StorageController;
 use App\Http\Controllers\TechnicalReportController;
 use App\Http\Controllers\TechnicalReportTemplateController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::get('/clients', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);
-    Route::put('/clients/{client}', [ClientController::class, 'update']);
+    Route::get('/clients/{client}', [ClientController::class, 'show']);
+    Route::put('/clients/{client}', [ClientController::class, 'update'])->middleware('role:Master,Administrador');
     Route::get('/catalogs/checklist', [CatalogController::class, 'checklist']);
     Route::get('/catalogs/{catalog}', [CatalogController::class, 'index']);
-    Route::post('/catalogs/{catalog}', [CatalogController::class, 'store']);
-    Route::patch('/catalogs/{catalog}/{id}', [CatalogController::class, 'update']);
+    Route::middleware('role:Master,Administrador')->group(function () {
+        Route::post('/catalogs/{catalog}', [CatalogController::class, 'store']);
+        Route::patch('/catalogs/{catalog}/{id}', [CatalogController::class, 'update']);
+        Route::post('/catalogs/checklist/options', [CatalogController::class, 'storeChecklist']);
+        Route::patch('/catalogs/checklist/options/{id}', [CatalogController::class, 'updateChecklist']);
+        Route::get('/storage/statistics', [StorageController::class, 'statistics']);
+    });
+    Route::middleware('role:Master')->group(function () {
+        Route::get('/users', [UserController::class, 'index']);
+        Route::post('/users', [UserController::class, 'store']);
+        Route::put('/users/{user}', [UserController::class, 'update']);
+        Route::put('/users/{user}/password', [UserController::class, 'resetPassword']);
+        Route::post('/storage/photos/preview', [StorageController::class, 'preview']);
+        Route::delete('/storage/photos', [StorageController::class, 'purge']);
+        Route::delete('/photos/{photo}', [StorageController::class, 'destroy']);
+    });
     Route::get('/orders', [ServiceOrderController::class, 'index']);
     Route::post('/orders', [ServiceOrderController::class, 'store']);
     Route::get('/orders/{order}', [ServiceOrderController::class, 'show']);
@@ -36,12 +53,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/finance/overview', [FinanceController::class, 'overview']);
     Route::get('/finance/daily', [FinanceController::class, 'transactions']);
     Route::get('/finance/month', [FinanceController::class, 'month']);
-    Route::post('/finance/transactions/{transaction}/adjust', [FinanceController::class, 'adjust']);
+    Route::post('/finance/transactions/{transaction}/adjust', [FinanceController::class, 'adjust'])->middleware('role:Master,Administrador');
     Route::post('/finance/reports', [FinanceController::class, 'issueReport']);
     Route::get('/finance/reports/{document}/pdf', [FinanceController::class, 'report']);
-    Route::get('/settings', [SettingsController::class, 'show']);
-    Route::put('/settings', [SettingsController::class, 'update']);
-    Route::post('/settings/logo', [SettingsController::class, 'logo']);
+    Route::middleware('role:Master,Administrador')->group(function () {
+        Route::get('/settings', [SettingsController::class, 'show']);
+        Route::put('/settings', [SettingsController::class, 'update']);
+        Route::post('/settings/logo', [SettingsController::class, 'logo']);
+    });
     Route::get('/settings/logo/{variant}', [SettingsController::class, 'logoFile']);
     Route::get('/orders/{order}/term', [DocumentController::class, 'term']);
     Route::get('/orders/{order}/budgets', [BudgetController::class, 'index']);
@@ -64,7 +83,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/push/configuration', [PushSubscriptionController::class, 'configuration']);
     Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store']);
     Route::delete('/push/subscriptions', [PushSubscriptionController::class, 'destroy']);
-    Route::post('/report-templates', [TechnicalReportTemplateController::class, 'store']);
-    Route::put('/report-templates/{template}', [TechnicalReportTemplateController::class, 'update']);
-    Route::post('/report-templates/{template}/duplicate', [TechnicalReportTemplateController::class, 'duplicate']);
+    Route::middleware('role:Master,Administrador')->group(function () {
+        Route::post('/report-templates', [TechnicalReportTemplateController::class, 'store']);
+        Route::put('/report-templates/{template}', [TechnicalReportTemplateController::class, 'update']);
+        Route::post('/report-templates/{template}/duplicate', [TechnicalReportTemplateController::class, 'duplicate']);
+    });
 });

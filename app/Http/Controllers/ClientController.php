@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Services\Audit;
 use App\Services\DocumentValidator;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
@@ -30,12 +31,21 @@ class ClientController extends Controller
         return response()->json($client, 201);
     }
 
-    public function update(Request $r, Client $client): JsonResponse
+    public function update(Request $r, Client $client, Audit $audit): JsonResponse
     {
+        $before = $client->toArray();
         $data = $this->validated($r, $client->id);
         $client->update($data);
+        $audit->record($r, 'client.updated', Client::class, $client->id, $before, $client->fresh()->toArray());
 
         return response()->json($client->fresh());
+    }
+
+    public function show(Client $client): JsonResponse
+    {
+        $orders = $client->serviceOrders()->latest('received_at')->with(['documents' => fn ($q) => $q->where('type', 'final')->latest('revision')])->get();
+
+        return response()->json(['client' => $client, 'orders' => $orders]);
     }
 
     private function validated(Request $r, ?int $ignore = null): array

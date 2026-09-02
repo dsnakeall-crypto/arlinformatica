@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use LogicException;
 
 class ServiceOrder extends Model
 {
@@ -40,6 +41,11 @@ class ServiceOrder extends Model
         return $this->hasMany(ServiceOrderPhoto::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(GeneratedDocument::class);
+    }
+
     public function snapshot()
     {
         return $this->hasOne(ServiceOrderSnapshot::class);
@@ -47,6 +53,6 @@ class ServiceOrder extends Model
 
     protected static function booted(): void
     {
-        static::deleting(fn () => throw new \LogicException('Ordens de serviço preservam o histórico e não podem ser excluídas.'));
+        static::deleting(fn () => throw new LogicException('Ordens de serviço preservam o histórico e não podem ser excluídas.'));
     }
 }
