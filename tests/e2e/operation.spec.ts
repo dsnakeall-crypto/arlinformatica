@@ -84,9 +84,9 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.getByRole('link', { name: 'Abrir PDF' })).toHaveAttribute('href', `/api/orders/${orderId}/budgets/1/pdf`);
 
     await page.getByRole('button', { name: 'Marcar enviado' }).click();
-    await expect(page.getByRole('button', { name: 'Aprovar e usar itens' })).toBeVisible();
-    await page.getByRole('button', { name: 'Aprovar e usar itens' }).click();
-    await expect(page.getByRole('button', { name: 'Aprovar e usar itens' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toBeVisible();
+    await page.getByRole('button', { name: 'Aprovar orçamento' }).click();
+    await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toHaveCount(0);
 
     const statusSelect = page.locator('.status-picker select');
     await statusSelect.selectOption('in_service');
