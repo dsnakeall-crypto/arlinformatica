@@ -64,16 +64,19 @@ test.describe.serial('fluxo operacional principal', () => {
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
+    await expect(page.getByText('Pagamento ainda não registrado.', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toBeVisible();
+    await expect(page.getByText(/NaN|Invalid Date/)).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Gerar orçamento' }).click();
     const budgetForm = page.locator('.budget-form');
     await budgetForm.getByLabel('Diagnóstico').fill('Falha de energia');
     await budgetForm.getByLabel('Serviço proposto').fill('Reparo completo');
     await budgetForm.getByLabel('Validade (dias)').fill('7');
-    await budgetForm.getByLabel('Item').fill('Formatação E2E');
+    await budgetForm.getByRole('textbox', { name: 'Item *', exact: true }).fill('Formatação E2E');
     await budgetForm.getByLabel('Quantidade').fill('1');
     await budgetForm.getByLabel('Valor unitário').fill('150,00');
-    await budgetForm.locator('input[type=checkbox]').check();
+    await budgetForm.getByRole('checkbox', { name: /Este item tem garantia/ }).check();
     await budgetForm.getByLabel('Duração').fill('90');
     await budgetForm.getByLabel('Unidade').selectOption('days');
     await budgetForm.getByRole('button', { name: 'Salvar e gerar PDF' }).click();

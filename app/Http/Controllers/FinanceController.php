@@ -35,7 +35,9 @@ class FinanceController extends Controller
 
     public function payment(ServiceOrder $order): JsonResponse
     {
-        return response()->json(DB::table('payments')->leftJoin('users', 'users.id', '=', 'payments.user_id')->where('service_order_id', $order->id)->select('payments.*', 'users.name as user_name')->first());
+        $payment = DB::table('payments')->leftJoin('users', 'users.id', '=', 'payments.user_id')->where('service_order_id', $order->id)->select('payments.*', 'users.name as user_name')->first();
+
+        return response()->json($payment ?: false);
     }
 
     public function quickEntry(Request $request): JsonResponse
