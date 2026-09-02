@@ -78,22 +78,33 @@ class FinanceController extends Controller
         $period = $request->validate(['period' => ['nullable', 'date_format:Y-m']])['period'] ?? now(self::TZ)->format('Y-m');
         $start = CarbonImmutable::createFromFormat('Y-m-d H:i:s', "$period-01 00:00:00", self::TZ);
         $end = $start->endOfMonth();
-        $transactions = DB::table('financial_transactions')->whereBetween('occurred_at', [$start->utc(), $end->utc()])->orderBy('occurred_at')->get();
-        $adjustments = DB::table('financial_adjustments')->whereIn('transaction_id', $transactions->pluck('id'))->orderBy('id')->get()->groupBy('transaction_id')->map(fn ($items) => $items->last());
-        $payments = DB::table('payments')->whereIn('id', $transactions->pluck('payment_id')->filter())->get()->keyBy('id');
-        $rows = $transactions->map(function ($row) use ($adjustments, $payments) {
-            $adjustment = $adjustments->get($row->id);
-            $payment = $row->payment_id ? $payments->get($row->payment_id) : null;
-            $row->effective_cents = (int) ($adjustment->new_cents ?? $row->amount_cents);
-            $row->method = $payment?->method;
-            $row->service_order_id = $payment?->service_order_id;
+        $utcBounds = [$start->utc(), $end->utc()];
 
-            return $row;
-        });
+        $rows = $this->effective()
+            ->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')
+            ->whereBetween('financial_transactions.occurred_at', $utcBounds)
+            ->addSelect('payments.method', 'payments.service_order_id')
+            ->orderBy('financial_transactions.occurred_at')
+            ->get();
+
         $orders = $rows->where('origin', 'service_order');
-        $orderIds = $orders->pluck('service_order_id')->filter()->unique()->values();
-        $items = DB::table('service_order_items')->whereIn('service_order_id', $orderIds)->get(['description', 'quantity', 'subtotal_cents'])->groupBy('description')->map(fn ($group, $description) => ['description' => $description, 'quantity' => (int) $group->sum('quantity'), 'total_cents' => (int) $group->sum('subtotal_cents')])->values();
-        $discount = (int) DB::table('service_orders')->whereIn('id', $orderIds)->sum('discount_cents');
+        $items = DB::table('service_order_items')
+            ->join('payments', 'payments.service_order_id', '=', 'service_order_items.service_order_id')
+            ->join('financial_transactions', 'financial_transactions.payment_id', '=', 'payments.id')
+            ->where('financial_transactions.origin', 'service_order')
+            ->whereBetween('financial_transactions.occurred_at', $utcBounds)
+            ->selectRaw('service_order_items.description, SUM(service_order_items.quantity) as quantity, SUM(service_order_items.subtotal_cents) as total_cents')
+            ->groupBy('service_order_items.description')
+            ->orderByDesc('total_cents')
+            ->get()
+            ->map(fn ($row) => ['description' => (string) $row->description, 'quantity' => (int) $row->quantity, 'total_cents' => (int) $row->total_cents])
+            ->values();
+        $discount = (int) DB::table('service_orders')
+            ->join('payments', 'payments.service_order_id', '=', 'service_orders.id')
+            ->join('financial_transactions', 'financial_transactions.payment_id', '=', 'payments.id')
+            ->where('financial_transactions.origin', 'service_order')
+            ->whereBetween('financial_transactions.occurred_at', $utcBounds)
+            ->sum('service_orders.discount_cents');
         $daily = $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))->map(fn ($day) => (int) $day->sum('effective_cents'))->sortKeys();
         $methods = $orders->filter(fn ($row) => $row->method)->groupBy('method')->map(fn ($method) => ['quantity' => $method->count(), 'total_cents' => (int) $method->sum('effective_cents')]);
 
