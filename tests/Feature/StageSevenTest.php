@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Client;
 use App\Models\Role;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderPhoto;
@@ -106,9 +107,9 @@ class StageSevenTest extends TestCase
         return User::create(['role_id' => Role::where('name', $role)->value('id'), 'name' => $role, 'login' => $login, 'password' => 'Senha#Forte123', 'active' => true]);
     }
 
-    private function client()
+    private function client(): Client
     {
-        return \App\Models\Client::create(['name' => 'Cliente Histórico', 'document' => '52998224725', 'phone' => '35999999999', 'postal_code' => '37160000', 'street' => 'Rua A', 'number' => '1', 'district' => 'Centro', 'city' => 'Cidade', 'state' => 'MG']);
+        return Client::create(['name' => 'Cliente Histórico', 'document' => '52998224725', 'phone' => '35999999999', 'postal_code' => '37160000', 'street' => 'Rua A', 'number' => '1', 'district' => 'Centro', 'city' => 'Cidade', 'state' => 'MG']);
     }
 
     private function order(User $user, $client = null): ServiceOrder
