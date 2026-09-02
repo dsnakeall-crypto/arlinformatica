@@ -2,7 +2,6 @@
 
 use App\Services\BackupService;
 use Illuminate\Support\Facades\Schedule;
-use Throwable;
 
 Schedule::command('post-sale:check')->hourly()->withoutOverlapping();
 Schedule::command('scheduler:heartbeat')->everyMinute()->withoutOverlapping();
