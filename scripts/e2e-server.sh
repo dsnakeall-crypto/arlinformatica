@@ -9,7 +9,6 @@ touch "$DB"
 export APP_ENV=testing APP_DEBUG=false APP_KEY='base64:7n9S6t2H7Hn23xH5H3YgNnLh6dI0vY7Hc7Jt6nD6m1M='
 export DB_CONNECTION=sqlite DB_DATABASE="$DB"
 export SESSION_DRIVER=file CACHE_STORE=array QUEUE_CONNECTION=sync
-export PHP_CLI_SERVER_WORKERS=4
 
 cd "$ROOT"
 php artisan migrate:fresh --seed --force

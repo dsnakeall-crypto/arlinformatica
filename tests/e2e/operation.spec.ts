@@ -85,7 +85,11 @@ test.describe.serial('fluxo operacional principal', () => {
 
     await page.getByRole('button', { name: 'Marcar enviado' }).click();
     await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toBeVisible();
+    const approvalRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/budgets/1/status`) && request.method() === 'PATCH');
     await page.getByRole('button', { name: 'Aprovar orçamento' }).click();
+    const approvalPayload = (await approvalRequestPromise).postDataJSON();
+    expect(approvalPayload).toEqual({ status: 'approved' });
+    expect(approvalPayload).not.toHaveProperty('copy_items');
     await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toHaveCount(0);
 
     const statusSelect = page.locator('.status-picker select');
@@ -95,11 +99,19 @@ test.describe.serial('fluxo operacional principal', () => {
     const finalModal = page.locator('.modal-card').filter({ hasText: 'FINALIZAÇÃO DA OS' });
     await expect(finalModal).toBeVisible();
     await finalModal.getByRole('button', { name: 'USAR ITENS DO ORÇAMENTO APROVADO' }).click();
+    await expect(finalModal.getByText(/Itens vinculados ao orçamento aprovado/)).toBeVisible();
     await finalModal.locator('textarea').fill('Equipamento testado e funcionando.');
+    const finalizeRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/finalize`) && request.method() === 'POST');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
+    const finalizePayload = (await finalizeRequestPromise).postDataJSON();
+    expect(finalizePayload.approved_budget_id).toBeTruthy();
+    expect(finalizePayload).not.toHaveProperty('items');
     await expect(statusSelect).toHaveValue('completed');
     await expect(page.locator('.completion').getByText('Concluído', { exact: true })).toBeVisible();
     await expect(page.getByText('PDF Final')).toBeVisible();
+    const finalized = await api(page, `/orders/${orderId}`);
+    expect(finalized.body.items[0].source_budget_id).toBeTruthy();
+    expect(finalized.body.items[0].description).toBe('Formatação E2E');
 
     await page.getByRole('button', { name: 'Registrar pagamento' }).click();
     const paymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });

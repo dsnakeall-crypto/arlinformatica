@@ -18,28 +18,30 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Otimizador de foto no servidor com reamostragem, remoção de metadados e teto de 100 KB, ligado à abertura e visualização da OS.
 - [OK] Abertura e consulta de OS reais com cliente, Bancada/Externo, equipamento, fabricante, problema, snapshot, histórico, checklist 100% OK/avarias e foto privada.
 - [OK] Catálogos backend de equipamentos, fabricantes e Serviços, e templates iniciais completos do checklist por equipamento.
-- [OK] Administração real de Serviços/produtos, equipamentos, fabricantes e checklist por equipamento, com desativação sem apagar históricos.
+- [OK] Administração real de Serviços/produtos, equipamentos, fabricantes e checklist por equipamento, incluindo tipo Serviço/Produto, preço e garantia adicional em dias/meses/anos, com desativação sem apagar históricos.
 - [OK] Edição auditada de clientes sem alterar snapshots, com atalhos WhatsApp/Maps centralizados e observação obrigatória do item "Outro" preservada na OS/documentos.
 - [OK] Orçamento funcional dentro da OS, cálculo em centavos, revisões imutáveis, aprovação/recusa auditável e snapshot opcional de garantia por item (dias/meses/anos).
-- [OK] Finalização obrigatória antes do status Concluído, com resultado estruturado, laudo condicional, itens/snapshots, desconto validado em centavos, garantia e cópia idempotente de orçamento aprovado.
+- [OK] Finalização obrigatória antes do status Concluído, com resultado estruturado, laudo condicional, itens/snapshots, desconto validado em centavos, garantia e uso idempotente do orçamento aprovado somente quando escolhido na finalização.
 - [OK] Laudos técnicos com modelos configuráveis, fluxo rascunho/emissão, revisões imutáveis, fotos existentes e avaliação de dano elétrico escolhida pelo técnico.
 
 ## Documentos e financeiro
 - [OK] Geração privada de PDF do termo e orçamento A4 com Dompdf, snapshot de conteúdo/empresa/logo, checksum e histórico de revisões.
 - [OK] PDFs privados de laudo e fechamento, com snapshot, fotos incorporadas, checksum SHA-256, revisão e ações de visualizar/imprimir/baixar.
 - [OK] PDF privado de relatório financeiro mensal, com snapshot, checksum, revisões, empresa atual na emissão, resumos, formas, faturamento diário e itens.
-- [OK] Pagamento separado do status operacional, Entrada Rápida, correção auditável, Visão Geral, Caixa Diário automático, movimentações e fechamento mensal ligados às transações reais.
+- [OK] Pagamento separado do status operacional, Entrada Rápida, correção auditável, Visão Geral, Caixa Diário automático, movimentações e fechamento mensal ligados às transações reais; o relatório mensal é carregado sob demanda e não bloqueia a abertura do Financeiro.
 - [OK] Dados da empresa persistentes, logo privada em seis variantes proporcionais e documentos timbrados com dados dinâmicos.
+- [OK] Garantia Geral configurável pode ser incluída no PDF final e é preservada no snapshot histórico; itens sem garantia adicional não imprimem seção de “sem garantia”.
 - [OK] Laudo geral e de dano elétrico com responsabilidade técnica explícita, timbrado dinâmico e registro fotográfico.
-- [PENDENTE] Comparação visual final de todos os documentos em ambiente de navegador com dependências instaladas.
+- [PENDENTE] Comparação visual final de todos os documentos; as referências visuais antigas não estão acessíveis como arquivos nesta conversa e precisam ser reanexadas na homologação visual.
 
 ## Relacionamento, plataforma e administração
 - [OK] Pós-venda real e simplificado com três confirmações independentes, snapshots, auditoria, lembrete idempotente após 5 dias e substituição do ciclo após 60 dias sem apagar a OS.
 - [OK] Central interna com sino, contador, leitura individual/global e eventos de cliente, OS e pós-venda; PWA instalável, service worker, inscrições Web Push por dispositivo e catch-up com throttle.
 - [OK] Disparo Web Push criptografado pelo backend com `minishlink/web-push` v11, VAPID por configuração segura, integração aos eventos, payload mínimo, tratamento de falhas/inscrições expiradas e teste individual; `composer.json`/`composer.lock` foram validados pela CI. Não se afirma entrega em dispositivo físico sem teste real.
 - [OK] Métricas reais de fotos/arquivos privados, prévia e limpeza de fotos exclusiva do Master com confirmação forte e auditoria, sem excluir a OS.
-- [OK] Backup/restore ZIP executável com dados e arquivos privados, manifesto, checksums, validação, confirmação forte, backup de segurança, autorização Master, download privado, proteção Zip Slip e auditoria.
-- [OK] Central de Configurações em cards com Dados da Empresa, Identidade Visual, Documentos e Layout básico; escrita restrita a Master/Administrador.
+- [OK] Backup/restore ZIP executável com dados e arquivos privados gerenciados, manifesto, checksums, validação, confirmação forte, backup de segurança, autorização Master, download privado, proteção Zip Slip e auditoria; framework/logs, backups e temporários de recuperação são preservados. Banco e filesystem não são apresentados como uma única transação atômica.
+- [OK] Central de Configurações em cards funcionais com Dados da Empresa, Identidade Visual, Documentos, Garantia Geral e infraestrutura conforme perfil; nenhum card usa “Disponível” para função inexistente. Layout é explicitamente uma preferência local por dispositivo.
+- [OK] Menu e telas administrativas respeitam o perfil: Master vê tudo; Administrador acessa a administração permitida sem gestão exclusiva do Master; Funcionário vê somente as operações permitidas. O backend permanece a autoridade de autorização.
 - [OK] Usuários com pesquisa, criação, edição, perfis, ativação, proteção do último Master e redefinição de senha forte com hash/auditoria.
 - [OK] Backup manual/automático, retenção protegida, heartbeat e guia de hospedagem/migração executáveis sem processo residente.
 
@@ -50,22 +52,26 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] CI preparada para PHP, lint, testes, TypeScript e build.
 - [OK] Telas operacionais de clientes, Nova OS, listagem e visualização de OS usam backend real, com estados de carregamento, erro, vazio e validação.
 - [OK] Etapa 7 administrativa ligada ao backend real, com telas responsivas e testes de segurança, históricos, catálogos, checklist e fotos.
-- [OK] Playwright E2E versionado no `package.json`/`package-lock.json`, com SQLite isolado, seed próprio, servidor Laravel local, fluxo operacional principal, autorização por perfis, viewport mobile e `retries: 0`; execução real validada pelo GitHub Actions.
+- [OK] Playwright E2E versionado no `package.json`/`package-lock.json`, com SQLite isolado, seed próprio, servidor Laravel local, fluxo operacional principal, autorização por perfis, viewport mobile e `retries: 0`; execução real é exigida pelo GitHub Actions antes do merge.
+- [OK] Preferência Automático/Web-PC/Mobile-Tablet persistida localmente por dispositivo, aplicada ao shell e validada pelo E2E; não existe configuração global `layout_mode` na tela de Settings.
+- [OK] OS externa no mobile expõe atalhos WhatsApp, Maps, Foto, Status e Finalizar; a mensagem inicial do WhatsApp inclui OS e avarias registradas, e abrir a conversa não registra envio.
 - [PENDENTE] Validação física do Web Push em Android/iPhone com HTTPS e VAPID reais; roteiro em `docs/HOMOLOGACAO_WEB_PUSH.md`.
-- [PENDENTE] Comparação visual final: as oito referências foram fornecidas nesta tarefa, mas a captura/comparação automatizada completa e a homologação de impressão física ainda precisam ser concluídas.
+- [PENDENTE] Comparação visual final e homologação de impressão física; as referências precisam ser reanexadas para comparação lado a lado.
 - [PENDENTE] Deploy real na KingHost; o workflow manual de release está preparado, porém não foi executado no GitHub Actions nesta branch.
-- [PENDENTE] Preferência Aparência e Layout por dispositivo ainda requer validação/ajuste funcional completo.
 - [PENDENTE] Recuperação pública de senha por e-mail é opcional e não foi implementada; o reset administrativo Master permanece funcional.
 
 ## Auditoria da Etapa 10
 - [OK] Painel operacional sem faturamento, com indicadores de OS, ações rápidas, dados reais, busca, filtro e paginação.
-- [OK] Mesa de Chamados com OS abertas agrupadas pelos status operacionais reais.
+- [OK] Mesa de Chamados usa endpoint dedicado sem paginação e retorna todas as OS abertas agrupadas pelos status operacionais; teste de backend cobre mais de 20 OS abertas.
 - [OK] Seletor de status na OS; escolher Concluído encaminha obrigatoriamente à finalização.
 - [OK] Visualização do cliente com dados atuais e histórico decrescente, valor, OS e PDF final quando emitido.
-- [OK] Orçamento usa validade configurada e permite marcar enviado, aprovar/copiar itens ou recusar pela interface.
+- [OK] Orçamento usa validade configurada; “Aprovar orçamento” altera somente o status, e os itens do orçamento aprovado só são usados quando a ação explícita da finalização é escolhida.
 - [OK] Preferência Automático/Web-PC/Mobile-Tablet persistida localmente por dispositivo e aplicada ao shell.
+- [OK] Perfis/menu role-aware com checagem E2E e autorização backend preservada.
+- [OK] Serviços/Produtos permitem criar e editar preço, tipo e garantia adicional; Garantia Geral é persistida e historicamente snapshotada.
+- [OK] OS externa possui atalhos mobile e WhatsApp pré-preenchido com avarias sem confundir abertura da conversa com envio confirmado.
 - [OK] Backup automático persistido no banco, configurável somente pelo Master, auditado e respeitado pelo comando/scheduler.
 - [OK] Zip Slip cobre barras invertidas, segmentos `..`, absolutos, drive letter, byte nulo, PHP e `.env`; restauração usa staging e semântica de snapshot apenas no domínio privado gerenciado.
 - [PENDENTE] Homologação Web Push em Android/iPhone físico e deploy real na KingHost dependem de ambiente externo.
 - [PENDENTE] Recuperação pública por e-mail permanece opcional enquanto SMTP não estiver definido.
-- [PENDENTE] Comparação visual final e impressão física: as imagens do prompt não estão disponíveis como arquivos no ambiente para captura automatizada lado a lado, e a instalação foi bloqueada pelo proxy externo.
+- [PENDENTE] Comparação visual final e impressão física dependem do reenvio das referências visuais e de validação física.
