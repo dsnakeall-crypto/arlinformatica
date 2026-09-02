@@ -77,13 +77,27 @@ class FinanceController extends Controller
     {
         $period = $request->validate(['period' => ['nullable', 'date_format:Y-m']])['period'] ?? now(self::TZ)->format('Y-m');
         $start = CarbonImmutable::createFromFormat('Y-m-d H:i:s', "$period-01 00:00:00", self::TZ);
-        $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')->whereBetween('occurred_at', [$start->utc(), $start->endOfMonth()->utc()])->addSelect('payments.method', 'payments.service_order_id')->get();
-        $orders = $rows->where('origin', 'service_order');
-        $orderIds = $orders->pluck('service_order_id')->filter();
-        $items = DB::table('service_order_items')->whereIn('service_order_id', $orderIds)->select('description', DB::raw('SUM(quantity) as quantity'), DB::raw('SUM(subtotal_cents) as total_cents'))->groupBy('description')->get();
-        $discount = DB::table('service_orders')->whereIn('id', $orderIds)->sum('discount_cents');
+        $end = $start->endOfMonth();
+        $transactions = DB::table('financial_transactions')->whereBetween('occurred_at', [$start->utc(), $end->utc()])->orderBy('occurred_at')->get();
+        $adjustments = DB::table('financial_adjustments')->whereIn('transaction_id', $transactions->pluck('id'))->orderBy('id')->get()->groupBy('transaction_id')->map(fn ($items) => $items->last());
+        $payments = DB::table('payments')->whereIn('id', $transactions->pluck('payment_id')->filter())->get()->keyBy('id');
+        $rows = $transactions->map(function ($row) use ($adjustments, $payments) {
+            $adjustment = $adjustments->get($row->id);
+            $payment = $row->payment_id ? $payments->get($row->payment_id) : null;
+            $row->effective_cents = (int) ($adjustment->new_cents ?? $row->amount_cents);
+            $row->method = $payment?->method;
+            $row->service_order_id = $payment?->service_order_id;
 
-        return response()->json(['period' => $period, 'total_cents' => $rows->sum('effective_cents'), 'service_orders_cents' => $orders->sum('effective_cents'), 'quick_entries_cents' => $rows->where('origin', 'quick_entry')->sum('effective_cents'), 'paid_orders' => $orders->count(), 'average_ticket_cents' => $orders->count() ? intdiv($orders->sum('effective_cents'), $orders->count()) : 0, 'discount_cents' => $discount, 'daily' => $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))->map(fn ($day) => $day->sum('effective_cents'))->sortKeys(), 'methods' => $orders->groupBy('method')->map(fn ($method) => ['quantity' => $method->count(), 'total_cents' => $method->sum('effective_cents')]), 'transactions' => $rows->sortBy('occurred_at')->values(), 'items' => $items]);
+            return $row;
+        });
+        $orders = $rows->where('origin', 'service_order');
+        $orderIds = $orders->pluck('service_order_id')->filter()->unique()->values();
+        $items = DB::table('service_order_items')->whereIn('service_order_id', $orderIds)->get(['description', 'quantity', 'subtotal_cents'])->groupBy('description')->map(fn ($group, $description) => ['description' => $description, 'quantity' => (int) $group->sum('quantity'), 'total_cents' => (int) $group->sum('subtotal_cents')])->values();
+        $discount = (int) DB::table('service_orders')->whereIn('id', $orderIds)->sum('discount_cents');
+        $daily = $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))->map(fn ($day) => (int) $day->sum('effective_cents'))->sortKeys();
+        $methods = $orders->filter(fn ($row) => $row->method)->groupBy('method')->map(fn ($method) => ['quantity' => $method->count(), 'total_cents' => (int) $method->sum('effective_cents')]);
+
+        return response()->json(['period' => $period, 'total_cents' => (int) $rows->sum('effective_cents'), 'service_orders_cents' => (int) $orders->sum('effective_cents'), 'quick_entries_cents' => (int) $rows->where('origin', 'quick_entry')->sum('effective_cents'), 'paid_orders' => $orders->count(), 'average_ticket_cents' => $orders->count() ? intdiv((int) $orders->sum('effective_cents'), $orders->count()) : 0, 'discount_cents' => $discount, 'daily' => $daily, 'methods' => $methods, 'transactions' => $rows->values(), 'items' => $items]);
     }
 
     public function adjust(Request $request, int $transaction): JsonResponse
