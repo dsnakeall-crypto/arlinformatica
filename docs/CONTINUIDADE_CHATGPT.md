@@ -1,16 +1,20 @@
 # Continuidade do projeto ARL Informática no ChatGPT
 
-Este arquivo permite continuar o projeto em outro chat sem depender do histórico completo da conversa anterior.
+Este arquivo é o ponto de retomada do projeto em um novo chat. O GitHub é a fonte oficial; não reconstruir requisitos apenas por memória de conversa.
 
-## Fonte oficial
+## Fonte oficial e estado atual
 
-Repositório privado GitHub: `dsnakeall-crypto/arlinformatica`
+- Repositório privado: `dsnakeall-crypto/arlinformatica`.
+- Branch principal: `main`.
+- Baseline atual da `main`: Etapa 9 / PR #10, commit `558a520421c8f290b970dcbc50ff03f2b1161784`, com backend, frontend e E2E verdes após o merge.
+- Etapa atual: **PR #11**, branch `codex/implementar-etapa-10-do-projeto`.
+- Último commit funcional validado da PR #11: `58fd267864ad4f2f47af3dc7d445372c1edab6d5`.
+- CI #230 desse commit: **backend OK, frontend OK e Playwright E2E OK**, com `retries: 0`.
+- Alterações documentais posteriores também precisam de CI verde antes do merge.
 
-Branch principal: `main`
+## Arquivos obrigatórios para um novo chat
 
-O GitHub é a fonte oficial do código e da documentação.
-
-## Arquivos que um novo chat DEVE ler primeiro
+Leia, nesta ordem:
 
 1. `AGENTS.md`
 2. `docs/PROJETO_MESTRE.md`
@@ -20,305 +24,77 @@ O GitHub é a fonte oficial do código e da documentação.
 6. `docs/KINGHOST_DEPLOY.md`
 7. `docs/CONTINUIDADE_CHATGPT.md`
 
-`docs/PROJETO_MESTRE.md` é a especificação funcional oficial. Não reconstruir requisitos por memória.
+`docs/PROJETO_MESTRE.md` é a especificação funcional oficial. `CHECKLIST_FINAL.md` contém o estado verificável. Se os anexos visuais antigos não estiverem disponíveis no chat, não afirmar comparação visual concluída: pedir o reenvio somente na etapa de homologação visual.
 
-## Objetivo central
+## Forma de trabalho com o proprietário
 
-Sistema completo ARL Informática para gestão de assistência técnica, independente de ChatGPT/Codex/Supabase em produção e preparado para hospedagem própria, especialmente KingHost/shared hosting PHP + MySQL/MariaDB.
+O proprietário não quer programar, interpretar logs ou executar passos técnicos do GitHub quando o assistente consegue fazê-los. O assistente deve conduzir análise, alterações e CI diretamente pela PR e explicar apenas o necessário.
 
-Arquitetura definida:
+Nunca fazer merge automaticamente nem atualizar `main`. Antes de qualquer escrita no GitHub, conferir novamente o head da PR e os SHAs dos arquivos relevantes. Não usar force-push. Se um teste falhar, explicar arquivo/teste afetado, esperado versus obtido, causa provável, correção e impacto em produção antes de alterar o código.
 
-- Laravel/PHP 8.x no backend;
-- MySQL/MariaDB em produção;
-- React + TypeScript + Vite no frontend;
-- sem processo Node permanente em produção;
-- PDFs compatíveis com shared hosting/Dompdf;
-- fotos privadas reduzidas para no máximo 100 KB;
-- PWA/mobile próprio;
-- GitHub como fonte oficial do código.
-
-## Regras funcionais importantes confirmadas
-
-- Perfis Master, Administrador e Funcionário, com autorização real no backend.
-- Painel focado em OS abertas/concluídas, sem faturamento em destaque.
-- Clientes com nome/razão social, CPF/CNPJ, telefone e endereço.
-- CPF/CNPJ normalizado, validado e sem duplicidade.
-- CEP com consulta automática e fallback manual.
-- Catálogo único chamado Serviços, classificando item como serviço ou produto.
-- Garantia adicional configurável por item e preservada por snapshot da OS.
-- Atendimento: Análise na Bancada ou Atendimento Externo, sem gerar valor financeiro sozinho.
-- Checklist em accordion: nada marcado = 100% OK; avarias aparecem em documentos e mensagem de WhatsApp.
-- Fotos de equipamento com máximo 100 KB; excluir fotos nunca exclui OS, PDFs, laudos, clientes ou histórico.
-- OS concluída nunca é excluída fisicamente no fluxo normal.
-- Snapshots preservam dados históricos de cliente, preços, logo, garantia, termo, checklist etc.
-- Termo de recebimento/retirada gerado na abertura da OS, com texto editável em Configurações.
-- WhatsApp por mensagem pré-preenchida, sem afirmar envio se não houver confirmação real.
-- Google Maps clicável pelo endereço.
-- Orçamentos dentro da OS, com PDF timbrado, versões e aprovação/recusa.
-- Laudos técnicos configuráveis, inclusive dano elétrico; o sistema não determina sozinho a causa técnica.
-- Finalização da OS permite reparo realizado, sem reparo, cancelamento, inviável, sem defeito etc.
-- PDF final A4 preservado como documento histórico.
-- Pagamento separado do status operacional da OS.
-- Financeiro com caixa diário automático, entrada rápida, visão mensal e relatórios.
-- Pós-venda com três ações: confirmar serviço, pedir avaliação Google e convidar para Instagram.
-- Pós-venda bloqueia botão após confirmação de envio, lembra após 5 dias e cria novo ciclo após 60 dias conforme Projeto Mestre.
-- Central de notificações e PWA/Web Push quando suportado.
-- Layout Web/PC segue referências; Mobile/Tablet terá interface própria.
-- Configurações organizadas em cards por categoria.
-- Backup completo de dados/documentos/fotos + manifesto; código versionado no GitHub.
-- Documentação de hospedagem/migração para KingHost.
+Não enfraquecer testes para obter verde. Playwright deve permanecer com `retries: 0`; não usar `force: true`, clique JavaScript ou aumento de timeout para esconder hitbox, concorrência ou defeito funcional. Só considerar uma revisão pronta quando **backend + frontend + E2E** estiverem verdes no head atual.
 
-Links padrão:
+## Regra permanente de interface
 
-- Instagram: `https://www.instagram.com/allanluttembarck`
-- Google Review: `https://g.page/r/CSxkz5Y88MaJEBM/review`
+Priorizar **mobile first**. A base de CSS deve atender telas pequenas e as expansões devem preferir `min-width`. Controles precisam ter áreas de toque adequadas e inputs invisíveis não podem invadir a hitbox de elementos vizinhos.
 
-## Referências visuais
-
-Mapeadas em `docs/REFERENCIAS_VISUAIS.md`:
-
-- painel/menu;
-- clientes;
-- Nova OS;
-- seletor de status;
-- PDF final A4;
-- Pós-Venda;
-- `TIMBRADO.png` para orçamento e laudos;
-- logo ARL separada, quando fornecida.
-
-Se um novo chat precisar comparar visualmente e não tiver os anexos antigos, pedir ao usuário para anexá-los novamente.
-
-## Histórico técnico resumido
-
-O projeto foi reiniciado do zero usando GitHub + Codex Cloud para evitar dependência de arquivos somente no PC.
-
-### PR #1 — fundação
-
-Criou a fundação Laravel/React, schema inicial, APIs básicas, documentação e shell visual. Houve falhas iniciais de CI por lockfiles ausentes, bloqueio HTTP 403 no ambiente Codex para Packagist/npm e problemas de Pint. GitHub Actions foi usado para estabilizar a base.
+Os atalhos da OS externa são a referência atual: uma coluna na base, duas a partir de 360 px e cinco a partir de 720 px; altura mínima de 48 px. O input de Foto fica contido dentro do próprio botão. O E2E mede as caixas de WhatsApp, Maps, Foto, Status e Finalizar e falha se houver sobreposição, além de clicar normalmente em `#external-status-action`.
 
-A PR #1 foi mergeada antes do backend ficar totalmente verde.
+## Etapa 10 — o que já está implementado na PR #11
 
-### PR #2 — correção da CI
+### Painel e Mesa
 
-PR: `fix: corrigir CI do backend e remover workflow temporário`.
+O Painel usa a listagem paginada normal com resumo operacional. A Mesa usa `/api/orders/desk`, sem paginação, e deve mostrar todas as OS abertas nos status `analysis`, `waiting_part` e `in_service`. Teste backend cobre mais de 20 OS abertas.
 
-Foram corrigidos os últimos problemas de Pint, removido o workflow temporário e criado `tests/Feature/SmokeTest.php`.
+### Orçamento e finalização
 
-Antes do merge da PR #2, a CI passou completamente:
-
-- Composer/install: OK;
-- ambiente Laravel: OK;
-- migrations + seed: OK;
-- `vendor/bin/pint --test`: OK;
-- `php artisan test`: OK;
-- `npm ci`: OK;
-- `npm run typecheck`: OK;
-- `npm run build`: OK.
-
-PR #2 mergeada com sucesso em 01/09/2026.
-
-### PR #3 — Etapa 2: operação funcional de clientes e OS
-
-PR: `feat: operação funcional de clientes e abertura/visualização de OS`.
+A aprovação do orçamento altera apenas status. Os itens só são escolhidos explicitamente na finalização. Quando `approved_budget_id` existe, o backend é a fonte de verdade: valida o orçamento, carrega `budget_items` do banco, reconstrói preço/quantidade/garantia e ignora valores manipuláveis enviados pelo navegador. O orçamento não pode ser usado em outra OS nem reutilizado indevidamente.
 
-Implementado e incorporado à `main`:
+### Financeiro
 
-- interface real ligada ao backend para Clientes;
-- cadastro e busca de clientes;
-- normalização/validação de CPF/CNPJ e prevenção de duplicidade;
-- ViaCEP com fallback para preenchimento manual;
-- endpoints e fluxo funcional de clientes;
-- catálogos necessários para equipamento, fabricantes, serviços e checklist;
-- abertura transacional de OS;
-- escolha entre Análise na Bancada e Atendimento Externo;
-- checklist por equipamento, com nenhuma avaria = `CHECKLIST 100% OK`;
-- upload privado de fotos usando `PhotoOptimizer`, com teto de 100 KB;
-- listagem de OS com dados reais;
-- visualização de OS com cliente, problema, checklist, fotos e histórico;
-- teste de fluxo operacional em `tests/Feature/OperationFlowTest.php`;
-- telas responsivas para o fluxo operacional inicial.
-
-A primeira execução da CI da PR #3 falhou apenas por:
-
-- ordenação de imports em `routes/api.php` exigida pelo Pint;
-- parâmetro `id` sem tipo explícito no TypeScript.
-
-As duas correções foram feitas diretamente na branch da PR sem usar créditos adicionais do Codex.
-
-Depois das correções, a CI da PR #3 passou completamente:
-
-- backend: OK;
-- frontend: OK;
-- migrations + seed: OK;
-- Pint: OK;
-- testes PHP: OK;
-- `npm ci`: OK;
-- TypeScript/typecheck: OK;
-- build: OK.
-
-PR #3 mergeada com sucesso em 01/09/2026.
-
-Merge commit da Etapa 2 na `main`: `a721049d168982ebf553152aacabf18d0da1aa7e`.
-
-### PR #4 — Etapa 3: configurações, documentos, orçamento e garantia
-
-PR: `feat: configurações, identidade visual, documentos e orçamentos (Etapa 3)`.
-
-Implementado e incorporado à `main`:
-
-- central de Configurações em cards;
-- dados persistentes da empresa;
-- identidade visual com upload privado de logomarca;
-- geração de seis variantes proporcionais da logo em WebP;
-- textos configuráveis de documentos e termo;
-- infraestrutura reutilizável de documentos A4 com Dompdf;
-- armazenamento privado de PDFs com checksum SHA-256;
-- snapshots para preservação histórica;
-- termo da OS preservado historicamente;
-- orçamento dentro da OS;
-- revisões imutáveis de orçamento;
-- cálculo financeiro em centavos;
-- garantia opcional por item em dias, meses ou anos;
-- snapshot da garantia;
-- registro auditável de envio, aprovação e recusa;
-- testes automatizados em `tests/Feature/StageThreeTest.php`.
+O bloqueio antigo foi resolvido por arquitetura: a abertura do Financeiro carrega Visão Geral e Caixa Diário sem depender de `/finance/month`. Mensal e Relatórios carregam sob demanda e têm erro próprio. Assim uma falha do relatório mensal não derruba a tela financeira inteira.
 
-Durante a estabilização da PR #4 foram corrigidos diretamente na branch, sem novo consumo do Codex:
+### Perfis
 
-- formatação PHP exigida pelo Pint;
-- tipagem do `useEffect` no frontend;
-- fixture PNG inválida no teste de variantes da logomarca.
+`/api/me` fornece apenas contexto seguro de usuário/perfil. Master vê todas as áreas; Administrador vê a administração permitida sem funções exclusivas de Master; Funcionário vê somente operação. A interface filtra menus, mas o backend continua sendo a autoridade real de autorização.
 
-Depois das correções, a CI da PR #4 passou completamente para backend e frontend. A PR foi mergeada em 01/09/2026 e a execução da CI na própria `main` após o merge também terminou com sucesso.
+### Serviços e garantias
 
-Merge commit da Etapa 3 na `main`: `6299c6d17fd2160538d147986e9c5f9ae37bec3d`.
+Serviços/Produtos permitem criar e editar nome, tipo, preço e garantia adicional em dias/meses/anos. Garantia Geral pode ser habilitada nas Configurações, exige texto quando ativa e é preservada em snapshot do PDF final. Item sem garantia adicional não imprime mensagem artificial de “sem garantia”.
 
-### PR #5 — Etapa 4: finalização, PDF final e laudos técnicos
+### Atendimento externo mobile
 
-PR: `feat: finalização de OS, PDF final A4 e módulo de laudos técnicos`.
+A OS externa expõe WhatsApp, Maps, Foto, Status e Finalizar. WhatsApp inclui número da OS e avarias do checklist. Abrir a conversa não registra envio. O layout desses atalhos foi corrigido com mobile first e tem E2E de não sobreposição.
 
-Implementado e incorporado à `main`:
+### Layout por dispositivo
 
-- bloqueio da conclusão direta da OS, exigindo fluxo obrigatório de finalização;
-- finalização transacional com resultado estruturado, laudo condicional, itens, desconto, total, garantias, snapshots e auditoria;
-- cópia idempotente de itens do orçamento aprovado;
-- PDF final A4 privado, histórico e imutável, inclusive em finalização sem reparo e total zero;
-- fotos incorporadas ao PDF, checksum SHA-256 e histórico em `generated_documents`;
-- modelos editáveis de laudos técnicos, rascunho/emissão e revisões imutáveis;
-- laudo de dano elétrico com conclusão escolhida obrigatoriamente pelo técnico;
-- PDFs timbrados de laudo com fotos e responsabilidade técnica explícita;
-- interface da OS com Finalização, Laudos e Documentos, incluindo visualizar, imprimir e baixar;
-- testes automatizados em `tests/Feature/StageFourTest.php`.
+`automatic`, `desktop` e `mobile` são preferências locais em `localStorage`. Não existe `layout_mode` global em Settings nem em snapshot empresarial.
 
-Durante a estabilização da PR #5 foram corrigidos diretamente na branch, sem novo consumo do Codex:
+### Backup e restauração
 
-- formatação exigida pelo Pint em controllers;
-- importação PHP não utilizada;
-- tipagem/`useEffect` no frontend;
-- workflow temporário de correção removido antes do merge.
-A CI da PR #5 passou integralmente antes do merge. A PR foi mergeada em 01/09/2026 e a CI da `main` no merge também passou integralmente: Composer, migrations + seed, Pint, testes PHP, `npm ci`, TypeScript/typecheck e build.
+Backup automático é persistido no banco, auditado e lido pelo scheduler. Restauração usa staging e snapshot apenas do domínio privado gerenciado. Framework, logs, backups, temporários de recuperação, `.env`, PHP e arquivos fora do domínio gerenciado são preservados. Banco e filesystem são fases separadas; não afirmar atomicidade única entre os dois.
 
-Merge commit da Etapa 4 na `main`: `3d15295240692f7bbfbb40c512468385c704f81f`.
+## Correções estruturais importantes desta PR
 
-## Estado atual do sistema
+1. **Orçamento stale no frontend:** havia estados independentes de orçamento; a finalização podia ficar com dados antigos. A correção inicial refazia a consulta ao abrir a finalização, e a solução estrutural tornou o orçamento aprovado autoritativo no servidor por ID.
+2. **Financeiro:** `/finance/month` falhava no E2E quando fazia parte do carregamento inicial conjunto. A solução definitiva foi desacoplar o relatório mensal da abertura da tela, não aumentar timeout nem retirar teste.
+3. **Mobile externo:** o `input[type=file]` de Foto interceptava o clique de Status/Finalizar. Adicionar ID ao Status provou que o seletor não era a causa. A correção real foi CSS mobile-first, contendo o input na própria hitbox e testando geometricamente ausência de sobreposição.
 
-A `main` está estável e com CI verde até a Etapa 9. A PR #10 foi mergeada pelo commit `558a520421c8f290b970dcbc50ff03f2b1161784`; backend, frontend e Playwright E2E passaram integralmente na CI da `main` após o merge.
+## Validações externas ainda pendentes
 
-Já existem de forma funcional ou estrutural:
+- Web Push em Android/iPhone físico com HTTPS e VAPID reais.
+- Comparação visual final de PDFs/telas e homologação de impressão física; os arquivos de referência visual precisam ser reanexados.
+- Deploy real na KingHost.
+- Recuperação pública opcional de senha por e-mail enquanto SMTP não estiver definido; reset administrativo pelo Master permanece funcional.
 
-- Laravel/PHP + React/TypeScript;
-- autenticação/sessão e perfis iniciais;
-- instalador CLI para primeiro Master;
-- schema amplo do banco;
-- clientes reais ligados à interface;
-- CPF/CNPJ validado e sem duplicidade;
-- ViaCEP com fallback manual;
-- abertura e listagem real de OS;
-- numeração transacional de OS;
-- snapshots e histórico de status;
-- regra estrutural de não excluir OS;
-- Bancada/Atendimento Externo;
-- checklist de entrada com regra 100% OK;
-- fotos privadas ligadas à OS e otimizadas para até 100 KB;
-- catálogos básicos necessários à abertura da OS;
-- visualização inicial da OS;
-- central de Configurações com Dados da Empresa, Identidade Visual, Documentos, Layout e Laudos;
-- logo privada em seis variantes proporcionais;
-- termo e orçamento A4 privados gerados com Dompdf;
-- documentos com snapshot, checksum e preservação histórica;
-- orçamento dentro da OS com revisões, aprovação/recusa e garantia opcional por item;
-- finalização obrigatória da OS com resultado, valores, snapshots e auditoria;
-- PDF final A4 privado e histórico;
-- laudos técnicos configuráveis, inclusive dano elétrico com decisão humana;
-- layout desktop/mobile operacional inicial;
-- PWA manifest inicial;
-- documentação de arquitetura e KingHost;
-- CI funcional e verde para backend e frontend.
+Essas pendências devem ser descritas honestamente; não inventar homologação externa.
 
-## Etapa 3 — Configurações, documentos, orçamento e garantia
+## Regra para merge
 
-Concluída e mergeada pela PR #4 a partir da branch `codex/implementar-tela-de-configuracoes`.
+Não interpretar “Able to merge” como aprovação. Ausência de conflito Git não substitui testes.
 
-A implementação inclui dados configuráveis da empresa; upload privado da logo com seis variantes sem deformação; central responsiva de Configurações; textos configuráveis do termo; infraestrutura Dompdf privada com snapshot e SHA-256; termo da OS; orçamento A4 com revisões; cálculo em centavos; garantia opcional em dias, meses ou anos; e registro auditável de envio, aprovação ou recusa. Documentos emitidos preservam empresa, logo, texto e dados usados.
+Antes de liberar o merge, conferir o head atual da PR #11 e a CI correspondente. Backend, frontend e E2E precisam estar verdes. O merge é manual pelo proprietário.
 
-A validação final foi feita no GitHub Actions. Antes do merge, backend e frontend ficaram verdes; após o merge, a CI da `main` também passou integralmente.
+## Prompt curto para um novo chat
 
-## Etapa 4 — finalização, PDF final e laudos técnicos
-
-Concluída e mergeada pela PR #5 a partir da branch `codex/implementar-finalizacao-da-os-e-pdf`.
-
-O backend impede conclusão direta; a finalização transacional registra resultado, relato, itens, preços, desconto, total, garantia, usuário/data e snapshots; orçamento aprovado pode originar os itens uma única vez. A emissão cria PDF final privado e imutável, inclusive sem reparo e total zero, com checksum, snapshot, fotos incorporadas e histórico em `generated_documents`.
-
-Também foram implementados modelos iniciais editáveis de laudo, criação/edição/duplicação/ativação, laudos em rascunho e revisões emitidas imutáveis, PDF timbrado com fotos e fluxo específico de dano elétrico. A conclusão elétrica é sempre uma seleção humana obrigatória; o sistema não atribui responsabilidade a concessionária ou terceiro. A página da OS organiza Termo, Orçamentos, PDF Final e Laudos com ações de visualização, impressão e download, inclusive em layout mobile.
-
-Testes da Etapa 4 cobrem bloqueio da conclusão direta, reparo e não reparo, valores, orçamento aprovado, snapshots de catálogo/garantia, PDF, laudos/revisões, dano elétrico e proibição de exclusão da OS.
-
-## Etapa 5 — Pagamento e Financeiro (concluída e mergeada)
-
-A PR #6 foi concluída e mergeada na `main`. Merge commit: `195afdb13405f618c21744fe4455cbe44b4026bd`. A CI da `main` após o merge passou integralmente. Pagamento separado do status, Entrada Rápida, caixa diário, visão financeira, correções auditáveis e relatório mensal PDF fazem parte da base atual.
-
-## Etapa 6 — Pós-venda, notificações e PWA (concluída e mergeada)
-
-A PR #7 foi mergeada na `main` pelo commit `cedcbf252b7c8b0345242cb33bdbbb704d0ad594`, e a CI da `main` após o merge passou integralmente. A entrega inclui pós-venda simplificado ligado ao backend, regras idempotentes de 5/60 dias, confirmações manuais independentes com snapshot e auditoria, WhatsApp/Maps centralizados, central interna, scheduler/catch-up, PWA, service worker e gerenciamento seguro de inscrições Web Push. Naquele marco, o disparo Web Push criptografado ainda estava pendente; ele foi implementado posteriormente na Etapa 8/PR #9.
-
-## Etapa 7 — Administração, segurança, cadastros e fotos
-
-**CONCLUÍDA E MERGEADA.** A PR #8 foi mergeada na `main` pelo commit `2c709ba699ca05c8a7faf29c56e87bf77423f787`, e a CI da `main` após o merge passou integralmente. A entrega acrescentou administração exclusiva de usuários pelo Master, autorização backend das mutações administrativas, edição auditada de clientes, CRUD com inativação de Serviços/equipamentos/fabricantes/checklist, observação obrigatória de “Outro”, métricas reais e limpeza segura de fotos. A recuperação pública por e-mail não foi criada porque exigiria configuração externa; o reset administrativo pelo Master é funcional.
-
-## Etapa 8 — Backup, diagnóstico, Push e hospedagem
-
-**CONCLUÍDA E MERGEADA.** A PR #9 foi mergeada na `main` pelo commit `c1704153861d31c056e7cc8fa663d876c210285b`, com CI verde após o merge. A entrega inclui backup ZIP privado manual/automático, manifesto e checksums, download Master, upload validado, restauração com confirmação e backup de segurança, retenção, heartbeat, diagnóstico real e guia de migração/KingHost. O envio Web Push criptografado foi implementado com `minishlink/web-push` v11, a dependência está em `composer.json` e `composer.lock`, e o GitHub Actions instalou a biblioteca e validou backend/frontend com sucesso no commit `47ec97ab7937f7ee7e5c52f975c036101ee64a5e`. A validação em dispositivos físicos reais continua pendente e não se afirma entrega em iPhone/Android sem teste manual.
-
-## Pendências principais para as próximas etapas
-
-Consultar sempre `CHECKLIST_FINAL.md` e `docs/PROJETO_MESTRE.md` antes de implementar.
-
-## Etapa 9 — Homologação, E2E e release
-
-**CONCLUÍDA E MERGEADA.** A PR #10 foi mergeada pelo commit `558a520421c8f290b970dcbc50ff03f2b1161784`, e a CI da `main` passou integralmente após o merge. A branch `codex/adicionar-homologacao-final-e-e2e` adiciona ambiente Playwright isolado, cobertura de fluxo principal/perfis/mobile, job E2E, workflow manual de release e documentação de homologação. O Playwright está versionado no lockfile, usa `retries: 0` e já teve execução real bem-sucedida no GitHub Actions.
-
-Pendências externas mantidas honestamente:
-
-- validar Web Push em dispositivos reais suportados;
-- recuperação pública opcional por e-mail;
-- comparação visual final com as referências;
-- testes funcionais manuais finais do Projeto Mestre.
-
-## Regra de trabalho daqui para frente
-
-1. Não fazer grandes alterações direto na `main`.
-2. Criar branch nova para cada etapa relevante.
-3. Codex implementa nessa branch.
-4. Abrir PR.
-5. Esperar CI.
-6. Corrigir qualquer check vermelho antes do merge.
-7. Só fazer merge com backend e frontend verdes.
-8. Atualizar `CHECKLIST_FINAL.md` e este arquivo em marcos importantes.
-
-Nunca interpretar `Able to merge` como aprovação dos testes; isso só indica ausência de conflito de Git.
-
-Se o Codex Cloud bloquear Packagist/npm por HTTP 403, não repetir instalações várias vezes. Registrar a limitação e deixar a validação final para o GitHub Actions usando os lockfiles versionados.
-
-## Prompt pronto para continuar em um NOVO CHAT
-
-Use a `main` real do GitHub como fonte. A Etapa 8 foi concluída e mergeada pela PR #9 no commit `c1704153861d31c056e7cc8fa663d876c210285b`, com CI verde. A Etapa 9 foi mergeada pela PR #10 no commit `558a520421c8f290b970dcbc50ff03f2b1161784`, com a CI da `main` integralmente verde. Leia todos os documentos obrigatórios e verifique o estado real antes de continuar.
+> Continue a PR #11 do repositório privado `dsnakeall-crypto/arlinformatica`, branch `codex/implementar-etapa-10-do-projeto`. Leia os sete documentos obrigatórios, confira o head real e a CI antes de qualquer escrita. A Etapa 10 já contém Painel/Mesa, orçamento autoritativo no servidor, Financeiro mensal sob demanda, perfis, garantias, backup endurecido e atalhos externos mobile-first. Playwright deve permanecer com `retries: 0`; não enfraqueça testes. Não faça merge automaticamente. Se referências visuais não estiverem anexadas, não declare homologação visual concluída.
