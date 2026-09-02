@@ -1,0 +1,32 @@
+name: Temporary Stage 8 Pint Fix
+
+on:
+  push:
+    branches:
+      - codex/implementar-etapa-8-backup-e-web-push
+    paths:
+      - .github/workflows/fix-stage8-pint.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix-pint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/implementar-etapa-8-backup-e-web-push
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: vendor/bin/pint tests/Feature/StageEightTest.php
+      - name: Commit formatting fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/Feature/StageEightTest.php
+          git commit -m "fix: ajustar Pint do teste da etapa 8" || exit 0
+          git push origin HEAD:codex/implementar-etapa-8-backup-e-web-push
