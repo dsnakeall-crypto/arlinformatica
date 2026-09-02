@@ -24,15 +24,19 @@ class BackupService
         File::ensureDirectoryExists("$work/database");
 
         try {
-            $tables = array_values(array_diff(Schema::getTableListing(), self::EXCLUDED_TABLES));
+            $tables = array_values(array_filter(
+                Schema::getTableListing(),
+                fn (string $table) => ! in_array($this->logicalTableName($table), self::EXCLUDED_TABLES, true)
+            ));
             sort($tables);
             $checksums = [];
             $counts = [];
             foreach ($tables as $table) {
+                $logicalTable = $this->logicalTableName($table);
                 $json = json_encode(DB::table($table)->orderBy($this->primaryKey($table))->get()->map(fn ($row) => (array) $row)->all(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-                File::put("$work/database/$table.json", $json);
-                $checksums["database/$table.json"] = hash('sha256', $json);
-                $counts[$table] = DB::table($table)->count();
+                File::put("$work/database/$logicalTable.json", $json);
+                $checksums["database/$logicalTable.json"] = hash('sha256', $json);
+                $counts[$logicalTable] = DB::table($table)->count();
             }
             $this->copyPrivateStorage($work, $checksums);
             $manifest = [
@@ -109,12 +113,16 @@ class BackupService
             Schema::disableForeignKeyConstraints();
             try {
                 DB::transaction(function () use ($zip) {
-                    $tables = array_values(array_diff(Schema::getTableListing(), self::EXCLUDED_TABLES));
+                    $tables = array_values(array_filter(
+                        Schema::getTableListing(),
+                        fn (string $table) => ! in_array($this->logicalTableName($table), self::EXCLUDED_TABLES, true)
+                    ));
                     foreach (array_reverse($tables) as $table) {
                         DB::table($table)->delete();
                     }
                     foreach ($tables as $table) {
-                        $content = $zip->getFromName("database/$table.json");
+                        $logicalTable = $this->logicalTableName($table);
+                        $content = $zip->getFromName("database/$logicalTable.json");
                         if ($content === false) {
                             continue;
                         }
@@ -199,6 +207,11 @@ class BackupService
     private function safeEntry(string $name): bool
     {
         return $name !== '' && ! str_contains($name, "\0") && ! str_contains(str_replace('\\', '/', $name), '../') && ! str_starts_with($name, '/') && ! preg_match('/^[A-Za-z]:/', $name);
+    }
+
+    private function logicalTableName(string $table): string
+    {
+        return Str::afterLast($table, '.');
     }
 
     private function primaryKey(string $table): string
