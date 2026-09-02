@@ -12,7 +12,7 @@ class WebPushService
 {
     public function sendToUser(int $userId, array $payload): array
     {
-        if (! class_exists(WebPush::class) || ! filled(config('webpush.private_key'))) {
+        if (! class_exists(WebPush::class) || ! filled(config('webpush.subject')) || ! filled(config('webpush.public_key')) || ! filled(config('webpush.private_key'))) {
             return ['status' => 'not_configured', 'accepted' => 0];
         }
         $subscriptions = DB::table('push_subscriptions')->where('user_id', $userId)->get();
