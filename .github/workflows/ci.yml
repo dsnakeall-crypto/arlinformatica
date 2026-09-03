@@ -87,11 +87,19 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - name: Setup PHP for E2E without OPcache
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip
+          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip, :opcache
           coverage: none
+      - name: Verify E2E PHP runtime
+        run: |
+          php -v
+          if php -m | grep -Fxq 'Zend OPcache'; then
+            echo 'Zend OPcache must be disabled for the E2E PHP built-in server.' >&2
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with: {node-version: 22, cache: npm}
       - run: composer install --no-interaction --prefer-dist --no-progress
