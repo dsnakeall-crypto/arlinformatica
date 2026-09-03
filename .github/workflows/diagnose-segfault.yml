@@ -6,249 +6,244 @@ on:
       - codex/implementar-etapa-10-do-projeto
 
 jobs:
-  carbon-runtime-compare:
-    name: carbon-runtime-compare / PHP ${{ matrix.php }}
+  source-inventory:
+    name: Carbon and macro source inventory
     runs-on: ubuntu-22.04
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.2.33', '8.3.33']
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Inventory Carbon call sites and macro registrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics/source-inventory
+          grep -RInE --include='*.php' 'Carbon(Immutable)?::|\\Carbon\\Carbon(Immutable)?' app routes resources bootstrap config 2>/dev/null \
+            | tee diagnostics/source-inventory/carbon-call-sites.txt || true
+          grep -RInE --include='*.php' '(Carbon|CarbonImmutable).*::macro\(|::macro\(' app routes resources bootstrap config 2>/dev/null \
+            | tee diagnostics/source-inventory/macro-sites.txt || true
+          grep -RInE --include='*.php' 'createFromFormat|rawCreateFromFormat|parse\(' app routes resources bootstrap config 2>/dev/null \
+            | tee diagnostics/source-inventory/date-call-sites.txt || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-inventory-${{ github.sha }}
+          path: diagnostics/source-inventory/
+          if-no-files-found: warn
+          retention-days: 7
 
-      - name: Setup PHP ${{ matrix.php }}
+  carbon-surface-reduction:
+    name: Carbon surface reduction / PHP 8.2.33
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP 8.2.33
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: '8.2.33'
           extensions: mbstring
           coverage: none
-
       - run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: Stress Carbon in long-lived php -S
+      - name: Compare normal extensions versus php -n using fresh process per Carbon mode
         shell: bash
         run: |
           set -uo pipefail
-          SAFE_PHP="${{ matrix.php }}"
-          SAFE_PHP="${SAFE_PHP//./-}"
-          DIAG="$GITHUB_WORKSPACE/diagnostics/carbon-$SAFE_PHP"
-          CORE_DIR="$GITHUB_WORKSPACE/core-dumps-carbon-$SAFE_PHP"
-          mkdir -p "$DIAG" "$CORE_DIR"
-
-          {
-            echo '=== runtime ==='
-            php -v
-            php -r 'printf("opcache.enable_cli=%s\n", var_export(ini_get("opcache.enable_cli"), true));'
-            echo "php_bin=$(readlink -f "$(command -v php)")"
-          } | tee "$DIAG/runtime.txt"
-
-          CORE_PATTERN="$CORE_DIR/core.%e.%p.%t"
-          sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"
-          ulimit -c unlimited
-          echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)" | tee "$DIAG/result.txt"
-          echo "shell_core_soft=$(ulimit -Sc)" | tee -a "$DIAG/result.txt"
-
+          DIAG="$GITHUB_WORKSPACE/diagnostics/carbon-surface-8-2-33"
+          CORE_ROOT="$GITHUB_WORKSPACE/core-dumps-carbon-surface-8-2-33"
+          mkdir -p "$DIAG" "$CORE_ROOT"
+          php -m > "$DIAG/modules-normal.txt"
+          php -n -m > "$DIAG/modules-minimal.txt"
           cat > "$DIAG/router.php" <<'PHP'
           <?php
           require dirname(__DIR__, 2).'/vendor/autoload.php';
-
           use Carbon\Carbon;
           use Carbon\CarbonImmutable;
-
           header('Content-Type: application/json');
-          $mode = $_GET['mode'] ?? 'alternate';
-          $iterations = max(1, min((int) ($_GET['n'] ?? 1000), 10000));
+          $mode = $_GET['mode'] ?? 'immutable';
+          $iterations = max(1, min((int) ($_GET['n'] ?? 5000), 10000));
           $format = 'Y-m-d H:i:s';
           $value = '2026-09-01 00:00:00';
           $timezone = 'America/Sao_Paulo';
-
           for ($i = 0; $i < $iterations; $i++) {
               if ($mode === 'mutable') {
+                  $date = Carbon::createFromFormat($format, $value, $timezone);
+              } elseif ($mode === 'immutable') {
+                  $date = CarbonImmutable::createFromFormat($format, $value, $timezone);
+              } else {
                   $a = Carbon::createFromFormat($format, $value, $timezone);
-                  if ($a->format('Y-m-d') !== '2026-09-01') { throw new RuntimeException('mutable mismatch'); }
-                  continue;
+                  $date = CarbonImmutable::createFromFormat($format, $value, $timezone);
+                  if ($a->format('Y-m-d') !== $date->format('Y-m-d')) { throw new RuntimeException('alternate mismatch'); }
               }
-
-              if ($mode === 'immutable') {
-                  $b = CarbonImmutable::createFromFormat($format, $value, $timezone);
-                  if ($b->format('Y-m-d') !== '2026-09-01') { throw new RuntimeException('immutable mismatch'); }
-                  continue;
-              }
-
-              $a = Carbon::createFromFormat($format, $value, $timezone);
-              $b = CarbonImmutable::createFromFormat($format, $value, $timezone);
-              if ($a->format('Y-m-d') !== $b->format('Y-m-d')) { throw new RuntimeException('alternate mismatch'); }
+              if ($date->format('Y-m-d') !== '2026-09-01') { throw new RuntimeException('date mismatch'); }
           }
-
-          echo json_encode([
-              'ok' => true,
-              'pid' => getmypid(),
-              'mode' => $mode,
-              'iterations' => $iterations,
-          ]);
+          echo json_encode(['ok' => true, 'pid' => getmypid(), 'mode' => $mode, 'iterations' => $iterations]);
           PHP
-
-          php -d opcache.enable_cli=0 -S 127.0.0.1:8099 "$DIAG/router.php" > "$DIAG/server.log" 2>&1 &
-          SERVER_PID=$!
-          echo "server_pid=$SERVER_PID" | tee -a "$DIAG/result.txt"
-
-          READY=0
-          for _ in $(seq 1 50); do
-            set +e
-            RESPONSE="$(curl --max-time 2 -fsS 'http://127.0.0.1:8099/?mode=alternate&n=1' 2>&1)"
-            STATUS=$?
-            set -e
-            if [[ $STATUS -eq 0 ]]; then
-              READY=1
-              echo "ready_response=$RESPONSE" | tee -a "$DIAG/result.txt"
-              break
-            fi
-            sleep 0.2
-          done
-
-          if [[ $READY -ne 1 ]]; then
-            echo 'server_readiness_failed=yes' | tee -a "$DIAG/result.txt"
-            cat "$DIAG/server.log" | tee -a "$DIAG/result.txt"
-            exit 0
-          fi
-
-          if [[ -r "/proc/$SERVER_PID/limits" ]]; then
-            grep 'Max core file size' "/proc/$SERVER_PID/limits" | tee -a "$DIAG/result.txt"
-          fi
-
-          CRASHED=0
-          REQUESTS=0
-          for ROUND in $(seq 1 100); do
-            for URL in \
-              'http://127.0.0.1:8099/?mode=alternate&n=5000' \
-              'http://127.0.0.1:8099/?mode=mutable&n=5000' \
-              'http://127.0.0.1:8099/?mode=immutable&n=5000'; do
-              set +e
-              RESPONSE="$(curl --max-time 20 -fsS "$URL" 2>&1)"
-              STATUS=$?
-              set -e
-              REQUESTS=$((REQUESTS + 1))
-              if [[ $STATUS -ne 0 ]]; then
-                echo "failed_round=$ROUND request=$REQUESTS status=$STATUS response=$RESPONSE" | tee -a "$DIAG/result.txt"
-                CRASHED=1
-                break 2
+          : > "$DIAG/results.txt"
+          MINIMAL_CORE_KEPT=0
+          for RUNTIME in normal minimal; do
+            for MODE in alternate mutable immutable; do
+              CASE="$RUNTIME-$MODE"
+              CASE_DIR="$DIAG/$CASE"
+              CORE_DIR="$CORE_ROOT/$CASE"
+              mkdir -p "$CASE_DIR" "$CORE_DIR"
+              sudo sysctl -w "kernel.core_pattern=$CORE_DIR/core.%e.%p.%t" >/dev/null
+              ulimit -c unlimited
+              if [[ "$RUNTIME" == normal ]]; then
+                PHP_ARGS=(-d opcache.enable_cli=0)
+              else
+                PHP_ARGS=(-n -d date.timezone=UTC)
               fi
-              if (( REQUESTS % 30 == 0 )); then
-                echo "completed_requests=$REQUESTS last=$RESPONSE" | tee -a "$DIAG/result.txt"
+              php "${PHP_ARGS[@]}" -S 127.0.0.1:8099 "$DIAG/router.php" > "$CASE_DIR/server.log" 2>&1 &
+              SERVER_PID=$!
+              READY=0
+              for _ in $(seq 1 50); do
+                set +e
+                curl --max-time 2 -fsS "http://127.0.0.1:8099/?mode=$MODE&n=1" > "$CASE_DIR/readiness.json" 2> "$CASE_DIR/readiness.err"
+                STATUS=$?
+                set -e
+                if [[ $STATUS -eq 0 ]]; then READY=1; break; fi
+                sleep 0.2
+              done
+              if [[ $READY -ne 1 ]]; then
+                echo "$CASE readiness_failed=yes" | tee -a "$DIAG/results.txt"
+                set +e; kill "$SERVER_PID" 2>/dev/null; wait "$SERVER_PID" 2>/dev/null; set -e
+                continue
+              fi
+              FAILED=0
+              ATTEMPTED=0
+              for REQUEST in $(seq 1 100); do
+                ATTEMPTED=$REQUEST
+                set +e
+                curl --max-time 20 -fsS "http://127.0.0.1:8099/?mode=$MODE&n=5000" > "$CASE_DIR/response.json" 2> "$CASE_DIR/curl.err"
+                STATUS=$?
+                set -e
+                if [[ $STATUS -ne 0 ]]; then FAILED=1; break; fi
+              done
+              sleep 1
+              set +e
+              if kill -0 "$SERVER_PID" 2>/dev/null; then kill "$SERVER_PID" 2>/dev/null; fi
+              wait "$SERVER_PID"
+              WAIT_STATUS=$?
+              set -e
+              CORE_COUNT=$(find "$CORE_DIR" -maxdepth 1 -type f | wc -l)
+              echo "$CASE attempted=$ATTEMPTED failed=$FAILED curl_exit=${STATUS:-0} wait_status=$WAIT_STATUS core_count=$CORE_COUNT" | tee -a "$DIAG/results.txt"
+              find "$CORE_DIR" -maxdepth 1 -type f -printf "$CASE core=%f size=%s\n" | tee -a "$DIAG/results.txt" || true
+              if [[ $CORE_COUNT -gt 0 ]]; then
+                if [[ "$RUNTIME" == minimal && $MINIMAL_CORE_KEPT -eq 0 ]]; then
+                  MINIMAL_CORE_KEPT=1
+                  echo "$CASE full_core_retained=yes" | tee -a "$DIAG/results.txt"
+                else
+                  while IFS= read -r CORE; do
+                    sha256sum "$CORE" >> "$CASE_DIR/core-sha256-before-removal.txt"
+                    rm -f "$CORE"
+                  done < <(find "$CORE_DIR" -maxdepth 1 -type f)
+                  echo "$CASE full_core_retained=no core_removed_to_limit_artifact_size=yes" | tee -a "$DIAG/results.txt"
+                fi
               fi
             done
           done
-
-          sleep 2
-          if kill -0 "$SERVER_PID" 2>/dev/null; then
-            echo 'server_alive_after_stress=yes' | tee -a "$DIAG/result.txt"
-            kill "$SERVER_PID" || true
-            wait "$SERVER_PID" || true
-          else
-            echo 'server_alive_after_stress=no' | tee -a "$DIAG/result.txt"
-            CRASHED=1
-          fi
-
-          echo "requests_completed=$REQUESTS" | tee -a "$DIAG/result.txt"
-          echo "crash_observed=$CRASHED" | tee -a "$DIAG/result.txt"
-          find "$CORE_DIR" -maxdepth 1 -type f -printf 'core=%f size=%s\n' | tee -a "$DIAG/result.txt" || true
-          tail -200 "$DIAG/server.log" > "$DIAG/server-tail.txt" || true
-
-      - name: Upload Carbon runtime comparison
+      - name: Upload Carbon surface reduction
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: carbon-runtime-php-${{ matrix.php }}-${{ github.sha }}
+          name: carbon-surface-php-8.2.33-${{ github.sha }}
           path: |
-            diagnostics/carbon-*/
-            core-dumps-carbon-*/
+            diagnostics/carbon-surface-8-2-33/
+            core-dumps-carbon-surface-8-2-33/
           if-no-files-found: warn
           retention-days: 7
 
   e2e-runtime-compare:
-    name: e2e-runtime-compare / PHP ${{ matrix.php }}
+    name: e2e-runtime-compare / PHP ${{ matrix.php }} / 3 fresh runs
     runs-on: ubuntu-22.04
-    timeout-minutes: 35
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         php: ['8.2.33', '8.3.33']
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip
           coverage: none
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
       - run: composer install --no-interaction --prefer-dist --no-progress
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-
-      - name: Run full E2E normally with core dump enabled
+      - name: Run full E2E 3 times with fresh PHP process and request accounting
         shell: bash
         run: |
           set -uo pipefail
           SAFE_PHP="${{ matrix.php }}"
           SAFE_PHP="${SAFE_PHP//./-}"
           DIAG="$GITHUB_WORKSPACE/diagnostics/e2e-$SAFE_PHP"
-          CORE_DIR="$GITHUB_WORKSPACE/core-dumps-e2e-$SAFE_PHP"
-          mkdir -p "$DIAG" "$CORE_DIR"
-
+          CORE_ROOT="$GITHUB_WORKSPACE/core-dumps-e2e-$SAFE_PHP"
+          mkdir -p "$DIAG" "$CORE_ROOT"
           {
-            echo '=== runtime ==='
             php -v
             php -r 'printf("opcache.enable_cli=%s\n", var_export(ini_get("opcache.enable_cli"), true));'
             echo "php_bin=$(readlink -f "$(command -v php)")"
-            echo '=== playwright retries ==='
             grep -n 'retries' playwright.config.ts || true
           } | tee "$DIAG/runtime.txt"
-
-          CORE_PATTERN="$CORE_DIR/core.%e.%p.%t"
-          sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"
-          ulimit -c unlimited
-          {
-            echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)"
-            echo "shell_core_soft=$(ulimit -Sc)"
-            echo "shell_core_hard=$(ulimit -Hc)"
-          } | tee "$DIAG/core-setup.txt"
-
-          set +e
-          CI=false npm run test:e2e 2>&1 | tee "$DIAG/playwright-console.txt"
-          E2E_STATUS=${PIPESTATUS[0]}
-          set -e
-
-          echo "e2e_exit=$E2E_STATUS" | tee "$DIAG/result.txt"
-          echo "core_pattern_final=$(cat /proc/sys/kernel/core_pattern)" | tee -a "$DIAG/result.txt"
-          find "$CORE_DIR" -maxdepth 1 -type f -printf 'core=%f size=%s\n' | tee -a "$DIAG/result.txt" || true
-
-          if [[ $E2E_STATUS -eq 0 ]]; then
-            echo 'e2e_result=green' | tee -a "$DIAG/result.txt"
-          else
-            echo 'e2e_result=failed' | tee -a "$DIAG/result.txt"
-          fi
-
-          # Diagnostic workflow records the natural result but does not mask it as a product fix.
+          : > "$DIAG/summary.txt"
+          KEPT_CORE=0
+          for RUN in 1 2 3; do
+            RUN_DIAG="$DIAG/run-$RUN"
+            RUN_CORE="$CORE_ROOT/run-$RUN"
+            mkdir -p "$RUN_DIAG" "$RUN_CORE"
+            sudo sysctl -w "kernel.core_pattern=$RUN_CORE/core.%e.%p.%t" >/dev/null
+            ulimit -c unlimited
+            rm -rf playwright-report test-results
+            set +e
+            CI=1 npm run test:e2e 2>&1 | tee "$RUN_DIAG/playwright-console.txt"
+            E2E_STATUS=${PIPESTATUS[0]}
+            set -e
+            LOG="$RUN_DIAG/playwright-console.txt"
+            ACCEPTED=$(grep -c ' Accepted$' "$LOG" 2>/dev/null || true)
+            ROUTED=$(grep -c ' URI: ' "$LOG" 2>/dev/null || true)
+            STATIC=$(grep -Ec '\[[0-9]{3}\]: (GET|HEAD) ' "$LOG" 2>/dev/null || true)
+            SEGFAULTS=$(grep -c 'Segmentation fault' "$LOG" 2>/dev/null || true)
+            LAST_ROUTE=$(grep ' URI: ' "$LOG" 2>/dev/null | tail -n 1 || true)
+            PREVIOUS_ROUTE=$(grep ' URI: ' "$LOG" 2>/dev/null | tail -n 2 | head -n 1 || true)
+            FIRST_REFUSED=$(grep -m1 'ERR_CONNECTION_REFUSED' "$LOG" 2>/dev/null || true)
+            printf 'run=%s e2e_exit=%s accepted_connections=%s routed_requests=%s static_responses=%s segfault_lines=%s\n' "$RUN" "$E2E_STATUS" "$ACCEPTED" "$ROUTED" "$STATIC" "$SEGFAULTS" | tee -a "$DIAG/summary.txt"
+            printf 'run=%s previous_routed=%s\n' "$RUN" "$PREVIOUS_ROUTE" | tee -a "$DIAG/summary.txt"
+            printf 'run=%s last_routed=%s\n' "$RUN" "$LAST_ROUTE" | tee -a "$DIAG/summary.txt"
+            printf 'run=%s first_connection_refused=%s\n' "$RUN" "$FIRST_REFUSED" | tee -a "$DIAG/summary.txt"
+            grep ' URI: ' "$LOG" | nl -ba > "$RUN_DIAG/routed-requests-numbered.txt" || true
+            grep ' Accepted$' "$LOG" | nl -ba > "$RUN_DIAG/accepted-connections-numbered.txt" || true
+            find "$RUN_CORE" -maxdepth 1 -type f -printf 'core=%f size=%s\n' > "$RUN_DIAG/cores.txt" || true
+            if find "$RUN_CORE" -maxdepth 1 -type f | grep -q .; then
+              if [[ $KEPT_CORE -eq 0 ]]; then
+                KEPT_CORE=1
+                echo "run=$RUN full_core_retained=yes" | tee -a "$DIAG/summary.txt"
+              else
+                while IFS= read -r CORE; do
+                  sha256sum "$CORE" >> "$RUN_DIAG/core-sha256-before-removal.txt"
+                  rm -f "$CORE"
+                done < <(find "$RUN_CORE" -maxdepth 1 -type f)
+                echo "run=$RUN full_core_retained=no duplicate_core_removed_to_limit_artifact_size=yes" | tee -a "$DIAG/summary.txt"
+              fi
+            fi
+            if [[ -d playwright-report ]]; then cp -a playwright-report "$RUN_DIAG/playwright-report"; fi
+            sleep 2
+          done
           exit 0
-
-      - name: Upload E2E runtime comparison
+      - name: Upload repeated E2E comparison
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-runtime-php-${{ matrix.php }}-${{ github.sha }}
+          name: e2e-repeated-php-${{ matrix.php }}-${{ github.sha }}
           path: |
             diagnostics/e2e-*/
             core-dumps-e2e-*/
-            playwright-report/
             storage/logs/laravel.log
           if-no-files-found: warn
           retention-days: 7
