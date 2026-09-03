@@ -13,11 +13,14 @@ jobs:
       actions: read
       contents: read
     steps:
-      - uses: shivammathur/setup-php@v2
+      - name: Setup exact PHP 8.2 build with matching debug symbols
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip
           coverage: none
+        env:
+          debug: true
 
       - name: Download captured core artifact
         shell: bash
@@ -38,40 +41,41 @@ jobs:
           { echo "artifact_id=$CORE_ARTIFACT_ID"; echo "core=$CORE"; ls -lh "$CORE"; file "$CORE"; } \
             | tee diagnostics/core-source.txt
 
-      - name: Verify exact PHP build and prepare symbols
+      - name: Verify exact PHP binary and debug file
         shell: bash
         run: |
           set -euo pipefail
           PHP_BIN="$(readlink -f "$(command -v php)")"
           EXPECTED="$(grep -i 'Build ID:' captured/diagnostics/runtime-before.txt | tail -1 | sed -E 's/.*Build ID:[[:space:]]*//')"
           CURRENT="$(readelf -n "$PHP_BIN" 2>/dev/null | grep -i 'Build ID:' | tail -1 | sed -E 's/.*Build ID:[[:space:]]*//')"
-          DBG_VERSION='8.2.33-1+ubuntu22.04.1+deb.sury.org+1'
+          DEBUG_FILE="/usr/lib/debug/.build-id/${EXPECTED:0:2}/${EXPECTED:2}.debug"
           {
             echo "php_bin=$PHP_BIN"
             php -v
-            echo "debug_package_version=$DBG_VERSION"
             echo "expected_build_id=$EXPECTED"
             echo "current_build_id=$CURRENT"
+            echo "expected_debug_file=$DEBUG_FILE"
+            if [[ -f "$DEBUG_FILE" ]]; then
+              echo "debug_file_present=yes"
+              file "$DEBUG_FILE"
+              ls -lh "$DEBUG_FILE"
+            else
+              echo "debug_file_present=no"
+            fi
           } | tee diagnostics/php-build-match.txt
-          [[ -n "$EXPECTED" && "$CURRENT" == "$EXPECTED" ]] || { echo 'BUILD ID MISMATCH' | tee -a diagnostics/php-build-match.txt; exit 1; }
+
+          [[ -n "$EXPECTED" && "$CURRENT" == "$EXPECTED" ]] || {
+            echo 'BUILD ID MISMATCH' | tee -a diagnostics/php-build-match.txt
+            exit 1
+          }
+          [[ -f "$DEBUG_FILE" ]] || {
+            echo 'MATCHING SETUP-PHP DEBUG SYMBOLS NOT FOUND' | tee -a diagnostics/php-build-match.txt
+            exit 1
+          }
 
           sudo apt-get update -qq
           sudo apt-get install -y gdb libc6-dbg
-          mkdir -p /tmp/php-dbgsym /tmp/debug-root
-          BASE='https://ppa.launchpadcontent.net/ondrej/php/ubuntu/pool/main/p/php8.2'
-          for COMPONENT in cli common sqlite3 gd zip mbstring; do
-            FILE="php8.2-${COMPONENT}-dbgsym_${DBG_VERSION}_amd64.ddeb"
-            if curl --fail --location --silent --show-error "$BASE/$FILE" -o "/tmp/php-dbgsym/$FILE"; then
-              dpkg-deb -x "/tmp/php-dbgsym/$FILE" /tmp/debug-root
-              echo "debug_symbols_extracted=$FILE" | tee -a diagnostics/php-build-match.txt
-            else
-              echo "debug_symbols_unavailable=$FILE" | tee -a diagnostics/php-build-match.txt
-            fi
-          done
-          DEBUG_FILE="/tmp/debug-root/usr/lib/debug/.build-id/${EXPECTED:0:2}/${EXPECTED:2}.debug"
-          echo "expected_cli_debug_file=$DEBUG_FILE" | tee -a diagnostics/php-build-match.txt
-          test -f "$DEBUG_FILE" || { echo 'MATCHING CLI DEBUG SYMBOLS NOT FOUND' | tee -a diagnostics/php-build-match.txt; exit 1; }
-          find /tmp/debug-root/usr/lib/debug -type f -printf '%p %s bytes\n' 2>/dev/null | sort \
+          find /usr/lib/debug/.build-id -type f -printf '%p %s bytes\n' 2>/dev/null | sort \
             > diagnostics/debug-symbol-files.txt || true
 
       - name: Extract full native backtrace offline
@@ -86,15 +90,19 @@ jobs:
             -ex 'set pagination off' \
             -ex 'set print pretty on' \
             -ex 'set debuginfod enabled on' \
-            -ex 'set debug-file-directory /tmp/debug-root/usr/lib/debug:/usr/lib/debug' \
+            -ex 'set debug-file-directory /usr/lib/debug' \
             -ex 'info files' \
             -ex 'info sharedlibrary' \
             -ex 'info registers' \
             -ex 'x/16i $pc-32' \
             -ex 'thread apply all bt full' \
             -ex 'quit' > diagnostics/gdb-backtrace.txt 2>&1 || true
-          { sed -n '1,160p' diagnostics/gdb-backtrace.txt; echo '=== FRAMES ==='; grep -E '^#[0-9]+' diagnostics/gdb-backtrace.txt | head -160 || true; } \
-            | tee diagnostics/gdb-summary.txt
+          {
+            echo '=== FIRST 180 LINES ==='
+            sed -n '1,180p' diagnostics/gdb-backtrace.txt
+            echo '=== FRAMES ==='
+            grep -E '^#[0-9]+' diagnostics/gdb-backtrace.txt | head -180 || true
+          } | tee diagnostics/gdb-summary.txt
 
       - name: Upload post-mortem backtrace
         if: always()
