@@ -6,83 +6,6 @@ on:
       - codex/implementar-etapa-10-do-projeto
 
 jobs:
-  core-smoke:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Validate core dump support with a minimal native crash
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "$GITHUB_WORKSPACE/core-dumps-smoke" diagnostics-smoke
-          CORE_PATTERN="$GITHUB_WORKSPACE/core-dumps-smoke/core.%e.%p.%t"
-
-          {
-            echo "=== core environment before ==="
-            echo "soft_core=$(ulimit -Sc)"
-            echo "hard_core=$(ulimit -Hc)"
-            echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)"
-            echo "core_uses_pid=$(cat /proc/sys/kernel/core_uses_pid)"
-            echo "suid_dumpable=$(cat /proc/sys/fs/suid_dumpable)"
-            grep -E 'CoreDumping|NoNewPrivs|Seccomp' /proc/self/status || true
-            ls -ld "$GITHUB_WORKSPACE/core-dumps-smoke"
-          } | tee diagnostics-smoke/before.txt
-
-          sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"
-          ulimit -c unlimited
-
-          cat > /tmp/crash.c <<'EOF'
-          int main(void) {
-              *(volatile int *)0 = 1;
-              return 0;
-          }
-          EOF
-          gcc -g -O0 /tmp/crash.c -o /tmp/crash
-
-          set +e
-          /tmp/crash
-          STATUS=$?
-          set -e
-
-          {
-            echo "status=$STATUS"
-            echo "soft_core_after=$(ulimit -Sc)"
-            echo "core_pattern_after=$(cat /proc/sys/kernel/core_pattern)"
-            echo "core files:"
-            find "$GITHUB_WORKSPACE/core-dumps-smoke" -maxdepth 1 -type f -printf '%f %s bytes\n' || true
-          } | tee diagnostics-smoke/after.txt
-
-          if [[ "$STATUS" -ne 139 ]]; then
-            echo "Expected SIGSEGV exit status 139, got $STATUS" >&2
-            exit 1
-          fi
-
-          CORE="$(find "$GITHUB_WORKSPACE/core-dumps-smoke" -maxdepth 1 -type f -name 'core.*' -print -quit)"
-          if [[ -z "$CORE" ]]; then
-            echo "SIGSEGV occurred but runner did not create a core file." | tee diagnostics-smoke/no-core.txt
-            exit 2
-          fi
-
-          sudo apt-get update -qq
-          sudo apt-get install -y gdb
-          gdb --batch -q /tmp/crash "$CORE" \
-            -ex 'set pagination off' \
-            -ex 'info registers' \
-            -ex 'bt full' > diagnostics-smoke/gdb.txt 2>&1 || true
-
-      - name: Upload core smoke diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: core-smoke-${{ github.sha }}
-          path: |
-            diagnostics-smoke/
-            core-dumps-smoke/
-          if-no-files-found: warn
-          retention-days: 7
-
   e2e-core-php82:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
@@ -135,7 +58,7 @@ jobs:
             readelf -n "$PHP_BIN" 2>/dev/null | grep -i 'Build ID' || true
           } | tee diagnostics/runtime-before.txt
 
-      - name: Run E2E normally with core dumps enabled
+      - name: Run E2E normally and inspect live PHP process
         shell: bash
         run: |
           set -uo pipefail
@@ -144,20 +67,62 @@ jobs:
 
           {
             echo "core_pattern before=$(cat /proc/sys/kernel/core_pattern)"
-            if sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"; then
-              echo "core_pattern after=$(cat /proc/sys/kernel/core_pattern)"
-            else
-              echo "WARNING: could not change kernel.core_pattern"
-              echo "core_pattern unchanged=$(cat /proc/sys/kernel/core_pattern)"
-            fi
-
+            sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"
+            echo "core_pattern after=$(cat /proc/sys/kernel/core_pattern)"
             ulimit -c unlimited
-            echo "ulimit core after=$(ulimit -c)"
-            echo "coredump_filter=$(cat /proc/self/coredump_filter)"
+            echo "shell soft core=$(ulimit -Sc)"
+            echo "shell hard core=$(ulimit -Hc)"
+            echo "shell coredump_filter=$(cat /proc/self/coredump_filter)"
           } | tee diagnostics/core-setup.txt
 
           set +e
-          CI=false npm run test:e2e
+          CI=false npm run test:e2e &
+          E2E_PID=$!
+          set -e
+
+          PHP_PID=""
+          for _ in $(seq 1 150); do
+            PHP_PID="$(pgrep -f 'php -S 127.0.0.1:8000' | head -n 1 || true)"
+            if [[ -n "$PHP_PID" && -r "/proc/$PHP_PID/limits" ]]; then
+              break
+            fi
+            sleep 0.2
+          done
+
+          if [[ -n "$PHP_PID" && -r "/proc/$PHP_PID/limits" ]]; then
+            {
+              echo "=== process ids ==="
+              echo "E2E_PID=$E2E_PID"
+              echo "PHP_PID=$PHP_PID"
+              echo "=== PHP command line ==="
+              tr '\0' ' ' < "/proc/$PHP_PID/cmdline"; echo
+              echo "=== PHP executable ==="
+              readlink -f "/proc/$PHP_PID/exe" || true
+              echo "=== PHP cwd ==="
+              readlink -f "/proc/$PHP_PID/cwd" || true
+              echo "=== PHP limits ==="
+              cat "/proc/$PHP_PID/limits"
+              echo "=== PHP status ==="
+              grep -E '^(Name|Pid|PPid|TracerPid|Uid|Gid|CoreDumping|NoNewPrivs|Seccomp):' "/proc/$PHP_PID/status" || true
+              echo "=== PHP coredump_filter ==="
+              cat "/proc/$PHP_PID/coredump_filter" || true
+              echo "=== ancestry ==="
+              CURRENT="$PHP_PID"
+              for _ in $(seq 1 8); do
+                [[ -r "/proc/$CURRENT/status" ]] || break
+                NAME="$(awk '/^Name:/{print $2}' "/proc/$CURRENT/status")"
+                PPID_VALUE="$(awk '/^PPid:/{print $2}' "/proc/$CURRENT/status")"
+                printf 'pid=%s name=%s ppid=%s\n' "$CURRENT" "$NAME" "$PPID_VALUE"
+                [[ "$PPID_VALUE" == "0" ]] && break
+                CURRENT="$PPID_VALUE"
+              done
+            } | tee diagnostics/php-process.txt
+          else
+            echo "PHP web-server process was not found while E2E was running." | tee diagnostics/php-process-not-found.txt
+          fi
+
+          set +e
+          wait "$E2E_PID"
           STATUS=$?
           set -e
 
