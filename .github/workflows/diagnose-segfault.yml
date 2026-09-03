@@ -110,3 +110,126 @@ jobs:
           path: diagnostics/
           if-no-files-found: error
           retention-days: 7
+
+  carbon-trait-cache-repro:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Stress Carbon and CarbonImmutable in one long-lived php -S process
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p diagnostics/carbon-cache core-dumps-carbon
+          CORE_PATTERN="$GITHUB_WORKSPACE/core-dumps-carbon/core.%e.%p.%t"
+          sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"
+          ulimit -c unlimited
+
+          cat > diagnostics/carbon-cache/router.php <<'PHP'
+          <?php
+          require dirname(__DIR__, 2).'/vendor/autoload.php';
+
+          use Carbon\Carbon;
+          use Carbon\CarbonImmutable;
+
+          header('Content-Type: application/json');
+          $mode = $_GET['mode'] ?? 'alternate';
+          $iterations = max(1, min((int) ($_GET['n'] ?? 1000), 10000));
+          $format = 'Y-m-d H:i:s';
+          $value = '2026-09-01 00:00:00';
+          $timezone = 'America/Sao_Paulo';
+
+          for ($i = 0; $i < $iterations; $i++) {
+              if ($mode === 'mutable') {
+                  $a = Carbon::createFromFormat($format, $value, $timezone);
+                  if ($a->format('Y-m-d') !== '2026-09-01') { throw new RuntimeException('mutable mismatch'); }
+                  continue;
+              }
+
+              if ($mode === 'immutable') {
+                  $b = CarbonImmutable::createFromFormat($format, $value, $timezone);
+                  if ($b->format('Y-m-d') !== '2026-09-01') { throw new RuntimeException('immutable mismatch'); }
+                  continue;
+              }
+
+              $a = Carbon::createFromFormat($format, $value, $timezone);
+              $b = CarbonImmutable::createFromFormat($format, $value, $timezone);
+              if ($a->format('Y-m-d') !== $b->format('Y-m-d')) { throw new RuntimeException('alternate mismatch'); }
+          }
+
+          echo json_encode([
+              'ok' => true,
+              'pid' => getmypid(),
+              'mode' => $mode,
+              'iterations' => $iterations,
+              'carbon' => Carbon::VERSION ?? null,
+          ]);
+          PHP
+
+          php -d opcache.enable_cli=0 -S 127.0.0.1:8099 diagnostics/carbon-cache/router.php \
+            > diagnostics/carbon-cache/server.log 2>&1 &
+          SERVER_PID=$!
+          echo "server_pid=$SERVER_PID" | tee diagnostics/carbon-cache/result.txt
+
+          for _ in $(seq 1 50); do
+            curl -fsS 'http://127.0.0.1:8099/?mode=alternate&n=1' >/dev/null && break
+            sleep 0.2
+          done
+
+          if [[ -r "/proc/$SERVER_PID/limits" ]]; then
+            grep 'Max core file size' "/proc/$SERVER_PID/limits" | tee -a diagnostics/carbon-cache/result.txt
+          fi
+
+          FAILURE=0
+          REQUESTS=0
+
+          for ROUND in $(seq 1 100); do
+            for URL in \
+              'http://127.0.0.1:8099/?mode=alternate&n=5000' \
+              'http://127.0.0.1:8099/?mode=mutable&n=5000' \
+              'http://127.0.0.1:8099/?mode=immutable&n=5000'; do
+              RESPONSE="$(curl --max-time 20 -fsS "$URL" 2>&1)"
+              STATUS=$?
+              REQUESTS=$((REQUESTS + 1))
+              if [[ $STATUS -ne 0 ]]; then
+                echo "failed_round=$ROUND request=$REQUESTS status=$STATUS response=$RESPONSE" | tee -a diagnostics/carbon-cache/result.txt
+                FAILURE=1
+                break 2
+              fi
+              if (( REQUESTS % 30 == 0 )); then
+                echo "completed_requests=$REQUESTS last=$RESPONSE" | tee -a diagnostics/carbon-cache/result.txt
+              fi
+            done
+          done
+
+          if kill -0 "$SERVER_PID" 2>/dev/null; then
+            echo "server_alive_after_stress=yes" | tee -a diagnostics/carbon-cache/result.txt
+            kill "$SERVER_PID" || true
+            wait "$SERVER_PID" || true
+          else
+            echo "server_alive_after_stress=no" | tee -a diagnostics/carbon-cache/result.txt
+            FAILURE=1
+          fi
+
+          echo "requests_completed=$REQUESTS" | tee -a diagnostics/carbon-cache/result.txt
+          echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)" | tee -a diagnostics/carbon-cache/result.txt
+          find core-dumps-carbon -maxdepth 1 -type f -printf 'core=%f size=%s\n' | tee -a diagnostics/carbon-cache/result.txt || true
+          exit "$FAILURE"
+
+      - name: Upload Carbon cache diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: carbon-trait-cache-repro-${{ github.sha }}
+          path: |
+            diagnostics/carbon-cache/
+            core-dumps-carbon/
+          if-no-files-found: warn
+          retention-days: 7
