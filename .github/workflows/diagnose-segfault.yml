@@ -6,27 +6,27 @@ on:
       - codex/implementar-etapa-10-do-projeto
 
 jobs:
-  analyze-captured-core:
+  analyze-carbon-repro-core:
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     permissions:
       actions: read
       contents: read
     steps:
-      - name: Setup exact PHP 8.2 build with matching debug symbols
+      - name: Setup exact PHP 8.2 build with debug symbols
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip
+          extensions: mbstring
           coverage: none
         env:
           debug: true
 
-      - name: Download captured core artifact
+      - name: Download Carbon mini-repro core
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          CORE_ARTIFACT_ID: '9891828050'
+          CORE_ARTIFACT_ID: '9893136466'
         run: |
           set -euo pipefail
           mkdir -p captured diagnostics
@@ -34,219 +34,80 @@ jobs:
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${CORE_ARTIFACT_ID}/zip" \
-            -o /tmp/core-artifact.zip
-          unzip -q /tmp/core-artifact.zip -d captured
-          CORE="$(find captured/core-dumps -maxdepth 1 -type f -name 'core.*' -print -quit)"
+            -o /tmp/carbon-core.zip
+          unzip -q /tmp/carbon-core.zip -d captured
+          CORE="$(find captured/core-dumps-carbon -maxdepth 1 -type f -name 'core.*' -print -quit)"
           test -n "$CORE"
-          { echo "artifact_id=$CORE_ARTIFACT_ID"; echo "core=$CORE"; ls -lh "$CORE"; file "$CORE"; } \
-            | tee diagnostics/core-source.txt
+          {
+            echo "artifact_id=$CORE_ARTIFACT_ID"
+            echo "core=$CORE"
+            ls -lh "$CORE"
+            file "$CORE"
+            echo '=== repro result ==='
+            cat captured/diagnostics/carbon-cache/result.txt
+            echo '=== repro server log ==='
+            cat captured/diagnostics/carbon-cache/server.log
+          } | tee diagnostics/core-source.txt
 
-      - name: Verify exact PHP binary and debug file
+      - name: Verify PHP binary and symbols
         shell: bash
         run: |
           set -euo pipefail
           PHP_BIN="$(readlink -f "$(command -v php)")"
-          EXPECTED="$(grep -i 'Build ID:' captured/diagnostics/runtime-before.txt | tail -1 | sed -E 's/.*Build ID:[[:space:]]*//')"
-          CURRENT="$(readelf -n "$PHP_BIN" 2>/dev/null | grep -i 'Build ID:' | tail -1 | sed -E 's/.*Build ID:[[:space:]]*//')"
-          DEBUG_FILE="/usr/lib/debug/.build-id/${EXPECTED:0:2}/${EXPECTED:2}.debug"
+          BUILD_ID="$(readelf -n "$PHP_BIN" 2>/dev/null | grep -i 'Build ID:' | tail -1 | sed -E 's/.*Build ID:[[:space:]]*//')"
+          DEBUG_FILE="/usr/lib/debug/.build-id/${BUILD_ID:0:2}/${BUILD_ID:2}.debug"
           {
             echo "php_bin=$PHP_BIN"
             php -v
-            echo "expected_build_id=$EXPECTED"
-            echo "current_build_id=$CURRENT"
-            echo "expected_debug_file=$DEBUG_FILE"
-            if [[ -f "$DEBUG_FILE" ]]; then
-              echo "debug_file_present=yes"
-              file "$DEBUG_FILE"
-              ls -lh "$DEBUG_FILE"
-            else
-              echo "debug_file_present=no"
-            fi
-          } | tee diagnostics/php-build-match.txt
-
-          [[ -n "$EXPECTED" && "$CURRENT" == "$EXPECTED" ]] || exit 1
-          [[ -f "$DEBUG_FILE" ]] || exit 1
-
+            echo "build_id=$BUILD_ID"
+            echo "debug_file=$DEBUG_FILE"
+            test -f "$DEBUG_FILE" && echo 'debug_file_present=yes' || echo 'debug_file_present=no'
+            file "$PHP_BIN"
+            test -f "$DEBUG_FILE" && file "$DEBUG_FILE" || true
+          } | tee diagnostics/php-build.txt
+          test -n "$BUILD_ID"
+          test -f "$DEBUG_FILE"
           sudo apt-get update -qq
           sudo apt-get install -y gdb libc6-dbg
 
-      - name: Inspect active PHP frame offline
+      - name: Extract Carbon mini-repro backtrace offline
         shell: bash
         run: |
           set -euo pipefail
           PHP_BIN="$(readlink -f "$(command -v php)")"
-          CORE="$(find captured/core-dumps -maxdepth 1 -type f -name 'core.*' -print -quit)"
+          CORE="$(find captured/core-dumps-carbon -maxdepth 1 -type f -name 'core.*' -print -quit)"
           gdb --batch -q "$PHP_BIN" "$CORE" \
             -ex 'set pagination off' \
             -ex 'set print pretty on' \
             -ex 'set debug-file-directory /usr/lib/debug' \
+            -ex 'info files' \
+            -ex 'info sharedlibrary' \
+            -ex 'info registers' \
+            -ex 'x/16i $pc-32' \
             -ex 'frame 0' \
-            -ex 'p ((zend_execute_data *)$r14)->run_time_cache' \
-            -ex 'p ((zend_execute_data *)$r14)->func->op_array.cache_size' \
-            -ex 'p ((zend_execute_data *)$r14)->func->op_array.run_time_cache' \
-            -ex 'p *((zend_execute_data *)$r14)->opline' \
             -ex 'p ((zend_execute_data *)$r14)->func->common.function_name' \
             -ex 'x/s ((zend_execute_data *)$r14)->func->common.function_name->val' \
-            -ex 'p ((zend_execute_data *)$r14)->func->common.scope' \
-            -ex 'x/s ((zend_execute_data *)$r14)->func->common.scope->name->val' \
             -ex 'p ((zend_execute_data *)$r14)->func->op_array.filename' \
             -ex 'x/s ((zend_execute_data *)$r14)->func->op_array.filename->val' \
-            -ex 'p ((zend_class_entry *)$rbp)->name' \
-            -ex 'x/s ((zend_class_entry *)$rbp)->name->val' \
             -ex 'p ((zend_execute_data *)$r14)->prev_execute_data' \
             -ex 'p ((zend_execute_data *)$r14)->prev_execute_data->func->common.function_name' \
             -ex 'x/s ((zend_execute_data *)$r14)->prev_execute_data->func->common.function_name->val' \
             -ex 'p ((zend_execute_data *)$r14)->prev_execute_data->func->op_array.filename' \
             -ex 'x/s ((zend_execute_data *)$r14)->prev_execute_data->func->op_array.filename->val' \
-            -ex 'bt 12' \
-            -ex 'quit' > diagnostics/zend-active-frame.txt 2>&1 || true
-          cat diagnostics/zend-active-frame.txt
+            -ex 'thread apply all bt full' \
+            -ex 'quit' > diagnostics/carbon-core-gdb.txt 2>&1 || true
+          {
+            echo '=== SIGNAL / TOP FRAMES ==='
+            grep -E 'Program terminated|^#0 |^#1 |^#2 |^#3 |^#4 |^#5 |ZEND_|Carbon|Creator.php' diagnostics/carbon-core-gdb.txt | head -160 || true
+            echo '=== FULL TRACE ==='
+            cat diagnostics/carbon-core-gdb.txt
+          } | tee diagnostics/carbon-core-summary.txt
 
-      - name: Upload focused Zend state
+      - name: Upload Carbon core analysis
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: php-segfault-zend-frame-89083ca2
+          name: carbon-mini-core-analysis-${{ github.sha }}
           path: diagnostics/
           if-no-files-found: error
-          retention-days: 7
-
-  carbon-trait-cache-repro:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring
-          coverage: none
-      - run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: Stress Carbon and CarbonImmutable in one long-lived php -S process
-        shell: bash
-        run: |
-          set -uo pipefail
-          mkdir -p diagnostics/carbon-cache core-dumps-carbon
-          CORE_PATTERN="$GITHUB_WORKSPACE/core-dumps-carbon/core.%e.%p.%t"
-          sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"
-          ulimit -c unlimited
-
-          cat > diagnostics/carbon-cache/router.php <<'PHP'
-          <?php
-          require dirname(__DIR__, 2).'/vendor/autoload.php';
-
-          use Carbon\Carbon;
-          use Carbon\CarbonImmutable;
-
-          header('Content-Type: application/json');
-          $mode = $_GET['mode'] ?? 'alternate';
-          $iterations = max(1, min((int) ($_GET['n'] ?? 1000), 10000));
-          $format = 'Y-m-d H:i:s';
-          $value = '2026-09-01 00:00:00';
-          $timezone = 'America/Sao_Paulo';
-
-          for ($i = 0; $i < $iterations; $i++) {
-              if ($mode === 'mutable') {
-                  $a = Carbon::createFromFormat($format, $value, $timezone);
-                  if ($a->format('Y-m-d') !== '2026-09-01') { throw new RuntimeException('mutable mismatch'); }
-                  continue;
-              }
-
-              if ($mode === 'immutable') {
-                  $b = CarbonImmutable::createFromFormat($format, $value, $timezone);
-                  if ($b->format('Y-m-d') !== '2026-09-01') { throw new RuntimeException('immutable mismatch'); }
-                  continue;
-              }
-
-              $a = Carbon::createFromFormat($format, $value, $timezone);
-              $b = CarbonImmutable::createFromFormat($format, $value, $timezone);
-              if ($a->format('Y-m-d') !== $b->format('Y-m-d')) { throw new RuntimeException('alternate mismatch'); }
-          }
-
-          echo json_encode([
-              'ok' => true,
-              'pid' => getmypid(),
-              'mode' => $mode,
-              'iterations' => $iterations,
-          ]);
-          PHP
-
-          php -d opcache.enable_cli=0 -S 127.0.0.1:8099 diagnostics/carbon-cache/router.php \
-            > diagnostics/carbon-cache/server.log 2>&1 &
-          SERVER_PID=$!
-          echo "server_pid=$SERVER_PID" | tee diagnostics/carbon-cache/result.txt
-
-          READY=0
-          for _ in $(seq 1 50); do
-            set +e
-            READY_RESPONSE="$(curl --max-time 2 -fsS 'http://127.0.0.1:8099/?mode=alternate&n=1' 2>&1)"
-            READY_STATUS=$?
-            set -e
-            if [[ $READY_STATUS -eq 0 ]]; then
-              READY=1
-              echo "ready_response=$READY_RESPONSE" | tee -a diagnostics/carbon-cache/result.txt
-              break
-            fi
-            sleep 0.2
-          done
-
-          if [[ $READY -ne 1 ]]; then
-            echo "server_readiness_failed=yes" | tee -a diagnostics/carbon-cache/result.txt
-            cat diagnostics/carbon-cache/server.log | tee -a diagnostics/carbon-cache/result.txt
-            exit 2
-          fi
-
-          if [[ -r "/proc/$SERVER_PID/limits" ]]; then
-            grep 'Max core file size' "/proc/$SERVER_PID/limits" | tee -a diagnostics/carbon-cache/result.txt
-          fi
-
-          FAILURE=0
-          REQUESTS=0
-
-          for ROUND in $(seq 1 100); do
-            for URL in \
-              'http://127.0.0.1:8099/?mode=alternate&n=5000' \
-              'http://127.0.0.1:8099/?mode=mutable&n=5000' \
-              'http://127.0.0.1:8099/?mode=immutable&n=5000'; do
-              set +e
-              RESPONSE="$(curl --max-time 20 -fsS "$URL" 2>&1)"
-              STATUS=$?
-              set -e
-              REQUESTS=$((REQUESTS + 1))
-              if [[ $STATUS -ne 0 ]]; then
-                echo "failed_round=$ROUND request=$REQUESTS status=$STATUS response=$RESPONSE" | tee -a diagnostics/carbon-cache/result.txt
-                FAILURE=1
-                break 2
-              fi
-              if (( REQUESTS % 30 == 0 )); then
-                echo "completed_requests=$REQUESTS last=$RESPONSE" | tee -a diagnostics/carbon-cache/result.txt
-              fi
-            done
-          done
-
-          if kill -0 "$SERVER_PID" 2>/dev/null; then
-            echo "server_alive_after_stress=yes" | tee -a diagnostics/carbon-cache/result.txt
-            kill "$SERVER_PID" || true
-            wait "$SERVER_PID" || true
-          else
-            echo "server_alive_after_stress=no" | tee -a diagnostics/carbon-cache/result.txt
-            FAILURE=1
-          fi
-
-          echo "requests_completed=$REQUESTS" | tee -a diagnostics/carbon-cache/result.txt
-          echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)" | tee -a diagnostics/carbon-cache/result.txt
-          find core-dumps-carbon -maxdepth 1 -type f -printf 'core=%f size=%s\n' | tee -a diagnostics/carbon-cache/result.txt || true
-          tail -200 diagnostics/carbon-cache/server.log | tee diagnostics/carbon-cache/server-tail.txt
-          exit "$FAILURE"
-
-      - name: Upload Carbon cache diagnostic
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: carbon-trait-cache-repro-${{ github.sha }}
-          path: |
-            diagnostics/carbon-cache/
-            core-dumps-carbon/
-          if-no-files-found: warn
           retention-days: 7
