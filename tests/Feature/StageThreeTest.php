@@ -66,7 +66,10 @@ class StageThreeTest extends TestCase
         $this->actingAs($this->user)->patchJson("/api/orders/{$this->order->id}/budgets/1/status", ['status' => 'sent'])->assertOk();
         $this->actingAs($this->user)->postJson("/api/orders/{$this->order->id}/budgets", [...$payload, 'diagnosis' => 'Nova análise'])->assertCreated()->assertJsonPath('budget.revision', 2);
         $warranty = json_decode(DB::table('budget_items')->where('budget_id', $first->json('budget.id'))->first()->warranty_snapshot, true);
-        $this->assertSame(['enabled' => true, 'term' => 1, 'unit' => 'years'], $warranty);
+        $this->assertCount(3, $warranty);
+        $this->assertTrue($warranty['enabled']);
+        $this->assertSame(1, $warranty['term']);
+        $this->assertSame('years', $warranty['unit']);
         DB::table('settings')->updateOrInsert(['key' => 'company_name'], ['value' => 'Empresa Nova', 'created_at' => now(), 'updated_at' => now()]);
         $snapshot = json_decode(DB::table('generated_documents')->where(['service_order_id' => $this->order->id, 'type' => 'budget', 'revision' => 1])->value('snapshot'), true);
         $this->assertSame('ARL Informática', $snapshot['company']['company_name']);
