@@ -58,21 +58,35 @@ jobs:
             readelf -n "$PHP_BIN" 2>/dev/null | grep -i 'Build ID' || true
           } | tee diagnostics/runtime-before.txt
 
-      - name: Run E2E normally and inspect live PHP process
+      - name: Run E2E normally with inherited core limit
         shell: bash
         run: |
           set -uo pipefail
           mkdir -p "$GITHUB_WORKSPACE/core-dumps" diagnostics
+          chmod 0777 "$GITHUB_WORKSPACE/core-dumps"
           CORE_PATTERN="$GITHUB_WORKSPACE/core-dumps/core.%e.%p.%t"
 
+          sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"
+
+          # IMPORTANT: ulimit must run in this shell, not inside a piped group.
+          # A pipeline would execute the left side in a subshell and lose RLIMIT_CORE
+          # before npm -> Playwright -> sh -> php -S are spawned.
+          ulimit -c unlimited
+
           {
-            echo "core_pattern before=$(cat /proc/sys/kernel/core_pattern)"
-            sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"
-            echo "core_pattern after=$(cat /proc/sys/kernel/core_pattern)"
-            ulimit -c unlimited
+            echo "core_pattern before E2E=$(cat /proc/sys/kernel/core_pattern)"
+            echo "shell pid=$$"
             echo "shell soft core=$(ulimit -Sc)"
             echo "shell hard core=$(ulimit -Hc)"
             echo "shell coredump_filter=$(cat /proc/self/coredump_filter)"
+            echo "core directory:"
+            ls -ld "$GITHUB_WORKSPACE/core-dumps"
+            echo "write probe:"
+            touch "$GITHUB_WORKSPACE/core-dumps/.write-test"
+            ls -l "$GITHUB_WORKSPACE/core-dumps/.write-test"
+            rm -f "$GITHUB_WORKSPACE/core-dumps/.write-test"
+            echo "shell /proc limits:"
+            cat "/proc/$$/limits"
           } | tee diagnostics/core-setup.txt
 
           set +e
@@ -88,6 +102,16 @@ jobs:
             fi
             sleep 0.2
           done
+
+          if [[ -r "/proc/$E2E_PID/limits" ]]; then
+            {
+              echo "=== E2E parent process ==="
+              echo "E2E_PID=$E2E_PID"
+              tr '\0' ' ' < "/proc/$E2E_PID/cmdline"; echo
+              echo "=== E2E parent limits ==="
+              cat "/proc/$E2E_PID/limits"
+            } | tee diagnostics/e2e-parent-process.txt
+          fi
 
           if [[ -n "$PHP_PID" && -r "/proc/$PHP_PID/limits" ]]; then
             {
@@ -135,7 +159,7 @@ jobs:
 
           exit "$STATUS"
 
-      - name: Analyze core post-mortem
+      - name: Confirm core capture
         if: failure()
         shell: bash
         run: |
@@ -152,28 +176,13 @@ jobs:
             exit 0
           fi
 
-          sudo apt-get update -qq
-          sudo apt-get install -y gdb
-
-          PHP_BIN="$(readlink -f "$(command -v php)")"
-          for CORE in "${CORES[@]}"; do
-            NAME="$(basename "$CORE")"
-            {
-              echo "=== core ==="
+          {
+            echo "Core files captured: ${#CORES[@]}"
+            for CORE in "${CORES[@]}"; do
               ls -lh "$CORE"
-              echo "=== executable ==="
-              file "$PHP_BIN"
-              echo "=== core metadata ==="
-              file "$CORE"
-              echo "=== gdb post-mortem ==="
-              gdb --batch -q "$PHP_BIN" "$CORE" \
-                -ex 'set pagination off' \
-                -ex 'info files' \
-                -ex 'info sharedlibrary' \
-                -ex 'info registers' \
-                -ex 'thread apply all bt full'
-            } > "diagnostics/gdb-${NAME}.txt" 2>&1 || true
-          done
+              file "$CORE" || true
+            done
+          } | tee diagnostics/core-captured.txt
 
       - name: Upload SIGSEGV diagnostics
         if: always()
