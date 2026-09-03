@@ -34,7 +34,7 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Cores globais configuráveis controlam a identidade do app e o PDF A4; o PDF preserva as cores no snapshot histórico da OS.
 - [OK] Garantia Geral configurável pode ser incluída no PDF final e é preservada no snapshot histórico; itens sem garantia adicional não imprimem seção de “sem garantia”.
 - [OK] Laudo geral e de dano elétrico com responsabilidade técnica explícita, timbrado dinâmico e registro fotográfico.
-- [OK] Comparação visual automatizada concluída contra as referências reenviadas para Painel/Menu, Clientes, Nova OS, Status/OS, PDF A4 e Pós-Venda; as diferenças funcionais intencionais do Projeto Mestre foram preservadas.
+- [PENDENTE] Homologação visual final contra as referências oficiais antigas de Painel/Menu, Clientes, Nova OS, Status/OS, PDF A4, Pós-Venda, LOGO e TIMBRADO. Os anexos visuais precisam ser reenviados na etapa final; até lá não se afirma comparação concluída.
 - [PENDENTE] Homologação física de impressão A4 em impressora real.
 
 ## Relacionamento, plataforma e administração
@@ -59,7 +59,7 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Playwright E2E versionado no `package.json`/`package-lock.json`, com SQLite isolado, seed próprio, servidor Laravel local, fluxo operacional principal, autorização por perfis, viewport mobile e `retries: 0`; execução real é exigida pelo GitHub Actions antes do merge.
 - [OK] Preferência Automático/Web-PC/Mobile-Tablet persistida localmente por dispositivo, aplicada ao shell e validada pelo E2E; não existe configuração global `layout_mode` na tela de Settings.
 - [OK] OS externa no mobile expõe atalhos WhatsApp, Maps, Foto, Status e Finalizar; a mensagem inicial do WhatsApp inclui OS e avarias registradas, e abrir a conversa não registra envio.
-- [OK] Último head técnico validado antes deste ajuste documental: CI #280 com backend SQLite, backend MySQL 8, frontend e Playwright verdes.
+- [OK] Head técnico imediatamente anterior a este ajuste documental: `05e41622bf47fab8f943564cd6ab14408a339a00`, CI #286 com backend SQLite, backend MySQL 8, frontend e Playwright verdes após rerun controlado do E2E.
 - [PENDENTE] Validação física do Web Push em Android/iPhone com HTTPS e VAPID reais; roteiro em `docs/HOMOLOGACAO_WEB_PUSH.md`.
 - [PENDENTE] Homologação física de impressão A4.
 - [PENDENTE] Deploy real na KingHost; o workflow manual de release está preparado e exige testes/auditorias/E2E antes de montar o pacote.
@@ -77,6 +77,6 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] OS externa possui atalhos mobile e WhatsApp pré-preenchido com avarias sem confundir abertura da conversa com envio confirmado.
 - [OK] Backup automático persistido no banco, configurável somente pelo Master, auditado e respeitado pelo comando/scheduler.
 - [OK] Zip Slip cobre barras invertidas, segmentos `..`, absolutos, drive letter, byte nulo, PHP e `.env`; restauração usa staging e semântica de snapshot apenas no domínio privado gerenciado.
-- [OK] Referências visuais oficiais foram reenviadas e usadas na homologação automatizada; não se confunde referência visual com regra funcional quando o Projeto Mestre exige comportamento diferente.
+- [PENDENTE] Referências visuais oficiais ainda precisam ser reenviadas e comparadas na homologação final; até essa etapa não se considera a comparação visual concluída.
 - [PENDENTE] Homologação Web Push em Android/iPhone físico, impressão A4 física e deploy real na KingHost dependem de ambiente externo.
 - [PENDENTE] Recuperação pública por e-mail permanece opcional enquanto SMTP não estiver definido.
