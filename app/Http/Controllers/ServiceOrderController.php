@@ -21,13 +21,18 @@ class ServiceOrderController extends Controller
     public function index(Request $r, PostSaleService $postSales): JsonResponse
     {
         $postSales->catchUp(true);
-        $q = ServiceOrder::query()->with('client:id,name,phone,street,number,district,city,state')->latest('received_at');
+        $q = ServiceOrder::query()->with('client:id,name,phone,street,number,district,city,state');
         if ($status = $r->query('status')) {
             $q->where('status', $status);
         }
         if ($search = trim((string) $r->query('q'))) {
             $q->where(fn ($x) => $x->where('number', 'like', "%$search%")->orWhere('reported_problem', 'like', "%$search%")->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%$search%")->orWhere('phone', 'like', "%$search%")->orWhere('street', 'like', "%$search%")));
         }
+        match ((string) $r->query('sort', 'recent')) {
+            'oldest' => $q->oldest('received_at'),
+            'client' => $q->orderBy(Client::select('name')->whereColumn('clients.id', 'service_orders.client_id'))->latest('received_at'),
+            default => $q->latest('received_at'),
+        };
 
         $summary = [
             'open' => ServiceOrder::whereNotIn('status', ['completed', 'interrupted'])->count(),
@@ -51,7 +56,20 @@ class ServiceOrderController extends Controller
 
     public function store(Request $r, OrderNumber $numbers, NotificationService $notifications): JsonResponse
     {
-        $data = $r->validate(['client_id' => 'required|exists:clients,id', 'equipment_type_id' => 'required|exists:equipment_types,id', 'manufacturer_id' => 'nullable|exists:manufacturers,id', 'attendance_type' => 'required|in:bench,external', 'reported_problem' => 'required|string|max:10000', 'checklist' => 'array', 'checklist.*.template_id' => 'nullable|integer', 'checklist.*.label' => 'nullable|string|max:255', 'checklist.*.note' => 'nullable|string|max:255']);
+        $data = $r->validate([
+            'client_id' => 'required|exists:clients,id',
+            'equipment_type_id' => 'required|exists:equipment_types,id',
+            'manufacturer_id' => 'nullable|exists:manufacturers,id',
+            'attendance_type' => 'required|in:bench,external',
+            'reported_problem' => 'required|string|max:10000',
+            'checklist' => 'array',
+            'checklist.*.template_id' => 'nullable|integer',
+            'checklist.*.label' => 'nullable|string|max:255',
+            'checklist.*.note' => 'nullable|string|max:255',
+            'items' => 'array|max:50',
+            'items.*.catalog_id' => 'required|integer|exists:service_catalog,id',
+            'items.*.quantity' => 'required|integer|min:1|max:999',
+        ]);
         $requested = collect($data['checklist'] ?? []);
         $templates = DB::table('checklist_templates')->where('equipment_type_id', $data['equipment_type_id'])->where('active', true)
             ->where(fn ($q) => $q->whereIn('id', $requested->pluck('template_id')->filter())->orWhereIn('label', $requested->pluck('label')->filter()))->get();
@@ -62,18 +80,46 @@ class ServiceOrderController extends Controller
 
             return ['label' => $template->label, 'note' => $template->allows_note ? trim($item['note']) : null];
         })->all();
+
+        $requestedItems = collect($data['items'] ?? [])->groupBy('catalog_id')->mapWithKeys(function ($rows, $catalogId) {
+            $quantity = (int) $rows->sum('quantity');
+            abort_if($quantity > 999, 422, 'A quantidade de um item da OS não pode ultrapassar 999.');
+
+            return [(int) $catalogId => $quantity];
+        });
+        $catalogs = DB::table('service_catalog')->whereIn('id', $requestedItems->keys())->where('active', true)->get()->keyBy('id');
+        abort_unless($catalogs->count() === $requestedItems->count(), 422, 'Um serviço ou produto selecionado não está mais disponível.');
+        $data['items'] = $requestedItems->map(function (int $quantity, int $catalogId) use ($catalogs) {
+            $catalog = $catalogs->get($catalogId);
+            $warranty = $catalog->warranty_enabled ? [
+                'enabled' => true,
+                'term' => (int) $catalog->warranty_term,
+                'unit' => $catalog->warranty_unit,
+            ] : null;
+
+            return [
+                'catalog_id' => $catalog->id,
+                'description' => $catalog->name,
+                'quantity' => $quantity,
+                'unit_price_cents' => (int) $catalog->price_cents,
+                'subtotal_cents' => $quantity * (int) $catalog->price_cents,
+                'warranty_snapshot' => $warranty,
+            ];
+        })->values()->all();
+
         $order = DB::transaction(function () use ($data, $numbers, $r) {
             $client = Client::findOrFail($data['client_id']);
             $order = ServiceOrder::create([...$data, 'number' => $numbers->next(), 'status' => 'analysis', 'received_at' => now(), 'created_by' => $r->user()->id]);
             $order->histories()->create(['to_status' => 'analysis', 'user_id' => $r->user()->id]);
             $order->checklists()->createMany($data['checklist'] ?? []);
+            $order->items()->createMany($data['items'] ?? []);
             $order->snapshot()->create(['client' => $client->toArray(), 'company' => $this->companySnapshot(), 'equipment' => ['type_id' => $data['equipment_type_id'], 'manufacturer_id' => $data['manufacturer_id'] ?? null], 'term_text' => $this->term()]);
 
             return $order;
         });
         $notifications->notifyUsers('order_created', 'Nova OS aberta', "OS {$order->number} — {$order->client->name}", "/orders/{$order->id}", "order-created:{$order->id}", ['service_order_id' => $order->id]);
 
-        return response()->json($order->load('client'), 201);
+        return response()->json($order->load(['client', 'items']), 201);
     }
 
     public function show(ServiceOrder $order): JsonResponse

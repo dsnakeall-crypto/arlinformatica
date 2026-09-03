@@ -60,6 +60,8 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await newOrderForm.locator('select').nth(1).selectOption(String(equipment.body[0].id));
   if (manufacturers.body[0]) await newOrderForm.locator('select').nth(2).selectOption(String(manufacturers.body[0].id));
   await newOrderForm.getByLabel('Problema relatado *').fill('Notebook lento para referência da homologação visual.');
+  await newOrderForm.locator('.opening-catalog button').first().click();
+  await expect(newOrderForm.locator('.opening-item')).toHaveCount(1);
   await page.screenshot({ path: 'visual-artifacts/03-nova-os-desktop.png', fullPage: true });
 
   await nav.getByRole('button', { name: 'Ordens de Serviço' }).click();
