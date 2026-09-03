@@ -169,7 +169,6 @@ jobs:
               'pid' => getmypid(),
               'mode' => $mode,
               'iterations' => $iterations,
-              'carbon' => Carbon::VERSION ?? null,
           ]);
           PHP
 
@@ -178,10 +177,25 @@ jobs:
           SERVER_PID=$!
           echo "server_pid=$SERVER_PID" | tee diagnostics/carbon-cache/result.txt
 
+          READY=0
           for _ in $(seq 1 50); do
-            curl -fsS 'http://127.0.0.1:8099/?mode=alternate&n=1' >/dev/null && break
+            set +e
+            READY_RESPONSE="$(curl --max-time 2 -fsS 'http://127.0.0.1:8099/?mode=alternate&n=1' 2>&1)"
+            READY_STATUS=$?
+            set -e
+            if [[ $READY_STATUS -eq 0 ]]; then
+              READY=1
+              echo "ready_response=$READY_RESPONSE" | tee -a diagnostics/carbon-cache/result.txt
+              break
+            fi
             sleep 0.2
           done
+
+          if [[ $READY -ne 1 ]]; then
+            echo "server_readiness_failed=yes" | tee -a diagnostics/carbon-cache/result.txt
+            cat diagnostics/carbon-cache/server.log | tee -a diagnostics/carbon-cache/result.txt
+            exit 2
+          fi
 
           if [[ -r "/proc/$SERVER_PID/limits" ]]; then
             grep 'Max core file size' "/proc/$SERVER_PID/limits" | tee -a diagnostics/carbon-cache/result.txt
@@ -195,8 +209,10 @@ jobs:
               'http://127.0.0.1:8099/?mode=alternate&n=5000' \
               'http://127.0.0.1:8099/?mode=mutable&n=5000' \
               'http://127.0.0.1:8099/?mode=immutable&n=5000'; do
+              set +e
               RESPONSE="$(curl --max-time 20 -fsS "$URL" 2>&1)"
               STATUS=$?
+              set -e
               REQUESTS=$((REQUESTS + 1))
               if [[ $STATUS -ne 0 ]]; then
                 echo "failed_round=$ROUND request=$REQUESTS status=$STATUS response=$RESPONSE" | tee -a diagnostics/carbon-cache/result.txt
@@ -221,6 +237,7 @@ jobs:
           echo "requests_completed=$REQUESTS" | tee -a diagnostics/carbon-cache/result.txt
           echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)" | tee -a diagnostics/carbon-cache/result.txt
           find core-dumps-carbon -maxdepth 1 -type f -printf 'core=%f size=%s\n' | tee -a diagnostics/carbon-cache/result.txt || true
+          tail -200 diagnostics/carbon-cache/server.log | tee diagnostics/carbon-cache/server-tail.txt
           exit "$FAILURE"
 
       - name: Upload Carbon cache diagnostic
