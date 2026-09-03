@@ -64,24 +64,14 @@ jobs:
             fi
           } | tee diagnostics/php-build-match.txt
 
-          [[ -n "$EXPECTED" && "$CURRENT" == "$EXPECTED" ]] || {
-            echo 'BUILD ID MISMATCH' | tee -a diagnostics/php-build-match.txt
-            exit 1
-          }
-          [[ -f "$DEBUG_FILE" ]] || {
-            echo 'MATCHING SETUP-PHP DEBUG SYMBOLS NOT FOUND' | tee -a diagnostics/php-build-match.txt
-            exit 1
-          }
+          [[ -n "$EXPECTED" && "$CURRENT" == "$EXPECTED" ]] || exit 1
+          [[ -f "$DEBUG_FILE" ]] || exit 1
 
           sudo apt-get update -qq
           sudo apt-get install -y gdb libc6-dbg
-          find /usr/lib/debug/.build-id -type f -printf '%p %s bytes\n' 2>/dev/null | sort \
-            > diagnostics/debug-symbol-files.txt || true
 
-      - name: Extract full native backtrace offline
+      - name: Inspect active PHP frame offline
         shell: bash
-        env:
-          DEBUGINFOD_URLS: https://debuginfod.ubuntu.com
         run: |
           set -euo pipefail
           PHP_BIN="$(readlink -f "$(command -v php)")"
@@ -89,26 +79,34 @@ jobs:
           gdb --batch -q "$PHP_BIN" "$CORE" \
             -ex 'set pagination off' \
             -ex 'set print pretty on' \
-            -ex 'set debuginfod enabled on' \
             -ex 'set debug-file-directory /usr/lib/debug' \
-            -ex 'info files' \
-            -ex 'info sharedlibrary' \
-            -ex 'info registers' \
-            -ex 'x/16i $pc-32' \
-            -ex 'thread apply all bt full' \
-            -ex 'quit' > diagnostics/gdb-backtrace.txt 2>&1 || true
-          {
-            echo '=== FIRST 180 LINES ==='
-            sed -n '1,180p' diagnostics/gdb-backtrace.txt
-            echo '=== FRAMES ==='
-            grep -E '^#[0-9]+' diagnostics/gdb-backtrace.txt | head -180 || true
-          } | tee diagnostics/gdb-summary.txt
+            -ex 'frame 0' \
+            -ex 'p ((zend_execute_data *)$r14)->run_time_cache' \
+            -ex 'p ((zend_execute_data *)$r14)->func->op_array.cache_size' \
+            -ex 'p ((zend_execute_data *)$r14)->func->op_array.run_time_cache' \
+            -ex 'p *((zend_execute_data *)$r14)->opline' \
+            -ex 'p ((zend_execute_data *)$r14)->func->common.function_name' \
+            -ex 'x/s ((zend_execute_data *)$r14)->func->common.function_name->val' \
+            -ex 'p ((zend_execute_data *)$r14)->func->common.scope' \
+            -ex 'x/s ((zend_execute_data *)$r14)->func->common.scope->name->val' \
+            -ex 'p ((zend_execute_data *)$r14)->func->op_array.filename' \
+            -ex 'x/s ((zend_execute_data *)$r14)->func->op_array.filename->val' \
+            -ex 'p ((zend_class_entry *)$rbp)->name' \
+            -ex 'x/s ((zend_class_entry *)$rbp)->name->val' \
+            -ex 'p ((zend_execute_data *)$r14)->prev_execute_data' \
+            -ex 'p ((zend_execute_data *)$r14)->prev_execute_data->func->common.function_name' \
+            -ex 'x/s ((zend_execute_data *)$r14)->prev_execute_data->func->common.function_name->val' \
+            -ex 'p ((zend_execute_data *)$r14)->prev_execute_data->func->op_array.filename' \
+            -ex 'x/s ((zend_execute_data *)$r14)->prev_execute_data->func->op_array.filename->val' \
+            -ex 'bt 12' \
+            -ex 'quit' > diagnostics/zend-active-frame.txt 2>&1 || true
+          cat diagnostics/zend-active-frame.txt
 
-      - name: Upload post-mortem backtrace
+      - name: Upload focused Zend state
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: php-segfault-backtrace-89083ca2
+          name: php-segfault-zend-frame-89083ca2
           path: diagnostics/
           if-no-files-found: error
           retention-days: 7
