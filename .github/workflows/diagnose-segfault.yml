@@ -6,193 +6,98 @@ on:
       - codex/implementar-etapa-10-do-projeto
 
 jobs:
-  e2e-core-php82:
+  analyze-captured-core:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip
           coverage: none
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
+      - name: Download captured core artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CORE_ARTIFACT_ID: '9891828050'
+        run: |
+          set -euo pipefail
+          mkdir -p captured diagnostics
+          curl --fail --location --silent --show-error \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${CORE_ARTIFACT_ID}/zip" \
+            -o /tmp/core-artifact.zip
+          unzip -q /tmp/core-artifact.zip -d captured
+          CORE="$(find captured/core-dumps -maxdepth 1 -type f -name 'core.*' -print -quit)"
+          test -n "$CORE"
+          { echo "artifact_id=$CORE_ARTIFACT_ID"; echo "core=$CORE"; ls -lh "$CORE"; file "$CORE"; } \
+            | tee diagnostics/core-source.txt
 
-      - run: composer install --no-interaction --prefer-dist --no-progress
-      - run: npm ci
-      - run: npm run build
-      - run: npx playwright install --with-deps chromium
-
-      - name: Record PHP runtime before E2E
+      - name: Verify exact PHP build and prepare symbols
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p diagnostics core-dumps
           PHP_BIN="$(readlink -f "$(command -v php)")"
+          EXPECTED="$(grep -i 'Build ID:' captured/diagnostics/runtime-before.txt | tail -1 | sed -E 's/.*Build ID:[[:space:]]*//')"
+          CURRENT="$(readelf -n "$PHP_BIN" 2>/dev/null | grep -i 'Build ID:' | tail -1 | sed -E 's/.*Build ID:[[:space:]]*//')"
+          VERSION="$(dpkg-query -W -f='${Version}' php8.2-cli)"
           {
-            echo "=== date ==="
-            date -u --iso-8601=seconds
-            echo "=== php binary ==="
-            echo "$PHP_BIN"
-            echo "=== php -v ==="
+            echo "php_bin=$PHP_BIN"
             php -v
-            echo "=== php --ini ==="
-            php --ini
-            echo "=== loaded modules ==="
-            php -m
-            echo "=== selected ini values ==="
-            php -r 'foreach (["opcache.enable", "opcache.enable_cli", "opcache.jit", "memory_limit"] as $k) { printf("%s=%s\n", $k, var_export(ini_get($k), true)); }'
-            echo "=== core settings before ==="
-            cat /proc/sys/kernel/core_pattern
-            cat /proc/sys/kernel/core_uses_pid
-            echo "=== shell limits before ==="
-            ulimit -a
-            echo "=== php binary linkage ==="
-            ldd "$PHP_BIN" || true
-            echo "=== build id ==="
-            readelf -n "$PHP_BIN" 2>/dev/null | grep -i 'Build ID' || true
-          } | tee diagnostics/runtime-before.txt
+            echo "php_package_version=$VERSION"
+            echo "expected_build_id=$EXPECTED"
+            echo "current_build_id=$CURRENT"
+          } | tee diagnostics/php-build-match.txt
+          [[ -n "$EXPECTED" && "$CURRENT" == "$EXPECTED" ]] || { echo 'BUILD ID MISMATCH' | tee -a diagnostics/php-build-match.txt; exit 1; }
 
-      - name: Run E2E normally with inherited core limit
-        shell: bash
-        run: |
-          set -uo pipefail
-          mkdir -p "$GITHUB_WORKSPACE/core-dumps" diagnostics
-          chmod 0777 "$GITHUB_WORKSPACE/core-dumps"
-          CORE_PATTERN="$GITHUB_WORKSPACE/core-dumps/core.%e.%p.%t"
-
-          sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"
-
-          # IMPORTANT: ulimit must run in this shell, not inside a piped group.
-          # A pipeline would execute the left side in a subshell and lose RLIMIT_CORE
-          # before npm -> Playwright -> sh -> php -S are spawned.
-          ulimit -c unlimited
-
-          {
-            echo "core_pattern before E2E=$(cat /proc/sys/kernel/core_pattern)"
-            echo "shell pid=$$"
-            echo "shell soft core=$(ulimit -Sc)"
-            echo "shell hard core=$(ulimit -Hc)"
-            echo "shell coredump_filter=$(cat /proc/self/coredump_filter)"
-            echo "core directory:"
-            ls -ld "$GITHUB_WORKSPACE/core-dumps"
-            echo "write probe:"
-            touch "$GITHUB_WORKSPACE/core-dumps/.write-test"
-            ls -l "$GITHUB_WORKSPACE/core-dumps/.write-test"
-            rm -f "$GITHUB_WORKSPACE/core-dumps/.write-test"
-            echo "shell /proc limits:"
-            cat "/proc/$$/limits"
-          } | tee diagnostics/core-setup.txt
-
-          set +e
-          CI=false npm run test:e2e &
-          E2E_PID=$!
-          set -e
-
-          PHP_PID=""
-          for _ in $(seq 1 150); do
-            PHP_PID="$(pgrep -f 'php -S 127.0.0.1:8000' | head -n 1 || true)"
-            if [[ -n "$PHP_PID" && -r "/proc/$PHP_PID/limits" ]]; then
-              break
+          sudo apt-get update -qq
+          sudo apt-get install -y gdb
+          mkdir -p /tmp/php-dbgsym /tmp/debug-root
+          BASE='https://ppa.launchpadcontent.net/ondrej/php/ubuntu/pool/main/p/php8.2'
+          for COMPONENT in cli common sqlite3 gd zip mbstring; do
+            FILE="php8.2-${COMPONENT}-dbgsym_${VERSION}_amd64.ddeb"
+            if curl --fail --location --silent --show-error "$BASE/$FILE" -o "/tmp/php-dbgsym/$FILE"; then
+              dpkg-deb -x "/tmp/php-dbgsym/$FILE" /tmp/debug-root
+              echo "debug_symbols_extracted=$FILE" | tee -a diagnostics/php-build-match.txt
+            else
+              echo "debug_symbols_unavailable=$FILE" | tee -a diagnostics/php-build-match.txt
             fi
-            sleep 0.2
           done
+          find /tmp/debug-root/usr/lib/debug -type f -printf '%p %s bytes\n' 2>/dev/null | sort \
+            > diagnostics/debug-symbol-files.txt || true
 
-          if [[ -r "/proc/$E2E_PID/limits" ]]; then
-            {
-              echo "=== E2E parent process ==="
-              echo "E2E_PID=$E2E_PID"
-              tr '\0' ' ' < "/proc/$E2E_PID/cmdline"; echo
-              echo "=== E2E parent limits ==="
-              cat "/proc/$E2E_PID/limits"
-            } | tee diagnostics/e2e-parent-process.txt
-          fi
-
-          if [[ -n "$PHP_PID" && -r "/proc/$PHP_PID/limits" ]]; then
-            {
-              echo "=== process ids ==="
-              echo "E2E_PID=$E2E_PID"
-              echo "PHP_PID=$PHP_PID"
-              echo "=== PHP command line ==="
-              tr '\0' ' ' < "/proc/$PHP_PID/cmdline"; echo
-              echo "=== PHP executable ==="
-              readlink -f "/proc/$PHP_PID/exe" || true
-              echo "=== PHP cwd ==="
-              readlink -f "/proc/$PHP_PID/cwd" || true
-              echo "=== PHP limits ==="
-              cat "/proc/$PHP_PID/limits"
-              echo "=== PHP status ==="
-              grep -E '^(Name|Pid|PPid|TracerPid|Uid|Gid|CoreDumping|NoNewPrivs|Seccomp):' "/proc/$PHP_PID/status" || true
-              echo "=== PHP coredump_filter ==="
-              cat "/proc/$PHP_PID/coredump_filter" || true
-              echo "=== ancestry ==="
-              CURRENT="$PHP_PID"
-              for _ in $(seq 1 8); do
-                [[ -r "/proc/$CURRENT/status" ]] || break
-                NAME="$(awk '/^Name:/{print $2}' "/proc/$CURRENT/status")"
-                PPID_VALUE="$(awk '/^PPid:/{print $2}' "/proc/$CURRENT/status")"
-                printf 'pid=%s name=%s ppid=%s\n' "$CURRENT" "$NAME" "$PPID_VALUE"
-                [[ "$PPID_VALUE" == "0" ]] && break
-                CURRENT="$PPID_VALUE"
-              done
-            } | tee diagnostics/php-process.txt
-          else
-            echo "PHP web-server process was not found while E2E was running." | tee diagnostics/php-process-not-found.txt
-          fi
-
-          set +e
-          wait "$E2E_PID"
-          STATUS=$?
-          set -e
-
-          {
-            echo "e2e_exit=$STATUS"
-            echo "core_pattern final=$(cat /proc/sys/kernel/core_pattern)"
-            echo "core files:"
-            find "$GITHUB_WORKSPACE/core-dumps" -maxdepth 1 -type f -printf '%f %s bytes\n' 2>/dev/null || true
-          } | tee diagnostics/e2e-result.txt
-
-          exit "$STATUS"
-
-      - name: Confirm core capture
-        if: failure()
+      - name: Extract full native backtrace offline
         shell: bash
+        env:
+          DEBUGINFOD_URLS: https://debuginfod.ubuntu.com
         run: |
           set -euo pipefail
-          shopt -s nullglob
-          CORES=("$GITHUB_WORKSPACE"/core-dumps/core.*)
+          PHP_BIN="$(readlink -f "$(command -v php)")"
+          CORE="$(find captured/core-dumps -maxdepth 1 -type f -name 'core.*' -print -quit)"
+          gdb --batch -q "$PHP_BIN" "$CORE" \
+            -ex 'set pagination off' \
+            -ex 'set print pretty on' \
+            -ex 'set debuginfod enabled on' \
+            -ex 'set debug-file-directory /tmp/debug-root/usr/lib/debug:/usr/lib/debug' \
+            -ex 'info files' \
+            -ex 'info sharedlibrary' \
+            -ex 'info registers' \
+            -ex 'x/16i $pc-32' \
+            -ex 'thread apply all bt full' \
+            -ex 'quit' > diagnostics/gdb-backtrace.txt 2>&1 || true
+          { sed -n '1,140p' diagnostics/gdb-backtrace.txt; echo '=== FRAMES ==='; grep -E '^#[0-9]+' diagnostics/gdb-backtrace.txt | head -120 || true; } \
+            | tee diagnostics/gdb-summary.txt
 
-          if (( ${#CORES[@]} == 0 )); then
-            {
-              echo "No core file was created."
-              echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)"
-              echo "core_uses_pid=$(cat /proc/sys/kernel/core_uses_pid)"
-            } | tee diagnostics/no-core.txt
-            exit 0
-          fi
-
-          {
-            echo "Core files captured: ${#CORES[@]}"
-            for CORE in "${CORES[@]}"; do
-              ls -lh "$CORE"
-              file "$CORE" || true
-            done
-          } | tee diagnostics/core-captured.txt
-
-      - name: Upload SIGSEGV diagnostics
+      - name: Upload post-mortem backtrace
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: php-segfault-diagnostics-${{ github.sha }}
-          path: |
-            diagnostics/
-            core-dumps/
-            playwright-report/
-            storage/logs/laravel.log
-          if-no-files-found: warn
+          name: php-segfault-backtrace-89083ca2
+          path: diagnostics/
+          if-no-files-found: error
           retention-days: 7
