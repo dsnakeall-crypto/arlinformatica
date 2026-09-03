@@ -17,16 +17,4 @@ php artisan db:seed --class=E2ESeeder --force
 SERVER_ROUTER="$ROOT/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php"
 cd "$ROOT/public"
 
-if [[ "${CI:-}" == "true" ]]; then
-  if ! command -v gdb >/dev/null 2>&1; then
-    sudo apt-get update -qq
-    sudo apt-get install -y gdb
-  fi
-
-  exec gdb --batch \
-    -ex run \
-    -ex 'thread apply all bt full' \
-    --args php -S 127.0.0.1:8000 "$SERVER_ROUTER"
-fi
-
 exec php -S 127.0.0.1:8000 "$SERVER_ROUTER"
