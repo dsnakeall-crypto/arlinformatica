@@ -8,7 +8,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo
+          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip
           coverage: none
       - run: composer install --no-interaction --prefer-dist --no-progress
       - run: composer audit --locked --no-dev
@@ -27,6 +27,10 @@ jobs:
       - run: php artisan migrate --seed --force
       - run: vendor/bin/pint --test
       - run: php artisan test
+      - name: Validate production PHP dependencies
+        run: |
+          composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+          composer check-platform-reqs --no-dev
   backend-mysql:
     runs-on: ubuntu-latest
     services:
@@ -59,6 +63,7 @@ jobs:
       QUEUE_CONNECTION: sync
     steps:
       - uses: actions/checkout@v4
+      - run: touch .env
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
