@@ -6,6 +6,83 @@ on:
       - codex/implementar-etapa-10-do-projeto
 
 jobs:
+  core-smoke:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate core dump support with a minimal native crash
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/core-dumps-smoke" diagnostics-smoke
+          CORE_PATTERN="$GITHUB_WORKSPACE/core-dumps-smoke/core.%e.%p.%t"
+
+          {
+            echo "=== core environment before ==="
+            echo "soft_core=$(ulimit -Sc)"
+            echo "hard_core=$(ulimit -Hc)"
+            echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)"
+            echo "core_uses_pid=$(cat /proc/sys/kernel/core_uses_pid)"
+            echo "suid_dumpable=$(cat /proc/sys/fs/suid_dumpable)"
+            grep -E 'CoreDumping|NoNewPrivs|Seccomp' /proc/self/status || true
+            ls -ld "$GITHUB_WORKSPACE/core-dumps-smoke"
+          } | tee diagnostics-smoke/before.txt
+
+          sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"
+          ulimit -c unlimited
+
+          cat > /tmp/crash.c <<'EOF'
+          int main(void) {
+              *(volatile int *)0 = 1;
+              return 0;
+          }
+          EOF
+          gcc -g -O0 /tmp/crash.c -o /tmp/crash
+
+          set +e
+          /tmp/crash
+          STATUS=$?
+          set -e
+
+          {
+            echo "status=$STATUS"
+            echo "soft_core_after=$(ulimit -Sc)"
+            echo "core_pattern_after=$(cat /proc/sys/kernel/core_pattern)"
+            echo "core files:"
+            find "$GITHUB_WORKSPACE/core-dumps-smoke" -maxdepth 1 -type f -printf '%f %s bytes\n' || true
+          } | tee diagnostics-smoke/after.txt
+
+          if [[ "$STATUS" -ne 139 ]]; then
+            echo "Expected SIGSEGV exit status 139, got $STATUS" >&2
+            exit 1
+          fi
+
+          CORE="$(find "$GITHUB_WORKSPACE/core-dumps-smoke" -maxdepth 1 -type f -name 'core.*' -print -quit)"
+          if [[ -z "$CORE" ]]; then
+            echo "SIGSEGV occurred but runner did not create a core file." | tee diagnostics-smoke/no-core.txt
+            exit 2
+          fi
+
+          sudo apt-get update -qq
+          sudo apt-get install -y gdb
+          gdb --batch -q /tmp/crash "$CORE" \
+            -ex 'set pagination off' \
+            -ex 'info registers' \
+            -ex 'bt full' > diagnostics-smoke/gdb.txt 2>&1 || true
+
+      - name: Upload core smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-smoke-${{ github.sha }}
+          path: |
+            diagnostics-smoke/
+            core-dumps-smoke/
+          if-no-files-found: warn
+          retention-days: 7
+
   e2e-core-php82:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
