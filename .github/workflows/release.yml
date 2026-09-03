@@ -14,6 +14,19 @@ jobs:
       - run: composer audit --locked --no-dev
       - run: npm ci
       - run: npm audit --omit=dev --audit-level=high
+      - name: Preparar ambiente de teste
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
+          {
+            echo 'DB_CONNECTION=sqlite'
+            echo "DB_DATABASE=${GITHUB_WORKSPACE}/database/database.sqlite"
+            echo 'SESSION_DRIVER=array'
+            echo 'CACHE_STORE=array'
+            echo 'QUEUE_CONNECTION=sync'
+          } >> .env
+          php artisan key:generate
+      - run: php artisan migrate --seed --force
       - run: vendor/bin/pint --test
       - run: php artisan test
       - run: npm run typecheck
