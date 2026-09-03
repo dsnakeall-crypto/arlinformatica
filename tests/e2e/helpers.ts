@@ -31,8 +31,8 @@ export async function api(page: Page, path: string, method = 'GET', body?: unkno
 }
 
 export function uniqueDocument(seed = Date.now()) {
-  const base = String(seed).slice(-8).padStart(8, '0');
-  const digits = `39053344${base}`.slice(0, 9);
+  const raw = String(seed).replace(/\D/g, '');
+  const digits = raw.padStart(9, '0').slice(-9);
   let sum = 0;
   for (let i = 0; i < 9; i++) sum += Number(digits[i]) * (10 - i);
   const d1 = ((sum * 10) % 11) % 10;
