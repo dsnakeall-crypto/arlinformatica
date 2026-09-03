@@ -1,0 +1,147 @@
+name: Diagnose PHP SIGSEGV
+
+on:
+  push:
+    branches:
+      - codex/implementar-etapa-10-do-projeto
+
+jobs:
+  e2e-core-php82:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+
+      - name: Record PHP runtime before E2E
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics core-dumps
+          PHP_BIN="$(readlink -f "$(command -v php)")"
+          {
+            echo "=== date ==="
+            date -u --iso-8601=seconds
+            echo "=== php binary ==="
+            echo "$PHP_BIN"
+            echo "=== php -v ==="
+            php -v
+            echo "=== php --ini ==="
+            php --ini
+            echo "=== loaded modules ==="
+            php -m
+            echo "=== selected ini values ==="
+            php -r 'foreach (["opcache.enable", "opcache.enable_cli", "opcache.jit", "memory_limit"] as $k) { printf("%s=%s\n", $k, var_export(ini_get($k), true)); }'
+            echo "=== core settings before ==="
+            cat /proc/sys/kernel/core_pattern
+            cat /proc/sys/kernel/core_uses_pid
+            echo "=== shell limits before ==="
+            ulimit -a
+            echo "=== php binary linkage ==="
+            ldd "$PHP_BIN" || true
+            echo "=== build id ==="
+            readelf -n "$PHP_BIN" 2>/dev/null | grep -i 'Build ID' || true
+          } | tee diagnostics/runtime-before.txt
+
+      - name: Run E2E normally with core dumps enabled
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/core-dumps" diagnostics
+          CORE_PATTERN="$GITHUB_WORKSPACE/core-dumps/core.%e.%p.%t"
+
+          {
+            echo "core_pattern before=$(cat /proc/sys/kernel/core_pattern)"
+            if sudo sysctl -w "kernel.core_pattern=$CORE_PATTERN"; then
+              echo "core_pattern after=$(cat /proc/sys/kernel/core_pattern)"
+            else
+              echo "WARNING: could not change kernel.core_pattern"
+              echo "core_pattern unchanged=$(cat /proc/sys/kernel/core_pattern)"
+            fi
+
+            ulimit -c unlimited
+            echo "ulimit core after=$(ulimit -c)"
+            echo "coredump_filter=$(cat /proc/self/coredump_filter)"
+          } | tee diagnostics/core-setup.txt
+
+          set +e
+          CI=false npm run test:e2e
+          STATUS=$?
+          set -e
+
+          {
+            echo "e2e_exit=$STATUS"
+            echo "core_pattern final=$(cat /proc/sys/kernel/core_pattern)"
+            echo "core files:"
+            find "$GITHUB_WORKSPACE/core-dumps" -maxdepth 1 -type f -printf '%f %s bytes\n' 2>/dev/null || true
+          } | tee diagnostics/e2e-result.txt
+
+          exit "$STATUS"
+
+      - name: Analyze core post-mortem
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          CORES=("$GITHUB_WORKSPACE"/core-dumps/core.*)
+
+          if (( ${#CORES[@]} == 0 )); then
+            {
+              echo "No core file was created."
+              echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)"
+              echo "core_uses_pid=$(cat /proc/sys/kernel/core_uses_pid)"
+            } | tee diagnostics/no-core.txt
+            exit 0
+          fi
+
+          sudo apt-get update -qq
+          sudo apt-get install -y gdb
+
+          PHP_BIN="$(readlink -f "$(command -v php)")"
+          for CORE in "${CORES[@]}"; do
+            NAME="$(basename "$CORE")"
+            {
+              echo "=== core ==="
+              ls -lh "$CORE"
+              echo "=== executable ==="
+              file "$PHP_BIN"
+              echo "=== core metadata ==="
+              file "$CORE"
+              echo "=== gdb post-mortem ==="
+              gdb --batch -q "$PHP_BIN" "$CORE" \
+                -ex 'set pagination off' \
+                -ex 'info files' \
+                -ex 'info sharedlibrary' \
+                -ex 'info registers' \
+                -ex 'thread apply all bt full'
+            } > "diagnostics/gdb-${NAME}.txt" 2>&1 || true
+          done
+
+      - name: Upload SIGSEGV diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-segfault-diagnostics-${{ github.sha }}
+          path: |
+            diagnostics/
+            core-dumps/
+            playwright-report/
+            storage/logs/laravel.log
+          if-no-files-found: warn
+          retention-days: 7
