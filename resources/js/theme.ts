@@ -1,3 +1,5 @@
+export {};
+
 type Theme = {
   theme_primary: string;
   theme_sidebar: string;
@@ -137,7 +139,7 @@ function syncControls() {
   if (found) renderPreview(currentTheme);
 }
 
-function status(message: string, kind: 'ok' | 'error' | '' = '') {
+function setThemeStatus(message: string, kind: 'ok' | 'error' | '' = '') {
   const el = document.querySelector<HTMLElement>('.theme-status');
   if (!el) return;
   el.textContent = message;
@@ -147,7 +149,7 @@ function status(message: string, kind: 'ok' | 'error' | '' = '') {
 async function saveTheme() {
   const button = document.querySelector<HTMLButtonElement>('.theme-save');
   if (button) button.disabled = true;
-  status('Salvando cores…');
+  setThemeStatus('Salvando cores…');
   try {
     const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
     const response = await fetch('/api/theme', {
@@ -159,9 +161,9 @@ async function saveTheme() {
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.message || 'Não foi possível salvar as cores.');
     applyTheme(body);
-    status('Cores salvas para toda a empresa.', 'ok');
+    setThemeStatus('Cores salvas para toda a empresa.', 'ok');
   } catch (error) {
-    status(error instanceof Error ? error.message : 'Não foi possível salvar as cores.', 'error');
+    setThemeStatus(error instanceof Error ? error.message : 'Não foi possível salvar as cores.', 'error');
   } finally {
     if (button) button.disabled = false;
   }
@@ -204,7 +206,7 @@ function injectThemeSettings() {
     (document.getElementById('theme-sidebar') as HTMLInputElement).value = defaultTheme.theme_sidebar;
     (document.getElementById('theme-accent') as HTMLInputElement).value = defaultTheme.theme_accent;
     renderPreview(defaultTheme);
-    status('Padrão ARL carregado na prévia. Clique em Salvar cores para aplicar.');
+    setThemeStatus('Padrão ARL carregado na prévia. Clique em Salvar cores para aplicar.');
   });
   section.querySelector<HTMLButtonElement>('.theme-save')?.addEventListener('click', () => void saveTheme());
   syncControls();

@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Services\CompanySettings;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ThemeSettingsTest extends TestCase
