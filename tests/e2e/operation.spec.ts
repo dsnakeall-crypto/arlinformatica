@@ -141,7 +141,7 @@ test.describe.serial('fluxo operacional principal', () => {
 
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
     await expect(page.getByRole('heading', { name: 'Pós-Venda' })).toBeVisible();
-    await expect(page.getByText('Nenhum pós-venda pendente.')).toBeVisible();
+    await expect(page.getByText('Nenhum pós-venda pendente')).toBeVisible();
     const postSale = await api(page, '/post-sales');
     expect(postSale.status).toBe(200);
     expect(postSale.body).toEqual([]); // a regra de cinco dias impede contato prematuro

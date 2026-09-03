@@ -88,23 +88,30 @@ class FinanceController extends Controller
             ->get();
 
         $orders = $rows->where('origin', 'service_order');
-        $items = DB::table('service_order_items')
-            ->join('payments', 'payments.service_order_id', '=', 'service_order_items.service_order_id')
-            ->join('financial_transactions', 'financial_transactions.payment_id', '=', 'payments.id')
-            ->where('financial_transactions.origin', 'service_order')
-            ->whereBetween('financial_transactions.occurred_at', $utcBounds)
-            ->selectRaw('service_order_items.description, SUM(service_order_items.quantity) as quantity, SUM(service_order_items.subtotal_cents) as total_cents')
-            ->groupBy('service_order_items.description')
-            ->orderByDesc('total_cents')
-            ->get()
-            ->map(fn ($row) => ['description' => (string) $row->description, 'quantity' => (int) $row->quantity, 'total_cents' => (int) $row->total_cents])
+        $orderIds = $orders
+            ->pluck('service_order_id')
+            ->filter(fn ($id) => $id !== null)
+            ->map(fn ($id) => (int) $id)
+            ->unique()
             ->values();
-        $discount = (int) DB::table('service_orders')
-            ->join('payments', 'payments.service_order_id', '=', 'service_orders.id')
-            ->join('financial_transactions', 'financial_transactions.payment_id', '=', 'payments.id')
-            ->where('financial_transactions.origin', 'service_order')
-            ->whereBetween('financial_transactions.occurred_at', $utcBounds)
-            ->sum('service_orders.discount_cents');
+
+        $items = collect();
+        $discount = 0;
+        if ($orderIds->isNotEmpty()) {
+            $items = DB::table('service_order_items')
+                ->whereIn('service_order_id', $orderIds->all())
+                ->get(['description', 'quantity', 'subtotal_cents'])
+                ->groupBy('description')
+                ->map(fn ($group, $description) => [
+                    'description' => (string) $description,
+                    'quantity' => (int) $group->sum('quantity'),
+                    'total_cents' => (int) $group->sum('subtotal_cents'),
+                ])
+                ->sortByDesc('total_cents')
+                ->values();
+            $discount = (int) DB::table('service_orders')->whereIn('id', $orderIds->all())->sum('discount_cents');
+        }
+
         $daily = $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))->map(fn ($day) => (int) $day->sum('effective_cents'))->sortKeys();
         $methods = $orders->filter(fn ($row) => $row->method)->groupBy('method')->map(fn ($method) => ['quantity' => $method->count(), 'total_cents' => (int) $method->sum('effective_cents')]);
 
