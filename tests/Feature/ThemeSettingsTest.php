@@ -44,6 +44,22 @@ class ThemeSettingsTest extends TestCase
             ->assertJsonValidationErrors('theme_primary');
     }
 
+    public function test_official_identity_defaults_match_the_homologated_letterhead(): void
+    {
+        $settings = app(CompanySettings::class)->all();
+
+        $this->assertSame('ARL Informática', $settings['company_name']);
+        $this->assertSame('18588208000139', $settings['cnpj']);
+        $this->assertSame('35988285777', $settings['phone']);
+        $this->assertSame('arlinfocg@gmail.com', $settings['email']);
+        $this->assertSame('Rua Nossa Senhora do Carmo', $settings['street']);
+        $this->assertSame('331', $settings['number']);
+        $this->assertSame('Centro', $settings['district']);
+        $this->assertSame('Campos Gerais', $settings['city']);
+        $this->assertSame('MG', $settings['state']);
+        $this->assertSame('https://www.instagram.com/arlinformatica/', $settings['instagram']);
+    }
+
     public function test_final_pdf_uses_colors_from_the_historical_company_snapshot(): void
     {
         $company = array_replace(app(CompanySettings::class)->snapshot(), [
