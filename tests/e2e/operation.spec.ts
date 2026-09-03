@@ -29,9 +29,10 @@ test.describe.serial('fluxo operacional principal', () => {
     const values: Record<string, string> = { name: 'Cliente E2E', document, phone: '34999998888', postal_code: '99999999', street: 'Rua Manual', number: '10', district: 'Centro', city: 'Araguari', state: 'MG' };
     for (const [name, value] of Object.entries(values)) await form.locator(`[name="${name}"]`).fill(value);
     await form.getByRole('button', { name: 'Salvar cliente' }).click();
-    await expect(page.getByText('Cliente E2E')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', /wa\.me|whatsapp/);
-    await expect(page.getByRole('link', { name: 'Maps' })).toHaveAttribute('href', /google/);
+    const clientCard = page.locator('.client-list article').filter({ hasText: 'Cliente E2E' });
+    await expect(clientCard).toBeVisible();
+    await expect(clientCard.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', /wa\.me|whatsapp/);
+    await expect(clientCard.getByRole('link', { name: 'Maps' })).toHaveAttribute('href', /google/);
     const found = await api(page, `/clients?q=${document}`);
     clientId = found.body.data[0].id;
     const duplicate = await api(page, '/clients', 'POST', { ...values, name: 'Duplicado', document, postal_code: '99999999' });
