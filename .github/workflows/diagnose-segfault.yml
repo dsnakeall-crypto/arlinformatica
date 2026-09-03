@@ -45,22 +45,22 @@ jobs:
           PHP_BIN="$(readlink -f "$(command -v php)")"
           EXPECTED="$(grep -i 'Build ID:' captured/diagnostics/runtime-before.txt | tail -1 | sed -E 's/.*Build ID:[[:space:]]*//')"
           CURRENT="$(readelf -n "$PHP_BIN" 2>/dev/null | grep -i 'Build ID:' | tail -1 | sed -E 's/.*Build ID:[[:space:]]*//')"
-          VERSION="$(dpkg-query -W -f='${Version}' php8.2-cli)"
+          DBG_VERSION='8.2.33-1+ubuntu22.04.1+deb.sury.org+1'
           {
             echo "php_bin=$PHP_BIN"
             php -v
-            echo "php_package_version=$VERSION"
+            echo "debug_package_version=$DBG_VERSION"
             echo "expected_build_id=$EXPECTED"
             echo "current_build_id=$CURRENT"
           } | tee diagnostics/php-build-match.txt
           [[ -n "$EXPECTED" && "$CURRENT" == "$EXPECTED" ]] || { echo 'BUILD ID MISMATCH' | tee -a diagnostics/php-build-match.txt; exit 1; }
 
           sudo apt-get update -qq
-          sudo apt-get install -y gdb
+          sudo apt-get install -y gdb libc6-dbg
           mkdir -p /tmp/php-dbgsym /tmp/debug-root
           BASE='https://ppa.launchpadcontent.net/ondrej/php/ubuntu/pool/main/p/php8.2'
           for COMPONENT in cli common sqlite3 gd zip mbstring; do
-            FILE="php8.2-${COMPONENT}-dbgsym_${VERSION}_amd64.ddeb"
+            FILE="php8.2-${COMPONENT}-dbgsym_${DBG_VERSION}_amd64.ddeb"
             if curl --fail --location --silent --show-error "$BASE/$FILE" -o "/tmp/php-dbgsym/$FILE"; then
               dpkg-deb -x "/tmp/php-dbgsym/$FILE" /tmp/debug-root
               echo "debug_symbols_extracted=$FILE" | tee -a diagnostics/php-build-match.txt
@@ -68,6 +68,9 @@ jobs:
               echo "debug_symbols_unavailable=$FILE" | tee -a diagnostics/php-build-match.txt
             fi
           done
+          DEBUG_FILE="/tmp/debug-root/usr/lib/debug/.build-id/${EXPECTED:0:2}/${EXPECTED:2}.debug"
+          echo "expected_cli_debug_file=$DEBUG_FILE" | tee -a diagnostics/php-build-match.txt
+          test -f "$DEBUG_FILE" || { echo 'MATCHING CLI DEBUG SYMBOLS NOT FOUND' | tee -a diagnostics/php-build-match.txt; exit 1; }
           find /tmp/debug-root/usr/lib/debug -type f -printf '%p %s bytes\n' 2>/dev/null | sort \
             > diagnostics/debug-symbol-files.txt || true
 
@@ -90,7 +93,7 @@ jobs:
             -ex 'x/16i $pc-32' \
             -ex 'thread apply all bt full' \
             -ex 'quit' > diagnostics/gdb-backtrace.txt 2>&1 || true
-          { sed -n '1,140p' diagnostics/gdb-backtrace.txt; echo '=== FRAMES ==='; grep -E '^#[0-9]+' diagnostics/gdb-backtrace.txt | head -120 || true; } \
+          { sed -n '1,160p' diagnostics/gdb-backtrace.txt; echo '=== FRAMES ==='; grep -E '^#[0-9]+' diagnostics/gdb-backtrace.txt | head -160 || true; } \
             | tee diagnostics/gdb-summary.txt
 
       - name: Upload post-mortem backtrace
