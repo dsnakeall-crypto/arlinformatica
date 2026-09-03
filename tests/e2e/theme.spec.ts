@@ -7,6 +7,12 @@ const defaults = {
   theme_accent: '#28BD65',
 };
 
+const customTheme = {
+  theme_primary: '#B42318',
+  theme_sidebar: '#2B1110',
+  theme_accent: '#F5B700',
+};
+
 test('tema global pode ser alterado nas Configurações e persiste após recarregar', async ({ page }) => {
   await login(page);
   try {
@@ -21,9 +27,9 @@ test('tema global pode ser alterado nas Configurações e persiste após recarre
       }, value);
     };
 
-    await setColor('#theme-primary', '#B42318');
-    await setColor('#theme-sidebar', '#2B1110');
-    await setColor('#theme-accent', '#F5B700');
+    await setColor('#theme-primary', customTheme.theme_primary);
+    await setColor('#theme-sidebar', customTheme.theme_sidebar);
+    await setColor('#theme-accent', customTheme.theme_accent);
 
     const saved = page.waitForResponse((response) => response.url().endsWith('/api/theme') && response.request().method() === 'PUT');
     await page.getByRole('button', { name: 'Salvar cores' }).click();
@@ -35,12 +41,20 @@ test('tema global pode ser alterado nas Configurações e persiste após recarre
       sidebar: getComputedStyle(document.documentElement).getPropertyValue('--arl-sidebar').trim(),
       accent: getComputedStyle(document.documentElement).getPropertyValue('--arl-accent').trim(),
     }));
-    expect(applied).toEqual({ primary: '#B42318', sidebar: '#2B1110', accent: '#F5B700' });
+    expect(applied).toEqual({ primary: customTheme.theme_primary, sidebar: customTheme.theme_sidebar, accent: customTheme.theme_accent });
 
+    const reloadedTheme = page.waitForResponse((response) => response.url().endsWith('/api/theme') && response.request().method() === 'GET');
     await page.reload();
+    const themeResponse = await reloadedTheme;
+    expect(themeResponse.status()).toBe(200);
+    expect(await themeResponse.json()).toEqual(customTheme);
     await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
+    await page.waitForFunction(
+      (expected) => getComputedStyle(document.documentElement).getPropertyValue('--arl-primary').trim() === expected,
+      customTheme.theme_primary,
+    );
     const persisted = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--arl-primary').trim());
-    expect(persisted).toBe('#B42318');
+    expect(persisted).toBe(customTheme.theme_primary);
   } finally {
     const reset = await api(page, '/theme', 'PUT', defaults);
     expect(reset.status).toBe(200);
