@@ -6,8 +6,16 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with: {php-version: '8.2', extensions: 'mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip', coverage: none}
+      - name: Setup PHP for release checks without OPcache
+        uses: shivammathur/setup-php@v2
+        with: {php-version: '8.2', extensions: 'mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip, :opcache', coverage: none}
+      - name: Verificar runtime PHP do E2E
+        run: |
+          php -v
+          if php -m | grep -Fxq 'Zend OPcache'; then
+            echo 'Zend OPcache deve permanecer desabilitado durante o E2E do release.' >&2
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with: {node-version: 22, cache: npm}
       - run: composer install --no-interaction --prefer-dist --no-progress
