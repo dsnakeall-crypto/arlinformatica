@@ -12,6 +12,7 @@ class CompanySettings
         'instagram' => 'https://www.instagram.com/allanluttembarck', 'google_review' => 'https://g.page/r/CSxkz5Y88MaJEBM/review',
         'budget_validity_days' => '7', 'budget_observation' => '',
         'budget_institutional_text' => 'Após análise técnica do equipamento acima identificado, foram constatados os serviços e/ou componentes descritos neste orçamento. A execução será realizada mediante aprovação do cliente.',
+        'theme_primary' => '#087443', 'theme_sidebar' => '#063B2D', 'theme_accent' => '#28BD65',
         'warranty_general_enabled' => '0', 'warranty_general_text' => '', 'show_company_document' => '1', 'show_company_address' => '1',
         'post_sale_follow_up' => "Olá, {{nome_cliente}}.\n\nPassando para saber se está tudo certo com o equipamento e se o serviço está funcionando normalmente.\n\nSe tiver qualquer dúvida ou precisar de ajuda, pode entrar em contato com a ARL Informática.",
         'post_sale_google' => "Olá, {{nome_cliente}}\n\nPoderia avaliar a ARL Informática no Google?\nLeva 10 segundos:\n\nBasta clicar no link e dar sua avaliação =))\n\n{{link_google}}",
@@ -25,6 +26,15 @@ class CompanySettings
         $values['term_text'] = (string) DB::table('versioned_templates')->where('type', 'term')->where('active', true)->latest('version')->value('body');
 
         return $values;
+    }
+
+    public function theme(): array
+    {
+        $keys = ['theme_primary', 'theme_sidebar', 'theme_accent'];
+        $stored = DB::table('settings')->whereIn('key', $keys)->pluck('value', 'key')->all();
+        $values = array_replace(self::DEFAULTS, $stored);
+
+        return array_intersect_key($values, array_flip($keys));
     }
 
     public function snapshot(): array

@@ -1,10 +1,38 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+@php
+$normalizeColor = static function ($value, string $fallback): string {
+    $value = is_string($value) ? strtoupper($value) : '';
+    return preg_match('/^#[0-9A-F]{6}$/', $value) ? $value : $fallback;
+};
+$mixWhite = static function (string $hex, float $ratio): string {
+    $hex = ltrim($hex, '#');
+    $parts = [];
+    for ($i = 0; $i < 3; $i++) {
+        $base = hexdec(substr($hex, $i * 2, 2));
+        $parts[] = (int) round($base + (255 - $base) * $ratio);
+    }
+    return sprintf('#%02X%02X%02X', $parts[0], $parts[1], $parts[2]);
+};
+$contrastText = static function (string $hex): string {
+    $hex = ltrim($hex, '#');
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    return (($r * 299 + $g * 587 + $b * 114) / 1000) >= 150 ? '#111827' : '#FFFFFF';
+};
+$themePrimary = $normalizeColor($company['theme_primary'] ?? null, '#087443');
+$themeAccent = $normalizeColor($company['theme_accent'] ?? null, '#28BD65');
+$themeSoft = $mixWhite($themePrimary, .90);
+$themeBorder = $mixWhite($themePrimary, .72);
+$themeOnPrimary = $contrastText($themePrimary);
+@endphp
 <meta charset="utf-8">
 <title>OS {{ $order['number'] }} — Relatório Técnico</title>
 <style>
 @page{margin:20px 22px 22px}*{box-sizing:border-box}body{font-family:DejaVu Sans,Arial,sans-serif;color:#17221c;font-size:9px;line-height:1.35;margin:0}.green{color:#087a43}.muted{color:#66736b}.box{border:1px solid #dce6df;border-radius:7px;padding:9px 11px;margin-bottom:8px}.section-title{font-size:8px;font-weight:700;color:#087a43;text-transform:uppercase;letter-spacing:.35px;margin:0 0 5px}.header{width:100%;border-collapse:collapse;margin-bottom:8px}.header td{vertical-align:middle}.brand{width:22%;padding-right:8px}.brand img{max-width:105px;max-height:58px;object-fit:contain}.brand-fallback{font-size:24px;font-weight:800;color:#087a43;letter-spacing:2px}.company{width:51%;padding:0 8px}.company strong{display:block;font-size:11px;margin-bottom:3px}.company div{font-size:7.5px;line-height:1.45}.os-card{width:27%;background:#f1f8f4;border:1px solid #d4eadc;border-radius:7px;padding:9px;text-align:center;color:#087a43}.os-card small{display:block;font-size:7px;font-weight:700;text-transform:uppercase}.os-card strong{display:block;font-size:14px;margin-top:6px}.dates{width:100%;border-collapse:separate;border-spacing:0 6px}.dates td{width:50%;border:1px solid #dce6df;border-radius:6px;padding:7px 10px}.dates b{color:#087a43;margin-right:7px}.grid{width:100%;border-collapse:separate;border-spacing:7px 0;margin:0 -7px 8px}.grid td{vertical-align:top;width:50%;border:1px solid #dce6df;border-radius:7px;padding:9px 11px}.grid p{margin:2px 0}.equipment-photo{float:right;max-width:82px;max-height:65px;margin-left:8px;border-radius:5px}.problem-tech{width:100%;border-collapse:separate;border-spacing:7px 0;margin:0 -7px 8px}.problem-tech td{vertical-align:top;width:50%;border:1px solid #dce6df;border-radius:7px;padding:9px 11px;min-height:65px}.problem-tech p{margin:0}.checklist p{margin:2px 0}.items{width:100%;border-collapse:collapse;margin-top:3px}.items thead th{background:#087a43;color:white;padding:5px 6px;text-align:left;font-size:7.5px}.items td{padding:5px 6px;border-bottom:1px solid #e3ebe6;vertical-align:top}.items th:nth-child(2),.items td:nth-child(2){width:9%;text-align:center}.items th:nth-child(3),.items td:nth-child(3),.items th:nth-child(4),.items td:nth-child(4){width:19%;text-align:right}.warranty{font-size:6.8px;color:#66736b}.totals{width:43%;margin-left:auto;margin-top:6px;border-collapse:collapse}.totals td{padding:3px 5px;text-align:right}.totals .total-label,.totals .total-value{background:#f1f8f4;color:#087a43;font-weight:800;font-size:11px;border-top:1px solid #d4eadc;border-bottom:1px solid #d4eadc}.totals .total-label{text-align:left}.general-warranty{margin-top:8px;background:#f8fbf9}.photos{margin-top:6px}.photos img{width:108px;height:78px;object-fit:contain;border:1px solid #e0e8e3;border-radius:5px;margin:0 5px 5px 0}.footer-table{width:100%;margin-top:14px;border-collapse:collapse}.footer-table td{vertical-align:bottom}.closing{width:60%;font-size:7.5px;color:#66736b}.closing strong{display:block;color:#17221c;font-size:8px}.thanks{width:40%;text-align:right;color:#66736b}.thanks b{color:#087a43}.footer-line{margin-top:7px;border-top:1px solid #dce6df;padding-top:5px;text-align:center;font-size:6.8px;color:#7a857e}.result{font-weight:700;color:#17221c;margin:4px 0 0}
+.green,.section-title,.brand-fallback,.dates b,.totals .total-label,.totals .total-value{color:{{ $themePrimary }}!important}.os-card{background:{{ $themeSoft }}!important;border-color:{{ $themeBorder }}!important;color:{{ $themePrimary }}!important}.items thead th{background:{{ $themePrimary }}!important;color:{{ $themeOnPrimary }}!important}.totals .total-label,.totals .total-value{background:{{ $themeSoft }}!important;border-color:{{ $themeBorder }}!important}.general-warranty{background:{{ $themeSoft }}!important;border-color:{{ $themeBorder }}!important}.thanks b{color:{{ $themeAccent }}!important}
 </style>
 </head>
 <body>

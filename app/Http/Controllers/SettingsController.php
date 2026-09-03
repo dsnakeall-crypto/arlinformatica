@@ -19,6 +19,41 @@ class SettingsController extends Controller
         return response()->json(['budget_validity_days' => (int) $all['budget_validity_days']]);
     }
 
+    public function theme(CompanySettings $settings): JsonResponse
+    {
+        return response()->json($settings->theme());
+    }
+
+    public function updateTheme(Request $request, CompanySettings $settings): JsonResponse
+    {
+        abort_unless(in_array($request->user()->role->name, ['Master', 'Administrador']), 403);
+        $data = $request->validate([
+            'theme_primary' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'theme_sidebar' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'theme_accent' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        ]);
+        $data = array_map(static fn (string $value) => strtoupper($value), $data);
+
+        DB::transaction(function () use ($data, $request) {
+            foreach ($data as $key => $value) {
+                DB::table('settings')->updateOrInsert(
+                    ['key' => $key],
+                    ['value' => $value, 'updated_at' => now(), 'created_at' => now()]
+                );
+            }
+            DB::table('audit_logs')->insert([
+                'user_id' => $request->user()->id,
+                'action' => 'theme.updated',
+                'subject_type' => 'settings',
+                'after' => json_encode($data),
+                'ip_address' => $request->ip(),
+                'created_at' => now(),
+            ]);
+        });
+
+        return response()->json($settings->theme());
+    }
+
     public function show(CompanySettings $settings): JsonResponse
     {
         return response()->json($settings->all());
