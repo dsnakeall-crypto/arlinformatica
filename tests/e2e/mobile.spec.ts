@@ -1,8 +1,26 @@
 import { expect, test } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
-test('mobile possui navegação própria, ações tocáveis e inputs sem zoom forçado', async ({ page }) => {
+test('mobile possui navegação própria, filtros contidos, ações tocáveis e inputs sem zoom forçado', async ({ page }) => {
   await login(page);
+  await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
+  await expect(page.getByText('Carregando painel...')).toHaveCount(0);
+
+  const viewportSize = page.viewportSize();
+  expect(viewportSize).not.toBeNull();
+  const filterBoxes = await page.locator('.dashboard-cards + .panel > .filters input, .dashboard-cards + .panel > .filters select').evaluateAll((elements) => elements.map((element) => {
+    const rect = element.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, height: rect.height };
+  }));
+  expect(filterBoxes).toHaveLength(3);
+  for (const box of filterBoxes) {
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.right).toBeLessThanOrEqual(viewportSize!.width);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+  }
+  const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(documentWidth).toBeLessThanOrEqual(viewportSize!.width);
+
   await expect(page.locator('.menu-toggle')).toBeVisible();
   await page.locator('.menu-toggle').click();
   await expect(page.locator('aside.open')).toBeVisible();
@@ -83,11 +101,13 @@ test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem m
     const pathname = new URL(request.url()).pathname;
     if (pathname.startsWith('/api/') && request.method() !== 'GET') apiWrites.push(`${request.method()} ${pathname}`);
   });
-  await whatsapp.evaluate((element) => {
-    element.addEventListener('click', (event) => event.preventDefault(), { once: true });
-    (element as HTMLElement).click();
+  await page.context().route('https://wa.me/**', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>WhatsApp mock</title>' });
   });
-  await page.waitForTimeout(100);
+  const popupPromise = page.waitForEvent('popup');
+  await whatsapp.click();
+  const popup = await popupPromise;
+  await popup.close();
   expect(apiWrites).toEqual([]);
 
   const photo = actions.getByLabel('Foto do atendimento externo');
