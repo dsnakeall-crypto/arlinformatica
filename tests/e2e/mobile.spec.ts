@@ -24,6 +24,31 @@ test('mobile possui navegação própria, filtros contidos, ações tocáveis e 
   await expect(page.locator('.menu-toggle')).toBeVisible();
   await page.locator('.menu-toggle').click();
   await expect(page.locator('aside.open')).toBeVisible();
+  await page.locator('aside').getByRole('button', { name: 'Clientes' }).click();
+  await expect(page.getByRole('heading', { name: 'Cadastro de Clientes' })).toBeVisible();
+  const firstClient = page.locator('.clients-list-panel .client-list article').first();
+  await expect(firstClient).toBeVisible();
+  const clientBounds = await firstClient.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { left: rect.left, right: rect.right };
+  });
+  const clientActionBoxes = await firstClient.locator('.contact-links a, .contact-links button').evaluateAll((elements) => elements.map((element) => {
+    const rect = element.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, height: rect.height };
+  }));
+  expect(clientActionBoxes.length).toBeGreaterThan(0);
+  for (const box of clientActionBoxes) {
+    expect(box.left).toBeGreaterThanOrEqual(clientBounds.left);
+    expect(box.right).toBeLessThanOrEqual(clientBounds.right);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+  }
+  const phoneWhiteSpace = await firstClient.locator(':scope > span').first().evaluate((element) => getComputedStyle(element).whiteSpace);
+  expect(phoneWhiteSpace).toBe('nowrap');
+  const clientsDocumentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(clientsDocumentWidth).toBeLessThanOrEqual(viewportSize!.width);
+
+  await page.locator('.menu-toggle').click();
+  await expect(page.locator('aside.open')).toBeVisible();
   await page.locator('aside').getByRole('button', { name: 'Nova OS' }).click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
   const fontSize = await page.getByLabel('Problema relatado *').evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
