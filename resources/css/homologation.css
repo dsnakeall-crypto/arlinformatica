@@ -17,6 +17,33 @@
     display: none;
 }
 
+.clients-list-panel .client-list article {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 12px;
+}
+
+.clients-list-panel .client-list article > span:first-of-type {
+    white-space: nowrap;
+}
+
+.clients-list-panel .client-list article > span:nth-of-type(2) {
+    min-width: 0;
+}
+
+.clients-list-panel .contact-links {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    min-width: 0;
+}
+
+.clients-list-panel .contact-links a,
+.clients-list-panel .contact-links button {
+    min-height: 36px;
+    padding: 7px 10px;
+    white-space: nowrap;
+}
+
 .client-form-placeholder {
     display: none;
 }
@@ -266,6 +293,15 @@
         width: 100%;
         max-width: none;
         min-width: 0;
+        min-height: 44px;
+    }
+
+    .clients-list-panel .client-list article > span:first-of-type {
+        font-size: 13px;
+    }
+
+    .clients-list-panel .contact-links a,
+    .clients-list-panel .contact-links button {
         min-height: 44px;
     }
 }
