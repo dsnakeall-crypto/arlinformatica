@@ -252,6 +252,21 @@
     .layout-mobile aside.open {
         transition: transform .18s ease;
     }
+
+    .dashboard-cards + .panel > .filters {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        width: 100%;
+    }
+
+    .dashboard-cards + .panel > .filters label,
+    .dashboard-cards + .panel > .filters select {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        min-height: 44px;
+    }
 }
 
 @media (min-width: 720px) {
