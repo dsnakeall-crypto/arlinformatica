@@ -42,11 +42,13 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
+  await expect(page.getByText('Carregando painel...')).toHaveCount(0);
   await page.screenshot({ path: 'visual-artifacts/01-painel-desktop.png', fullPage: true });
 
   const nav = page.locator('aside nav');
   await nav.getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Cadastro de Clientes' })).toBeVisible();
+  await expect(page.getByText('Carregando clientes...')).toHaveCount(0);
   await page.screenshot({ path: 'visual-artifacts/02-clientes-lista-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Novo cliente' }).click();
   await expect(page.getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
@@ -100,11 +102,13 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
+  await expect(page.getByText('Carregando painel...')).toHaveCount(0);
   await page.screenshot({ path: 'visual-artifacts/01-painel-mobile.png', fullPage: true });
 
   await page.locator('.menu-toggle').click();
   await page.locator('aside').getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Cadastro de Clientes' })).toBeVisible();
+  await expect(page.getByText('Carregando clientes...')).toHaveCount(0);
   await page.screenshot({ path: 'visual-artifacts/02-clientes-mobile.png', fullPage: true });
 
   await page.locator('.menu-toggle').click();
