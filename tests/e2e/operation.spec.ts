@@ -166,11 +166,16 @@ test.describe.serial('fluxo operacional principal', () => {
 
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
     await expect(page.getByRole('heading', { name: 'Pós-Venda' })).toBeVisible();
-    await expect(page.getByText(`OS ${orderNumber}`)).toBeVisible();
-    await expect(page.getByText(/Disponível após 24 horas/)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'CONFIRMAR SE ESTÁ TUDO CERTO' })).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'PEDIR AVALIAÇÃO' })).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'CONVIDAR PARA SEGUIR' })).toBeDisabled();
+    const lockedRow = page.locator('.post-sale article').filter({ hasText: `OS ${orderNumber}` });
+    await expect(lockedRow).toBeVisible();
+    const lockedActions = lockedRow.locator('.post-action');
+    await expect(lockedActions).toHaveCount(3);
+    for (let i = 0; i < 3; i += 1) {
+      await expect(lockedActions.nth(i)).not.toHaveAttribute('href');
+      await expect(lockedActions.nth(i)).toHaveCSS('pointer-events', 'none');
+    }
+    const lockLabel = await lockedRow.locator('div').first().evaluate((element) => getComputedStyle(element, '::after').content);
+    expect(lockLabel).toContain('Disponível após 24 horas');
 
     const postSale = await api(page, '/post-sales');
     expect(postSale.status).toBe(200);
@@ -178,6 +183,7 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(cycle).toBeTruthy();
     expect(cycle.available).toBe(false);
     expect(cycle.eligible_at).toBeTruthy();
+    expect(cycle.whatsapp.follow_up).toBeNull();
     const blocked = await api(page, `/post-sales/${cycle.id}/follow_up/confirm`, 'POST', {});
     expect(blocked.status).toBe(409);
   });
