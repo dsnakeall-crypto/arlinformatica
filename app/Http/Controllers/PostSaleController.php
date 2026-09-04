@@ -14,12 +14,20 @@ class PostSaleController extends Controller
 {
     public function index(PostSaleService $service, CompanySettings $settings): JsonResponse
     {
-        $service->catchUp(true);
+        // Sem throttle aqui: ao entrar no Pós-Venda, uma OS recém-concluída deve aparecer imediatamente.
+        $service->catchUp();
         $configuration = $settings->all();
-        $rows = DB::table('post_sale_cycles as cycles')->join('service_orders as orders', 'orders.id', '=', 'cycles.service_order_id')->join('clients', 'clients.id', '=', 'cycles.client_id')->where('cycles.active', true)->where('cycles.eligible_at', '<=', now())->select('cycles.id', 'orders.number', 'clients.name', 'clients.phone')->orderBy('cycles.eligible_at')->get();
+        $rows = DB::table('post_sale_cycles as cycles')
+            ->join('service_orders as orders', 'orders.id', '=', 'cycles.service_order_id')
+            ->join('clients', 'clients.id', '=', 'cycles.client_id')
+            ->where('cycles.active', true)
+            ->select('cycles.id', 'cycles.eligible_at', 'orders.number', 'clients.name', 'clients.phone')
+            ->orderBy('cycles.eligible_at')
+            ->get();
         $actions = DB::table('post_sale_actions')->whereIn('cycle_id', $rows->pluck('id'))->get()->groupBy('cycle_id');
 
         return response()->json($rows->map(function ($row) use ($actions, $configuration) {
+            $row->available = now()->greaterThanOrEqualTo($row->eligible_at);
             $row->actions = $actions->get($row->id, collect())->mapWithKeys(fn ($action) => [$action->type => ['id' => $action->id, 'confirmed_at' => $action->confirmed_at]])->all();
             $row->messages = collect(PostSaleService::ACTIONS)->mapWithKeys(fn ($type) => [$type => $this->message($type, $row->name, $configuration)])->all();
             $row->whatsapp = collect($row->messages)->map(fn ($message) => ContactLinks::whatsapp($row->phone, $message))->all();
@@ -34,6 +42,7 @@ class PostSaleController extends Controller
         $configuration = $settings->all();
         $record = DB::table('post_sale_cycles as cycles')->join('clients', 'clients.id', '=', 'cycles.client_id')->where('cycles.id', $cycle)->where('cycles.active', true)->select('cycles.*', 'clients.name')->first();
         abort_unless($record, 404);
+        abort_if(now()->lessThan($record->eligible_at), 409, 'O Pós-Venda desta OS será liberado 24 horas após a conclusão.');
         $message = $this->message($type, $record->name, $configuration);
         $updated = DB::table('post_sale_actions')->where('cycle_id', $cycle)->where('type', $type)->whereNull('confirmed_at')->update(['confirmed_at' => now(), 'confirmed_by' => $request->user()->id, 'message_snapshot' => $message, 'updated_at' => now()]);
         abort_unless($updated === 1, 409, 'Esta mensagem já foi confirmada como enviada.');
