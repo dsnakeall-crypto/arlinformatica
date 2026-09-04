@@ -27,6 +27,9 @@ $themeAccent = $normalizeColor($company['theme_accent'] ?? null, '#28BD65');
 $themeSoft = $mixWhite($themePrimary, .90);
 $themeBorder = $mixWhite($themePrimary, .72);
 $themeOnPrimary = $contrastText($themePrimary);
+$documentTimezone = config('app.timezone', 'America/Sao_Paulo');
+$receivedAt = \Carbon\Carbon::parse($order['received_at'])->setTimezone($documentTimezone);
+$completedAt = \Carbon\Carbon::parse($finalization['completed_at'])->setTimezone($documentTimezone);
 @endphp
 <meta charset="utf-8">
 <title>OS {{ $order['number'] }} — Relatório Técnico</title>
@@ -42,7 +45,7 @@ $themeOnPrimary = $contrastText($themePrimary);
 <td class="os-card"><small>Ordem de Serviço /<br>Relatório Técnico</small><strong>OS Nº {{ $order['number'] }}</strong></td>
 </tr></table>
 
-<table class="dates"><tr><td><b>ENTRADA</b>{{ \Carbon\Carbon::parse($order['received_at'])->format('d/m/Y H:i') }}</td><td><b>SAÍDA</b>{{ \Carbon\Carbon::parse($finalization['completed_at'])->format('d/m/Y H:i') }}</td></tr></table>
+<table class="dates"><tr><td><b>ENTRADA</b>{{ $receivedAt->format('d/m/Y H:i') }}</td><td><b>SAÍDA</b>{{ $completedAt->format('d/m/Y H:i') }}</td></tr></table>
 
 <table class="grid"><tr>
 <td><div class="section-title">Dados do cliente</div><p><strong>{{ $order['client']['name'] }}</strong></p><p>CPF/CNPJ: {{ $order['client']['document'] }} · {{ $order['client']['phone'] }}</p><p>{{ $order['client']['street'] }}, {{ $order['client']['number'] }}{{ filled($order['client']['district'] ?? null) ? ' — '.$order['client']['district'] : '' }}</p><p>{{ $order['client']['city'] }}/{{ $order['client']['state'] }}{{ filled($order['client']['postal_code'] ?? null) ? ' · CEP '.$order['client']['postal_code'] : '' }}</p></td>
@@ -63,7 +66,7 @@ $themeOnPrimary = $contrastText($themePrimary);
 
 @if(count($photos) > 1)<div class="box photos"><div class="section-title">Registro fotográfico</div>@foreach(array_slice($photos,1) as $photo)<img src="data:{{ $photo['mime'] }};base64,{{ $photo['data'] }}">@endforeach</div>@endif
 
-<table class="footer-table"><tr><td class="closing"><strong>{{ $company['company_name'] }}</strong>{{ $company['city'] }}/{{ $company['state'] }}, {{ \Carbon\Carbon::parse($finalization['completed_at'])->locale('pt_BR')->translatedFormat('d \d\e F \d\e Y') }}.</td><td class="thanks">Obrigado pela confiança! <b>♥</b></td></tr></table>
+<table class="footer-table"><tr><td class="closing"><strong>{{ $company['company_name'] }}</strong>{{ $company['city'] }}/{{ $company['state'] }}, {{ $completedAt->locale('pt_BR')->translatedFormat('d \d\e F \d\e Y') }}.</td><td class="thanks">Obrigado pela confiança! <b>♥</b></td></tr></table>
 <div class="footer-line">Documento privado emitido a partir do snapshot histórico da OS nº {{ $order['number'] }}.</div>
 </body>
 </html>
