@@ -57,7 +57,7 @@ class ThemeSettingsTest extends TestCase
         $this->assertSame('Centro', $settings['district']);
         $this->assertSame('Campos Gerais', $settings['city']);
         $this->assertSame('MG', $settings['state']);
-        $this->assertSame('https://www.instagram.com/arlinformatica/', $settings['instagram']);
+        $this->assertSame('https://www.instagram.com/allanluttembarck', $settings['instagram']);
     }
 
     public function test_final_pdf_uses_colors_from_the_historical_company_snapshot(): void
