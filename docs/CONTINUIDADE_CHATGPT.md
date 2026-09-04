@@ -6,11 +6,12 @@ Este arquivo é o ponto de retomada do projeto em um novo chat. O GitHub é a fo
 
 - Repositório privado: `dsnakeall-crypto/arlinformatica`.
 - Branch principal: `main`.
-- Baseline atual da `main`: Etapa 9 / PR #10, commit `558a520421c8f290b970dcbc50ff03f2b1161784`, com backend, frontend e E2E verdes após o merge.
+- Base atual da PR #11 na `main`: commit `4c4e753c004c6f834a989f13d6ab1e66ba2612e9`.
 - Etapa atual: **PR #11**, branch `codex/implementar-etapa-10-do-projeto`.
-- Último commit funcional validado da PR #11: `58fd267864ad4f2f47af3dc7d445372c1edab6d5`.
-- CI #230 desse commit: **backend OK, frontend OK e Playwright E2E OK**, com `retries: 0`.
-- Alterações documentais posteriores também precisam de CI verde antes do merge.
+- Último commit funcional validado da PR #11: `a1f95ce1d598e8883a50709d0d48bf201129d929`.
+- CI #328 desse commit: **backend SQLite OK, backend MySQL OK, frontend OK e Playwright E2E normal OK**, com `retries: 0`.
+- Commit de limpeza posterior: `5f47b8cd7f87e5a8c987a95e514795634b955202`, que removeu o workflow temporário `.github/workflows/diagnose-segfault.yml`. O CI do head posterior precisa ficar verde antes de qualquer liberação de merge.
+- Não há autorização de merge enquanto existirem validações externas pendentes ou checks do head final não verificados.
 
 ## Arquivos obrigatórios para um novo chat
 
@@ -32,7 +33,7 @@ O proprietário não quer programar, interpretar logs ou executar passos técnic
 
 Nunca fazer merge automaticamente nem atualizar `main`. Antes de qualquer escrita no GitHub, conferir novamente o head da PR e os SHAs dos arquivos relevantes. Não usar force-push. Se um teste falhar, explicar arquivo/teste afetado, esperado versus obtido, causa provável, correção e impacto em produção antes de alterar o código.
 
-Não enfraquecer testes para obter verde. Playwright deve permanecer com `retries: 0`; não usar `force: true`, clique JavaScript ou aumento de timeout para esconder hitbox, concorrência ou defeito funcional. Só considerar uma revisão pronta quando **backend + frontend + E2E** estiverem verdes no head atual.
+Não enfraquecer testes para obter verde. Playwright deve permanecer com `retries: 0`; não usar `force: true`, clique JavaScript ou aumento de timeout para esconder hitbox, concorrência ou defeito funcional. Só considerar uma revisão pronta quando **backend SQLite + backend MySQL + frontend + E2E normal** estiverem verdes no head atual.
 
 ## Regra permanente de interface
 
@@ -79,12 +80,20 @@ Backup automático é persistido no banco, auditado e lido pelo scheduler. Resta
 1. **Orçamento stale no frontend:** havia estados independentes de orçamento; a finalização podia ficar com dados antigos. A correção inicial refazia a consulta ao abrir a finalização, e a solução estrutural tornou o orçamento aprovado autoritativo no servidor por ID.
 2. **Financeiro:** `/finance/month` falhava no E2E quando fazia parte do carregamento inicial conjunto. A solução definitiva foi desacoplar o relatório mensal da abertura da tela, não aumentar timeout nem retirar teste.
 3. **Mobile externo:** o `input[type=file]` de Foto interceptava o clique de Status/Finalizar. Adicionar ID ao Status provou que o seletor não era a causa. A correção real foi CSS mobile-first, contendo o input na própria hitbox e testando geometricamente ausência de sobreposição.
+4. **SIGSEGV intermitente no servidor PHP embutido do E2E:** a investigação por bisseção de extensões mostrou crashes quando Zend OPcache permanecia carregado e estabilidade consistente nas execuções observadas sem o módulo. A CI e o workflow de release passaram a configurar o PHP usado no E2E com `:opcache` e possuem verificação explícita que falha se `Zend OPcache` reaparecer. Isso é restrito ao runtime de testes; não desativa OPcache da hospedagem/produção.
+5. **Persistência visual do tema após reload:** depois de estabilizar o runtime PHP, o E2E revelou uma corrida real do teste: o backend persistia e retornava as cores corretas, mas a asserção do CSS podia ocorrer antes de o GET `/api/theme` terminar. O teste foi sincronizado com a resposta real da API e só então valida o CSS aplicado; não foram adicionados retry, `force:true`, clique JavaScript ou timeout artificial. O CI #328 passou integralmente após essa correção.
+
+## Diagnóstico temporário removido
+
+- `.github/workflows/diagnose-segfault.yml` foi criado apenas para isolar o crash e foi removido no commit `5f47b8cd7f87e5a8c987a95e514795634b955202` depois que a evidência necessária foi obtida.
+- Não recriar esse workflow por padrão. Se um novo `SIGSEGV` aparecer com OPcache já ausente no job E2E, investigar o novo log/artefato antes de supor que é o mesmo problema.
 
 ## Validações externas ainda pendentes
 
 - Web Push em Android/iPhone físico com HTTPS e VAPID reais.
 - Comparação visual final de PDFs/telas e homologação de impressão física; os arquivos de referência visual precisam ser reanexados.
-- Deploy real na KingHost.
+- Deploy real na KingHost e smoke test no ambiente real.
+- Execução manual do workflow `Preparar release` no head final. O conector usado nesta retomada não expõe ação de `workflow_dispatch`, então essa execução pode exigir ação manual no GitHub quando o head estiver definitivamente fechado.
 - Recuperação pública opcional de senha por e-mail enquanto SMTP não estiver definido; reset administrativo pelo Master permanece funcional.
 
 Essas pendências devem ser descritas honestamente; não inventar homologação externa.
@@ -93,8 +102,8 @@ Essas pendências devem ser descritas honestamente; não inventar homologação 
 
 Não interpretar “Able to merge” como aprovação. Ausência de conflito Git não substitui testes.
 
-Antes de liberar o merge, conferir o head atual da PR #11 e a CI correspondente. Backend, frontend e E2E precisam estar verdes. O merge é manual pelo proprietário.
+Antes de liberar o merge, conferir o head atual da PR #11 e a CI correspondente. Backend SQLite, backend MySQL, frontend e E2E normal precisam estar verdes. Também é necessário concluir a revisão final e não haver falha técnica crítica aberta. O merge é manual pelo proprietário.
 
 ## Prompt curto para um novo chat
 
-> Continue a PR #11 do repositório privado `dsnakeall-crypto/arlinformatica`, branch `codex/implementar-etapa-10-do-projeto`. Leia os sete documentos obrigatórios, confira o head real e a CI antes de qualquer escrita. A Etapa 10 já contém Painel/Mesa, orçamento autoritativo no servidor, Financeiro mensal sob demanda, perfis, garantias, backup endurecido e atalhos externos mobile-first. Playwright deve permanecer com `retries: 0`; não enfraqueça testes. Não faça merge automaticamente. Se referências visuais não estiverem anexadas, não declare homologação visual concluída.
+> Continue a PR #11 do repositório privado `dsnakeall-crypto/arlinformatica`, branch `codex/implementar-etapa-10-do-projeto`. Leia os sete documentos obrigatórios, confira o head real e a CI antes de qualquer escrita. O último head funcional validado foi `a1f95ce1d598e8883a50709d0d48bf201129d929`, CI #328 totalmente verde; depois foi removido o workflow temporário de diagnóstico de SIGSEGV. A Etapa 10 contém Painel/Mesa, orçamento autoritativo no servidor, Financeiro mensal sob demanda, perfis, garantias, backup endurecido e atalhos externos mobile-first. O E2E usa PHP sem Zend OPcache devido ao crash intermitente isolado no runner. Playwright deve permanecer com `retries: 0`; não enfraqueça testes. Não faça merge automaticamente. Se referências visuais não estiverem anexadas, não declare homologação visual concluída.
