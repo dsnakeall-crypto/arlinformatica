@@ -261,6 +261,7 @@
     }
 
     .dashboard-cards + .panel > .filters label,
+    .dashboard-cards + .panel > .filters input,
     .dashboard-cards + .panel > .filters select {
         width: 100%;
         max-width: none;
