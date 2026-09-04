@@ -9,6 +9,10 @@
     <title>ARL Informática</title>
     @auth
         @vite(['resources/js/main.tsx','resources/css/theme.css','resources/js/theme.ts'])
+        <style>
+            .post-sale .post-action:not([href]){pointer-events:none;cursor:not-allowed;background:#e3e6e4;color:#66716b;opacity:.72}
+            .post-sale article:has(.post-action:not([href]))>div::after{content:'Disponível após 24 horas';display:block;margin-top:4px;color:#8a6426;font-size:12px;font-weight:700}
+        </style>
     @else
         <style>
             :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#102a25;background:#f4f7f5}
