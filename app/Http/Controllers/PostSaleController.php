@@ -30,7 +30,8 @@ class PostSaleController extends Controller
             $row->available = now()->greaterThanOrEqualTo($row->eligible_at);
             $row->actions = $actions->get($row->id, collect())->mapWithKeys(fn ($action) => [$action->type => ['id' => $action->id, 'confirmed_at' => $action->confirmed_at]])->all();
             $row->messages = collect(PostSaleService::ACTIONS)->mapWithKeys(fn ($type) => [$type => $this->message($type, $row->name, $configuration)])->all();
-            $row->whatsapp = collect($row->messages)->map(fn ($message) => ContactLinks::whatsapp($row->phone, $message))->all();
+            $links = collect($row->messages)->map(fn ($message) => ContactLinks::whatsapp($row->phone, $message));
+            $row->whatsapp = $row->available ? $links->all() : $links->map(fn () => null)->all();
 
             return $row;
         }));
