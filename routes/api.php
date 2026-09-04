@@ -62,10 +62,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/orders/{order}/status', [ServiceOrderController::class, 'updateStatus']);
     Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store']);
     Route::get('/orders/{order}/payment', [FinanceController::class, 'payment']);
+    Route::get('/orders/{order}/payments', [FinanceController::class, 'payments']);
     Route::post('/orders/{order}/payment', [FinanceController::class, 'pay']);
     Route::post('/finance/quick-entry', [FinanceController::class, 'quickEntry']);
     Route::get('/finance/overview', [FinanceController::class, 'overview']);
     Route::get('/finance/daily', [FinanceController::class, 'transactions']);
+    Route::get('/finance/receivables', [FinanceController::class, 'receivables']);
     Route::get('/finance/month', [FinanceController::class, 'month']);
     Route::post('/finance/transactions/{transaction}/adjust', [FinanceController::class, 'adjust'])->middleware('role:Master,Administrador');
     Route::post('/finance/reports', [FinanceController::class, 'issueReport']);
