@@ -30,7 +30,7 @@ npm run build
 npm run test:e2e
 ```
 
-O E2E usa SQLite descartável, migrations/seeds e servidor Laravel local. Instale o Chromium uma vez com `npx playwright install chromium`. O Playwright permanece com `retries: 0`: falha deve ser investigada e corrigida, não mascarada por repetição automática. O workflow manual **Preparar release** gera o pacote de produção sem secrets nem dados privados.
+O E2E usa SQLite descartável, migrations/seeds e servidor Laravel local. Instale o Chromium uma vez com `npx playwright install chromium`. O Playwright permanece com `retries: 0`: falha deve ser investigada e corrigida, não mascarada por repetição automática. No GitHub Actions, o PHP do servidor embutido usado no E2E é configurado sem Zend OPcache devido ao `SIGSEGV` intermitente isolado no runner; essa configuração é restrita ao ambiente de teste e não desativa OPcache em produção. O workflow manual **Preparar release** gera o pacote de produção sem secrets nem dados privados.
 
 ## Produção
 
@@ -38,9 +38,9 @@ Nunca publique `.env`, banco, backups, fotos ou PDFs. O document root é `public
 
 ## Estado
 
-A `main` está estável até a Etapa 9, mergeada pela PR #10 no commit `558a520421c8f290b970dcbc50ff03f2b1161784`, com backend, frontend e E2E verdes. A Etapa 10 está na PR #11, branch `codex/implementar-etapa-10-do-projeto`.
+A `main` é a base estável e a Etapa 10 está na PR #11, branch `codex/implementar-etapa-10-do-projeto`. A branch está sem commits pendentes da `main` no último comparativo realizado.
 
-O último commit funcional da Etapa 10, `58fd267864ad4f2f47af3dc7d445372c1edab6d5`, passou integralmente na CI #230: backend, frontend e Playwright E2E. Alterações documentais posteriores também devem ter CI verde antes do merge. Consulte [`CHECKLIST_FINAL.md`](CHECKLIST_FINAL.md) para o estado verificável e as validações externas pendentes.
+O último head funcional validado da Etapa 10 é `a1f95ce1d598e8883a50709d0d48bf201129d929`, com a CI #328 integralmente verde: backend SQLite, backend MySQL 8, frontend e Playwright E2E normal. Depois dessa validação foram feitas apenas limpezas/documentação, inclusive a remoção do workflow temporário de diagnóstico de `SIGSEGV`; o head final ainda deve passar novamente pela CI antes de qualquer autorização de merge. Consulte [`CHECKLIST_FINAL.md`](CHECKLIST_FINAL.md) e [`docs/CONTINUIDADE_CHATGPT.md`](docs/CONTINUIDADE_CHATGPT.md) para o estado verificável e as validações externas pendentes.
 
 ## Etapa 10
 
