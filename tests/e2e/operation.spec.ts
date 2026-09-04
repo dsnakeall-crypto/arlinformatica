@@ -60,13 +60,13 @@ test.describe.serial('fluxo operacional principal', () => {
     expect((await page.request.get(`/api/orders/${orderId}/term`)).status()).toBe(200);
   });
 
-  test('orçamento, aprovação, andamento, conclusão, PDF e pagamento pela UI', async ({ page }) => {
+  test('orçamento, conclusão, pagamento parcial, A Receber e quitação pela UI', async ({ page }) => {
     await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
     await expect(page.getByText('Pagamento ainda não registrado.', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toHaveCount(0);
     await expect(page.getByText(/NaN|Invalid Date/)).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Gerar orçamento' }).click();
@@ -114,22 +114,47 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(finalized.body.items[0].source_budget_id).toBeTruthy();
     expect(finalized.body.items[0].description).toBe('Formatação E2E');
 
+    await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toBeVisible();
     await page.getByRole('button', { name: 'Registrar pagamento' }).click();
     const paymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
-    await paymentModal.getByLabel('Valor recebido (R$)').fill('150,00');
+    await expect(paymentModal.getByRole('button', { name: /Pagar valor total/ })).toBeVisible();
+    await paymentModal.getByLabel('Valor recebido (R$)').fill('50,00');
     await paymentModal.getByLabel('Forma de pagamento *').selectOption('pix');
+    await expect(paymentModal.getByText(/R\$ 100,00.*A Receber/)).toBeVisible();
     await paymentModal.getByRole('button', { name: 'Confirmar pagamento' }).click();
-    await expect(page.getByText(/Pago · R\$ 150,00/)).toBeVisible();
+    await expect(page.getByText(/Pagamento parcial/)).toBeVisible();
+    await expect(page.getByText(/ainda faltam R\$ 100,00/)).toBeVisible();
+
+    const partial = await api(page, `/orders/${orderId}/payments`);
+    expect(partial.body.paid_cents).toBe(5000);
+    expect(partial.body.balance_cents).toBe(10000);
+    expect(partial.body.status).toBe('partial');
 
     await page.getByRole('button', { name: 'Financeiro' }).click();
     await expect(page.getByRole('heading', { name: 'Financeiro' })).toBeVisible();
-    await expect(page.getByText('Total do mês')).toBeVisible();
-    const finance = await api(page, '/finance/overview');
-    expect(finance.status).toBe(200);
-    expect(finance.body.month_total_cents).toBeGreaterThanOrEqual(15000);
+    await page.getByRole('button', { name: 'A Receber' }).click();
+    await expect(page.getByText(`OS #${orderNumber} · Cliente E2E`)).toBeVisible();
+    await expect(page.getByText('Falta R$ 100,00')).toBeVisible();
+    const receivables = await api(page, '/finance/receivables');
+    expect(receivables.status).toBe(200);
+    expect(receivables.body.data.find((row: { id: number }) => row.id === orderId)?.balance_cents).toBe(10000);
+
+    const receivableRow = page.locator('.transaction').filter({ hasText: `OS #${orderNumber}` });
+    await receivableRow.getByRole('button', { name: 'Abrir OS' }).click();
+    await page.getByRole('button', { name: 'Registrar novo pagamento' }).click();
+    const finalPaymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
+    await finalPaymentModal.getByRole('button', { name: /Pagar valor total/ }).click();
+    await finalPaymentModal.getByRole('button', { name: 'Confirmar pagamento' }).click();
+    await expect(page.getByText('Pago integralmente')).toBeVisible();
+    await expect(page.getByText('Saldo zerado.')).toBeVisible();
+
+    const paid = await api(page, `/orders/${orderId}/payments`);
+    expect(paid.body.paid_cents).toBe(15000);
+    expect(paid.body.balance_cents).toBe(0);
+    expect(paid.body.status).toBe('paid');
   });
 
-  test('histórico do cliente e pós-venda são acessíveis pela UI e preservam a OS', async ({ page }) => {
+  test('histórico do cliente e pós-venda aparecem imediatamente, mas ficam bloqueados por 24h', async ({ page }) => {
     await page.getByRole('button', { name: 'Clientes' }).click();
     const clientCard = page.locator('.client-list article').filter({ hasText: 'Cliente E2E' });
     await clientCard.getByRole('button', { name: 'Visualizar' }).click();
@@ -141,9 +166,19 @@ test.describe.serial('fluxo operacional principal', () => {
 
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
     await expect(page.getByRole('heading', { name: 'Pós-Venda' })).toBeVisible();
-    await expect(page.getByText('Nenhum pós-venda pendente')).toBeVisible();
+    await expect(page.getByText(`OS ${orderNumber}`)).toBeVisible();
+    await expect(page.getByText(/Disponível após 24 horas/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'CONFIRMAR SE ESTÁ TUDO CERTO' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'PEDIR AVALIAÇÃO' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'CONVIDAR PARA SEGUIR' })).toBeDisabled();
+
     const postSale = await api(page, '/post-sales');
     expect(postSale.status).toBe(200);
-    expect(postSale.body).toEqual([]); // a regra de cinco dias impede contato prematuro
+    const cycle = postSale.body.find((row: { number: string }) => row.number === orderNumber);
+    expect(cycle).toBeTruthy();
+    expect(cycle.available).toBe(false);
+    expect(cycle.eligible_at).toBeTruthy();
+    const blocked = await api(page, `/post-sales/${cycle.id}/follow_up/confirm`, 'POST', {});
+    expect(blocked.status).toBe(409);
   });
 });
