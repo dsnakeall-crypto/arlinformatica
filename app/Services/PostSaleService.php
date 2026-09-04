@@ -58,7 +58,7 @@ class PostSaleService
             DB::table('post_sale_cycles')->where('id', $active->id)->update(['active' => false, 'archived_at' => now(), 'archive_reason' => 'Nova OS elegível após 60 dias', 'updated_at' => now()]);
             $this->notifications->resolve("post-sale:$active->id");
         }
-        $cycle = DB::table('post_sale_cycles')->insertGetId(['client_id' => $order->client_id, 'service_order_id' => $order->id, 'active' => true, 'eligible_at' => $order->completed_at->copy()->addDays(5), 'created_at' => now(), 'updated_at' => now()]);
+        $cycle = DB::table('post_sale_cycles')->insertGetId(['client_id' => $order->client_id, 'service_order_id' => $order->id, 'active' => true, 'eligible_at' => $order->completed_at->copy()->addHours(24), 'created_at' => now(), 'updated_at' => now()]);
         foreach (self::ACTIONS as $type) {
             DB::table('post_sale_actions')->insertOrIgnore(['cycle_id' => $cycle, 'type' => $type, 'created_at' => now(), 'updated_at' => now()]);
         }
