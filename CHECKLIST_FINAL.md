@@ -59,10 +59,15 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Playwright E2E versionado no `package.json`/`package-lock.json`, com SQLite isolado, seed próprio, servidor Laravel local, fluxo operacional principal, autorização por perfis, viewport mobile e `retries: 0`; execução real é exigida pelo GitHub Actions antes do merge.
 - [OK] Preferência Automático/Web-PC/Mobile-Tablet persistida localmente por dispositivo, aplicada ao shell e validada pelo E2E; não existe configuração global `layout_mode` na tela de Settings.
 - [OK] OS externa no mobile expõe atalhos WhatsApp, Maps, Foto, Status e Finalizar; a mensagem inicial do WhatsApp inclui OS e avarias registradas, e abrir a conversa não registra envio.
-- [OK] Head técnico imediatamente anterior a este ajuste documental: `05e41622bf47fab8f943564cd6ab14408a339a00`, CI #286 com backend SQLite, backend MySQL 8, frontend e Playwright verdes após rerun controlado do E2E.
+- [OK] O runtime PHP usado pelo servidor embutido do E2E é configurado sem Zend OPcache e possui verificação explícita; a bisseção temporária isolou o crash intermitente no runner sem alterar o runtime de produção.
+- [OK] A persistência do tema após reload é validada aguardando a resposta real de `GET /api/theme` e confirmando as cores no CSS, sem retries, `force:true`, clique JavaScript ou timeout artificial.
+- [OK] Último head funcional validado: `a1f95ce1d598e8883a50709d0d48bf201129d929`, CI #328 com backend SQLite, backend MySQL 8, frontend e Playwright normal verdes.
+- [OK] Workflow temporário `.github/workflows/diagnose-segfault.yml` removido após o diagnóstico; não permanece como rotina da branch.
+- [PENDENTE] Confirmar CI totalmente verde no head final depois das últimas limpezas/documentação antes de qualquer autorização de merge.
 - [PENDENTE] Validação física do Web Push em Android/iPhone com HTTPS e VAPID reais; roteiro em `docs/HOMOLOGACAO_WEB_PUSH.md`.
 - [PENDENTE] Homologação física de impressão A4.
 - [PENDENTE] Deploy real na KingHost; o workflow manual de release está preparado e exige testes/auditorias/E2E antes de montar o pacote.
+- [PENDENTE] Executar manualmente `Preparar release` no head final e conferir o artefato gerado; a integração disponível nesta retomada não oferece `workflow_dispatch`.
 - [PENDENTE] Recuperação pública de senha por e-mail é opcional e não foi implementada; o reset administrativo Master permanece funcional.
 
 ## Auditoria da Etapa 10
