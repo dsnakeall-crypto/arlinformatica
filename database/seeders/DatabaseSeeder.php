@@ -18,16 +18,41 @@ class DatabaseSeeder extends Seeder
             DB::table('manufacturers')->updateOrInsert(['name' => $name], ['active' => true, 'created_at' => $now, 'updated_at' => $now]);
         }
         $groups = [
-            [['Notebook', 'Mac Apple'], ['Tela riscada', 'Tela trincada', 'Tela quebrada', 'Carcaça quebrada', 'Carcaça trincada', 'Dobradiça quebrada', 'Dobradiça avariada', 'Carregador com emenda', 'Carregador danificado', 'Outro']],
-            [['Computador'], ['Gabinete amassado', 'Gabinete quebrado', 'Tampa avariada', 'Conector danificado', 'Outro']],
-            [['Tablet', 'iPad'], ['Tela riscada', 'Tela trincada', 'Tela quebrada', 'Carcaça amassada', 'Carcaça quebrada', 'Conector danificado', 'Outro']],
-            [['Impressora'], ['Carcaça quebrada', 'Carcaça trincada', 'Tampa quebrada', 'Bandeja quebrada', 'Cabo danificado', 'Outro']],
+            [['Notebook', 'Mac Apple'], [
+                'Carcaça Trincada', 'Carcaça Amassada', 'Cantos Quebrados', 'Tampa Riscada', 'Base Desgastada',
+                'Parafusos Faltando', 'Pé de Borracha Faltando', 'Teclas Faltando', 'Teclas Afundadas / Presas',
+                'Touchpad Riscado ou Rachado', 'Botão Power Quebrado / Afundado', 'Dobradiça Solta / Folgada',
+                'Dobradiça Dura / Travada', 'Plástico da Dobradiça Quebrado',
+            ]],
+            [['Computador'], [
+                'Painel Lateral Amassado', 'Vidro Temperado Trincado', 'Tampa Frontal Solta',
+                'Botões do Painel Quebrados', 'Sinais de Oxidação', 'Marcas de Derramamento de Líquido',
+            ]],
+            [['Impressora'], [
+                'Carcaça Trincada / Quebrada', 'Tampas / Portas Soltas', 'Bandeja de Papel Quebrada',
+                'Bandeja de Saída Faltando', 'Vidro do Scanner Riscado', 'Vidro do Scanner Trincado',
+                'Trava de Papel Quebrada', 'Painel Digital Riscado / Trincado', 'Botões do Painel Afundados',
+                'Entrada USB / Rede Danificada', 'Conector de Energia Folgado', 'Marcas de Vazamento de Tinta',
+                'Carcaça Manchada de Tinta', 'Suporte de Cartucho / Cabeçote Solto',
+                'Rolo Compressor / Tracionador Desgastado',
+            ]],
+            [['Tablet', 'iPad'], [
+                'Tela Trincada', 'Riscos no Display', 'Carcaça / Traseira Amassada', 'Cantos Amassados / Raspados',
+                'Vidro da Câmera Riscado / Trincado', 'Bateria Visivelmente Estufada',
+                'Conector do Carregador Quebrado', 'Conector de Carga Com Sujeira / Obstruído',
+                'Botão Power Afundado', 'Botões de Volume Presos', 'Entrada de Fone (P2) Danificada',
+                'Grade dos Alto-Falantes Amassada', 'Smart Connector / Pinos Danificados',
+                'Selo / Adesivo de Vedação Solto', 'Carcaça Empenada / Torta',
+            ]],
         ];
         foreach ($groups as [$types, $labels]) {
             foreach ($types as $type) {
                 $equipmentId = DB::table('equipment_types')->where('name', $type)->value('id');
-                foreach ($labels as $label) {
-                    DB::table('checklist_templates')->updateOrInsert(['equipment_type_id' => $equipmentId, 'label' => $label], ['allows_note' => $label === 'Outro', 'active' => true, 'created_at' => $now, 'updated_at' => $now]);
+                foreach ($labels as $position => $label) {
+                    DB::table('checklist_templates')->updateOrInsert(
+                        ['equipment_type_id' => $equipmentId, 'label' => $label],
+                        ['allows_note' => false, 'active' => true, 'position' => $position, 'created_at' => $now, 'updated_at' => $now],
+                    );
                 }
             }
         }
