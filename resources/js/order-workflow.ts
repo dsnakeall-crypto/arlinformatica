@@ -162,9 +162,12 @@ function removeDesk() {
 }
 
 function normalizeLabels() {
-  document.querySelectorAll<HTMLOptionElement>('option[value="waiting_part"]').forEach((option) => { option.textContent = 'Aguardando Peça/Cliente'; });
+  const waitingLabel = 'Aguardando Peça/Cliente';
+  document.querySelectorAll<HTMLOptionElement>('option[value="waiting_part"]').forEach((option) => {
+    if (option.textContent?.trim() !== waitingLabel) option.textContent = waitingLabel;
+  });
   document.querySelectorAll<HTMLElement>('.badge').forEach((badge) => {
-    if (badge.textContent?.trim() === 'Aguardando Peça') badge.textContent = 'Aguardando Peça/Cliente';
+    if (badge.textContent?.trim() === 'Aguardando Peça') badge.textContent = waitingLabel;
   });
 }
 
