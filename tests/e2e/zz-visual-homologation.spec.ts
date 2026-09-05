@@ -114,6 +114,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.screenshot({ path: 'visual-artifacts/08-configuracoes-desktop.png', fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('.menu-toggle').click();
   await page.locator('aside nav').getByRole('button', { name: 'Painel' }).click();
   await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
   await expect(page.getByText(`#${orderResponse.body.number}`, { exact: true }).first()).toBeVisible();
