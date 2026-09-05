@@ -22,8 +22,13 @@ class ServiceOrderController extends Controller
     {
         $postSales->catchUp(true);
         $q = ServiceOrder::query()->with('client:id,name,phone,street,number,district,city,state');
-        if ($status = $r->query('status')) {
-            $q->where('status', $status);
+        $requestedStatus = (string) $r->query('status', '');
+        $finalized = $r->boolean('finalized') || $requestedStatus === 'paid';
+        $q->where('archived', $finalized);
+        if ($requestedStatus !== '') {
+            if ($requestedStatus !== 'paid') {
+                $q->where('status', $requestedStatus);
+            }
         }
         if ($search = trim((string) $r->query('q'))) {
             $q->where(fn ($x) => $x->where('number', 'like', "%$search%")->orWhere('reported_problem', 'like', "%$search%")->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%$search%")->orWhere('phone', 'like', "%$search%")->orWhere('street', 'like', "%$search%")));
@@ -126,6 +131,8 @@ class ServiceOrderController extends Controller
     {
         $order->load(['client', 'checklists', 'items', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']);
         $payload = $order->toArray();
+        $payload['display_status'] = $order->archived ? 'paid' : $order->status;
+        $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;
         if ($order->attendance_type === 'external') {
             $damages = $order->checklists->map(fn ($check) => '• '.$check->label.($check->note ? ': '.$check->note : ''));
             $message = "Olá, {$order->client->name}. Aqui é a ARL Informática sobre a OS #{$order->number}.";
@@ -163,17 +170,108 @@ class ServiceOrderController extends Controller
 
     public function updateStatus(Request $r, ServiceOrder $order): JsonResponse
     {
-        $data = $r->validate(['status' => 'required|in:analysis,waiting_part,in_service,completed,interrupted']);
+        $data = $r->validate([
+            'status' => 'required|in:analysis,waiting_part,in_service,completed,interrupted,paid',
+            'interruption_reason' => 'nullable|required_if:status,interrupted|string|max:10000',
+        ]);
+
         if ($data['status'] === 'completed') {
             abort(422, 'Use a finalização para concluir a OS.');
         }
+
+        if ($data['status'] === 'paid') {
+            abort_if($order->archived, 409, 'Esta OS já está em OS Finalizadas.');
+            abort_unless($order->status === 'completed', 422, 'Finalize a OS antes de marcá-la como paga e retirada.');
+            $total = $this->orderTotalCents($order);
+            $paid = $this->paidCentsForOrder($order);
+            abort_if($paid < $total, 422, 'Ainda existe saldo pendente. Registre o pagamento restante antes de marcar a OS como PAGO.');
+
+            DB::transaction(function () use ($order, $r) {
+                $before = $order->status;
+                $order->forceFill(['archived' => true])->save();
+                StatusHistory::create([
+                    'service_order_id' => $order->id,
+                    'from_status' => $before,
+                    'to_status' => 'paid',
+                    'user_id' => $r->user()->id,
+                ]);
+                DB::table('audit_logs')->insert([
+                    'user_id' => $r->user()->id,
+                    'action' => 'service_order.marked_paid_and_retrieved',
+                    'subject_type' => 'service_order',
+                    'subject_id' => $order->id,
+                    'after' => json_encode(['archived' => true, 'display_status' => 'paid']),
+                    'ip_address' => $r->ip(),
+                    'created_at' => now(),
+                ]);
+            });
+
+            $fresh = $order->fresh();
+            $payload = $fresh->toArray();
+            $payload['display_status'] = 'paid';
+
+            return response()->json($payload);
+        }
+
+        abort_if($order->archived, 422, 'Uma OS paga e retirada só pode voltar ao fluxo pela opção Reabrir OS.');
+        abort_if($order->status === 'completed', 422, 'Uma OS concluída só pode ser marcada como PAGO ou reaberta como retorno/garantia.');
+
         DB::transaction(function () use ($order, $data, $r) {
             $before = $order->status;
-            $order->update(['status' => $data['status']]);
-            StatusHistory::create(['service_order_id' => $order->id, 'from_status' => $before, 'to_status' => $data['status'], 'user_id' => $r->user()->id]);
+            $reason = $data['status'] === 'interrupted' ? trim((string) $data['interruption_reason']) : null;
+            $order->forceFill([
+                'status' => $data['status'],
+                'technical_report' => $reason,
+            ])->save();
+            StatusHistory::create([
+                'service_order_id' => $order->id,
+                'from_status' => $before,
+                'to_status' => $data['status'],
+                'user_id' => $r->user()->id,
+            ]);
         });
 
-        return response()->json($order->fresh());
+        $fresh = $order->fresh();
+        $payload = $fresh->toArray();
+        $payload['display_status'] = $fresh->archived ? 'paid' : $fresh->status;
+        $payload['interruption_reason'] = $fresh->status === 'interrupted' ? $fresh->technical_report : null;
+
+        return response()->json($payload);
+    }
+
+    private function orderTotalCents(ServiceOrder $order): int
+    {
+        $total = (int) ($order->total_cents ?? 0);
+        if ($total > 0) {
+            return $total;
+        }
+
+        $approvedBudget = (int) (DB::table('budgets')
+            ->where('service_order_id', $order->id)
+            ->where('status', 'approved')
+            ->orderByDesc('revision')
+            ->value('total_cents') ?? 0);
+        if ($approvedBudget > 0) {
+            return $approvedBudget;
+        }
+
+        return (int) DB::table('service_order_items')->where('service_order_id', $order->id)->sum('subtotal_cents');
+    }
+
+    private function paidCentsForOrder(ServiceOrder $order): int
+    {
+        $latest = DB::table('financial_adjustments')
+            ->select('transaction_id', DB::raw('MAX(id) as adjustment_id'))
+            ->groupBy('transaction_id');
+
+        return (int) (DB::table('financial_transactions as ft')
+            ->join('payments as p', 'p.id', '=', 'ft.payment_id')
+            ->leftJoinSub($latest, 'latest_adjustment', 'latest_adjustment.transaction_id', '=', 'ft.id')
+            ->leftJoin('financial_adjustments as adjustment', 'adjustment.id', '=', 'latest_adjustment.adjustment_id')
+            ->where('p.service_order_id', $order->id)
+            ->where('ft.origin', 'service_order')
+            ->selectRaw('COALESCE(SUM(COALESCE(adjustment.new_cents, ft.amount_cents)), 0) as paid_cents')
+            ->value('paid_cents') ?? 0);
     }
 
     private function companySnapshot(): array
