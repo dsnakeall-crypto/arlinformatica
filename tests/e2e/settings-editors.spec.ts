@@ -17,12 +17,12 @@ test('configurações separa textos de documentos em subabas com editor expandid
   await expect(termEditor).toBeVisible();
   await expect(budgetEditor).toBeHidden();
   await expect(termEditor).toHaveJSProperty('scrollHeight', await termEditor.evaluate((el) => el.scrollHeight));
-  expect(await termEditor.evaluate((el) => el.clientHeight)).toBeGreaterThanOrEqual(220);
+  expect(await termEditor.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(220);
 
   await budgetTab.click();
   await expect(termEditor).toBeHidden();
   await expect(budgetEditor).toBeVisible();
-  expect(await budgetEditor.evaluate((el) => el.clientHeight)).toBeGreaterThanOrEqual(220);
+  expect(await budgetEditor.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(220);
 
   await reportsTab.click();
   await expect(page.getByRole('heading', { name: 'Modelos de laudos', exact: true })).toBeVisible();
@@ -71,16 +71,16 @@ test('nova OS oferece checklist opcional em quatro categorias fixas', async ({ p
   await expect(categories).toHaveText(['Notebooks', 'Computadores', 'Tablets & iPads', 'Impressoras']);
   await expect(checklist.getByText('Checklist opcional:', { exact: false })).toBeVisible();
 
+  const equipmentSearch = page.getByPlaceholder('Pesquisar equipamento…');
   await checklist.getByRole('button', { name: 'Impressoras', exact: true }).click();
-  const equipment = page.getByLabel('Equipamento *');
-  await expect(equipment.locator('option:checked')).toHaveText('Impressora');
+  await expect(equipmentSearch).toHaveValue('Impressora');
   const printerDamage = checklist.getByText('Carcaça Trincada / Quebrada', { exact: true });
   await expect(printerDamage).toBeVisible();
   await printerDamage.locator('input[type="checkbox"]').check();
   await expect(checklist.getByRole('button', { name: 'Impressoras (1)', exact: true })).toBeVisible();
 
   await checklist.getByRole('button', { name: 'Notebooks', exact: true }).click();
-  await expect(equipment.locator('option:checked')).toHaveText('Notebook');
+  await expect(equipmentSearch).toHaveValue('Notebook');
   await expect(checklist.getByText('Carcaça Trincada', { exact: true })).toBeVisible();
   await expect(checklist.getByText('Carcaça Trincada / Quebrada', { exact: true })).toHaveCount(0);
 });
