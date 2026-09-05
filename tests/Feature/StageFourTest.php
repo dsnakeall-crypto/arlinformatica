@@ -30,12 +30,19 @@ class StageFourTest extends TestCase
         $this->order->snapshot()->create(['client' => ['name' => 'Cliente'], 'company' => ['company_name' => 'ARL'], 'equipment' => ['name' => 'Notebook'], 'term_text' => 'Termo']);
     }
 
-    public function test_direct_completion_is_rejected_and_completed_order_cannot_be_deleted(): void
+    public function test_direct_completion_is_rejected_and_completed_order_can_be_soft_deleted_with_history_preserved(): void
     {
         $this->actingAs($this->user)->patchJson("/api/orders/{$this->order->id}/status", ['status' => 'completed'])->assertUnprocessable();
         $this->finalize(['result' => 'no_fault', 'technical_report' => 'Nenhum defeito foi constatado.', 'items' => [], 'discount_cents' => 0])->assertCreated()->assertJsonPath('order.status', 'completed');
-        $this->expectException(\LogicException::class);
-        $this->order->fresh()->delete();
+
+        $this->actingAs($this->user)
+            ->deleteJson("/api/orders/{$this->order->id}")
+            ->assertOk()
+            ->assertJsonPath('deleted', true);
+
+        $this->assertSoftDeleted('service_orders', ['id' => $this->order->id]);
+        $this->assertDatabaseHas('generated_documents', ['service_order_id' => $this->order->id, 'type' => 'final', 'revision' => 1]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'service_order.deleted', 'subject_id' => $this->order->id]);
     }
 
     public function test_repair_items_money_warranty_and_catalog_snapshot_are_preserved(): void
