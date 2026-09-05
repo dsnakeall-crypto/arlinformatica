@@ -73,7 +73,7 @@ class ServiceOrderMaintenanceController extends Controller
         $label = self::REOPEN_TYPES[$data['reopen_type']];
         $newOrder = DB::transaction(function () use ($request, $order, $numbers, $settings, $data, $label, $notifications) {
             $client = Client::findOrFail($order->client_id);
-            $newOrder = new ServiceOrder();
+            $newOrder = new ServiceOrder;
             $newOrder->forceFill([
                 'number' => $numbers->next(),
                 'client_id' => $order->client_id,
