@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/clients', [ClientController::class, 'store']);
     Route::get('/clients/{client}', [ClientController::class, 'show']);
     Route::put('/clients/{client}', [ClientController::class, 'update'])->middleware('role:Master,Administrador');
+    Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->middleware('role:Master,Administrador');
     Route::get('/catalogs/checklist', [CatalogController::class, 'checklist']);
     Route::get('/catalogs/{catalog}', [CatalogController::class, 'index']);
     Route::middleware('role:Master,Administrador')->group(function () {
@@ -60,6 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}', [ServiceOrderController::class, 'show']);
     Route::middleware('role:Master,Administrador')->group(function () {
         Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
+        Route::delete('/orders/{order}', [ServiceOrderMaintenanceController::class, 'destroy']);
         Route::post('/orders/{order}/reopen', [ServiceOrderMaintenanceController::class, 'reopen']);
     });
     Route::post('/orders/{order}/photos', [ServiceOrderController::class, 'uploadPhoto']);
