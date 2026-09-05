@@ -32,7 +32,10 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(page.locator('.clients-workspace')).toBeVisible();
   await expect(page.locator('.clients-list-panel')).toBeVisible();
+  await expect(page.locator('.clients-editor')).toBeHidden();
+  await page.getByRole('button', { name: 'Novo cliente', exact: true }).click();
   await expect(page.locator('.clients-editor').getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
+  await page.locator('.clients-editor').getByRole('button', { name: 'Cancelar', exact: true }).click();
 
   await nav.getByRole('button', { name: 'Nova OS' }).click();
   const form = page.locator('form.os-form');
