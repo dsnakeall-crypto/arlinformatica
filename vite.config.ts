@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/js/brand2026.ts',
                 'resources/js/brand2026-access.ts',
                 'resources/js/client-search.ts',
+                'resources/js/order-maintenance.ts',
                 'resources/css/brand2026.css',
                 'resources/css/theme.css',
                 'resources/js/theme.ts',
