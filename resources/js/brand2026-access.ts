@@ -1,6 +1,14 @@
 export {};
 
+function syncDecorativeAccessibility() {
+  document.querySelectorAll<HTMLElement>('.arl-nav-arrow, .arl-profile-arrow').forEach((item) => {
+    item.setAttribute('aria-hidden', 'true');
+  });
+}
+
 function syncSettingsAccess() {
+  syncDecorativeAccessibility();
+
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Configurações');
   if (!heading) return;
 
@@ -10,16 +18,25 @@ function syncSettingsAccess() {
   const hasMasterInfrastructure = Boolean(document.querySelector('.infra-grid'));
   for (const section of ['backup', 'system']) {
     const button = tabs.querySelector<HTMLButtonElement>(`[data-section="${section}"]`);
-    if (button) button.hidden = !hasMasterInfrastructure;
+    if (button) {
+      button.hidden = !hasMasterInfrastructure;
+      button.style.display = hasMasterInfrastructure ? '' : 'none';
+    }
   }
 
   const storageContent = document.querySelector('[data-arl-settings-section="storage"]');
   const storageButton = tabs.querySelector<HTMLButtonElement>('[data-section="storage"]');
-  if (storageButton) storageButton.hidden = !storageContent;
+  if (storageButton) {
+    storageButton.hidden = !storageContent;
+    storageButton.style.display = storageContent ? '' : 'none';
+  }
 
   const notificationContent = document.querySelector('[data-arl-settings-section="notifications"]');
   const notificationButton = tabs.querySelector<HTMLButtonElement>('[data-section="notifications"]');
-  if (notificationButton) notificationButton.hidden = !notificationContent;
+  if (notificationButton) {
+    notificationButton.hidden = !notificationContent;
+    notificationButton.style.display = notificationContent ? '' : 'none';
+  }
 }
 
 const observer = new MutationObserver(() => window.requestAnimationFrame(syncSettingsAccess));
