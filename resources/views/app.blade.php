@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#063b2d">
+    <meta name="theme-color" content="#09080A">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="manifest" href="/manifest.webmanifest">
     <title>ARL Informática</title>
     @auth
-        @vite(['resources/js/main.tsx','resources/css/theme.css','resources/js/theme.ts'])
+        @vite(['resources/js/brand2026.ts','resources/js/main.tsx','resources/css/brand2026.css'])
         <style>
             .post-sale .post-action:not([href]){pointer-events:none;cursor:not-allowed;background:#e3e6e4;color:#66716b;opacity:.72}
             .post-sale article:has(.post-action:not([href]))>div::after{content:'Disponível após 24 horas';display:block;margin-top:4px;color:#8a6426;font-size:12px;font-weight:700}
