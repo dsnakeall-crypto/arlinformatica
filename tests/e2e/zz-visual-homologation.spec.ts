@@ -61,8 +61,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
   const newOrderForm = page.locator('form.os-form');
   await newOrderForm.locator('select').nth(0).selectOption(String(clientResponse.body.id));
-  await newOrderForm.locator('select').nth(1).selectOption(String(equipment.body[0].id));
-  if (manufacturers.body[0]) await newOrderForm.locator('select').nth(2).selectOption(String(manufacturers.body[0].id));
+  await newOrderForm.getByLabel('Equipamento / Modelo / Acessórios *').fill('Notebook Dell Inspiron 15 + carregador');
   await newOrderForm.getByLabel('Problema relatado *').fill('Notebook lento para referência da homologação visual.');
   await newOrderForm.locator('.opening-catalog button').first().click();
   await expect(newOrderForm.locator('.opening-item')).toHaveCount(1);
@@ -117,7 +116,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('.menu-toggle').click();
   await page.locator('aside nav').getByRole('button', { name: 'Painel' }).click();
-  await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' })).toBeVisible();
   await expect(page.getByText(`#${orderResponse.body.number}`, { exact: true }).first()).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/01-painel-mobile.png', fullPage: true });
 

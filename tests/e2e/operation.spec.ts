@@ -39,32 +39,28 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(duplicate.status).toBe(422);
   });
 
-  test('abre OS externa com equipamento, fabricante, avaria, foto e termo', async ({ page }) => {
+  test('abre OS externa com descrição manual, avaria, foto e termo', async ({ page }) => {
     await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
     await page.locator('.os-form section').first().locator('select').selectOption(String(clientId));
-
-    const equipmentSearch = page.getByPlaceholder('Pesquisar equipamento…');
-    await equipmentSearch.fill('Notebook');
-    await page.locator('.arl-deep-catalog-results').filter({ has: page.getByRole('option', { name: 'Notebook', exact: true }) }).getByRole('option', { name: 'Notebook', exact: true }).click();
-
-    const manufacturerSearch = page.getByPlaceholder('Pesquisar fabricante…');
-    await manufacturerSearch.fill('Dell');
-    await page.locator('.arl-deep-catalog-results').filter({ has: page.getByRole('option', { name: 'Dell', exact: true }) }).getByRole('option', { name: 'Dell', exact: true }).click();
+    const manualEquipment = 'Notebook Dell Inspiron 15 + carregador + mouse';
+    await page.getByLabel('Equipamento / Modelo / Acessórios *').fill(manualEquipment);
 
     await page.getByRole('button', { name: 'ATENDIMENTO EXTERNO' }).click();
     await page.getByLabel('Problema relatado *').fill('Notebook não liga durante homologação');
     const checklist = page.locator('.os-form details').filter({ hasText: 'CHECKLIST DE ENTRADA' });
     await checklist.locator('summary').click();
     await checklist.getByRole('button', { name: 'Notebooks', exact: true }).click();
-    await checklist.getByText('Carcaça Trincada', { exact: true }).locator('input').check();
+    await checklist.getByRole('checkbox', { name: 'Carcaça Trincada', exact: true }).check();
     await page.locator('input[type=file]').setInputFiles({ name: 'equipamento.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
     await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
     await expect(page.getByText('Notebook não liga durante homologação')).toBeVisible();
+    await expect(page.getByText(manualEquipment, { exact: true })).toBeVisible();
     const orders = await api(page, '/orders?q=Cliente%20E2E');
     orderId = orders.body.data[0].id;
     orderNumber = orders.body.data[0].number;
     const detail = await api(page, `/orders/${orderId}`);
     expect(detail.body.attendance_type).toBe('external');
+    expect(detail.body.equipment_description).toBe(manualEquipment);
     expect(detail.body.photos[0].bytes).toBeLessThanOrEqual(102400);
     expect((await page.request.get(`/api/orders/${orderId}/term`)).status()).toBe(200);
   });

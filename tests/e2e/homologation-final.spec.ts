@@ -19,10 +19,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   });
   expect(clientResponse.status).toBe(201);
 
-  const equipment = await api(page, '/catalogs/equipment');
-  const manufacturers = await api(page, '/catalogs/manufacturers');
   const services = await api(page, '/catalogs/services');
-  expect(equipment.status).toBe(200);
   expect(services.status).toBe(200);
   expect(services.body.length).toBeGreaterThan(0);
   const service = services.body[0];
@@ -41,8 +38,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   const form = page.locator('form.os-form');
   await expect(form.getByRole('heading', { name: 'Serviços / Itens da OS' })).toBeVisible();
   await form.locator('select').nth(0).selectOption(String(clientResponse.body.id));
-  await form.locator('select').nth(1).selectOption(String(equipment.body[0].id));
-  if (manufacturers.body[0]) await form.locator('select').nth(2).selectOption(String(manufacturers.body[0].id));
+  await form.getByLabel('Equipamento / Modelo / Acessórios *').fill('Notebook Dell Inspiron 15 + carregador');
   await form.getByLabel('Problema relatado *').fill('Teste final de itens opcionais na abertura.');
   await form.locator('.opening-catalog button').filter({ hasText: service.name }).click();
   await expect(form.locator('.opening-item').filter({ hasText: service.name })).toBeVisible();
@@ -53,11 +49,13 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   expect(orderResponse.status()).toBe(201);
   const requestBody = orderResponse.request().postDataJSON();
   expect(requestBody.items).toEqual([{ catalog_id: service.id, quantity: 1 }]);
+  expect(requestBody.equipment_description).toBe('Notebook Dell Inspiron 15 + carregador');
   const created = await orderResponse.json();
 
   await expect(page.getByRole('heading', { name: `OS #${created.number}`, exact: true })).toBeVisible();
   const detail = await api(page, `/orders/${created.id}`);
   expect(detail.status).toBe(200);
+  expect(detail.body.equipment_description).toBe('Notebook Dell Inspiron 15 + carregador');
   expect(detail.body.items).toHaveLength(1);
   expect(detail.body.items[0].description).toBe(service.name);
   expect(detail.body.items[0].unit_price_cents).toBe(service.price_cents);

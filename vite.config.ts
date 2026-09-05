@@ -16,6 +16,7 @@ export default defineConfig({
                 'resources/js/record-management.ts',
                 'resources/js/ui-final-polish.ts',
                 'resources/js/ui-regression-guard.ts',
+                'resources/js/manual-equipment.ts',
                 'resources/js/mobile-home.ts',
                 'resources/css/brand2026.css',
                 'resources/css/theme.css',

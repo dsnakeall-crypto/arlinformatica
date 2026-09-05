@@ -29,40 +29,29 @@ test('configurações separa textos de documentos em subabas com editor expandid
   await expect(budgetEditor).toBeHidden();
 });
 
-test('configurações mantém somente equipamentos e fabricantes nos cadastros da OS', async ({ page }) => {
+test('configurações não expõe cadastros automáticos de equipamento, fabricante ou checklist', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
   await page.locator('.arl-settings-tab[data-section="orders"]').click();
 
-  const tabs = page.locator('.arl-order-subtabs [role="tab"]');
-  const equipmentTab = page.getByRole('tab', { name: 'Equipamentos', exact: true });
-  const manufacturersTab = page.getByRole('tab', { name: 'Fabricantes', exact: true });
-  const equipmentPanel = page.locator('[data-arl-order-panel="equipment"]');
-  const manufacturersPanel = page.locator('[data-arl-order-panel="manufacturers"]');
-
-  await expect(tabs).toHaveCount(2);
-  await expect(page.getByRole('tab', { name: 'Checklist de Entrada', exact: true })).toHaveCount(0);
+  await expect(page.locator('.arl-order-subtabs')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Equipamentos', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Fabricantes', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Checklist de Entrada', exact: true })).toHaveCount(0);
-  await expect(equipmentTab).toHaveAttribute('aria-selected', 'true');
-  await expect(equipmentPanel).toBeVisible();
-  await expect(manufacturersPanel).toBeHidden();
-
-  const addButton = equipmentPanel.getByRole('button', { name: 'Adicionar', exact: true });
-  await expect(addButton).toBeVisible();
-  const addBox = await addButton.boundingBox();
-  expect(addBox?.height ?? 0).toBeGreaterThanOrEqual(44);
-  expect(await addButton.evaluate((el) => getComputedStyle(el).borderRadius)).not.toBe('0px');
-
-  await manufacturersTab.click();
-  await expect(equipmentPanel).toBeHidden();
-  await expect(manufacturersPanel).toBeVisible();
+  await expect(page.getByLabel('Mostrar garantia geral no PDF final')).toBeVisible();
 });
 
-test('nova OS oferece checklist opcional em quatro categorias fixas', async ({ page }) => {
+test('nova OS usa descrição manual e checklist opcional em quatro categorias fixas', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
+  const manual = page.getByLabel('Equipamento / Modelo / Acessórios *');
+  await expect(manual).toBeVisible();
+  await manual.fill('Impressora Epson L3250 + cabo USB + fonte');
+  await expect(page.getByPlaceholder('Pesquisar equipamento…')).toBeHidden();
+  await expect(page.getByPlaceholder('Pesquisar fabricante…')).toBeHidden();
+
   const checklist = page.locator('.os-form details').filter({ hasText: 'CHECKLIST DE ENTRADA' });
   await checklist.locator('summary').click();
 
@@ -71,16 +60,15 @@ test('nova OS oferece checklist opcional em quatro categorias fixas', async ({ p
   await expect(categories).toHaveText(['Notebooks', 'Computadores', 'Tablets & iPads', 'Impressoras']);
   await expect(checklist.getByText('Checklist opcional:', { exact: false })).toBeVisible();
 
-  const equipmentSearch = page.getByPlaceholder('Pesquisar equipamento…');
   await checklist.getByRole('button', { name: 'Impressoras', exact: true }).click();
-  await expect(equipmentSearch).toHaveValue('Impressora');
-  const printerDamage = checklist.getByText('Carcaça Trincada / Quebrada', { exact: true });
+  await expect(manual).toHaveValue('Impressora Epson L3250 + cabo USB + fonte');
+  const printerDamage = checklist.getByRole('checkbox', { name: 'Carcaça Trincada / Quebrada', exact: true });
   await expect(printerDamage).toBeVisible();
-  await printerDamage.locator('input[type="checkbox"]').check();
+  await printerDamage.check();
   await expect(checklist.getByRole('button', { name: 'Impressoras (1)', exact: true })).toBeVisible();
 
   await checklist.getByRole('button', { name: 'Notebooks', exact: true }).click();
-  await expect(equipmentSearch).toHaveValue('Notebook');
-  await expect(checklist.getByText('Carcaça Trincada', { exact: true })).toBeVisible();
-  await expect(checklist.getByText('Carcaça Trincada / Quebrada', { exact: true })).toHaveCount(0);
+  await expect(manual).toHaveValue('Impressora Epson L3250 + cabo USB + fonte');
+  await expect(checklist.getByRole('checkbox', { name: 'Carcaça Trincada', exact: true })).toBeVisible();
+  await expect(checklist.getByRole('checkbox', { name: 'Carcaça Trincada / Quebrada', exact: true })).toHaveCount(0);
 });

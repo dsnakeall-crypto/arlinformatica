@@ -1,36 +1,41 @@
 import { expect, test } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
-test('mobile possui navegação própria, filtros contidos, ações tocáveis e inputs sem zoom forçado', async ({ page }) => {
+test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado', async ({ page }) => {
   await login(page);
-  await expect(page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' })).toBeVisible();
-  await page.locator('.menu-toggle').click();
-  await expect(page.locator('aside.open')).toBeVisible();
-  await page.locator('aside').getByRole('button', { name: 'Painel' }).click();
-  await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
-  await expect(page.getByText('Carregando painel...')).toHaveCount(0);
+  const home = page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' });
+  await expect(home).toBeVisible();
 
   const viewportSize = page.viewportSize();
   expect(viewportSize).not.toBeNull();
-  const filterBoxes = await page.locator('.dashboard-cards + .panel > .filters input, .dashboard-cards + .panel > .filters select').evaluateAll((elements) => elements.map((element) => {
-    const rect = element.getBoundingClientRect();
-    return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, height: rect.height };
-  }));
-  expect(filterBoxes).toHaveLength(3);
-  for (const box of filterBoxes) {
-    expect(box.left).toBeGreaterThanOrEqual(0);
-    expect(box.right).toBeLessThanOrEqual(viewportSize!.width);
-    expect(box.height).toBeGreaterThanOrEqual(44);
-  }
   const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(documentWidth).toBeLessThanOrEqual(viewportSize!.width);
 
-  await expect(page.locator('.menu-toggle')).toBeVisible();
-  await page.locator('.menu-toggle').click();
-  await expect(page.locator('aside.open')).toBeVisible();
-  await page.locator('aside').getByRole('button', { name: 'Clientes' }).click();
+  const client = await api(page, '/clients', 'POST', {
+    name: 'Cliente Mobile Navegação',
+    document: uniqueDocument(81234568),
+    phone: '34999996666',
+    postal_code: '38400000',
+    street: 'Rua Mobile',
+    number: '56',
+    district: 'Centro',
+    city: 'Uberlândia',
+    state: 'MG',
+  });
+  expect(client.status).toBe(201);
+
+  const homeButtons = await home.locator('button').evaluateAll((elements) => elements.map((element) => {
+    const rect = element.getBoundingClientRect();
+    return { width: rect.width, height: rect.height };
+  }));
+  expect(homeButtons.length).toBeGreaterThanOrEqual(3);
+  for (const box of homeButtons) {
+    expect(box.height).toBeGreaterThanOrEqual(44);
+  }
+
+  await home.getByRole('button', { name: 'Clientes', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
-  const firstClient = page.locator('.clients-list-panel .client-list article').first();
+  const firstClient = page.locator('.clients-list-panel .client-list article').filter({ hasText: 'Cliente Mobile Navegação' });
   await expect(firstClient).toBeVisible();
   const clientBounds = await firstClient.evaluate((element) => {
     const rect = element.getBoundingClientRect();
@@ -55,6 +60,10 @@ test('mobile possui navegação própria, filtros contidos, ações tocáveis e 
   await expect(page.locator('aside.open')).toBeVisible();
   await page.locator('aside').getByRole('button', { name: 'Nova OS' }).click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
+  const manual = page.getByLabel('Equipamento / Modelo / Acessórios *');
+  await expect(manual).toBeVisible();
+  const manualFontSize = await manual.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+  expect(manualFontSize).toBeGreaterThanOrEqual(16);
   const fontSize = await page.getByLabel('Problema relatado *').evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
   expect(fontSize).toBeGreaterThanOrEqual(16);
   const viewport = await page.locator('meta[name="viewport"]').getAttribute('content');
