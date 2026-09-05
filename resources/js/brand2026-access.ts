@@ -155,10 +155,14 @@ function syncOrderSettingsSubtabs() {
   }
 
   const cards = Array.from(document.querySelectorAll<HTMLElement>('.admin-list')).filter((card) => {
+    if (card.hidden) return false;
     const title = card.querySelector('h2')?.textContent?.trim() || '';
     return Boolean(orderPanelByTitle[title]);
   });
-  if (cards.length < orderSubtabs.length) return;
+  if (cards.length < orderSubtabs.length) {
+    document.querySelector('.arl-order-subtabs')?.remove();
+    return;
+  }
 
   cards.forEach((card) => {
     const title = card.querySelector('h2')?.textContent?.trim() || '';

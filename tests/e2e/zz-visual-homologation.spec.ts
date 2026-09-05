@@ -78,6 +78,15 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await expect(page.locator('.arl-order-photo-tools')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/04-status-os-desktop.png', fullPage: true });
 
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('.menu-toggle').click();
+  await page.locator('aside nav').getByRole('button', { name: 'Painel' }).click();
+  const mobileHome = page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' });
+  await expect(mobileHome).toBeVisible();
+  await expect(mobileHome.getByText(`OS #${orderResponse.body.number} · Em Análise`, { exact: true })).toBeVisible();
+  await page.screenshot({ path: 'visual-artifacts/01-painel-mobile.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 900 });
+
   const finalization = await api(page, `/orders/${orderResponse.body.id}/finalize`, 'POST', {
     result: 'repair_completed',
     technical_report: 'Instalação realizada com sucesso. Equipamento testado e em perfeito funcionamento.',
@@ -114,12 +123,6 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.screenshot({ path: 'visual-artifacts/08-configuracoes-desktop.png', fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator('.menu-toggle').click();
-  await page.locator('aside nav').getByRole('button', { name: 'Painel' }).click();
-  await expect(page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' })).toBeVisible();
-  await expect(page.getByText(`#${orderResponse.body.number}`, { exact: true }).first()).toBeVisible();
-  await page.screenshot({ path: 'visual-artifacts/01-painel-mobile.png', fullPage: true });
-
   await page.locator('.menu-toggle').click();
   await page.locator('aside').getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
