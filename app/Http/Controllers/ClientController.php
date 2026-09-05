@@ -59,6 +59,23 @@ class ClientController extends Controller
         return response()->json($client->fresh());
     }
 
+    public function destroy(Request $r, Client $client, Audit $audit): JsonResponse
+    {
+        $before = $client->toArray();
+        $client->delete();
+        $audit->record($r, 'client.deleted', Client::class, $client->id, $before, [
+            'id' => $client->id,
+            'deleted_at' => $client->deleted_at?->toISOString(),
+            'soft_deleted' => true,
+        ]);
+
+        return response()->json([
+            'deleted' => true,
+            'id' => $client->id,
+            'message' => 'Cliente removido da listagem. O histórico de OS foi preservado.',
+        ]);
+    }
+
     public function show(Client $client): JsonResponse
     {
         $orders = $client->serviceOrders()->latest('received_at')->with(['documents' => fn ($q) => $q->where('type', 'final')->latest('revision')])->get();
