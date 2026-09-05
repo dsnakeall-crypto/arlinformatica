@@ -1,3 +1,4 @@
+import './order-detail-editor';
 export {};
 
 type ClientHit = {
