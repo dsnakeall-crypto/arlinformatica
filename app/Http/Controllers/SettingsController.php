@@ -16,7 +16,12 @@ class SettingsController extends Controller
     {
         $all = $settings->all();
 
-        return response()->json(['budget_validity_days' => (int) $all['budget_validity_days']]);
+        return response()->json([
+            'budget_validity_days' => (int) $all['budget_validity_days'],
+            'company_name' => (string) $all['company_name'],
+            'trade_name' => (string) $all['trade_name'],
+            'order_opened_whatsapp' => (string) $all['order_opened_whatsapp'],
+        ]);
     }
 
     public function theme(CompanySettings $settings): JsonResponse
@@ -27,29 +32,11 @@ class SettingsController extends Controller
     public function updateTheme(Request $request, CompanySettings $settings): JsonResponse
     {
         abort_unless(in_array($request->user()->role->name, ['Master', 'Administrador']), 403);
-        $data = $request->validate([
+        $request->validate([
             'theme_primary' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'theme_sidebar' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'theme_accent' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
-        $data = array_map(static fn (string $value) => strtoupper($value), $data);
-
-        DB::transaction(function () use ($data, $request) {
-            foreach ($data as $key => $value) {
-                DB::table('settings')->updateOrInsert(
-                    ['key' => $key],
-                    ['value' => $value, 'updated_at' => now(), 'created_at' => now()]
-                );
-            }
-            DB::table('audit_logs')->insert([
-                'user_id' => $request->user()->id,
-                'action' => 'theme.updated',
-                'subject_type' => 'settings',
-                'after' => json_encode($data),
-                'ip_address' => $request->ip(),
-                'created_at' => now(),
-            ]);
-        });
 
         return response()->json($settings->theme());
     }
@@ -69,6 +56,7 @@ class SettingsController extends Controller
             'complement' => 'nullable|string|max:100', 'instagram' => 'nullable|url|max:255', 'google_review' => 'nullable|url|max:255',
             'budget_validity_days' => 'required|integer|min:1|max:365', 'budget_observation' => 'nullable|string|max:2000', 'budget_institutional_text' => 'required|string|max:1000', 'term_text' => 'required|string|max:10000',
             'warranty_general_enabled' => 'sometimes|boolean', 'warranty_general_text' => 'nullable|string|max:5000', 'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
+            'order_opened_whatsapp' => 'sometimes|required|string|max:5000',
             'post_sale_follow_up' => 'sometimes|required|string|max:5000', 'post_sale_google' => 'sometimes|required|string|max:5000', 'post_sale_instagram' => 'sometimes|required|string|max:5000',
         ]);
         if ($request->boolean('warranty_general_enabled') && blank($data['warranty_general_text'] ?? null)) {
