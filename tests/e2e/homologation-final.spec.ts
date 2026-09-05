@@ -52,7 +52,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   expect(requestBody.items).toEqual([{ catalog_id: service.id, quantity: 1 }]);
   const created = await orderResponse.json();
 
-  await expect(page.getByRole('heading', { name: `OS #${created.number}` })).toBeVisible();
+  await expect(page.getByRole('heading', { name: `OS #${created.number}`, exact: true })).toBeVisible();
   const detail = await api(page, `/orders/${created.id}`);
   expect(detail.status).toBe(200);
   expect(detail.body.items).toHaveLength(1);
