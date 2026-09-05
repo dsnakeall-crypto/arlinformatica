@@ -6,8 +6,18 @@ function syncDecorativeAccessibility() {
   });
 }
 
+function syncPostSaleScope() {
+  const postSalePanel = document.querySelector('.post-sale');
+  if (postSalePanel) return;
+
+  document.querySelectorAll<HTMLElement>('.arl-post-sale-editor, .arl-post-toolbar').forEach((item) => {
+    item.remove();
+  });
+}
+
 function syncSettingsAccess() {
   syncDecorativeAccessibility();
+  syncPostSaleScope();
 
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Configurações');
   if (!heading) return;
