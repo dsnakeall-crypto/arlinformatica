@@ -211,8 +211,11 @@ function syncMobileHome() {
 
 let frame = 0;
 function scheduleSync() {
-  window.cancelAnimationFrame(frame);
-  frame = window.requestAnimationFrame(syncMobileHome);
+  if (frame) return;
+  frame = window.requestAnimationFrame(() => {
+    frame = 0;
+    syncMobileHome();
+  });
 }
 
 const observer = new MutationObserver(scheduleSync);
