@@ -24,7 +24,7 @@ class StageFourTest extends TestCase
         parent::setUp();
         Storage::fake('local');
         $this->seed(DatabaseSeeder::class);
-        $this->user = User::create(['role_id' => DB::table('roles')->where('name', 'Master')->value('id'), 'name' => 'Técnico', 'login' => 'tecnico', 'password' => Hash::make('password-password')]);
+        $this->user = User::create(['role_id' => DB::table('roles')->where('name', 'Master')->value('id'), 'name' => 'Técnico', 'login' => 'tecnico', 'password' => Hash::make('password-password'), 'active' => true]);
         $client = DB::table('clients')->insertGetId(['name' => 'Cliente', 'document' => '52998224725', 'phone' => '35999999999', 'postal_code' => '37160000', 'street' => 'Rua A', 'number' => '1', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG', 'created_at' => now(), 'updated_at' => now()]);
         $this->order = ServiceOrder::create(['number' => '0000100', 'client_id' => $client, 'equipment_type_id' => DB::table('equipment_types')->value('id'), 'attendance_type' => 'bench', 'status' => 'analysis', 'reported_problem' => 'Não liga', 'received_at' => now(), 'created_by' => $this->user->id]);
         $this->order->snapshot()->create(['client' => ['name' => 'Cliente'], 'company' => ['company_name' => 'ARL'], 'equipment' => ['name' => 'Notebook'], 'term_text' => 'Termo']);
