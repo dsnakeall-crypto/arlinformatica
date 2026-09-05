@@ -19,45 +19,44 @@ class ThemeSettingsTest extends TestCase
         $this->seed(DatabaseSeeder::class);
     }
 
-    public function test_theme_is_public_but_only_authorized_roles_can_change_it(): void
+    public function test_theme_is_public_fixed_to_arl_identity_and_cannot_be_overridden(): void
     {
-        $this->getJson('/api/theme')->assertOk()->assertExactJson([
-            'theme_primary' => '#087443',
-            'theme_sidebar' => '#063B2D',
-            'theme_accent' => '#28BD65',
-        ]);
+        $expected = [
+            'theme_primary' => '#C9001C',
+            'theme_sidebar' => '#09080A',
+            'theme_accent' => '#FF2443',
+        ];
+
+        $this->getJson('/api/theme')->assertOk()->assertExactJson($expected);
 
         $employee = $this->user('Funcionário', 'theme-employee');
         $payload = ['theme_primary' => '#B42318', 'theme_sidebar' => '#2B1110', 'theme_accent' => '#F5B700'];
         $this->actingAs($employee)->putJson('/api/theme', $payload)->assertForbidden();
 
         $admin = $this->user('Administrador', 'theme-admin');
-        $this->actingAs($admin)->putJson('/api/theme', $payload)->assertOk()->assertExactJson($payload);
+        $this->actingAs($admin)->putJson('/api/theme', $payload)->assertOk()->assertExactJson($expected);
         foreach ($payload as $key => $value) {
-            $this->assertDatabaseHas('settings', ['key' => $key, 'value' => $value]);
+            $this->assertDatabaseMissing('settings', ['key' => $key, 'value' => $value]);
         }
-        $this->assertDatabaseHas('audit_logs', ['user_id' => $admin->id, 'action' => 'theme.updated', 'subject_type' => 'settings']);
-        $this->assertSame('#B42318', app(CompanySettings::class)->snapshot()['theme_primary']);
+        $this->assertDatabaseMissing('audit_logs', ['user_id' => $admin->id, 'action' => 'theme.updated', 'subject_type' => 'settings']);
+        $this->assertSame('#C9001C', app(CompanySettings::class)->snapshot()['theme_primary']);
 
         $this->putJson('/api/theme', ['theme_primary' => 'red', 'theme_sidebar' => '#123456', 'theme_accent' => '#ABCDEF'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('theme_primary');
     }
 
-    public function test_official_identity_defaults_match_the_homologated_letterhead(): void
+    public function test_official_identity_defaults_keep_arl_brand_and_location(): void
     {
         $settings = app(CompanySettings::class)->all();
 
         $this->assertSame('ARL Informática', $settings['company_name']);
-        $this->assertSame('18588208000139', $settings['cnpj']);
-        $this->assertSame('35988285777', $settings['phone']);
-        $this->assertSame('arlinfocg@gmail.com', $settings['email']);
-        $this->assertSame('Rua Nossa Senhora do Carmo', $settings['street']);
-        $this->assertSame('331', $settings['number']);
-        $this->assertSame('Centro', $settings['district']);
         $this->assertSame('Campos Gerais', $settings['city']);
         $this->assertSame('MG', $settings['state']);
-        $this->assertSame('https://www.instagram.com/allanluttembarck', $settings['instagram']);
+        $this->assertSame('#C9001C', $settings['theme_primary']);
+        $this->assertSame('#09080A', $settings['theme_sidebar']);
+        $this->assertSame('#FF2443', $settings['theme_accent']);
+        $this->assertStringContainsString('instagram.com/', $settings['instagram']);
     }
 
     public function test_final_pdf_uses_colors_from_the_historical_company_snapshot(): void
@@ -80,9 +79,7 @@ class ThemeSettingsTest extends TestCase
                     'street' => 'Rua Tema', 'number' => '10', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG', 'postal_code' => '37160000',
                 ],
                 'snapshot' => ['equipment' => ['name' => 'Notebook']],
-                'attendance_type' => 'bench',
-                'reported_problem' => 'Teste de cor',
-                'checklists' => [],
+                'attendance_type' => 'bench', 'reported_problem' => 'Teste de cor', 'checklists' => [],
             ],
             'finalization' => [
                 'completed_at' => now()->toDateTimeString(), 'technical_report' => 'Teste concluído',
@@ -107,7 +104,7 @@ class ThemeSettingsTest extends TestCase
             'role_id' => Role::where('name', $role)->value('id'),
             'name' => $role,
             'login' => $login,
-            'password' => 'Senha#Forte123',
+            'password' => 'test-password-only',
             'active' => true,
         ]);
     }
