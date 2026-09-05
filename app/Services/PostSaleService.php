@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class PostSaleService
 {
-    public const ACTIONS = ['follow_up', 'google', 'instagram'];
+    public const ACTIONS = ['google', 'instagram'];
 
     public function __construct(private readonly NotificationService $notifications) {}
 
@@ -27,7 +27,11 @@ class PostSaleService
             });
 
             DB::table('post_sale_cycles')->where('active', true)->where('eligible_at', '<=', now())->get()->each(function ($cycle) {
-                $pending = DB::table('post_sale_actions')->where('cycle_id', $cycle->id)->whereNull('confirmed_at')->exists();
+                $pending = DB::table('post_sale_actions')
+                    ->where('cycle_id', $cycle->id)
+                    ->whereIn('type', self::ACTIONS)
+                    ->whereNull('confirmed_at')
+                    ->exists();
                 if (! $pending) {
                     $this->notifications->resolve("post-sale:$cycle->id");
 
