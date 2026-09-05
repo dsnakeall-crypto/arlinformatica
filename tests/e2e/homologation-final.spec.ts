@@ -29,6 +29,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
 
   const nav = page.locator('aside nav');
   await nav.getByRole('button', { name: 'Clientes' }).click();
+  await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(page.locator('.clients-workspace')).toBeVisible();
   await expect(page.locator('.clients-list-panel')).toBeVisible();
   await expect(page.locator('.clients-editor').getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
@@ -64,7 +65,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   const mobileAside = page.locator('aside');
   await expect(mobileAside).toHaveClass(/open/);
   await mobileAside.getByRole('button', { name: 'Clientes' }).click();
-  await expect(page.getByRole('heading', { name: 'Cadastro de Clientes' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(mobileAside).not.toHaveClass(/open/);
   const box = await mobileAside.boundingBox();
   expect(box).not.toBeNull();
