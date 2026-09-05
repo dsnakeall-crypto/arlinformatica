@@ -25,7 +25,7 @@ test('mobile possui navegação própria, filtros contidos, ações tocáveis e 
   await page.locator('.menu-toggle').click();
   await expect(page.locator('aside.open')).toBeVisible();
   await page.locator('aside').getByRole('button', { name: 'Clientes' }).click();
-  await expect(page.getByRole('heading', { name: 'Cadastro de Clientes' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   const firstClient = page.locator('.clients-list-panel .client-list article').first();
   await expect(firstClient).toBeVisible();
   const clientBounds = await firstClient.evaluate((element) => {
@@ -56,6 +56,7 @@ test('mobile possui navegação própria, filtros contidos, ações tocáveis e 
   const viewport = await page.locator('meta[name="viewport"]').getAttribute('content');
   expect(viewport).not.toContain('user-scalable=no');
   await expect(page.locator('input[type=file]')).toHaveAttribute('capture', 'environment');
+  await expect(page.getByRole('button', { name: /Usar câmera/ })).toBeVisible();
 });
 
 test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem marcar WhatsApp como enviado', async ({ page }) => {
