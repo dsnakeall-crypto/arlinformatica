@@ -114,7 +114,7 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(finalizePayload).not.toHaveProperty('items');
     await expect(statusSelect).toHaveValue('completed');
     await expect(page.locator('.completion').getByText('Concluído', { exact: true })).toBeVisible();
-    await expect(page.getByText('PDF Final')).toBeVisible();
+    await expect(page.getByText('PDF Final', { exact: true })).toBeVisible();
     const finalized = await api(page, `/orders/${orderId}`);
     expect(finalized.body.items[0].source_budget_id).toBeTruthy();
     expect(finalized.body.items[0].description).toBe('Formatação E2E');
