@@ -14,7 +14,7 @@ class ClientController extends Controller
 {
     public function index(Request $r): JsonResponse
     {
-        $q = Client::query()->orderBy('name');
+        $q = Client::query();
         $search = preg_replace('/\s+/', ' ', trim((string) $r->query('q')));
         if ($search !== '') {
             $terms = array_values(array_filter(explode(' ', $search)));
@@ -28,7 +28,12 @@ class ClientController extends Controller
                     }
                 });
             }
+
+            // Pesquisa progressiva: quem começa pelo texto digitado aparece primeiro,
+            // sem esconder os demais resultados que contêm o termo.
+            $q->orderByRaw('CASE WHEN LOWER(name) LIKE ? THEN 0 ELSE 1 END', [mb_strtolower($search).'%']);
         }
+        $q->orderBy('name');
 
         $perPage = max(1, min(100, (int) $r->integer('per_page', $search !== '' ? 100 : 20)));
 
