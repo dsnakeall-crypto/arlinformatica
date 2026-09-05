@@ -45,7 +45,7 @@ class Brand2026SettingsTest extends TestCase
         ]);
     }
 
-    public function test_post_sale_templates_are_managed_inside_post_sale_and_audited(): void
+    public function test_post_sale_google_and_instagram_templates_are_managed_and_audited(): void
     {
         $admin = $this->user('Administrador', 'brand-admin');
         $employee = $this->user('Funcionário', 'brand-employee');
@@ -53,7 +53,6 @@ class Brand2026SettingsTest extends TestCase
         $this->actingAs($employee)->getJson('/api/post-sales/settings')->assertForbidden();
 
         $payload = [
-            'post_sale_follow_up' => 'Feedback {{nome_cliente}}',
             'post_sale_google' => 'Avaliação {{nome_cliente}} {{link_google}}',
             'post_sale_instagram' => 'Instagram {{nome_cliente}} {{instagram}}',
         ];
@@ -61,7 +60,8 @@ class Brand2026SettingsTest extends TestCase
         $this->actingAs($admin)
             ->putJson('/api/post-sales/settings', $payload)
             ->assertOk()
-            ->assertJson($payload);
+            ->assertJson($payload)
+            ->assertJsonMissingPath('post_sale_follow_up');
 
         foreach ($payload as $key => $value) {
             $this->assertDatabaseHas('settings', ['key' => $key, 'value' => $value]);
