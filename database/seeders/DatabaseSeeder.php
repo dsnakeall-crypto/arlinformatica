@@ -12,14 +12,14 @@ class DatabaseSeeder extends Seeder
         $now = now();
         foreach (['Master', 'Administrador', 'Funcionário'] as $name) {
             DB::table('roles')->updateOrInsert(['name' => $name], ['permissions' => json_encode($name === 'Master' ? ['*'] : ['orders', 'clients']), 'created_at' => $now, 'updated_at' => $now]);
-        } foreach (['Notebook', 'CPU / Computador', 'Tablet', 'Impressora', 'MacBook', 'iPad'] as $name) {
+        } foreach (['Computador', 'Notebook', 'Impressora', 'Tablet', 'Mac Apple', 'iPad'] as $name) {
             DB::table('equipment_types')->updateOrInsert(['name' => $name], ['active' => true, 'created_at' => $now, 'updated_at' => $now]);
-        } foreach (['Dell', 'ASUS', 'Acer', 'Lenovo', 'HP', 'Apple', 'Samsung', 'Epson', 'Canon', 'Brother', 'Positivo', 'LG', 'Microsoft', 'Xiaomi', 'Motorola'] as $name) {
+        } foreach (['Acer', 'Apple', 'ASUS', 'Avell', 'Brother', 'Canon', 'Compaq', 'Dell', 'Epson', 'Gigabyte', 'HP', 'Huawei', 'Lenovo', 'Lexmark', 'LG', 'Microsoft', 'Motorola', 'MSI', 'Multi', 'Philco', 'Positivo', 'Razer', 'Samsung', 'Toshiba', 'VAIO', 'Xerox', 'Xiaomi'] as $name) {
             DB::table('manufacturers')->updateOrInsert(['name' => $name], ['active' => true, 'created_at' => $now, 'updated_at' => $now]);
         }
         $groups = [
-            [['Notebook', 'MacBook'], ['Tela riscada', 'Tela trincada', 'Tela quebrada', 'Carcaça quebrada', 'Carcaça trincada', 'Dobradiça quebrada', 'Dobradiça avariada', 'Carregador com emenda', 'Carregador danificado', 'Outro']],
-            [['CPU / Computador'], ['Gabinete amassado', 'Gabinete quebrado', 'Tampa avariada', 'Conector danificado', 'Outro']],
+            [['Notebook', 'Mac Apple'], ['Tela riscada', 'Tela trincada', 'Tela quebrada', 'Carcaça quebrada', 'Carcaça trincada', 'Dobradiça quebrada', 'Dobradiça avariada', 'Carregador com emenda', 'Carregador danificado', 'Outro']],
+            [['Computador'], ['Gabinete amassado', 'Gabinete quebrado', 'Tampa avariada', 'Conector danificado', 'Outro']],
             [['Tablet', 'iPad'], ['Tela riscada', 'Tela trincada', 'Tela quebrada', 'Carcaça amassada', 'Carcaça quebrada', 'Conector danificado', 'Outro']],
             [['Impressora'], ['Carcaça quebrada', 'Carcaça trincada', 'Tampa quebrada', 'Bandeja quebrada', 'Cabo danificado', 'Outro']],
         ];
