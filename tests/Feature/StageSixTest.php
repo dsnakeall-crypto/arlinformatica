@@ -39,7 +39,7 @@ class StageSixTest extends TestCase
         app(PostSaleService::class)->catchUp();
 
         $this->assertDatabaseCount('post_sale_cycles', 1);
-        $this->assertDatabaseCount('post_sale_actions', 3);
+        $this->assertDatabaseCount('post_sale_actions', 2);
         $this->assertDatabaseCount('notifications', 0);
         $cycle = DB::table('post_sale_cycles')->where('service_order_id', $repair->id)->first();
         $this->assertSame($completedAt->copy()->addHours(24)->format('Y-m-d H:i:s'), Carbon::parse($cycle->eligible_at)->format('Y-m-d H:i:s'));
@@ -50,7 +50,7 @@ class StageSixTest extends TestCase
             ->assertJsonPath('0.number', '0000300')
             ->assertJsonPath('0.available', false);
 
-        $this->postJson("/api/post-sales/{$cycle->id}/follow_up/confirm")
+        $this->postJson("/api/post-sales/{$cycle->id}/google/confirm")
             ->assertConflict()
             ->assertJsonPath('message', 'O Pós-Venda desta OS será liberado 24 horas após a conclusão.');
 
@@ -76,11 +76,11 @@ class StageSixTest extends TestCase
         $this->order('0000303', now()->subDays(2), 'repair_completed');
         app(PostSaleService::class)->catchUp();
         $cycle = DB::table('post_sale_cycles')->value('id');
-        foreach (['follow_up', 'google', 'instagram'] as $type) {
+        foreach (['google', 'instagram'] as $type) {
             $this->actingAs($this->user)->postJson("/api/post-sales/$cycle/$type/confirm")->assertOk();
             $this->assertDatabaseHas('post_sale_actions', ['cycle_id' => $cycle, 'type' => $type, 'confirmed_by' => $this->user->id]);
         }
-        $this->postJson("/api/post-sales/$cycle/follow_up/confirm")->assertConflict();
+        $this->postJson("/api/post-sales/$cycle/google/confirm")->assertConflict();
         $this->assertDatabaseHas('audit_logs', ['action' => 'post_sale.confirmed', 'subject_id' => $cycle]);
         $this->assertDatabaseHas('notifications', ['deduplication_key' => "post-sale:$cycle", 'active' => false]);
     }
