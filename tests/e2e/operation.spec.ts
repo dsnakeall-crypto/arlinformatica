@@ -42,12 +42,21 @@ test.describe.serial('fluxo operacional principal', () => {
   test('abre OS externa com equipamento, fabricante, avaria, foto e termo', async ({ page }) => {
     await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
     await page.locator('.os-form section').first().locator('select').selectOption(String(clientId));
-    await page.getByLabel('Equipamento *').selectOption({ label: 'Notebook' });
-    await page.getByLabel('Fabricante').selectOption({ label: 'Dell' });
+
+    const equipmentSearch = page.getByPlaceholder('Pesquisar equipamento…');
+    await equipmentSearch.fill('Notebook');
+    await page.locator('.arl-deep-catalog-results').filter({ has: page.getByRole('option', { name: 'Notebook', exact: true }) }).getByRole('option', { name: 'Notebook', exact: true }).click();
+
+    const manufacturerSearch = page.getByPlaceholder('Pesquisar fabricante…');
+    await manufacturerSearch.fill('Dell');
+    await page.locator('.arl-deep-catalog-results').filter({ has: page.getByRole('option', { name: 'Dell', exact: true }) }).getByRole('option', { name: 'Dell', exact: true }).click();
+
     await page.getByRole('button', { name: 'ATENDIMENTO EXTERNO' }).click();
     await page.getByLabel('Problema relatado *').fill('Notebook não liga durante homologação');
-    await page.locator('details').click();
-    await page.getByText('Tela riscada').locator('input').check();
+    const checklist = page.locator('.os-form details').filter({ hasText: 'CHECKLIST DE ENTRADA' });
+    await checklist.locator('summary').click();
+    await checklist.getByRole('button', { name: 'Notebooks', exact: true }).click();
+    await checklist.getByText('Carcaça Trincada', { exact: true }).locator('input').check();
     await page.locator('input[type=file]').setInputFiles({ name: 'equipamento.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
     await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
     await expect(page.getByText('Notebook não liga durante homologação')).toBeVisible();
@@ -169,8 +178,8 @@ test.describe.serial('fluxo operacional principal', () => {
     const lockedRow = page.locator('.post-sale article').filter({ hasText: `OS ${orderNumber}` });
     await expect(lockedRow).toBeVisible();
     const lockedActions = lockedRow.locator('.post-action');
-    await expect(lockedActions).toHaveCount(3);
-    for (let i = 0; i < 3; i += 1) {
+    await expect(lockedActions).toHaveCount(2);
+    for (let i = 0; i < 2; i += 1) {
       await expect(lockedActions.nth(i)).not.toHaveAttribute('href');
       await expect(lockedActions.nth(i)).toHaveCSS('pointer-events', 'none');
     }
