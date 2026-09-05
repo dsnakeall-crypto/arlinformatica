@@ -129,6 +129,61 @@ class ServiceOrderMaintenanceController extends Controller
         return response()->json($order->fresh()->load(['client', 'checklists', 'items', 'photos', 'histories.user:id,name', 'snapshot']));
     }
 
+    public function destroy(Request $request, ServiceOrder $order, NotificationService $notifications): JsonResponse
+    {
+        $order->load(['client', 'checklists', 'items', 'documents']);
+        $before = [
+            'order' => $order->toArray(),
+            'documents' => $order->documents->map(fn ($document) => [
+                'id' => $document->id,
+                'type' => $document->type,
+                'revision' => $document->revision,
+            ])->values()->all(),
+        ];
+        $cycleIds = DB::table('post_sale_cycles')
+            ->where('service_order_id', $order->id)
+            ->where('active', true)
+            ->pluck('id');
+
+        DB::transaction(function () use ($request, $order, $before) {
+            $order->delete();
+            DB::table('post_sale_cycles')
+                ->where('service_order_id', $order->id)
+                ->where('active', true)
+                ->update([
+                    'active' => false,
+                    'archived_at' => now(),
+                    'archive_reason' => 'OS removida da operação',
+                    'updated_at' => now(),
+                ]);
+            DB::table('audit_logs')->insert([
+                'user_id' => $request->user()->id,
+                'action' => 'service_order.deleted',
+                'subject_type' => 'service_order',
+                'subject_id' => $order->id,
+                'before' => json_encode($before),
+                'after' => json_encode([
+                    'deleted_at' => $order->deleted_at?->toISOString(),
+                    'soft_deleted' => true,
+                    'financial_history_preserved' => true,
+                    'documents_preserved' => true,
+                ]),
+                'ip_address' => $request->ip(),
+                'created_at' => now(),
+            ]);
+        });
+
+        foreach ($cycleIds as $cycleId) {
+            $notifications->resolve("post-sale:{$cycleId}");
+        }
+
+        return response()->json([
+            'deleted' => true,
+            'id' => $order->id,
+            'message' => 'OS removida das listagens. Histórico financeiro, auditoria e documentos foram preservados.',
+        ]);
+    }
+
     public function reopen(
         Request $request,
         ServiceOrder $order,
@@ -151,7 +206,7 @@ class ServiceOrderMaintenanceController extends Controller
 
         $label = self::REOPEN_TYPES[$data['reopen_type']];
         $newOrder = DB::transaction(function () use ($request, $order, $numbers, $settings, $data, $label, $notifications) {
-            $client = Client::findOrFail($order->client_id);
+            $client = Client::withTrashed()->findOrFail($order->client_id);
             $newOrder = new ServiceOrder;
             $newOrder->forceFill([
                 'number' => $numbers->next(),
