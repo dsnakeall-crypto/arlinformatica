@@ -13,6 +13,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostSaleController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\ServiceOrderController;
+use App\Http\Controllers\ServiceOrderMaintenanceController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\TechnicalReportController;
@@ -57,6 +58,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/desk', [ServiceOrderController::class, 'desk']);
     Route::post('/orders', [ServiceOrderController::class, 'store']);
     Route::get('/orders/{order}', [ServiceOrderController::class, 'show']);
+    Route::middleware('role:Master,Administrador')->group(function () {
+        Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
+        Route::post('/orders/{order}/reopen', [ServiceOrderMaintenanceController::class, 'reopen']);
+    });
     Route::post('/orders/{order}/photos', [ServiceOrderController::class, 'uploadPhoto']);
     Route::get('/orders/{order}/photos/{photo}', [ServiceOrderController::class, 'photo']);
     Route::patch('/orders/{order}/status', [ServiceOrderController::class, 'updateStatus']);
