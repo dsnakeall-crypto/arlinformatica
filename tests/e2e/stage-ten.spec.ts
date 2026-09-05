@@ -62,7 +62,10 @@ test('Administrador acessa administração permitida sem funções exclusivas do
 
   await nav.getByRole('button', { name: 'Configurações' }).click();
   await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();
-  await expect(page.getByText('Backup e Restauração', { exact: true })).toHaveCount(0);
+  const tabs = page.locator('.arl-settings-tabs');
+  await expect(tabs).toBeVisible();
+  await expect(tabs.getByRole('button', { name: /Backup e Restauração/ })).toBeHidden();
+  await expect(tabs.getByRole('button', { name: /Sistema e Diagnóstico/ })).toBeHidden();
 });
 
 test('Financeiro abre sem depender do relatório mensal e carrega mensal sob demanda', async ({ page }) => {
@@ -120,17 +123,30 @@ test('Serviços e Produtos cria e edita tipo, preço e garantia adicional', asyn
   await expect(row).toContainText('Garantia 2 anos');
 });
 
-test('Configurações salva Garantia Geral e não mantém layout global nem cards Disponível', async ({ page }) => {
+test('Configurações usa sanfona exclusiva e salva Garantia Geral', async ({ page }) => {
   await login(page);
   await page.locator('aside').getByRole('button', { name: 'Configurações' }).click();
   await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();
   await expect(page.getByText('Disponível', { exact: true })).toHaveCount(0);
-  await expect(page.getByText('Layout por dispositivo', { exact: true })).toBeVisible();
+
+  const tabs = page.locator('.arl-settings-tabs');
+  await expect(tabs).toBeVisible();
+  const company = tabs.getByRole('button', { name: /Empresa/ });
+  const identity = tabs.getByRole('button', { name: /Identidade Visual/ });
+  const orders = tabs.getByRole('button', { name: /Ordens de Serviço/ });
+  await expect(company).toHaveClass(/active/);
+  await identity.click();
+  await expect(identity).toHaveClass(/active/);
+  await expect(company).not.toHaveClass(/active/);
+  await orders.click();
+  await expect(orders).toHaveClass(/active/);
+  await expect(identity).not.toHaveClass(/active/);
 
   const form = page.locator('form.settings-form');
   await expect(form.locator('[name="layout_mode"]')).toHaveCount(0);
   await expect(page.getByLabel('Layout neste dispositivo')).toBeVisible();
   const toggle = form.getByLabel('Mostrar garantia geral no PDF final');
+  await expect(toggle).toBeVisible();
   if (!(await toggle.isChecked())) await toggle.check();
   const text = form.getByLabel('Texto da garantia geral');
   await text.fill('Garantia geral configurada pelo E2E.');
