@@ -104,9 +104,94 @@ function syncDocumentEditors() {
   syncSettingsEditorHeights();
 }
 
+const orderSubtabs = [
+  ['equipment', 'Equipamentos'],
+  ['manufacturers', 'Fabricantes'],
+  ['checklist', 'Checklist de Entrada'],
+] as const;
+
+type OrderSubtabId = (typeof orderSubtabs)[number][0];
+
+const orderPanelByTitle: Record<string, OrderSubtabId> = {
+  Equipamentos: 'equipment',
+  Fabricantes: 'manufacturers',
+  'Checklist de Entrada': 'checklist',
+};
+
+function syncOrderSubtabState() {
+  const active = document.documentElement.dataset.arlOrderSubtab || 'equipment';
+  document.querySelectorAll<HTMLButtonElement>('.arl-order-subtab').forEach((button) => {
+    const selected = button.dataset.orderSubtab === active;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-selected', selected ? 'true' : 'false');
+    button.tabIndex = selected ? 0 : -1;
+  });
+  document.querySelectorAll<HTMLElement>('[data-arl-order-panel]').forEach((panel) => {
+    panel.setAttribute('aria-hidden', panel.dataset.arlOrderPanel === active ? 'false' : 'true');
+  });
+}
+
+function syncOrderSettingsSubtabs() {
+  const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Configurações');
+  if (!heading) {
+    document.querySelector('.arl-order-subtabs')?.remove();
+    return;
+  }
+
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('.admin-list')).filter((card) => {
+    const title = card.querySelector('h2')?.textContent?.trim() || '';
+    return Boolean(orderPanelByTitle[title]);
+  });
+  if (cards.length < orderSubtabs.length) return;
+
+  cards.forEach((card) => {
+    const title = card.querySelector('h2')?.textContent?.trim() || '';
+    const panel = orderPanelByTitle[title];
+    if (!panel) return;
+    card.dataset.arlOrderPanel = panel;
+    card.dataset.arlSettingsSection = 'orders';
+    card.id = `arl-order-panel-${panel}`;
+    card.setAttribute('role', 'tabpanel');
+    card.setAttribute('aria-labelledby', `arl-order-tab-${panel}`);
+    card.classList.add('arl-order-settings-card');
+    card.querySelector<HTMLElement>('.inline')?.classList.add('arl-order-add-row');
+    card.querySelectorAll<HTMLElement>('article').forEach((row) => row.classList.add('arl-order-setting-row'));
+    card.querySelectorAll<HTMLButtonElement>('article button').forEach((button) => {
+      const label = button.textContent?.trim() || '';
+      button.classList.add('arl-order-row-action');
+      if (label === 'Editar') button.classList.add('arl-order-edit');
+      if (label === 'Desativar' || label === 'Reativar') button.classList.add('arl-order-toggle');
+    });
+  });
+
+  let tabs = document.querySelector<HTMLElement>('.arl-order-subtabs');
+  if (!tabs) {
+    tabs = document.createElement('div');
+    tabs.className = 'arl-order-subtabs';
+    tabs.dataset.arlSettingsSection = 'orders';
+    tabs.setAttribute('role', 'tablist');
+    tabs.setAttribute('aria-label', 'Cadastros da Ordem de Serviço');
+    tabs.innerHTML = orderSubtabs
+      .map(
+        ([id, label]) =>
+          `<button type="button" id="arl-order-tab-${id}" class="arl-order-subtab" role="tab" aria-controls="arl-order-panel-${id}" data-order-subtab="${id}">${label}</button>`,
+      )
+      .join('');
+    cards[0].before(tabs);
+  }
+
+  const validTabs = new Set(orderSubtabs.map(([id]) => id));
+  if (!validTabs.has((document.documentElement.dataset.arlOrderSubtab || '') as OrderSubtabId)) {
+    document.documentElement.dataset.arlOrderSubtab = 'equipment';
+  }
+
+  syncOrderSubtabState();
+}
+
 function syncSettingsAccess() {
   syncDecorativeAccessibility();
   syncPostSaleScope();
+  syncOrderSettingsSubtabs();
 
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Configurações');
   if (!heading) return;
@@ -150,8 +235,18 @@ document.addEventListener('click', (event) => {
     return;
   }
 
+  const orderTab = target?.closest<HTMLButtonElement>('.arl-order-subtab');
+  if (orderTab?.dataset.orderSubtab) {
+    document.documentElement.dataset.arlOrderSubtab = orderTab.dataset.orderSubtab;
+    syncOrderSubtabState();
+    return;
+  }
+
   if (target?.closest('.arl-settings-tab')) {
-    window.requestAnimationFrame(() => window.requestAnimationFrame(syncSettingsEditorHeights));
+    window.requestAnimationFrame(() => {
+      syncOrderSettingsSubtabs();
+      window.requestAnimationFrame(syncSettingsEditorHeights);
+    });
   }
 });
 
