@@ -3,7 +3,7 @@ export {};
 
 type Item={catalog_id?:number|null;finalization_id?:number|null;description:string;quantity:number;unit_price_cents:number;subtotal_cents:number;warranty_snapshot?:string|Record<string,any>|null};
 type Order={id:number;number:string;status:string;archived?:boolean;final_report?:string|null;technical_report?:string|null;items:Item[]};
-declare global{interface Window{__arlOrderDetailEditorInstalled?:boolean;__arlOrderDetailState?:any;__arlWorkflowOrder?:Record<string,any>|null}}
+declare global{interface Window{__arlOrderDetailEditorInstalled?:boolean;__arlOrderDetailState?:any}}
 const csrf=()=>document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content??'';
 const api=async(url:string,options:RequestInit={})=>{const r=await fetch('/api'+url,{credentials:'same-origin',...options,headers:{Accept:'application/json',...(options.body?{'Content-Type':'application/json'}:{}),...(csrf()?{'X-CSRF-TOKEN':csrf()}:{}),...options.headers}});const b=await r.json().catch(()=>({message:'Resposta inválida.'}));if(!r.ok)throw new Error(b.message||'Não foi possível concluir.');return b};
 const money=(c:number)=>`R$ ${(c/100).toFixed(2).replace('.',',')}`;
