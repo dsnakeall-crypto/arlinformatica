@@ -78,7 +78,7 @@ test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem m
   const notebook = equipment.body.find((item: { name: string }) => item.name === 'Notebook');
   expect(notebook).toBeTruthy();
   const checklist = await api(page, `/catalogs/checklist?equipment_type_id=${notebook.id}`);
-  const damage = checklist.body.find((item: { label: string }) => item.label === 'Tela riscada');
+  const damage = checklist.body.find((item: { label: string }) => item.label === 'Carcaça Trincada');
   expect(damage).toBeTruthy();
 
   const order = await api(page, '/orders', 'POST', {
@@ -120,7 +120,7 @@ test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem m
   expect(whatsappHref).toContain('wa.me');
   const decoded = decodeURIComponent(whatsappHref ?? '');
   expect(decoded).toContain(`OS #${order.body.number}`);
-  expect(decoded).toContain('Tela riscada');
+  expect(decoded).toContain('Carcaça Trincada');
 
   const apiWrites: string[] = [];
   page.on('request', (request) => {
@@ -136,9 +136,9 @@ test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem m
   await popup.close();
   expect(apiWrites).toEqual([]);
 
-  const photo = actions.getByLabel('Foto do atendimento externo');
+  const photo = actions.locator('input[type=file]');
   await expect(photo).toHaveAttribute('capture', 'environment');
-  await page.locator('#external-status-action').click();
+  await actions.getByRole('button', { name: 'Status', exact: true }).click();
   await expect(page.locator('.status-picker select')).toBeFocused();
   await actions.getByRole('button', { name: 'Finalizar' }).click();
   const finalModal = page.locator('.modal-card').filter({ hasText: 'FINALIZAÇÃO DA OS' });
