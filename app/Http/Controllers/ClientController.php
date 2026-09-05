@@ -15,11 +15,24 @@ class ClientController extends Controller
     public function index(Request $r): JsonResponse
     {
         $q = Client::query()->orderBy('name');
-        if ($s = trim((string) $r->query('q'))) {
-            $q->where(fn ($x) => $x->where('name', 'like', "%$s%")->orWhere('phone', 'like', "%$s%")->orWhere('document', 'like', '%'.DocumentValidator::normalize($s).'%'));
+        $search = preg_replace('/\s+/', ' ', trim((string) $r->query('q')));
+        if ($search !== '') {
+            $terms = array_values(array_filter(explode(' ', $search)));
+            foreach ($terms as $term) {
+                $document = DocumentValidator::normalize($term);
+                $q->where(function ($query) use ($term, $document) {
+                    $query->where('name', 'like', "%{$term}%")
+                        ->orWhere('phone', 'like', "%{$term}%");
+                    if ($document !== '') {
+                        $query->orWhere('document', 'like', "%{$document}%");
+                    }
+                });
+            }
         }
 
-        return response()->json($q->paginate(20));
+        $perPage = max(1, min(100, (int) $r->integer('per_page', $search !== '' ? 100 : 20)));
+
+        return response()->json($q->paginate($perPage));
     }
 
     public function store(Request $r, NotificationService $notifications): JsonResponse
