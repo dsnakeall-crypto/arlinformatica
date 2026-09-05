@@ -98,7 +98,7 @@ class ServiceOrderWorkflowTest extends TestCase
 
         $this->patchJson("/api/orders/{$order->id}/status", ['status' => 'paid'])
             ->assertOk()
-            ->assertJsonPath('archived', true)
+            ->assertJsonPath('archived', 1)
             ->assertJsonPath('display_status', 'paid');
 
         $this->getJson('/api/orders')
@@ -107,7 +107,7 @@ class ServiceOrderWorkflowTest extends TestCase
 
         $this->getJson('/api/orders?finalized=1')
             ->assertOk()
-            ->assertJsonFragment(['id' => $order->id, 'archived' => true]);
+            ->assertJsonFragment(['id' => $order->id, 'archived' => 1]);
 
         $this->assertDatabaseHas('status_history', [
             'service_order_id' => $order->id,
