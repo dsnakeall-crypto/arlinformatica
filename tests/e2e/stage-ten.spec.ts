@@ -1,20 +1,15 @@
 import { expect, test } from '@playwright/test';
 import { api, login } from './helpers';
 
-test('painel e mesa usam a consulta operacional completa', async ({ page }) => {
+test('painel mantém a consulta operacional e o menu não exibe Mesa de Chamados', async ({ page }) => {
   await login(page);
   await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
   await expect(page.getByText('OS abertas')).toBeVisible();
   await expect(page.getByRole('main').getByRole('button', { name: 'Nova OS' })).toBeVisible();
 
-  const deskResponsePromise = page.waitForResponse((response) => response.url().endsWith('/api/orders/desk') && response.request().method() === 'GET');
-  await page.locator('aside').getByRole('button', { name: 'Mesa de Chamados' }).click();
-  const deskResponse = await deskResponsePromise;
-  expect(deskResponse.status()).toBe(200);
-  expect(Array.isArray(await deskResponse.json())).toBeTruthy();
-  await expect(page.getByRole('heading', { name: 'Mesa de Chamados' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Em Análise' })).toBeVisible();
-  await expect(page.getByText('Todas as OS abertas, sem limite de paginação, organizadas pelos status operacionais.')).toBeVisible();
+  const nav = page.locator('aside nav');
+  await expect(nav.getByRole('button', { name: 'Mesa de Chamados', exact: true })).toHaveCount(0);
+  await expect(nav.getByRole('button', { name: 'Ordens de Serviço', exact: true })).toBeVisible();
 });
 
 test('layout é persistido por dispositivo e os três modos alteram o shell', async ({ page }) => {
