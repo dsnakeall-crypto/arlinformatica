@@ -121,7 +121,12 @@ function removeChecklistSettingsEditor() {
   if (!heading) return;
 
   document.querySelectorAll<HTMLElement>('.admin-list').forEach((card) => {
-    if (card.querySelector('h2')?.textContent?.trim() === 'Checklist de Entrada') card.remove();
+    if (card.querySelector('h2')?.textContent?.trim() === 'Checklist de Entrada') {
+      // Keep React-owned nodes attached so React can safely reconcile/unmount them later.
+      card.hidden = true;
+      card.style.display = 'none';
+      card.setAttribute('aria-hidden', 'true');
+    }
   });
 
   if (document.documentElement.dataset.arlOrderSubtab === 'checklist') {

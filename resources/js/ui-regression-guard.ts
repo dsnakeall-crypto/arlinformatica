@@ -18,6 +18,7 @@ function installRegressionStyles() {
   style.textContent = `
     main:has(.post-sale) .arl-post-sale-editor{display:grid!important}
     .arl-restored-external-status svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+    .detail-grid .arl-payment-empty > p{display:block!important}
     @media(max-width:760px){
       .arl-vivid-actions a,.arl-vivid-actions button{width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important;flex-basis:44px!important}
       .dashboard-contact{width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important}

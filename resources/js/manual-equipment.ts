@@ -82,7 +82,9 @@ function installManualField() {
       (option) => option.textContent?.trim() === INTERNAL_EQUIPMENT,
     );
     if (manualOption) {
-      nativeSetSelect(typeSelect, manualOption.value);
+      // Preserve a checklist category selected before this enhancer finishes initializing.
+      // Only fall back to the internal manual type when the controlled select is still empty.
+      if (!typeSelect.value) nativeSetSelect(typeSelect, manualOption.value);
       form.dataset.arlManualEquipmentInitialized = '1';
     }
   }
@@ -109,7 +111,12 @@ function removeAutomaticCatalogEditors() {
 
   document.querySelectorAll<HTMLElement>('.admin-list').forEach((card) => {
     const title = card.querySelector('h2')?.textContent?.trim();
-    if (title === 'Equipamentos' || title === 'Fabricantes') card.remove();
+    if (title === 'Equipamentos' || title === 'Fabricantes') {
+      // These cards belong to React. Hide them without detaching nodes React must later unmount.
+      card.hidden = true;
+      card.style.display = 'none';
+      card.setAttribute('aria-hidden', 'true');
+    }
   });
   document.querySelector('.arl-order-subtabs')?.remove();
 }
