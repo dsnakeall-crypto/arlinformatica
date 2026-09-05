@@ -73,7 +73,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   const row = page.locator('.order-row').filter({ hasText: `#${orderResponse.body.number}` });
   await expect(row).toBeVisible();
   await row.getByRole('button', { name: 'Ver OS' }).click();
-  await expect(page.getByRole('heading', { name: `OS #${orderResponse.body.number}` })).toBeVisible();
+  await expect(page.getByRole('heading', { name: `OS #${orderResponse.body.number}`, exact: true })).toBeVisible();
   await expect(page.locator('.arl-order-photo-tools')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/04-status-os-desktop.png', fullPage: true });
 

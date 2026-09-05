@@ -2,6 +2,13 @@ export {};
 
 const statusIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2"/></svg>';
 
+const checklistCategoryEquipment: Record<string, { preferred: string; accepted: string[] }> = {
+  notebooks: { preferred: 'Notebook', accepted: ['Notebook', 'Mac Apple'] },
+  computers: { preferred: 'Computador', accepted: ['Computador'] },
+  tablets: { preferred: 'Tablet', accepted: ['Tablet', 'iPad'] },
+  printers: { preferred: 'Impressora', accepted: ['Impressora'] },
+};
+
 function installRegressionStyles() {
   if (document.getElementById('arl-ui-regression-guard-style')) return;
 
@@ -44,6 +51,47 @@ function syncExternalStatusAction() {
   else actions.append(button);
 }
 
+function syncChecklistEquipmentBeforeCategoryClick(event: MouseEvent) {
+  const button = event.target instanceof Element
+    ? event.target.closest<HTMLButtonElement>('.arl-checklist-category')
+    : null;
+  if (!button) return;
+
+  const category = checklistCategoryEquipment[button.dataset.checklistCategory || ''];
+  const form = button.closest<HTMLFormElement>('form.os-form');
+  if (!category || !form) return;
+
+  const select = Array.from(form.querySelectorAll<HTMLSelectElement>('select')).find((item) => {
+    const label = item.closest('label');
+    return label?.querySelector(':scope > span')?.textContent?.trim().startsWith('Equipamento');
+  });
+  if (!select) return;
+
+  const selectedName = select.selectedOptions[0]?.textContent?.trim() || '';
+  if (category.accepted.includes(selectedName)) return;
+
+  const target = Array.from(select.options).find((option) => option.textContent?.trim() === category.preferred)
+    || Array.from(select.options).find((option) => category.accepted.includes(option.textContent?.trim() || ''));
+  if (!target) return;
+
+  button.closest('details')
+    ?.querySelectorAll<HTMLInputElement>('.checks input[type="checkbox"]:checked')
+    .forEach((checkbox) => checkbox.click());
+
+  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
+  if (setter) setter.call(select, target.value);
+  else select.value = target.value;
+
+  select.dispatchEvent(new Event('input', { bubbles: true }));
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+
+  const search = select.closest('label')?.querySelector<HTMLInputElement>('.arl-deep-catalog-input');
+  if (search) {
+    search.value = target.textContent?.trim() || category.preferred;
+    search.setCustomValidity('');
+  }
+}
+
 let queued = false;
 function scheduleSync() {
   if (queued) return;
@@ -56,6 +104,7 @@ function scheduleSync() {
   });
 }
 
+document.addEventListener('click', syncChecklistEquipmentBeforeCategoryClick, { capture: true });
 new MutationObserver(scheduleSync).observe(document.documentElement, { childList: true, subtree: true });
 document.addEventListener('DOMContentLoaded', scheduleSync);
 scheduleSync();

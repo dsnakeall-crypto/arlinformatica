@@ -15,7 +15,8 @@ export async function login(page: Page, login = 'e2e.master') {
   }, { login, password });
   expect(result.status, JSON.stringify(result.body)).toBe(200);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
+  await expect(page.locator('main')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Notificações', exact: true })).toBeVisible();
 }
 
 export async function api(page: Page, path: string, method = 'GET', body?: unknown) {
