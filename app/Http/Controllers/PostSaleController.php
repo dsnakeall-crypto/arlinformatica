@@ -21,10 +21,11 @@ class PostSaleController extends Controller
             ->join('service_orders as orders', 'orders.id', '=', 'cycles.service_order_id')
             ->join('clients', 'clients.id', '=', 'cycles.client_id')
             ->where('cycles.active', true)
+            ->whereNull('orders.deleted_at')
             ->select('cycles.id', 'cycles.eligible_at', 'orders.number', 'clients.name', 'clients.phone')
             ->orderBy('cycles.eligible_at')
             ->get();
-        $actions = DB::table('post_sale_actions')->whereIn('cycle_id', $rows->pluck('id'))->get()->groupBy('cycle_id');
+        $actions = DB::table('post_sale_actions')->whereIn('cycle_id', $rows->pluck('id'))->whereIn('type', PostSaleService::ACTIONS)->get()->groupBy('cycle_id');
 
         return response()->json($rows->map(function ($row) use ($actions, $configuration) {
             $row->available = now()->greaterThanOrEqualTo($row->eligible_at);
@@ -43,7 +44,6 @@ class PostSaleController extends Controller
 
         return response()->json([
             'google_review' => (string) $configuration['google_review'],
-            'post_sale_follow_up' => (string) $configuration['post_sale_follow_up'],
             'post_sale_google' => (string) $configuration['post_sale_google'],
             'post_sale_instagram' => (string) $configuration['post_sale_instagram'],
         ]);
@@ -52,10 +52,10 @@ class PostSaleController extends Controller
     public function updateSettings(Request $request, CompanySettings $settings): JsonResponse
     {
         $data = $request->validate([
-            'post_sale_follow_up' => ['required', 'string', 'max:5000'],
-            'post_sale_google' => ['required', 'string', 'max:5000'],
-            'post_sale_instagram' => ['required', 'string', 'max:5000'],
+            'post_sale_google' => ['sometimes', 'required', 'string', 'max:5000'],
+            'post_sale_instagram' => ['sometimes', 'required', 'string', 'max:5000'],
         ]);
+        abort_if($data === [], 422, 'Informe ao menos uma mensagem para atualizar.');
 
         DB::transaction(function () use ($data, $request) {
             foreach ($data as $key => $value) {
@@ -88,7 +88,7 @@ class PostSaleController extends Controller
         $updated = DB::table('post_sale_actions')->where('cycle_id', $cycle)->where('type', $type)->whereNull('confirmed_at')->update(['confirmed_at' => now(), 'confirmed_by' => $request->user()->id, 'message_snapshot' => $message, 'updated_at' => now()]);
         abort_unless($updated === 1, 409, 'Esta mensagem já foi confirmada como enviada.');
         DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'post_sale.confirmed', 'subject_type' => 'post_sale_cycle', 'subject_id' => $cycle, 'after' => json_encode(['type' => $type, 'message_snapshot' => $message]), 'ip_address' => $request->ip(), 'created_at' => now()]);
-        if (! DB::table('post_sale_actions')->where('cycle_id', $cycle)->whereNull('confirmed_at')->exists()) {
+        if (! DB::table('post_sale_actions')->where('cycle_id', $cycle)->whereIn('type', PostSaleService::ACTIONS)->whereNull('confirmed_at')->exists()) {
             $notifications->resolve("post-sale:$cycle");
         }
 
@@ -98,7 +98,6 @@ class PostSaleController extends Controller
     private function message(string $type, string $name, array $settings): string
     {
         $defaults = [
-            'follow_up' => "Olá, {{nome_cliente}}.\n\nPassando para saber se está tudo certo com o equipamento e se o serviço está funcionando normalmente.\n\nSe tiver qualquer dúvida ou precisar de ajuda, pode entrar em contato com a ARL Informática.",
             'google' => "Olá, {{nome_cliente}}\n\nPoderia avaliar a ARL Informática no Google?\nLeva 10 segundos:\n\nBasta clicar no link e dar sua avaliação =))\n\n{{link_google}}",
             'instagram' => "Olá, {{nome_cliente}} 😊\n\nAcompanhe a ARL Informática no Instagram para ver dicas, novidades e nosso trabalho:\n\n{{instagram}}\n\nSerá um prazer ter você por lá!",
         ];
