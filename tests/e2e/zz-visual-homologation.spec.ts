@@ -15,6 +15,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   expect(services.status).toBe(200);
   expect(equipment.body.length).toBeGreaterThan(0);
   expect(services.body.length).toBeGreaterThan(0);
+  const service = services.body.find((item: any) => item.name === 'Formatação E2E') ?? services.body[0];
 
   const clientResponse = await api(page, '/clients', 'POST', {
     name: 'Cliente Homologação Visual',
@@ -37,6 +38,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
     attendance_type: 'bench',
     reported_problem: 'Notebook lento para referência da homologação visual.',
     checklist: [],
+    items: [{ catalog_id: service.id, quantity: 1 }],
   });
   expect(orderResponse.status).toBe(201);
 
@@ -77,7 +79,6 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await expect(page.locator('.arl-order-photo-tools')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/04-status-os-desktop.png', fullPage: true });
 
-  const service = services.body.find((item: any) => item.name === 'Formatação E2E') ?? services.body[0];
   const finalization = await api(page, `/orders/${orderResponse.body.id}/finalize`, 'POST', {
     result: 'repair_completed',
     technical_report: 'Instalação realizada com sucesso. Equipamento testado e em perfeito funcionamento.',

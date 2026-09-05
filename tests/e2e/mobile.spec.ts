@@ -3,6 +3,10 @@ import { api, login, uniqueDocument } from './helpers';
 
 test('mobile possui navegação própria, filtros contidos, ações tocáveis e inputs sem zoom forçado', async ({ page }) => {
   await login(page);
+  await expect(page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' })).toBeVisible();
+  await page.locator('.menu-toggle').click();
+  await expect(page.locator('aside.open')).toBeVisible();
+  await page.locator('aside').getByRole('button', { name: 'Painel' }).click();
   await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
   await expect(page.getByText('Carregando painel...')).toHaveCount(0);
 
@@ -96,7 +100,7 @@ test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem m
   const row = page.locator('.order-row').filter({ hasText: 'Cliente Mobile Externo' });
   await expect(row).toBeVisible();
   await row.getByRole('button', { name: 'Ver OS' }).click();
-  await expect(page.getByRole('heading', { name: `OS #${order.body.number}` })).toBeVisible();
+  await expect(page.getByRole('heading', { name: `OS #${order.body.number}`, exact: true })).toBeVisible();
 
   const actions = page.locator('[aria-label="Atalhos do atendimento externo"]');
   await expect(actions).toBeVisible();

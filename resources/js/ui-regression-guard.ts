@@ -8,6 +8,7 @@ const checklistCategoryEquipment: Record<string, { preferred: string; accepted: 
   tablets: { preferred: 'Tablet', accepted: ['Tablet', 'iPad'] },
   printers: { preferred: 'Impressora', accepted: ['Impressora'] },
 };
+let pendingChecklistCategory: string | null = null;
 
 function installRegressionStyles() {
   if (document.getElementById('arl-ui-regression-guard-style')) return;
@@ -51,30 +52,35 @@ function syncExternalStatusAction() {
   else actions.append(button);
 }
 
-function syncChecklistEquipmentBeforeCategoryClick(event: MouseEvent) {
-  const button = event.target instanceof Element
-    ? event.target.closest<HTMLButtonElement>('.arl-checklist-category')
-    : null;
-  if (!button) return;
-
-  const category = checklistCategoryEquipment[button.dataset.checklistCategory || ''];
-  const form = button.closest<HTMLFormElement>('form.os-form');
-  if (!category || !form) return;
-
-  const select = Array.from(form.querySelectorAll<HTMLSelectElement>('select')).find((item) => {
+function newOrderEquipmentSelect() {
+  const form = document.querySelector<HTMLFormElement>('form.os-form');
+  if (!form) return null;
+  return Array.from(form.querySelectorAll<HTMLSelectElement>('select')).find((item) => {
     const label = item.closest('label');
     return label?.querySelector(':scope > span')?.textContent?.trim().startsWith('Equipamento');
-  });
-  if (!select) return;
+  }) ?? null;
+}
+
+function applyChecklistCategory(categoryId: string) {
+  const category = checklistCategoryEquipment[categoryId];
+  const select = newOrderEquipmentSelect();
+  if (!category || !select) return false;
 
   const selectedName = select.selectedOptions[0]?.textContent?.trim() || '';
-  if (category.accepted.includes(selectedName)) return;
+  if (category.accepted.includes(selectedName)) {
+    const search = select.closest('label')?.querySelector<HTMLInputElement>('.arl-deep-catalog-input');
+    if (search) {
+      search.value = selectedName;
+      search.setCustomValidity('');
+    }
+    return true;
+  }
 
   const target = Array.from(select.options).find((option) => option.textContent?.trim() === category.preferred)
     || Array.from(select.options).find((option) => category.accepted.includes(option.textContent?.trim() || ''));
-  if (!target) return;
+  if (!target) return false;
 
-  button.closest('details')
+  select.closest('form')
     ?.querySelectorAll<HTMLInputElement>('.checks input[type="checkbox"]:checked')
     .forEach((checkbox) => checkbox.click());
 
@@ -82,14 +88,35 @@ function syncChecklistEquipmentBeforeCategoryClick(event: MouseEvent) {
   if (setter) setter.call(select, target.value);
   else select.value = target.value;
 
-  select.dispatchEvent(new Event('input', { bubbles: true }));
-  select.dispatchEvent(new Event('change', { bubbles: true }));
-
   const search = select.closest('label')?.querySelector<HTMLInputElement>('.arl-deep-catalog-input');
   if (search) {
     search.value = target.textContent?.trim() || category.preferred;
     search.setCustomValidity('');
   }
+
+  select.dispatchEvent(new Event('input', { bubbles: true }));
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+  return true;
+}
+
+function syncChecklistEquipmentBeforeCategoryClick(event: MouseEvent) {
+  const button = event.target instanceof Element
+    ? event.target.closest<HTMLButtonElement>('.arl-checklist-category')
+    : null;
+  const categoryId = button?.dataset.checklistCategory || '';
+  if (!button || !checklistCategoryEquipment[categoryId]) return;
+
+  pendingChecklistCategory = categoryId;
+  if (applyChecklistCategory(categoryId)) pendingChecklistCategory = null;
+}
+
+function syncPendingChecklistEquipment() {
+  if (!pendingChecklistCategory) return;
+  if (!document.querySelector('form.os-form')) {
+    pendingChecklistCategory = null;
+    return;
+  }
+  if (applyChecklistCategory(pendingChecklistCategory)) pendingChecklistCategory = null;
 }
 
 let queued = false;
@@ -101,6 +128,7 @@ function scheduleSync() {
     installRegressionStyles();
     syncPostSaleAccessibility();
     syncExternalStatusAction();
+    syncPendingChecklistEquipment();
   });
 }
 
