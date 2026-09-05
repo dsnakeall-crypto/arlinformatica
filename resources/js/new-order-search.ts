@@ -45,7 +45,6 @@ function installCatalogCombobox(label: HTMLLabelElement, kind: CatalogKind) {
   const select = label.querySelector<HTMLSelectElement>('select');
   if (!select) return;
 
-  // React pode reaplicar required após uma renderização. A validação fica no campo visível.
   const required = kind === 'equipment';
   select.required = false;
 
@@ -82,6 +81,13 @@ function installCatalogCombobox(label: HTMLLabelElement, kind: CatalogKind) {
 
   let activeIndex = -1;
 
+  const validate = () => {
+    const typed = normalize(input.value);
+    const selected = normalize(selectedLabel(select));
+    const valid = typed === '' ? !required : Boolean(select.value) && typed === selected;
+    input.setCustomValidity(valid ? '' : 'Selecione uma opção da pesquisa.');
+  };
+
   const close = () => {
     results.hidden = true;
     input.setAttribute('aria-expanded', 'false');
@@ -92,6 +98,7 @@ function installCatalogCombobox(label: HTMLLabelElement, kind: CatalogKind) {
     select.value = option.value;
     select.dispatchEvent(new Event('change', { bubbles: true }));
     input.value = option.textContent?.trim() || '';
+    input.setCustomValidity('');
     close();
   };
 
@@ -124,13 +131,17 @@ function installCatalogCombobox(label: HTMLLabelElement, kind: CatalogKind) {
 
   input.addEventListener('focus', render);
   input.addEventListener('input', () => {
-    if (select.value) {
-      select.value = '';
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-    }
+    validate();
     render();
   });
-  input.addEventListener('blur', () => window.setTimeout(close, 100));
+  input.addEventListener('blur', () => {
+    if (!input.value.trim() && !required && select.value) {
+      select.value = '';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      input.setCustomValidity('');
+    }
+    window.setTimeout(close, 100);
+  });
   input.addEventListener('keydown', (event) => {
     const buttons = Array.from(results.querySelectorAll<HTMLButtonElement>('button'));
     if (!buttons.length) return;
@@ -156,7 +167,9 @@ function installCatalogCombobox(label: HTMLLabelElement, kind: CatalogKind) {
 
   select.addEventListener('change', () => {
     if (select.value) input.value = selectedLabel(select);
+    validate();
   });
+  validate();
 }
 
 function installEquipmentSearch() {
@@ -183,7 +196,7 @@ function installServiceSearch() {
 
       const buttons = Array.from(catalog.querySelectorAll<HTMLButtonElement>('button'));
       buttons.forEach((button, index) => {
-        if (!button.dataset.arlOriginalIndex) button.dataset.arlOriginalIndex = String(index);
+        if (button.dataset.arlOriginalIndex === undefined) button.dataset.arlOriginalIndex = String(index);
       });
 
       const query = input.value.trim();
