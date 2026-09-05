@@ -37,6 +37,46 @@ class PostSaleController extends Controller
         }));
     }
 
+    public function settings(CompanySettings $settings): JsonResponse
+    {
+        $configuration = $settings->all();
+
+        return response()->json([
+            'google_review' => (string) $configuration['google_review'],
+            'post_sale_follow_up' => (string) $configuration['post_sale_follow_up'],
+            'post_sale_google' => (string) $configuration['post_sale_google'],
+            'post_sale_instagram' => (string) $configuration['post_sale_instagram'],
+        ]);
+    }
+
+    public function updateSettings(Request $request, CompanySettings $settings): JsonResponse
+    {
+        $data = $request->validate([
+            'post_sale_follow_up' => ['required', 'string', 'max:5000'],
+            'post_sale_google' => ['required', 'string', 'max:5000'],
+            'post_sale_instagram' => ['required', 'string', 'max:5000'],
+        ]);
+
+        DB::transaction(function () use ($data, $request) {
+            foreach ($data as $key => $value) {
+                DB::table('settings')->updateOrInsert(
+                    ['key' => $key],
+                    ['value' => $value, 'updated_at' => now(), 'created_at' => now()]
+                );
+            }
+            DB::table('audit_logs')->insert([
+                'user_id' => $request->user()->id,
+                'action' => 'post_sale.settings_updated',
+                'subject_type' => 'settings',
+                'after' => json_encode($data),
+                'ip_address' => $request->ip(),
+                'created_at' => now(),
+            ]);
+        });
+
+        return $this->settings($settings);
+    }
+
     public function confirm(Request $request, int $cycle, string $type, CompanySettings $settings, NotificationService $notifications): JsonResponse
     {
         abort_unless(in_array($type, PostSaleService::ACTIONS, true), 404);
