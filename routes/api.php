@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [SettingsController::class, 'show']);
         Route::put('/settings', [SettingsController::class, 'update']);
         Route::post('/settings/logo', [SettingsController::class, 'logo']);
+        Route::get('/post-sales/settings', [PostSaleController::class, 'settings']);
+        Route::put('/post-sales/settings', [PostSaleController::class, 'updateSettings']);
     });
     Route::get('/settings/logo/{variant}', [SettingsController::class, 'logoFile']);
     Route::get('/operational-settings', [SettingsController::class, 'operational']);
