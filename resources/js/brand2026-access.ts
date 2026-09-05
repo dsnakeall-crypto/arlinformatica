@@ -107,7 +107,6 @@ function syncDocumentEditors() {
 const orderSubtabs = [
   ['equipment', 'Equipamentos'],
   ['manufacturers', 'Fabricantes'],
-  ['checklist', 'Checklist de Entrada'],
 ] as const;
 
 type OrderSubtabId = (typeof orderSubtabs)[number][0];
@@ -115,8 +114,20 @@ type OrderSubtabId = (typeof orderSubtabs)[number][0];
 const orderPanelByTitle: Record<string, OrderSubtabId> = {
   Equipamentos: 'equipment',
   Fabricantes: 'manufacturers',
-  'Checklist de Entrada': 'checklist',
 };
+
+function removeChecklistSettingsEditor() {
+  const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Configurações');
+  if (!heading) return;
+
+  document.querySelectorAll<HTMLElement>('.admin-list').forEach((card) => {
+    if (card.querySelector('h2')?.textContent?.trim() === 'Checklist de Entrada') card.remove();
+  });
+
+  if (document.documentElement.dataset.arlOrderSubtab === 'checklist') {
+    document.documentElement.dataset.arlOrderSubtab = 'equipment';
+  }
+}
 
 function syncOrderSubtabState() {
   const active = document.documentElement.dataset.arlOrderSubtab || 'equipment';
@@ -188,10 +199,132 @@ function syncOrderSettingsSubtabs() {
   syncOrderSubtabState();
 }
 
+const checklistCategories = [
+  { id: 'notebooks', label: 'Notebooks', equipment: ['Notebook', 'Mac Apple'], preferred: 'Notebook' },
+  { id: 'computers', label: 'Computadores', equipment: ['Computador'], preferred: 'Computador' },
+  { id: 'tablets', label: 'Tablets & iPads', equipment: ['Tablet', 'iPad'], preferred: 'Tablet' },
+  { id: 'printers', label: 'Impressoras', equipment: ['Impressora'], preferred: 'Impressora' },
+] as const;
+
+type ChecklistCategoryId = (typeof checklistCategories)[number]['id'];
+let activeChecklistCategory: ChecklistCategoryId | null = null;
+
+function checklistCategoryForEquipment(name: string) {
+  return checklistCategories.find((category) => category.equipment.includes(name as never));
+}
+
+function newOrderEquipmentSelect() {
+  return Array.from(document.querySelectorAll<HTMLSelectElement>('.os-form select')).find((select) => {
+    const label = select.closest('label');
+    return label?.querySelector('span')?.textContent?.trim().startsWith('Equipamento');
+  });
+}
+
+function setNativeSelectValue(select: HTMLSelectElement, value: string) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
+  setter?.call(select, value);
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function syncNewOrderChecklist() {
+  const details = Array.from(document.querySelectorAll<HTMLDetailsElement>('.os-form details')).find((item) =>
+    item.querySelector('summary')?.textContent?.includes('CHECKLIST DE ENTRADA'),
+  );
+  if (!details) {
+    activeChecklistCategory = null;
+    return;
+  }
+
+  const checks = details.querySelector<HTMLElement>('.checks');
+  const equipmentSelect = newOrderEquipmentSelect();
+  if (!checks || !equipmentSelect) return;
+
+  details.classList.add('arl-checklist-enhanced');
+  let categories = details.querySelector<HTMLElement>('.arl-checklist-categories');
+  if (!categories) {
+    categories = document.createElement('div');
+    categories.className = 'arl-checklist-categories';
+    categories.setAttribute('role', 'group');
+    categories.setAttribute('aria-label', 'Categorias do checklist');
+    categories.innerHTML = checklistCategories
+      .map(
+        (category) =>
+          `<button type="button" class="arl-checklist-category" data-checklist-category="${category.id}" aria-expanded="false">${category.label}</button>`,
+      )
+      .join('');
+    checks.before(categories);
+  }
+
+  let note = details.querySelector<HTMLElement>('.arl-checklist-helper');
+  if (!note) {
+    note = document.createElement('p');
+    note.className = 'arl-checklist-helper';
+    note.textContent = 'Checklist opcional: escolha uma categoria e marque somente as avarias encontradas.';
+    categories.after(note);
+  }
+
+  const selectedName = equipmentSelect.selectedOptions[0]?.textContent?.trim() || '';
+  const selectedCategory = checklistCategoryForEquipment(selectedName);
+  if (activeChecklistCategory && selectedCategory && activeChecklistCategory !== selectedCategory.id) {
+    activeChecklistCategory = selectedCategory.id;
+  }
+
+  categories.querySelectorAll<HTMLButtonElement>('.arl-checklist-category').forEach((button) => {
+    const category = checklistCategories.find((item) => item.id === button.dataset.checklistCategory);
+    if (!category) return;
+
+    if (!button.dataset.arlChecklistBound) {
+      button.dataset.arlChecklistBound = '1';
+      button.addEventListener('click', () => {
+        if (activeChecklistCategory === category.id) {
+          activeChecklistCategory = null;
+          syncNewOrderChecklist();
+          return;
+        }
+
+        const currentName = equipmentSelect.selectedOptions[0]?.textContent?.trim() || '';
+        const currentCategory = checklistCategoryForEquipment(currentName);
+        if (currentCategory?.id !== category.id) {
+          checks.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked').forEach((checkbox) => checkbox.click());
+          const options = Array.from(equipmentSelect.options);
+          const target = options.find((option) => option.textContent?.trim() === category.preferred)
+            || options.find((option) => category.equipment.includes((option.textContent?.trim() || '') as never));
+          if (target) setNativeSelectValue(equipmentSelect, target.value);
+        }
+
+        activeChecklistCategory = category.id;
+        window.requestAnimationFrame(syncNewOrderChecklist);
+      });
+    }
+
+    const active = activeChecklistCategory === category.id;
+    const selectedCount = active && selectedCategory?.id === category.id
+      ? checks.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked').length
+      : 0;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-expanded', active ? 'true' : 'false');
+    button.textContent = `${category.label}${selectedCount ? ` (${selectedCount})` : ''}`;
+  });
+
+  const showItems = Boolean(activeChecklistCategory && selectedCategory?.id === activeChecklistCategory);
+  checks.querySelectorAll<HTMLElement>(':scope > label').forEach((label) => {
+    label.hidden = !showItems;
+  });
+
+  const empty = checks.querySelector<HTMLParagraphElement>(':scope > p');
+  if (empty) {
+    empty.textContent = selectedName
+      ? 'Escolha uma das categorias acima para ver os itens.'
+      : 'Escolha uma categoria acima. O checklist é opcional.';
+  }
+}
+
 function syncSettingsAccess() {
   syncDecorativeAccessibility();
   syncPostSaleScope();
+  removeChecklistSettingsEditor();
   syncOrderSettingsSubtabs();
+  syncNewOrderChecklist();
 
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Configurações');
   if (!heading) return;
@@ -244,6 +377,7 @@ document.addEventListener('click', (event) => {
 
   if (target?.closest('.arl-settings-tab')) {
     window.requestAnimationFrame(() => {
+      removeChecklistSettingsEditor();
       syncOrderSettingsSubtabs();
       window.requestAnimationFrame(syncSettingsEditorHeights);
     });
@@ -254,6 +388,13 @@ document.addEventListener('input', (event) => {
   const area = event.target instanceof HTMLTextAreaElement ? event.target : null;
   if (area?.matches('textarea[data-arl-document-editor], .arl-opening-message-panel textarea, .report-settings textarea')) {
     autoSizeTextarea(area);
+  }
+});
+
+document.addEventListener('change', (event) => {
+  if (event.target === newOrderEquipmentSelect()) window.requestAnimationFrame(syncNewOrderChecklist);
+  if (event.target instanceof HTMLInputElement && event.target.matches('.arl-checklist-enhanced input[type="checkbox"]')) {
+    window.requestAnimationFrame(syncNewOrderChecklist);
   }
 });
 
