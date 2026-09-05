@@ -8,6 +8,7 @@ export default defineConfig({
             input: [
                 'resources/js/main.tsx',
                 'resources/js/brand2026.ts',
+                'resources/js/brand2026-access.ts',
                 'resources/css/brand2026.css',
                 'resources/css/theme.css',
                 'resources/js/theme.ts',
