@@ -63,17 +63,30 @@ class StageSevenTest extends TestCase
         $this->assertDatabaseHas('service_order_items', ['catalog_id' => $item['id'], 'unit_price_cents' => 12550]);
     }
 
-    public function test_other_checklist_requires_note_and_snapshot_survives_template_change(): void
+    public function test_fixed_checklist_snapshot_survives_future_preset_change(): void
     {
         $master = $this->user('Master', 'master');
         $order = $this->orderPayload();
-        $other = DB::table('checklist_templates')->where('equipment_type_id', $order['equipment_type_id'])->where('label', 'Outro')->first();
-        $order['checklist'] = [['template_id' => $other->id]];
-        $this->actingAs($master)->postJson('/api/orders', $order)->assertUnprocessable();
-        $order['checklist'][0]['note'] = 'Tampa com marca de queimado';
-        $created = $this->postJson('/api/orders', $order)->assertCreated()->json();
-        $this->patchJson("/api/catalogs/checklist/options/{$other->id}", ['label' => 'Outra avaria'])->assertOk();
-        $this->assertDatabaseHas('service_order_checklists', ['service_order_id' => $created['id'], 'label' => 'Outro', 'note' => 'Tampa com marca de queimado']);
+        $preset = DB::table('checklist_templates')
+            ->where('equipment_type_id', $order['equipment_type_id'])
+            ->where('label', 'Carcaça Trincada')
+            ->where('active', true)
+            ->first();
+        $this->assertNotNull($preset);
+
+        $order['checklist'] = [['template_id' => $preset->id]];
+        $created = $this->actingAs($master)->postJson('/api/orders', $order)->assertCreated()->json();
+
+        DB::table('checklist_templates')->where('id', $preset->id)->update([
+            'label' => 'Preset alterado no futuro',
+            'updated_at' => now(),
+        ]);
+
+        $this->assertDatabaseHas('service_order_checklists', [
+            'service_order_id' => $created['id'],
+            'label' => 'Carcaça Trincada',
+            'note' => null,
+        ]);
     }
 
     public function test_client_edit_is_audited_without_changing_order_snapshot(): void
