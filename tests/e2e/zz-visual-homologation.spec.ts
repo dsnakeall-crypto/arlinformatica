@@ -47,7 +47,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
 
   const nav = page.locator('aside nav');
   await nav.getByRole('button', { name: 'Clientes' }).click();
-  await expect(page.getByRole('heading', { name: 'Cadastro de Clientes' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(page.getByText('Cliente Homologação Visual', { exact: true }).first()).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-lista-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Novo cliente' }).click();
@@ -64,6 +64,9 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await newOrderForm.getByLabel('Problema relatado *').fill('Notebook lento para referência da homologação visual.');
   await newOrderForm.locator('.opening-catalog button').first().click();
   await expect(newOrderForm.locator('.opening-item')).toHaveCount(1);
+  await expect(page.getByPlaceholder('Buscar por nome, telefone ou CPF/CNPJ')).toBeVisible();
+  await expect(page.getByPlaceholder('Pesquisar serviço cadastrado')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Usar câmera/ })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/03-nova-os-desktop.png', fullPage: true });
 
   await nav.getByRole('button', { name: 'Ordens de Serviço' }).click();
@@ -71,6 +74,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await expect(row).toBeVisible();
   await row.getByRole('button', { name: 'Ver OS' }).click();
   await expect(page.getByRole('heading', { name: `OS #${orderResponse.body.number}` })).toBeVisible();
+  await expect(page.locator('.arl-order-photo-tools')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/04-status-os-desktop.png', fullPage: true });
 
   const service = services.body.find((item: any) => item.name === 'Formatação E2E') ?? services.body[0];
@@ -96,18 +100,28 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await writeFile('visual-artifacts/05-fechamento-final.pdf', Buffer.from(await pdf.body()));
 
   await nav.getByRole('button', { name: 'Pós-Venda' }).click();
-  await expect(page.getByRole('heading', { name: 'Pós-Venda' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Pós-Venda & Reputação' })).toBeVisible();
+  await expect(page.locator('.arl-post-toolbar')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/06-pos-venda-desktop.png', fullPage: true });
 
+  await nav.getByRole('button', { name: 'Serviços' }).click();
+  await expect(page.getByRole('heading', { name: 'Serviços e Produtos' })).toBeVisible();
+  await page.screenshot({ path: 'visual-artifacts/07-servicos-desktop.png', fullPage: true });
+
+  await nav.getByRole('button', { name: 'Configurações' }).click();
+  await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();
+  await expect(page.locator('.arl-settings-tabs')).toBeVisible();
+  await page.screenshot({ path: 'visual-artifacts/08-configuracoes-desktop.png', fullPage: true });
+
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.reload();
+  await page.locator('aside nav').getByRole('button', { name: 'Painel' }).click();
   await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
   await expect(page.getByText(`#${orderResponse.body.number}`, { exact: true }).first()).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/01-painel-mobile.png', fullPage: true });
 
   await page.locator('.menu-toggle').click();
   await page.locator('aside').getByRole('button', { name: 'Clientes' }).click();
-  await expect(page.getByRole('heading', { name: 'Cadastro de Clientes' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(page.getByText('Cliente Homologação Visual', { exact: true }).first()).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-mobile.png', fullPage: true });
 
