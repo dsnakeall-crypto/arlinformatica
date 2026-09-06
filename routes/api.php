@@ -8,6 +8,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DiagnosticController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FinalizationController;
+use App\Http\Controllers\FinalShareController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostSaleController;
@@ -68,6 +69,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/photos/{photo}', [ServiceOrderController::class, 'photo']);
     Route::patch('/orders/{order}/status', [ServiceOrderController::class, 'updateStatus']);
     Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store']);
+    Route::get('/orders/{order}/final-share', [FinalShareController::class, 'show']);
     Route::get('/orders/{order}/payment', [FinanceController::class, 'payment']);
     Route::get('/orders/{order}/payments', [FinanceController::class, 'payments']);
     Route::post('/orders/{order}/payment', [FinanceController::class, 'pay']);
