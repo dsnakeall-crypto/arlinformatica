@@ -162,12 +162,12 @@ function removeDesk() {
 }
 
 function normalizeLabels() {
-  const waitingLabel = 'Aguardando Peça/Cliente';
+  const waitingLabel = 'Aguardando';
   document.querySelectorAll<HTMLOptionElement>('option[value="waiting_part"]').forEach((option) => {
     if (option.textContent?.trim() !== waitingLabel) option.textContent = waitingLabel;
   });
   document.querySelectorAll<HTMLElement>('.badge').forEach((badge) => {
-    if (badge.textContent?.trim() === 'Aguardando Peça') badge.textContent = waitingLabel;
+    if (badge.textContent?.trim() === 'Aguardando Peça' || badge.textContent?.trim() === 'Aguardando Peça/Cliente') badge.textContent = waitingLabel;
   });
 }
 
@@ -238,7 +238,8 @@ function syncOrderDetail() {
   if (!detail) return;
   const history = Array.from(detail.querySelectorAll<HTMLElement>(':scope > section')).find((section) => section.querySelector('h2')?.textContent?.trim() === 'Histórico de status');
   history?.querySelectorAll<HTMLParagraphElement>('p').forEach((line) => {
-    if (line.textContent?.startsWith('Aguardando Peça ·')) line.textContent = line.textContent.replace('Aguardando Peça ·', 'Aguardando Peça/Cliente ·');
+    if (line.textContent?.startsWith('Aguardando Peça ·')) line.textContent = line.textContent.replace('Aguardando Peça ·', 'Aguardando ·');
+    if (line.textContent?.startsWith('Aguardando Peça/Cliente ·')) line.textContent = line.textContent.replace('Aguardando Peça/Cliente ·', 'Aguardando ·');
   });
   if (order.archived && history) {
     const lines = Array.from(history.querySelectorAll<HTMLParagraphElement>('p'));
