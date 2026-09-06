@@ -59,9 +59,58 @@ jobs:
         run: |
           set -euo pipefail
           RELEASE="arl-informatica-${GITHUB_SHA}"
-          mkdir -p "release/${RELEASE}"
-          rsync -a ./ "release/${RELEASE}/" --exclude='.git' --exclude='.github' --exclude='.env' --exclude='node_modules' --exclude='database/*.sqlite' --exclude='storage/app/private' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' --exclude='tests' --exclude='playwright-report' --exclude='test-results' --exclude='release'
-          printf 'Projeto: ARL Informática\nCommit: %s\nData UTC: %s\nVersão: %s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "$GITHUB_REF_NAME" > "release/${RELEASE}/RELEASE_MANIFEST.txt"
+          ROOT="release/${RELEASE}"
+          mkdir -p "${ROOT}"
+          rsync -a ./ "${ROOT}/" --exclude='.git' --exclude='.github' --exclude='.env' --exclude='node_modules' --exclude='database/*.sqlite' --exclude='storage/app/private' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' --exclude='storage/framework/testing/' --exclude='tests' --exclude='playwright-report' --exclude='test-results' --exclude='release'
+
+          fail=0
+          for forbidden in '.git' '.github' '.env' 'node_modules' 'storage/app/private' 'tests' 'playwright-report' 'test-results'; do
+            if [ -e "${ROOT}/${forbidden}" ]; then
+              echo "Conteúdo proibido permaneceu no pacote: ${forbidden}" >&2
+              fail=1
+            fi
+          done
+
+          if find "${ROOT}/database" -type f -name '*.sqlite' -print -quit 2>/dev/null | grep -q .; then
+            echo 'Banco SQLite de runtime/teste permaneceu no pacote:' >&2
+            find "${ROOT}/database" -type f -name '*.sqlite' -print >&2
+            fail=1
+          fi
+
+          if [ -d "${ROOT}/storage/logs" ]; then
+            unexpected_logs="$(find "${ROOT}/storage/logs" -type f ! -name '.gitignore' -print)"
+            if [ -n "${unexpected_logs}" ]; then
+              echo 'Logs de runtime/teste permaneceram no pacote:' >&2
+              printf '%s\n' "${unexpected_logs}" >&2
+              fail=1
+            fi
+          fi
+
+          if [ -e "${ROOT}/storage/framework/testing" ]; then
+            echo 'storage/framework/testing deve ser excluído integralmente do pacote.' >&2
+            find "${ROOT}/storage/framework/testing" -print >&2
+            fail=1
+          fi
+
+          if [ -d "${ROOT}/storage/framework" ]; then
+            unexpected_framework="$(find "${ROOT}/storage/framework" -type f \
+              ! -path "${ROOT}/storage/framework/cache/.gitignore" \
+              ! -path "${ROOT}/storage/framework/sessions/.gitignore" \
+              ! -path "${ROOT}/storage/framework/views/.gitignore" \
+              -print)"
+            if [ -n "${unexpected_framework}" ]; then
+              echo 'Artefatos inesperados permaneceram sob storage/framework/:' >&2
+              printf '%s\n' "${unexpected_framework}" >&2
+              fail=1
+            fi
+          fi
+
+          if [ "${fail}" -ne 0 ]; then
+            echo 'Falha de segurança: o pacote montado contém dados de runtime/teste.' >&2
+            exit 1
+          fi
+
+          printf 'Projeto: ARL Informática\nCommit: %s\nData UTC: %s\nVersão: %s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "$GITHUB_REF_NAME" > "${ROOT}/RELEASE_MANIFEST.txt"
           tar -C release -czf "release/${RELEASE}.tar.gz" "${RELEASE}"
           sha256sum "release/${RELEASE}.tar.gz" > "release/${RELEASE}.tar.gz.sha256"
       - uses: actions/upload-artifact@v4
