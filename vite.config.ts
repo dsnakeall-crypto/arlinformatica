@@ -18,6 +18,7 @@ export default defineConfig({
                 'resources/js/ui-regression-guard.ts',
                 'resources/js/manual-equipment.ts',
                 'resources/js/mobile-home.ts',
+                'resources/js/page-isolation.ts',
                 'resources/css/brand2026.css',
                 'resources/css/theme.css',
                 'resources/js/theme.ts',
