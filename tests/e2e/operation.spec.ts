@@ -44,7 +44,6 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.locator('.os-form section').first().locator('select').selectOption(String(clientId));
     const manualEquipment = 'Notebook Dell Inspiron 15 + carregador + mouse';
     await page.getByLabel('Equipamento / Modelo / Acessórios *').fill(manualEquipment);
-
     await page.getByRole('button', { name: 'ATENDIMENTO EXTERNO' }).click();
     await page.getByLabel('Problema relatado *').fill('Notebook não liga durante homologação');
     const checklist = page.locator('.os-form details').filter({ hasText: 'CHECKLIST DE ENTRADA' });
@@ -65,7 +64,7 @@ test.describe.serial('fluxo operacional principal', () => {
     expect((await page.request.get(`/api/orders/${orderId}/term`)).status()).toBe(200);
   });
 
-  test('orçamento, conclusão, pagamento parcial, A Receber e quitação pela UI', async ({ page }) => {
+  test('orçamento, conclusão e pagamento parcial pela UI', async ({ page }) => {
     await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
@@ -73,7 +72,6 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.getByText('Pagamento ainda não registrado.', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toHaveCount(0);
     await expect(page.getByText(/NaN|Invalid Date/)).toHaveCount(0);
-
     await page.getByRole('button', { name: 'Gerar orçamento' }).click();
     const budgetForm = page.locator('.budget-form');
     await budgetForm.getByLabel('Diagnóstico').fill('Falha de energia');
@@ -88,7 +86,6 @@ test.describe.serial('fluxo operacional principal', () => {
     await budgetForm.getByRole('button', { name: 'Salvar e gerar PDF' }).click();
     await expect(page.getByText(/Revisão 1/)).toBeVisible();
     await expect(page.getByRole('link', { name: 'Abrir PDF' })).toHaveAttribute('href', `/api/orders/${orderId}/budgets/1/pdf`);
-
     await page.getByRole('button', { name: 'Marcar enviado' }).click();
     await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toBeVisible();
     const approvalRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/budgets/1/status`) && request.method() === 'PATCH');
@@ -97,7 +94,6 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(approvalPayload).toEqual({ status: 'approved' });
     expect(approvalPayload).not.toHaveProperty('copy_items');
     await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toHaveCount(0);
-
     const statusSelect = page.locator('.status-picker select');
     await expect(statusSelect.locator('option[value="in_service"]')).toHaveCount(0);
     await statusSelect.selectOption('waiting_part');
@@ -125,7 +121,6 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(finalShare.status).toBe(200);
     expect(finalShare.body.url).toContain(`/share/orders/${orderId}/final/1`);
     await expect(page.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' })).toHaveAttribute('href', /wa\.me/);
-
     await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toBeVisible();
     await page.getByRole('button', { name: 'Registrar pagamento' }).click();
     const paymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
@@ -136,12 +131,13 @@ test.describe.serial('fluxo operacional principal', () => {
     await paymentModal.getByRole('button', { name: 'Confirmar pagamento' }).click();
     await expect(page.getByText(/Pagamento parcial/)).toBeVisible();
     await expect(page.getByText(/ainda faltam R\$ 100,00/)).toBeVisible();
-
     const partial = await api(page, `/orders/${orderId}/payments`);
     expect(partial.body.paid_cents).toBe(5000);
     expect(partial.body.balance_cents).toBe(10000);
     expect(partial.body.status).toBe('partial');
+  });
 
+  test('A Receber e quitação pela UI', async ({ page }) => {
     await page.getByRole('button', { name: 'Financeiro' }).click();
     await expect(page.getByRole('heading', { name: 'Financeiro' })).toBeVisible();
     await page.getByRole('button', { name: 'A Receber' }).click();
@@ -150,7 +146,6 @@ test.describe.serial('fluxo operacional principal', () => {
     const receivables = await api(page, '/finance/receivables');
     expect(receivables.status).toBe(200);
     expect(receivables.body.data.find((row: { id: number }) => row.id === orderId)?.balance_cents).toBe(10000);
-
     const receivableRow = page.locator('.transaction').filter({ hasText: `OS #${orderNumber}` });
     await receivableRow.getByRole('button', { name: 'Abrir OS' }).click();
     await page.getByRole('button', { name: 'Registrar novo pagamento' }).click();
@@ -159,7 +154,6 @@ test.describe.serial('fluxo operacional principal', () => {
     await finalPaymentModal.getByRole('button', { name: 'Confirmar pagamento' }).click();
     await expect(page.getByText('Pago integralmente')).toBeVisible();
     await expect(page.getByText('Saldo zerado.')).toBeVisible();
-
     const paid = await api(page, `/orders/${orderId}/payments`);
     expect(paid.body.paid_cents).toBe(15000);
     expect(paid.body.balance_cents).toBe(0);
@@ -172,10 +166,8 @@ test.describe.serial('fluxo operacional principal', () => {
     await clientCard.getByRole('button', { name: 'Visualizar' }).click();
     await expect(page.getByRole('heading', { name: 'Cliente E2E' })).toBeVisible();
     await expect(page.getByText(`OS #${orderNumber}`)).toBeVisible();
-
     const history = await api(page, `/clients/${clientId}`);
     expect(history.body.orders.some((order: { id: number }) => order.id === orderId)).toBeTruthy();
-
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
     await expect(page.getByRole('heading', { name: 'Pós-Venda' })).toBeVisible();
     const lockedRow = page.locator('.post-sale article').filter({ hasText: `OS ${orderNumber}` });
@@ -188,7 +180,6 @@ test.describe.serial('fluxo operacional principal', () => {
     }
     const lockLabel = await lockedRow.locator('div').first().evaluate((element) => getComputedStyle(element, '::after').content);
     expect(lockLabel).toContain('Disponível após 24 horas');
-
     const postSale = await api(page, '/post-sales');
     expect(postSale.status).toBe(200);
     const cycle = postSale.body.find((row: { number: string }) => row.number === orderNumber);
