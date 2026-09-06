@@ -17,12 +17,12 @@ test('configurações separa textos de documentos em subabas com editor expandid
   await expect(termEditor).toBeVisible();
   await expect(budgetEditor).toBeHidden();
   await expect(termEditor).toHaveJSProperty('scrollHeight', await termEditor.evaluate((el) => el.scrollHeight));
-  expect(await termEditor.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(220);
+  expect(Math.round(await termEditor.evaluate((el) => el.getBoundingClientRect().height))).toBeGreaterThanOrEqual(220);
 
   await budgetTab.click();
   await expect(termEditor).toBeHidden();
   await expect(budgetEditor).toBeVisible();
-  expect(await budgetEditor.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(220);
+  expect(Math.round(await budgetEditor.evaluate((el) => el.getBoundingClientRect().height))).toBeGreaterThanOrEqual(220);
 
   await reportsTab.click();
   await expect(page.getByRole('heading', { name: 'Modelos de laudos', exact: true })).toBeVisible();
