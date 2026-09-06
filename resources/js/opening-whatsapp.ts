@@ -206,6 +206,11 @@ function syncImmediately() {
 }
 
 captureOrderCreation();
-new MutationObserver(syncImmediately).observe(document.documentElement, { childList: true, subtree: true });
+new MutationObserver(syncImmediately).observe(document.documentElement, {
+  childList: true,
+  subtree: true,
+  attributes: true,
+  attributeFilter: ['href'],
+});
 document.addEventListener('DOMContentLoaded', syncImmediately);
 syncImmediately();
