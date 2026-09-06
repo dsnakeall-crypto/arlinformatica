@@ -99,8 +99,11 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toHaveCount(0);
 
     const statusSelect = page.locator('.status-picker select');
-    await statusSelect.selectOption('in_service');
-    await expect(page.getByText(/Em Serviço ·/).last()).toBeVisible();
+    await expect(statusSelect.locator('option[value="in_service"]')).toHaveCount(0);
+    await statusSelect.selectOption('waiting_part');
+    await expect(page.getByText(/Aguardando ·/).last()).toBeVisible();
+    await statusSelect.selectOption('analysis');
+    await expect(page.getByText(/Em Análise ·/).last()).toBeVisible();
     await statusSelect.selectOption('completed');
     const finalModal = page.locator('.modal-card').filter({ hasText: 'FINALIZAÇÃO DA OS' });
     await expect(finalModal).toBeVisible();
@@ -113,11 +116,15 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(finalizePayload.approved_budget_id).toBeTruthy();
     expect(finalizePayload).not.toHaveProperty('items');
     await expect(statusSelect).toHaveValue('completed');
-    await expect(page.locator('.completion').getByText('Concluído', { exact: true })).toBeVisible();
+    await expect(page.locator('.completion').getByText('Finalizado', { exact: true })).toBeVisible();
     await expect(page.getByText('PDF Final', { exact: true })).toBeVisible();
     const finalized = await api(page, `/orders/${orderId}`);
     expect(finalized.body.items[0].source_budget_id).toBeTruthy();
     expect(finalized.body.items[0].description).toBe('Formatação E2E');
+    const finalShare = await api(page, `/orders/${orderId}/final-share`);
+    expect(finalShare.status).toBe(200);
+    expect(finalShare.body.url).toContain(`/share/orders/${orderId}/final/1`);
+    await expect(page.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' })).toHaveAttribute('href', /wa\.me/);
 
     await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toBeVisible();
     await page.getByRole('button', { name: 'Registrar pagamento' }).click();
