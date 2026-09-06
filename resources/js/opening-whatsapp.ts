@@ -8,6 +8,12 @@ let pendingOpening: OpeningContext | null = null;
 const digits = (value: string) => value.replace(/\D/g, '');
 const q = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const qa = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => Array.from(root.querySelectorAll<T>(selector));
+const hide = (element: HTMLElement | null | undefined) => {
+  if (!element) return;
+  element.hidden = true;
+  element.setAttribute('aria-hidden', 'true');
+  element.style.setProperty('display', 'none', 'important');
+};
 
 function selectedClient(): OpeningClient | null {
   const current = (window as Window & { __arlSelectedClient?: OpeningClient | null }).__arlSelectedClient;
@@ -119,36 +125,47 @@ function syncMessageSettings() {
   const settingsHeading = qa<HTMLHeadingElement>('main h1').find((item) => item.textContent?.trim() === 'Configurações');
   if (!settingsHeading) return;
 
-  const openingPanel = q<HTMLElement>('.arl-opening-message-panel');
-  if (openingPanel) {
-    openingPanel.hidden = true;
-    openingPanel.setAttribute('aria-hidden', 'true');
-    openingPanel.style.setProperty('display', 'none', 'important');
+  hide(q<HTMLElement>('.arl-opening-message-panel'));
+  hide(q<HTMLElement>('.arl-post-sale-editor'));
+  hide(q<HTMLElement>('.arl-message-subnav'));
+  hide(q<HTMLElement>('.arl-settings-tab[data-section="messages"]'));
+  qa<HTMLElement>('.arl-post-message-panel').forEach(hide);
+
+  const settingsCard = qa<HTMLElement>('.setting-cards article').find((item) => item.textContent?.trim() === 'Pós-Venda');
+  hide(settingsCard);
+
+  const settingsForm = q<HTMLElement>('form.settings-form');
+  if (!settingsForm) return;
+  const messageHeading = qa<HTMLHeadingElement>('h2', settingsForm).find((item) => item.textContent?.trim() === 'Pós-Venda / Mensagens');
+  if (!messageHeading) return;
+
+  hide(messageHeading);
+  let sibling = messageHeading.nextElementSibling as HTMLElement | null;
+  while (sibling && sibling.tagName !== 'H2') {
+    const next = sibling.nextElementSibling as HTMLElement | null;
+    hide(sibling);
+    sibling = next;
   }
+}
 
-  q<HTMLButtonElement>('.arl-message-subnav [data-msg-tab="opening"]')?.remove();
+function syncPostSale() {
+  const heading = qa<HTMLHeadingElement>('main h1').find((item) => item.textContent?.trim().startsWith('Pós-Venda'));
+  if (!heading) return;
 
-  const messagesTab = q<HTMLButtonElement>('.arl-settings-tab[data-section="messages"]');
-  const description = messagesTab?.querySelector('small');
-  if (description) description.textContent = 'Avaliação Google e Instagram.';
+  hide(q<HTMLElement>('.arl-post-sale-editor'));
 
-  const nav = q<HTMLElement>('.arl-message-subnav');
-  if (!nav) return;
+  qa<HTMLElement>('.post-sale article').forEach((article) => {
+    const actions = qa<HTMLElement>(':scope > .post-action, :scope > button.sent', article);
+    if (actions.length < 3) return;
 
-  let active = document.documentElement.dataset.arlMessageSubtab || '';
-  if (!active || active === 'opening') {
-    active = 'google';
-    document.documentElement.dataset.arlMessageSubtab = active;
-  }
-
-  const topActive = messagesTab?.classList.contains('active') === true;
-  qa<HTMLElement>('.arl-post-message-panel').forEach((panel) => {
-    panel.hidden = !topActive || panel.dataset.msgPanel !== active;
+    hide(actions[0]);
+    actions[1].dataset.arlPostType = 'google';
+    actions[1].setAttribute('aria-label', 'Avaliação Google');
+    actions[1].setAttribute('title', 'Avaliação Google');
+    actions[2].dataset.arlPostType = 'instagram';
+    actions[2].setAttribute('aria-label', 'Instagram');
+    actions[2].setAttribute('title', 'Instagram');
   });
-  qa<HTMLButtonElement>('.arl-message-subnav [data-msg-tab]').forEach((button) => {
-    button.classList.toggle('active', button.dataset.msgTab === active);
-  });
-  nav.hidden = !topActive;
 }
 
 function captureOrderCreation() {
@@ -188,6 +205,7 @@ function scheduleSync() {
     if (modal) rewriteOpeningModal(modal);
     removeLegacyOpeningShare();
     syncMessageSettings();
+    syncPostSale();
   });
 }
 
