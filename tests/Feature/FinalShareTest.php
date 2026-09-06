@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Role;
 use App\Models\ServiceOrder;
 use App\Models\User;
+use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -71,7 +72,7 @@ class FinalShareTest extends TestCase
             ->json();
 
         $this->assertStringContainsString("/share/orders/{$order->id}/final/1", $share['url']);
-        $expires = \Carbon\Carbon::parse($share['expires_at']);
+        $expires = Carbon::parse($share['expires_at']);
         $this->assertTrue($expires->between(now()->addHours(47)->addMinutes(59), now()->addHours(48)->addMinute()));
 
         auth()->logout();
