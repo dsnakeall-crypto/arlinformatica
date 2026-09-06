@@ -20,7 +20,6 @@ class SettingsController extends Controller
             'budget_validity_days' => (int) $all['budget_validity_days'],
             'company_name' => (string) $all['company_name'],
             'trade_name' => (string) $all['trade_name'],
-            'order_opened_whatsapp' => (string) $all['order_opened_whatsapp'],
         ]);
     }
 
@@ -56,8 +55,6 @@ class SettingsController extends Controller
             'complement' => 'nullable|string|max:100', 'instagram' => 'nullable|url|max:255', 'google_review' => 'nullable|url|max:255',
             'budget_validity_days' => 'required|integer|min:1|max:365', 'budget_observation' => 'nullable|string|max:2000', 'budget_institutional_text' => 'required|string|max:1000', 'term_text' => 'required|string|max:10000',
             'warranty_general_enabled' => 'sometimes|boolean', 'warranty_general_text' => 'nullable|string|max:5000', 'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
-            'order_opened_whatsapp' => 'sometimes|required|string|max:5000',
-            'post_sale_follow_up' => 'sometimes|required|string|max:5000', 'post_sale_google' => 'sometimes|required|string|max:5000', 'post_sale_instagram' => 'sometimes|required|string|max:5000',
         ]);
         if ($request->boolean('warranty_general_enabled') && blank($data['warranty_general_text'] ?? null)) {
             throw ValidationException::withMessages(['warranty_general_text' => 'Informe o texto da garantia geral quando ela estiver ativada.']);
