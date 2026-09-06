@@ -188,8 +188,8 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(cycle).toBeTruthy();
     expect(cycle.available).toBe(false);
     expect(cycle.eligible_at).toBeTruthy();
-    expect(cycle.whatsapp.follow_up).toBeNull();
-    const blocked = await api(page, `/post-sales/${cycle.id}/follow_up/confirm`, 'POST', {});
+    expect(cycle.whatsapp.google).toBeNull();
+    const blocked = await api(page, `/post-sales/${cycle.id}/google/confirm`, 'POST', {});
     expect(blocked.status).toBe(409);
   });
 });
