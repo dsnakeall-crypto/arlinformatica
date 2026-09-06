@@ -29,7 +29,7 @@ function syncPageScopedArtifacts() {
     remove('.arl-settings-tabs, .arl-opening-message-panel, .arl-finance-settings-note, .arl-message-subnav, .arl-post-message-panel, .arl-order-subtabs, .arl-document-subtabs');
   }
 
-  const postSale = heading('Pós-Venda');
+  const postSale = heading(/^Pós-Venda(?: & Reputação)?$/);
   if (!postSale) {
     remove('.arl-post-sale-editor, .arl-post-toolbar');
   }
