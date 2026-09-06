@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\CompanySettings;
 use App\Services\ContactLinks;
 use App\Services\NotificationService;
 use App\Services\PostSaleService;
@@ -12,11 +11,19 @@ use Illuminate\Support\Facades\DB;
 
 class PostSaleController extends Controller
 {
-    public function index(PostSaleService $service, CompanySettings $settings): JsonResponse
+    private const INSTAGRAM_URL = 'https://www.instagram.com/allanluttembarck';
+
+    private const GOOGLE_REVIEW_URL = 'https://g.page/r/CSxkz5Y88MaJEBM/review';
+
+    private const MESSAGES = [
+        'instagram' => "Olá! 😊\nAgradecemos por escolher a Arl Informática.\nFoi um prazer atender você!\n\nSiga a gente no Instagram e acompanhe nossas novidades:\nhttps://www.instagram.com/allanluttembarck\n\nEquipe Arl Informática",
+        'google' => "Olá! 😊\nAgradecemos por escolher a Arl Informática.\nFoi um prazer atender você!\n\nSe puder, deixe sua avaliação no Google. Sua opinião é muito importante para nós:\nhttps://g.page/r/CSxkz5Y88MaJEBM/review\n\nEquipe Arl Informática",
+    ];
+
+    public function index(PostSaleService $service): JsonResponse
     {
         // Sem throttle aqui: ao entrar no Pós-Venda, uma OS recém-concluída deve aparecer imediatamente.
         $service->catchUp();
-        $configuration = $settings->all();
         $rows = DB::table('post_sale_cycles as cycles')
             ->join('service_orders as orders', 'orders.id', '=', 'cycles.service_order_id')
             ->join('clients', 'clients.id', '=', 'cycles.client_id')
@@ -27,10 +34,10 @@ class PostSaleController extends Controller
             ->get();
         $actions = DB::table('post_sale_actions')->whereIn('cycle_id', $rows->pluck('id'))->whereIn('type', PostSaleService::ACTIONS)->get()->groupBy('cycle_id');
 
-        return response()->json($rows->map(function ($row) use ($actions, $configuration) {
+        return response()->json($rows->map(function ($row) use ($actions) {
             $row->available = now()->greaterThanOrEqualTo($row->eligible_at);
             $row->actions = $actions->get($row->id, collect())->mapWithKeys(fn ($action) => [$action->type => ['id' => $action->id, 'confirmed_at' => $action->confirmed_at]])->all();
-            $row->messages = collect(PostSaleService::ACTIONS)->mapWithKeys(fn ($type) => [$type => $this->message($type, $row->name, $configuration)])->all();
+            $row->messages = collect(PostSaleService::ACTIONS)->mapWithKeys(fn ($type) => [$type => $this->message($type)])->all();
             $links = collect($row->messages)->map(fn ($message) => ContactLinks::whatsapp($row->phone, $message));
             $row->whatsapp = $row->available ? $links->all() : $links->map(fn () => null)->all();
 
@@ -38,53 +45,31 @@ class PostSaleController extends Controller
         }));
     }
 
-    public function settings(CompanySettings $settings): JsonResponse
+    public function settings(): JsonResponse
     {
-        $configuration = $settings->all();
-
         return response()->json([
-            'google_review' => (string) $configuration['google_review'],
-            'post_sale_google' => (string) $configuration['post_sale_google'],
-            'post_sale_instagram' => (string) $configuration['post_sale_instagram'],
+            'google_review' => self::GOOGLE_REVIEW_URL,
+            'instagram' => self::INSTAGRAM_URL,
+            'post_sale_google' => self::MESSAGES['google'],
+            'post_sale_instagram' => self::MESSAGES['instagram'],
+            'editable' => false,
         ]);
     }
 
-    public function updateSettings(Request $request, CompanySettings $settings): JsonResponse
+    public function updateSettings(): JsonResponse
     {
-        $data = $request->validate([
-            'post_sale_google' => ['sometimes', 'required', 'string', 'max:5000'],
-            'post_sale_instagram' => ['sometimes', 'required', 'string', 'max:5000'],
-        ]);
-        abort_if($data === [], 422, 'Informe ao menos uma mensagem para atualizar.');
-
-        DB::transaction(function () use ($data, $request) {
-            foreach ($data as $key => $value) {
-                DB::table('settings')->updateOrInsert(
-                    ['key' => $key],
-                    ['value' => $value, 'updated_at' => now(), 'created_at' => now()]
-                );
-            }
-            DB::table('audit_logs')->insert([
-                'user_id' => $request->user()->id,
-                'action' => 'post_sale.settings_updated',
-                'subject_type' => 'settings',
-                'after' => json_encode($data),
-                'ip_address' => $request->ip(),
-                'created_at' => now(),
-            ]);
-        });
-
-        return $this->settings($settings);
+        return response()->json([
+            'message' => 'As mensagens de Pós-Venda são fixas e não podem ser editadas.',
+        ], 405);
     }
 
-    public function confirm(Request $request, int $cycle, string $type, CompanySettings $settings, NotificationService $notifications): JsonResponse
+    public function confirm(Request $request, int $cycle, string $type, NotificationService $notifications): JsonResponse
     {
         abort_unless(in_array($type, PostSaleService::ACTIONS, true), 404);
-        $configuration = $settings->all();
         $record = DB::table('post_sale_cycles as cycles')->join('clients', 'clients.id', '=', 'cycles.client_id')->where('cycles.id', $cycle)->where('cycles.active', true)->select('cycles.*', 'clients.name')->first();
         abort_unless($record, 404);
         abort_if(now()->lessThan($record->eligible_at), 409, 'O Pós-Venda desta OS será liberado 24 horas após a conclusão.');
-        $message = $this->message($type, $record->name, $configuration);
+        $message = $this->message($type);
         $updated = DB::table('post_sale_actions')->where('cycle_id', $cycle)->where('type', $type)->whereNull('confirmed_at')->update(['confirmed_at' => now(), 'confirmed_by' => $request->user()->id, 'message_snapshot' => $message, 'updated_at' => now()]);
         abort_unless($updated === 1, 409, 'Esta mensagem já foi confirmada como enviada.');
         DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'post_sale.confirmed', 'subject_type' => 'post_sale_cycle', 'subject_id' => $cycle, 'after' => json_encode(['type' => $type, 'message_snapshot' => $message]), 'ip_address' => $request->ip(), 'created_at' => now()]);
@@ -95,14 +80,10 @@ class PostSaleController extends Controller
         return response()->json(['confirmed_at' => now()->toIso8601String()]);
     }
 
-    private function message(string $type, string $name, array $settings): string
+    private function message(string $type): string
     {
-        $defaults = [
-            'google' => "Olá, {{nome_cliente}}\n\nPoderia avaliar a ARL Informática no Google?\nLeva 10 segundos:\n\nBasta clicar no link e dar sua avaliação =))\n\n{{link_google}}",
-            'instagram' => "Olá, {{nome_cliente}} 😊\n\nAcompanhe a ARL Informática no Instagram para ver dicas, novidades e nosso trabalho:\n\n{{instagram}}\n\nSerá um prazer ter você por lá!",
-        ];
-        $template = $settings["post_sale_$type"] ?? $defaults[$type];
+        abort_unless(array_key_exists($type, self::MESSAGES), 404);
 
-        return strtr($template, ['{{nome_cliente}}' => $name, '{{link_google}}' => $settings['google_review'], '{{instagram}}' => $settings['instagram']]);
+        return self::MESSAGES[$type];
     }
 }
