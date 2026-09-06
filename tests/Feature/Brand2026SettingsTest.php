@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class Brand2026SettingsTest extends TestCase
@@ -18,7 +19,7 @@ class Brand2026SettingsTest extends TestCase
         $this->seed(DatabaseSeeder::class);
     }
 
-    public function test_operational_settings_expose_order_opened_whatsapp_template(): void
+    public function test_operational_settings_do_not_expose_editable_opening_whatsapp_template(): void
     {
         $master = $this->user('Master', 'brand-master');
 
@@ -26,47 +27,51 @@ class Brand2026SettingsTest extends TestCase
             ->getJson('/api/operational-settings')
             ->assertOk()
             ->assertJsonPath('company_name', 'ARL Informática')
-            ->assertJsonPath('order_opened_whatsapp', fn ($value) => is_string($value) && str_contains($value, '{{nome_cliente}}') && str_contains($value, '{{numero_os}}'));
+            ->assertJsonMissingPath('order_opened_whatsapp');
     }
 
-    public function test_order_opened_whatsapp_template_can_be_saved_in_settings(): void
+    public function test_legacy_whatsapp_message_fields_are_not_saved_by_general_settings(): void
     {
         $master = $this->user('Master', 'brand-master');
         $settings = $this->actingAs($master)->getJson('/api/settings')->assertOk()->json();
-        $settings['order_opened_whatsapp'] = 'Olá {{nome_cliente}}, a OS {{numero_os}} foi aberta pela {{empresa}}.';
+        $legacyKeys = ['order_opened_whatsapp', 'post_sale_follow_up', 'post_sale_google', 'post_sale_instagram'];
+        $before = collect($legacyKeys)->mapWithKeys(fn ($key) => [$key => DB::table('settings')->where('key', $key)->value('value')])->all();
 
-        $this->putJson('/api/settings', $settings)
-            ->assertOk()
-            ->assertJsonPath('order_opened_whatsapp', $settings['order_opened_whatsapp']);
+        foreach ($legacyKeys as $key) {
+            $settings[$key] = "ALTERADO-$key";
+        }
 
-        $this->assertDatabaseHas('settings', [
-            'key' => 'order_opened_whatsapp',
-            'value' => $settings['order_opened_whatsapp'],
-        ]);
+        $this->putJson('/api/settings', $settings)->assertOk();
+
+        foreach ($before as $key => $value) {
+            $this->assertSame($value, DB::table('settings')->where('key', $key)->value('value'));
+        }
     }
 
-    public function test_post_sale_google_and_instagram_templates_are_managed_and_audited(): void
+    public function test_post_sale_google_and_instagram_messages_are_fixed_and_read_only(): void
     {
         $admin = $this->user('Administrador', 'brand-admin');
         $employee = $this->user('Funcionário', 'brand-employee');
 
         $this->actingAs($employee)->getJson('/api/post-sales/settings')->assertForbidden();
 
-        $payload = [
-            'post_sale_google' => 'Avaliação {{nome_cliente}} {{link_google}}',
-            'post_sale_instagram' => 'Instagram {{nome_cliente}} {{instagram}}',
-        ];
-
         $this->actingAs($admin)
-            ->putJson('/api/post-sales/settings', $payload)
+            ->getJson('/api/post-sales/settings')
             ->assertOk()
-            ->assertJson($payload)
+            ->assertJsonPath('editable', false)
+            ->assertJsonPath('instagram', 'https://www.instagram.com/allanluttembarck')
+            ->assertJsonPath('google_review', 'https://g.page/r/CSxkz5Y88MaJEBM/review')
+            ->assertJsonPath('post_sale_google', fn ($value) => is_string($value) && str_contains($value, 'Equipe Arl Informática'))
+            ->assertJsonPath('post_sale_instagram', fn ($value) => is_string($value) && str_contains($value, 'Equipe Arl Informática'))
             ->assertJsonMissingPath('post_sale_follow_up');
 
-        foreach ($payload as $key => $value) {
-            $this->assertDatabaseHas('settings', ['key' => $key, 'value' => $value]);
-        }
-        $this->assertDatabaseHas('audit_logs', ['action' => 'post_sale.settings_updated']);
+        $this->actingAs($admin)
+            ->putJson('/api/post-sales/settings', [
+                'post_sale_google' => 'não pode substituir',
+                'post_sale_instagram' => 'não pode substituir',
+            ])
+            ->assertStatus(405)
+            ->assertJsonPath('message', 'As mensagens de Pós-Venda são fixas e não podem ser editadas.');
     }
 
     public function test_corporate_theme_is_fixed_to_arl_palette(): void
