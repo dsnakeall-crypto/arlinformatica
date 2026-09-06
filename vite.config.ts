@@ -9,6 +9,7 @@ export default defineConfig({
                 'resources/js/main.tsx',
                 'resources/js/brand2026.ts',
                 'resources/js/opening-whatsapp.ts',
+                'resources/js/completion-polish.ts',
                 'resources/js/brand2026-access.ts',
                 'resources/js/client-search.ts',
                 'resources/js/order-maintenance.ts',
