@@ -29,6 +29,18 @@ test('configurações separa textos de documentos em subabas com editor expandid
   await expect(budgetEditor).toBeHidden();
 });
 
+test('configurações não expõe mensagens automáticas de WhatsApp editáveis', async ({ page }) => {
+  await login(page);
+
+  await page.getByRole('button', { name: 'Configurações', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Pós-Venda / Mensagens', exact: true })).toBeHidden();
+  await expect(page.getByLabel('Mensagem de acompanhamento')).toBeHidden();
+  await expect(page.getByLabel('Mensagem para avaliação Google')).toBeHidden();
+  await expect(page.getByLabel('Mensagem para Instagram')).toBeHidden();
+  await expect(page.locator('.arl-settings-tab[data-section="messages"]')).toBeHidden();
+});
+
 test('configurações não expõe cadastros automáticos de equipamento, fabricante ou checklist', async ({ page }) => {
   await login(page);
 
