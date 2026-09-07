@@ -30,7 +30,7 @@ async function createOrderWithOneItem(page: Page) {
     equipment_type_id: equipmentType.id,
     manufacturer_id: null,
     attendance_type: 'bench',
-    reported_problem: 'Diagnóstico de quantidade maior que 1',
+    reported_problem: 'Contrato de quantidade maior que 1',
     checklist: [],
     items: [{ catalog_id: service.id, quantity: 1 }],
   });
@@ -47,21 +47,40 @@ async function openOrder(page: Page, clientName: string, orderNumber: string) {
   return page.locator('[data-arl-order-detail-react="1"]');
 }
 
-test('diagnóstico: quantidade alterada na tela diverge da finalização quando serviços ainda não foram salvos', async ({ page }) => {
+const formattedMoney = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+
+test('finalização persiste quantidade pendente antes de gerar snapshot, financeiro, PDF e WhatsApp', async ({ page }) => {
   const { clientName, order, service } = await createOrderWithOneItem(page);
   const root = await openOrder(page, clientName, order.number);
 
   const quantity = root.getByLabel(`Quantidade de ${service.name}`);
   await quantity.fill('4');
-  const expectedScreenSubtotal = Number(service.price_cents) * 4;
-  await expect(root.locator('.arl-od-foot')).toContainText(`Subtotal: R$ ${(expectedScreenSubtotal / 100).toFixed(2).replace('.', ',')}`);
+  const expectedTotal = Number(service.price_cents) * 4;
+  const expectedMoney = formattedMoney(expectedTotal);
+  await expect(root.locator('.arl-od-foot')).toContainText(`Subtotal: ${expectedMoney}`);
 
-  // Reproduz exatamente o sintoma: a quantidade foi alterada visualmente, mas o botão
-  // "Salvar serviços" ainda não foi acionado antes de abrir a finalização.
+  const pendingSaveResponse = page.waitForResponse((response) => {
+    const request = response.request();
+    if (new URL(response.url()).pathname !== `/api/orders/${order.id}` || request.method() !== 'PATCH') return false;
+    const body = request.postDataJSON();
+    return Array.isArray(body?.items) && body.items.some((item: any) => Number(item.catalog_id) === Number(service.id) && Number(item.quantity) === 4);
+  });
+
   await root.getByRole('button', { name: 'Concluir OS' }).click();
+  const saved = await pendingSaveResponse;
+  expect(saved.status()).toBe(200);
+
+  const persistedBeforeFinalization = await api(page, `/orders/${order.id}`);
+  expect(persistedBeforeFinalization.status).toBe(200);
+  const activeItem = persistedBeforeFinalization.body?.items?.find((row: any) => !row.finalization_id && Number(row.catalog_id) === Number(service.id));
+  expect(Number(activeItem?.quantity)).toBe(4);
+  expect(Number(activeItem?.subtotal_cents)).toBe(expectedTotal);
+  expect(Number(persistedBeforeFinalization.body?.total_cents)).toBe(expectedTotal);
+
   const modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(modal).toBeVisible();
-  const modalTotalText = await modal.locator('.money').innerText();
+  await expect(modal.locator('.money')).toContainText(`Subtotal ${expectedMoney}`);
+  await expect(modal.locator('.money')).toContainText(`Total ${expectedMoney}`);
 
   const finalizeResponse = page.waitForResponse((response) =>
     new URL(response.url()).pathname === `/api/orders/${order.id}/finalize` && response.request().method() === 'POST'
@@ -69,53 +88,37 @@ test('diagnóstico: quantidade alterada na tela diverge da finalização quando 
   await modal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
   const response = await finalizeResponse;
   expect(response.status()).toBe(201);
+  const finalizePayload = response.request().postDataJSON();
+  expect(Number(finalizePayload?.items?.[0]?.quantity)).toBe(4);
   const finalized = await response.json();
   const finalizedTotal = Number(finalized.finalization?.total_cents ?? -1);
+  expect(finalizedTotal).toBe(expectedTotal);
 
   const payment = await api(page, `/orders/${order.id}/payments`);
   expect(payment.status).toBe(200);
-  const financeTotal = Number(payment.body?.total_cents ?? -1);
-  const balance = Number(payment.body?.balance_cents ?? -1);
+  expect(Number(payment.body?.total_cents)).toBe(expectedTotal);
+  expect(Number(payment.body?.balance_cents)).toBe(expectedTotal);
 
-  await expect(root.getByText(`Total: R$ ${(finalizedTotal / 100).toFixed(2).replace('.', ',')}`, { exact: true })).toBeVisible();
+  const persisted = await api(page, `/orders/${order.id}`);
+  expect(persisted.status).toBe(200);
+  const finalItem = persisted.body?.items?.find((row: any) => row.finalization_id && Number(row.catalog_id) === Number(service.id));
+  expect(Number(finalItem?.quantity)).toBe(4);
+  expect(Number(finalItem?.subtotal_cents)).toBe(expectedTotal);
+  expect(Number(persisted.body?.total_cents)).toBe(expectedTotal);
+
+  await expect(root.getByText(`Total: ${expectedMoney}`, { exact: true })).toBeVisible();
   const share = page.getByRole('status', { name: 'Compartilhar fechamento da OS' });
   await expect(share).toBeVisible();
+
   const pdfHref = await share.getByRole('link', { name: 'Abrir PDF' }).getAttribute('href');
   expect(pdfHref).toBeTruthy();
   const pdfResponse = await page.request.get(pdfHref!);
   expect(pdfResponse.status()).toBe(200);
   expect(pdfResponse.headers()['content-type']).toContain('application/pdf');
+  expect((await pdfResponse.body()).byteLength).toBeGreaterThan(1000);
 
   const whatsappHref = await share.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' }).getAttribute('href');
   expect(whatsappHref).toBeTruthy();
   const whatsappText = decodeURIComponent(new URL(whatsappHref!).searchParams.get('text') ?? '');
-  const formattedFinalTotal = `R$ ${(finalizedTotal / 100).toFixed(2).replace('.', ',')}`;
-  expect(whatsappText).toContain(`- Valor: ${formattedFinalTotal}`);
-
-  const persisted = await api(page, `/orders/${order.id}`);
-  const finalItem = persisted.body?.items?.find((row: any) => row.finalization_id);
-
-  console.log('QUANTITY_DIAGNOSTIC', JSON.stringify({
-    order: order.number,
-    service: service.name,
-    unit_price_cents: Number(service.price_cents),
-    ui_quantity: 4,
-    ui_subtotal_cents: expectedScreenSubtotal,
-    finalization_modal: modalTotalText.replace(/\s+/g, ' ').trim(),
-    finalized_item_quantity: Number(finalItem?.quantity ?? -1),
-    finalized_item_subtotal_cents: Number(finalItem?.subtotal_cents ?? -1),
-    finalization_total_cents: finalizedTotal,
-    finance_total_cents: financeTotal,
-    balance_cents: balance,
-    pdf_http_status: pdfResponse.status(),
-    pdf_total_source_cents: finalizedTotal,
-    whatsapp_value: formattedFinalTotal,
-  }));
-
-  expect(expectedScreenSubtotal).toBe(Number(service.price_cents) * 4);
-  expect(finalizedTotal).toBe(Number(service.price_cents));
-  expect(financeTotal).toBe(finalizedTotal);
-  expect(balance).toBe(finalizedTotal);
-  expect(Number(finalItem?.quantity)).toBe(1);
-  expect(Number(finalItem?.subtotal_cents)).toBe(Number(service.price_cents));
+  expect(whatsappText).toContain(`- Valor: ${expectedMoney}`);
 });
