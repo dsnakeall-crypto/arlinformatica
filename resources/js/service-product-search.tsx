@@ -52,7 +52,7 @@ export default function ServiceProductSearch({ items, onSelect, ariaLabel = 'Pes
         placeholder="Pesquisar serviço ou produto"
       />
     </label>
-    {query.trim() && <div className="services-list arl-service-product-results" role="list" aria-label={`${ariaLabel} resultados`}>
+    {query.trim() && <div className="services-list arl-service-product-results" role="list" aria-label="Resultados da busca">
       {visible.length ? visible.map((item) => <button
         type="button"
         key={item.id}
