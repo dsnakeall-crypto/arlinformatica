@@ -19,7 +19,9 @@ test('catálogo de serviços é React, editável e respeita desativação em nov
   expect((layoutText.match(/Layout/g) ?? []).length).toBe(1);
   await expect(page.locator('.device-layout .arl-layout-label')).toHaveCount(0);
 
-  const topCards = await page.getByTestId('service-top-card').count();
+  const topCardLocator = page.getByTestId('service-top-card');
+  await expect(topCardLocator.first()).toBeVisible();
+  const topCards = await topCardLocator.count();
   expect(topCards).toBeGreaterThan(0);
   expect(topCards).toBeLessThanOrEqual(3);
 
