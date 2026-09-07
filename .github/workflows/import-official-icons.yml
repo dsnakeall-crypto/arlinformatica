@@ -1,0 +1,57 @@
+name: Importar ícones oficiais
+
+on:
+  push:
+    branches:
+      - codex/implementar-etapa-10-do-projeto
+    paths:
+      - icones-faltantes-github.zip
+
+permissions:
+  contents: write
+
+jobs:
+  import-icons:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar pacote e reconstruir PNGs oficiais
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='icones-faltantes-github.zip'
+          test -f "$ZIP"
+
+          printf '%s\n' \
+            'icon-editar.png' \
+            'icon-lixeira.png' \
+            'icon-visualizar.png' > /tmp/expected-files.txt
+          unzip -Z1 "$ZIP" | sort > /tmp/zip-files.txt
+          sort /tmp/expected-files.txt > /tmp/expected-sorted.txt
+          diff -u /tmp/expected-sorted.txt /tmp/zip-files.txt
+
+          mkdir -p public/arl-assets/icons
+          unzip -p "$ZIP" icon-editar.png > public/arl-assets/icons/icon-editar.png
+          unzip -p "$ZIP" icon-lixeira.png > public/arl-assets/icons/icon-lixeira.png
+          unzip -p "$ZIP" icon-visualizar.png > public/arl-assets/icons/icon-visualizar.png
+
+          printf '%s  %s\n' \
+            '4373e954ba094ff508f90b639e280c01b7d440d7ef4cdd738469923272e41db7' 'public/arl-assets/icons/icon-editar.png' \
+            '0f3a224fc2062c87a1a191ec2d26fc9c3b11c5d4c30e878c3b7265d65095acb1' 'public/arl-assets/icons/icon-lixeira.png' \
+            'cf80a9872de95f0fa8ec9ff4ea1971f4ebaae3fac6fe704c24e9666290d1aae5' 'public/arl-assets/icons/icon-visualizar.png' | sha256sum -c -
+
+          test "$(git hash-object public/arl-assets/icons/icon-editar.png)" = 'b619ff0f8abbe431f107299a6845f189350229ee'
+          test "$(git hash-object public/arl-assets/icons/icon-lixeira.png)" = '82ce86e3af86d81c745d2361807348d7cdb6bdd0'
+          test "$(git hash-object public/arl-assets/icons/icon-visualizar.png)" = '3dbf24d0b861321dbc9b5e5d4acc9d701848736c'
+
+      - name: Commitar somente os ícones validados
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/arl-assets/icons/icon-editar.png public/arl-assets/icons/icon-lixeira.png public/arl-assets/icons/icon-visualizar.png
+          git rm icones-faltantes-github.zip
+          git commit -m 'chore(assets): adiciona três ícones oficiais validados'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
