@@ -40,12 +40,12 @@ class ServiceOrderMaintenanceController extends Controller
 
         abort_if($data === [], 422, 'Informe ao menos uma alteração para a OS.');
 
-        $protectedAfterCompletion = ['client_id', 'equipment_description', 'final_report', 'checklist', 'items'];
+        $protectedAfterCompletion = ['client_id', 'final_report', 'checklist', 'items'];
         $changesProtectedAfterCompletion = array_intersect_key($data, array_flip($protectedAfterCompletion)) !== [];
         abort_if(
             ($order->archived || $order->status === 'completed') && $changesProtectedAfterCompletion,
             422,
-            'Em OS finalizada ou paga, apenas atendimento e problema relatado podem ser corrigidos administrativamente.'
+            'Em OS finalizada ou paga, apenas atendimento, problema relatado e equipamento podem ser corrigidos administrativamente.'
         );
 
         $newClient = array_key_exists('client_id', $data)

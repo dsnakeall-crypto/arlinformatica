@@ -118,7 +118,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved }: Props)
 
   const save = async () => {
     if (!problem.trim()) { setError('Informe o problema relatado.'); return; }
-    if (!administrativeOnly && equipmentChanged && !equipment.trim()) { setError('Informe Equipamento / Modelo / Acessórios.'); return; }
+    if (equipmentChanged && !equipment.trim()) { setError('Informe Equipamento / Modelo / Acessórios.'); return; }
 
     setBusy(true);
     setError('');
@@ -127,10 +127,10 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved }: Props)
         attendance_type: attendance,
         reported_problem: problem.trim(),
       };
+      if (equipmentChanged) payload.equipment_description = equipment.trim();
 
       if (!administrativeOnly) {
         if (clientChanged) payload.client_id = Number(clientId);
-        if (equipmentChanged) payload.equipment_description = equipment.trim();
         payload.checklist = templates
           .filter((row) => checks[Number(row.id)]?.selected)
           .map((row) => ({ template_id: Number(row.id), note: checks[Number(row.id)]?.note.trim() || null }));
@@ -151,7 +151,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved }: Props)
 
   return <div className="modal"><section className="modal-card arl-od-card" role="dialog" aria-modal="true" aria-label={`Editar OS #${order.number}`}>
     <h2>Editar OS #{order.number}</h2>
-    <p>{administrativeOnly ? 'Correção administrativa: o fechamento, valores, cliente, equipamento, checklist e serviços permanecem preservados.' : 'Cliente, equipamento, atendimento, relato, checklist e serviços são salvos juntos nesta OS.'}</p>
+    <p>{administrativeOnly ? 'Correção administrativa: atendimento, problema relatado e equipamento podem ser corrigidos. Fechamento, valores, cliente, laudo final, checklist e serviços permanecem preservados.' : 'Cliente, equipamento, atendimento, relato, checklist e serviços são salvos juntos nesta OS.'}</p>
 
     {!administrativeOnly && <>
       <label>Cliente<select aria-label="Cliente da OS" value={clientId} onChange={(event) => setClientId(event.target.value)}>
@@ -159,10 +159,10 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved }: Props)
         {clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
       </select></label>
       {termIssued && clientChanged && <div className="notice" role="alert">Atenção: o Termo de Recebimento já emitido permanece com o cliente {order.client?.name}. A troca será registrada na OS e na auditoria, sem reescrever o documento assinado.</div>}
-
-      <label>Equipamento / Modelo / Acessórios<textarea aria-label="Equipamento / Modelo / Acessórios" maxLength={500} value={equipment} onChange={(event) => setEquipment(event.target.value)}/></label>
-      {termIssued && equipmentChanged && <div className="notice">O Termo de Recebimento já emitido mantém a descrição anterior do equipamento.</div>}
     </>}
+
+    <label>Equipamento / Modelo / Acessórios<textarea aria-label="Equipamento / Modelo / Acessórios" maxLength={500} value={equipment} onChange={(event) => setEquipment(event.target.value)}/></label>
+    {termIssued && equipmentChanged && <div className="notice">O Termo de Recebimento já emitido mantém a descrição anterior do equipamento.</div>}
 
     <label>Atendimento<select aria-label="Atendimento" value={attendance} onChange={(event) => setAttendance(event.target.value)}><option value="bench">Bancada</option><option value="external">Externo</option></select></label>
     <label>Problema relatado<textarea aria-label="Problema relatado" value={problem} onChange={(event) => setProblem(event.target.value)}/></label>

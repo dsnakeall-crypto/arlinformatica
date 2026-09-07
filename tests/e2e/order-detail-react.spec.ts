@@ -66,7 +66,7 @@ test('Ver OS React possui uma única raiz e blocos funcionais sem duplicação l
   });
 });
 
-test('OS finalizada permite só correção administrativa e preserva campos históricos explicitamente', async ({ page }) => {
+test('OS finalizada/paga permite equipamento, atendimento e relato e preserva campos históricos explicitamente', async ({ page }) => {
   const { clientName, order } = await createActiveOrder(page, 2);
   const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
     result: 'no_fault',
@@ -84,17 +84,18 @@ test('OS finalizada permite só correção administrativa e preserva campos hist
   const dialog = page.getByRole('dialog', { name: `Editar OS #${order.number}` });
   await expect(dialog, 'Contrato imutabilidade: Editar OS finalizada deveria abrir o editor administrativo').toBeVisible();
   await expect(
-    dialog.getByText(/fechamento, valores, cliente, equipamento, checklist e serviços permanecem preservados/i),
+    dialog.getByText(/fechamento, valores, cliente, laudo final, checklist e serviços permanecem preservados/i),
     'Contrato imutabilidade: aviso explícito de preservação histórica desapareceu',
   ).toBeVisible();
 
+  await expect(dialog.getByLabel('Equipamento / Modelo / Acessórios'), 'Contrato administrativo: equipamento deve permanecer corrigível').toBeVisible();
+  await expect(dialog.getByLabel('Equipamento / Modelo / Acessórios'), 'Contrato administrativo: equipamento deve permanecer habilitado').toBeEnabled();
   await expect(dialog.getByLabel('Atendimento'), 'Contrato administrativo: attendance_type deve permanecer corrigível').toBeVisible();
   await expect(dialog.getByLabel('Atendimento'), 'Contrato administrativo: attendance_type deve permanecer habilitado').toBeEnabled();
   await expect(dialog.getByLabel('Problema relatado'), 'Contrato administrativo: reported_problem deve permanecer corrigível').toBeVisible();
   await expect(dialog.getByLabel('Problema relatado'), 'Contrato administrativo: reported_problem deve permanecer habilitado').toBeEnabled();
 
   await expect(dialog.getByLabel('Cliente da OS'), 'Contrato protegido: client_id não pode ser exposto para edição após finalização').toHaveCount(0);
-  await expect(dialog.getByLabel('Equipamento / Modelo / Acessórios'), 'Contrato protegido: equipamento não pode ser exposto para edição após finalização').toHaveCount(0);
   await expect(dialog.getByRole('heading', { name: 'Checklist', exact: true }), 'Contrato protegido: checklist não pode ser exposto para edição após finalização').toHaveCount(0);
   await expect(dialog.getByLabel('Serviço para adicionar no editor'), 'Contrato protegido: itens/serviços não podem ser expostos para edição após finalização').toHaveCount(0);
   await expect(dialog.getByText('Laudo Final', { exact: true }), 'Contrato protegido: laudo final não pode ser exposto para edição após finalização').toHaveCount(0);
@@ -102,15 +103,15 @@ test('OS finalizada permite só correção administrativa e preserva campos hist
   const protectedAttempts = [
     ['client_id', { client_id: order.client_id }],
     ['items', { items: [] }],
-    ['equipment_description', { equipment_description: 'Equipamento pós-fechamento indevido' }],
     ['final_report', { final_report: 'Laudo pós-fechamento indevido' }],
     ['checklist', { checklist: [] }],
   ] as const;
   for (const [field, payload] of protectedAttempts) {
     const response = await api(page, `/orders/${order.id}`, 'PATCH', payload);
-    expect(response.status, `Contrato protegido: ${field} foi aceito após finalização; body=${JSON.stringify(response.body)}`).toBe(422);
+    expect(response.status, `Contrato protegido em Finalizado: ${field} foi aceito; body=${JSON.stringify(response.body)}`).toBe(422);
   }
 
+  await dialog.getByLabel('Equipamento / Modelo / Acessórios').fill('Equipamento administrativo corrigido após finalização');
   await dialog.getByLabel('Atendimento').selectOption('external');
   await dialog.getByLabel('Problema relatado').fill('Problema administrativo corrigido após finalização');
   const saveResponse = page.waitForResponse((response) =>
@@ -118,16 +119,37 @@ test('OS finalizada permite só correção administrativa e preserva campos hist
   );
   await dialog.getByRole('button', { name: 'Salvar alterações' }).click();
   const saved = await saveResponse;
-  expect(saved.status(), 'Contrato administrativo: PATCH permitido de atendimento/problema falhou').toBe(200);
+  expect(saved.status(), 'Contrato administrativo: PATCH permitido de equipamento/atendimento/problema falhou').toBe(200);
 
   const persisted = await api(page, `/orders/${order.id}`);
   expect(persisted.status).toBe(200);
+  expect(persisted.body?.equipment_description, 'Contrato administrativo: equipamento corrigido não persistiu').toBe('Equipamento administrativo corrigido após finalização');
   expect(persisted.body?.attendance_type, 'Contrato administrativo: attendance_type corrigido não persistiu').toBe('external');
   expect(persisted.body?.reported_problem, 'Contrato administrativo: reported_problem corrigido não persistiu').toBe('Problema administrativo corrigido após finalização');
   expect(Number(persisted.body?.client_id), 'Contrato protegido: client_id mudou indevidamente').toBe(Number(order.client_id));
-  expect(persisted.body?.equipment_description ?? null, 'Contrato protegido: equipamento mudou indevidamente').toBe(order.equipment_description ?? null);
   expect(persisted.body?.final_report ?? null, 'Contrato protegido: laudo final mudou indevidamente').toBe(order.final_report ?? null);
   expect(persisted.body?.checklists ?? [], 'Contrato protegido: checklist mudou indevidamente').toEqual([]);
+
+  const paid = await api(page, `/orders/${order.id}/status`, 'PATCH', { status: 'paid' });
+  expect(paid.status, `Contrato Pago: não foi possível arquivar OS de total zero; body=${JSON.stringify(paid.body)}`).toBe(200);
+
+  const paidEquipment = await api(page, `/orders/${order.id}`, 'PATCH', {
+    equipment_description: 'Equipamento administrativo corrigido após pagamento',
+  });
+  expect(paidEquipment.status, `Contrato Pago: equipamento deveria ser corrigível; body=${JSON.stringify(paidEquipment.body)}`).toBe(200);
+
+  for (const [field, payload] of protectedAttempts) {
+    const response = await api(page, `/orders/${order.id}`, 'PATCH', payload);
+    expect(response.status, `Contrato protegido em Pago: ${field} foi aceito; body=${JSON.stringify(response.body)}`).toBe(422);
+  }
+
+  const paidPersisted = await api(page, `/orders/${order.id}`);
+  expect(paidPersisted.status).toBe(200);
+  expect(paidPersisted.body?.display_status, 'Contrato Pago: OS deveria permanecer arquivada').toBe('paid');
+  expect(paidPersisted.body?.equipment_description, 'Contrato Pago: correção de equipamento não persistiu').toBe('Equipamento administrativo corrigido após pagamento');
+  expect(Number(paidPersisted.body?.client_id), 'Contrato protegido em Pago: client_id mudou indevidamente').toBe(Number(order.client_id));
+  expect(paidPersisted.body?.final_report ?? null, 'Contrato protegido em Pago: laudo final mudou indevidamente').toBe(order.final_report ?? null);
+  expect(paidPersisted.body?.checklists ?? [], 'Contrato protegido em Pago: checklist mudou indevidamente').toEqual([]);
 });
 
 test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PATCH nem finaliza', async ({ page }) => {
