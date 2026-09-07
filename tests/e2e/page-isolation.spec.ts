@@ -63,7 +63,7 @@ const groups = [
     destinations: [
       ['Financeiro', 'Financeiro'],
       ['Pós-Venda', 'Pós-Venda'],
-      ['Serviços', /Serviços e Produtos|Novo serviço ou produto/],
+      ['Serviços', 'Serviços e Produtos'],
     ],
   },
   {
@@ -84,9 +84,7 @@ for (const group of groups) {
     for (const [menu, heading] of group.destinations) {
       await openOrder(page, orderNumber);
       await sidebar.getByRole('button', { name: menu, exact: true }).click();
-      const destination = menu === 'Serviços'
-        ? page.locator('main .admin-list h2').filter({ hasText: heading })
-        : page.getByRole('heading', { name: heading });
+      const destination = page.getByRole('heading', { name: heading });
       await expect(destination).toBeVisible();
       await assertOrderArtifactsGone(page, orderNumber);
     }
