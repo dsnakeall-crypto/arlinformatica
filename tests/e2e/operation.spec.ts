@@ -108,7 +108,9 @@ test.describe.serial('fluxo operacional principal', () => {
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
     const statusSelect = page.locator('.status-picker select');
-    await expect(statusSelect.locator('option[value="in_service"]')).toHaveCount(0);
+    await expect(statusSelect.locator('option[value="in_service"]'), 'Fluxo operacional deve manter Em Serviço como opção válida').toHaveText('Em Serviço');
+    await statusSelect.selectOption('in_service');
+    await expect(page.getByText(/Em Serviço ·/).last()).toBeVisible();
     await statusSelect.selectOption('waiting_part');
     await expect(page.getByText(/Aguardando ·/).last()).toBeVisible();
     await statusSelect.selectOption('analysis');
