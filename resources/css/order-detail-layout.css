@@ -1,5 +1,7 @@
 [data-arl-order-detail-react="1"].arl-order-detail-page{display:grid;gap:14px;min-width:0}
 [data-arl-order-detail-react="1"] .arl-order-sticky-header{position:sticky;top:0;z-index:45;display:grid;gap:10px;padding:13px 15px;border:1px solid #e8e6e7;border-radius:var(--arl-radius);background:rgba(255,255,255,.97);box-shadow:0 8px 24px rgba(24,19,20,.075);backdrop-filter:blur(10px)}
+[data-arl-order-detail-react="1"] .modal{z-index:120!important}
+[data-arl-order-detail-react="1"] .arl-order-workflow>.arl-old-report{display:block!important}
 [data-arl-order-detail-react="1"] .arl-order-header-main{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:13px}
 [data-arl-order-detail-react="1"] .arl-order-back{min-height:38px;border:1px solid #e0dcdf;border-radius:10px;background:#fff;padding:7px 11px;color:var(--arl-ink);font-weight:800;cursor:pointer}
 [data-arl-order-detail-react="1"] .arl-order-header-identity{display:grid;gap:2px;min-width:0}
