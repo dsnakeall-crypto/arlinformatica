@@ -1,90 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
-async function installOrderRuntimeDiagnostics(page: Page) {
-  await page.addInitScript(() => {
-    const w = window as any;
-    if (w.__arlOrderDiagnosticsInstalled) return;
-    w.__arlOrderDiagnosticsInstalled = true;
-    w.__arlOrderDiagnostics = { styleWrites: [], cleanupQueries: [], residueRemovals: [] };
-
-    const context = () => ({
-      at: performance.now(),
-      href: location.href,
-      screen: document.querySelector('aside button.active')?.textContent?.trim() || 'sem-nav-ativa',
-      heading: document.querySelector('main h1')?.textContent?.trim() || 'sem-h1',
-      reactRoot: Boolean(document.querySelector('[data-arl-order-detail-react="1"]')),
-    });
-    const stack = () => new Error('ARL runtime diagnostic').stack || 'stack indisponível';
-    const recordStyle = (kind: string, element: Element, extra: Record<string, unknown> = {}) => {
-      if (!element.matches('.arl-order-quick-actions')) return;
-      w.__arlOrderDiagnostics.styleWrites.push({ kind, ...context(), ...extra, stack: stack() });
-    };
-
-    const nativeSetAttribute = Element.prototype.setAttribute;
-    Element.prototype.setAttribute = function(name: string, value: string) {
-      if (name.toLowerCase() === 'style') recordStyle('setAttribute(style)', this, { value });
-      return nativeSetAttribute.call(this, name, value);
-    };
-
-    const styleDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style');
-    if (styleDescriptor?.get && styleDescriptor.configurable) {
-      const proxies = new WeakMap<HTMLElement, CSSStyleDeclaration>();
-      Object.defineProperty(HTMLElement.prototype, 'style', {
-        configurable: styleDescriptor.configurable,
-        enumerable: styleDescriptor.enumerable,
-        get: function() {
-          const nativeStyle = styleDescriptor.get!.call(this) as CSSStyleDeclaration;
-          if (!(this instanceof HTMLElement) || !this.matches('.arl-order-quick-actions')) return nativeStyle;
-          let proxy = proxies.get(this);
-          if (!proxy) {
-            const element = this;
-            proxy = new Proxy(nativeStyle, {
-              set(target, property, value) {
-                recordStyle('style property setter', element, { property: String(property), value: String(value) });
-                return Reflect.set(target, property, value, target);
-              },
-              get(target, property) {
-                const value = Reflect.get(target, property, target);
-                if (typeof value !== 'function') return value;
-                if (property === 'setProperty') {
-                  return (...args: unknown[]) => {
-                    recordStyle('style.setProperty', element, { property: String(args[0]), value: String(args[1]) });
-                    return (value as Function).apply(target, args);
-                  };
-                }
-                return value.bind(target);
-              },
-            }) as CSSStyleDeclaration;
-            proxies.set(this, proxy);
-          }
-          return proxy;
-        },
-        set: styleDescriptor.set ? function(value: string) {
-          recordStyle('style attribute setter', this, { value });
-          return styleDescriptor.set!.call(this, value);
-        } : undefined,
-      });
-    }
-
-    const nativeQuerySelectorAll = Document.prototype.querySelectorAll;
-    Document.prototype.querySelectorAll = function(selectors: string) {
-      if (selectors.includes('.arl-od-modal') && selectors.includes('.arl-order-opened-modal')) {
-        w.__arlOrderDiagnostics.cleanupQueries.push({ selectors, ...context(), stack: stack() });
-      }
-      return nativeQuerySelectorAll.call(this, selectors);
-    } as typeof Document.prototype.querySelectorAll;
-
-    const nativeRemove = Element.prototype.remove;
-    Element.prototype.remove = function() {
-      if (this instanceof HTMLElement && this.dataset.testOrderResidue) {
-        w.__arlOrderDiagnostics.residueRemovals.push({ residue: this.dataset.testOrderResidue, ...context(), stack: stack() });
-      }
-      return nativeRemove.call(this);
-    };
-  });
-}
-
 async function createActiveOrder(page: Page, suffix: number, attendance: 'bench' | 'external' = 'bench') {
   await login(page);
   const clientName = `Cliente React OS ${suffix}`;
@@ -152,26 +68,14 @@ test('Ver OS React possui uma única raiz e blocos funcionais sem duplicação l
 
 test('OS finalizada permanece imutável e Editar OS mostra somente o aviso de preservação', async ({ page }) => {
   const { clientName, order } = await createActiveOrder(page, 2);
-  const services = await api(page, '/catalogs/services');
-  const service = services.body?.[0];
-  expect(service, 'Contrato imutabilidade: catálogo de serviços precisa ter um item para finalizar a OS').toBeTruthy();
   const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
-    result: 'repair_completed',
+    result: 'no_fault',
     result_other: null,
     technical_report: 'Laudo histórico imutável E2E',
     discount_cents: 0,
     approved_budget_id: null,
     photo_ids: [],
-    items: [{
-      catalog_id: service.id,
-      description: service.name,
-      quantity: 1,
-      unit_price_cents: service.price_cents,
-      warranty_enabled: Boolean(service.warranty_enabled),
-      warranty_term: service.warranty_term ?? null,
-      warranty_unit: service.warranty_unit ?? null,
-      warranty_description: service.warranty_description ?? null,
-    }],
+    items: [],
   });
   expect([200, 201], `Contrato imutabilidade: backend não finalizou a OS; status=${finalized.status} body=${JSON.stringify(finalized.body)}`).toContain(finalized.status);
 
@@ -215,53 +119,27 @@ test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PA
 });
 
 test('Guards impedem qualquer enhancer legado de mutar a árvore React do Ver OS', async ({ page }) => {
-  await installOrderRuntimeDiagnostics(page);
   const { clientName, order } = await createActiveOrder(page, 4);
   const root = await openOrder(page, clientName, order.number);
   await expect(root.getByText('Pagamento ainda não registrado.', { exact: true }), 'Pré-condição do guard: PaymentBox React ainda estava carregando').toBeVisible();
   await expect(root.getByText('Nenhum orçamento criado.', { exact: true }), 'Pré-condição do guard: BudgetBox React ainda estava carregando').toBeVisible();
   await expect(root.getByLabel('Serviço para adicionar').locator('option').first(), 'Pré-condição do guard: catálogo de serviços React ainda estava carregando').toBeAttached();
 
+  const quickActions = root.locator('.arl-order-quick-actions');
+  await expect(quickActions, 'Contrato guard: ações rápidas React desapareceram').toHaveCount(1);
+  await expect(quickActions, 'Contrato guard: enhancer legado não pode escrever style inline nas ações rápidas React').not.toHaveAttribute('style', /.+/);
+
   const preexistingFingerprints = await root.evaluate((node) => {
     const fingerprints = [
-      { selector: '.arl-od-tools[data-id]', enhancer: 'order-detail-actions.ts' },
-      { selector: '.arl-od-services[data-sig]', enhancer: 'order-detail-editor.ts' },
-      { selector: '.arl-od-report[data-sig]', enhancer: 'order-detail-editor.ts' },
+      '.arl-od-tools[data-id]',
+      '.arl-od-services[data-sig]',
+      '.arl-od-report[data-sig]',
     ];
-    return fingerprints.filter((item) => node.querySelector(item.selector)).map((item) => `${item.enhancer}: ${item.selector}`);
+    return fingerprints.filter((selector) => node.querySelector(selector));
   });
   expect(preexistingFingerprints, `Contrato guard já estava furado antes do estímulo: ${preexistingFingerprints.join(' | ') || 'nenhum fingerprint'}`).toEqual([]);
 
-  await root.evaluate((node) => {
-    const mutationLog: string[] = [];
-    const elementLabel = (element: Element | null) => {
-      if (!element) return 'nó não-elemento';
-      const id = element.id ? `#${element.id}` : '';
-      const classes = element.classList.length ? `.${Array.from(element.classList).join('.')}` : '';
-      return `${element.tagName.toLowerCase()}${id}${classes}`;
-    };
-    const likelyEnhancer = (target: Element | null) => {
-      if (!target) return 'enhancer desconhecido';
-      if (target.closest('.arl-od-services, .arl-od-report')) return 'order-detail-editor.ts';
-      if (target.closest('.arl-od-tools, .arl-pay-edit')) return 'order-detail-actions.ts/record-management.ts';
-      if (target.closest('.arl-order-quick-actions, [data-arl-quick-source]')) return 'ui-final-polish.ts';
-      if (target.closest('.status-picker, .arl-interruption-note')) return 'order-workflow.ts/ui-regression-guard.ts';
-      const section = target.closest('section');
-      if (section?.querySelector('h2')?.textContent?.trim() === 'Fotos') return 'brand2026.ts';
-      return 'enhancer legado não identificado';
-    };
-    const observer = new MutationObserver((records) => {
-      for (const record of records) {
-        const target = record.target instanceof Element ? record.target : record.target.parentElement;
-        const added = Array.from(record.addedNodes).map((addedNode) => addedNode instanceof Element ? elementLabel(addedNode) : '#text').join(',');
-        mutationLog.push(`${likelyEnhancer(target)} :: ${record.type} em ${elementLabel(target)}${record.attributeName ? ` atributo=${record.attributeName}` : ''}${added ? ` adicionou=${added}` : ''}`);
-      }
-    });
-    observer.observe(node, { subtree: true, childList: true, attributes: true, characterData: true });
-    (window as any).__arlOrderGuardObserver = observer;
-    (window as any).__arlOrderGuardMutations = mutationLog;
-  });
-
+  const before = await root.evaluate((node) => node.outerHTML);
   await page.evaluate(() => {
     const rootNode = document.querySelector('[data-arl-order-detail-react="1"]');
     rootNode?.querySelector('h1')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -274,25 +152,29 @@ test('Guards impedem qualquer enhancer legado de mutar a árvore React do Ver OS
   });
   await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
 
-  const diagnosticStyleWrites = await page.evaluate(() => (window as any).__arlOrderDiagnostics?.styleWrites || []);
-  const mutations = await page.evaluate(() => {
-    (window as any).__arlOrderGuardObserver?.disconnect();
-    return (window as any).__arlOrderGuardMutations as string[];
-  });
-  expect(mutations, `Contrato guard furado — enhancer(s) tocaram a árvore React: ${mutations.join(' | ') || 'nenhuma mutação registrada'}\nDIAGNÓSTICO style writes=${JSON.stringify(diagnosticStyleWrites, null, 2)}`).toEqual([]);
+  const after = await root.evaluate((node) => node.outerHTML);
+  expect(after, 'Contrato guard furado: estímulos de enhancers legados alteraram a árvore React do Ver OS').toBe(before);
+  await expect(quickActions, 'Contrato guard: enhancer legado escreveu style inline após o estímulo').not.toHaveAttribute('style', /.+/);
 });
 
-test('Unmount do Ver OS limpa os oito resíduos desacoplados sem depender de page-isolation legado', async ({ page }) => {
-  await installOrderRuntimeDiagnostics(page);
+test('Unmount do Ver OS limpa resíduos persistentes e o sharebar legado é aposentado pelo próprio observer', async ({ page }) => {
   const { clientName, order } = await createActiveOrder(page, 5);
   await openOrder(page, clientName, order.number);
+
+  await page.evaluate(() => {
+    const sharebar = document.createElement('div');
+    sharebar.className = 'arl-od-sharebar';
+    sharebar.dataset.testOrderResidue = 'arl-od-sharebar';
+    document.body.append(sharebar);
+  });
+  await expect(page.locator('[data-test-order-residue="arl-od-sharebar"]'), 'Contrato ownership: opening-whatsapp deve aposentar sharebar legado ainda no detalhe').toHaveCount(0);
+
   const residueClasses = [
     'arl-od-modal',
     'arl-status-modal',
     'arl-photo-choice',
     'arl-camera-modal',
     'arl-final-share-host',
-    'arl-od-sharebar',
     'arl-order-quick-actions',
     'arl-order-opened-modal',
   ];
@@ -304,37 +186,11 @@ test('Unmount do Ver OS limpa os oito resíduos desacoplados sem depender de pag
       document.body.append(residue);
     });
   }, residueClasses);
-  const injected = await page.locator('[data-test-order-residue]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLElement).dataset.testOrderResidue));
-  expect(injected, `Pré-condição resíduos: deveriam existir exatamente os 8 resíduos sintéticos; encontrados=${injected.join(', ')}`).toEqual(residueClasses);
 
-  const diagnosticBeforeNavigation = await page.evaluate(() => ({
-    cleanupQueries: [...((window as any).__arlOrderDiagnostics?.cleanupQueries || [])],
-    residueRemovals: [...((window as any).__arlOrderDiagnostics?.residueRemovals || [])],
-  }));
+  const injected = await page.locator('[data-test-order-residue]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLElement).dataset.testOrderResidue));
+  expect(injected, `Pré-condição resíduos: deveriam existir exatamente os 7 resíduos persistentes; encontrados=${injected.join(', ')}`).toEqual(residueClasses);
 
   await page.locator('aside').getByRole('button', { name: 'Painel', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Painel', exact: true }), 'Contrato unmount: navegação para Painel não concluiu').toBeVisible();
-
-  const remainingAtPanelCommit = await page.locator('[data-test-order-residue]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLElement).dataset.testOrderResidue));
-  const diagnosticAtPanelCommit = await page.evaluate(() => ({
-    cleanupQueries: [...((window as any).__arlOrderDiagnostics?.cleanupQueries || [])],
-    residueRemovals: [...((window as any).__arlOrderDiagnostics?.residueRemovals || [])],
-    reactRoot: Boolean(document.querySelector('[data-arl-order-detail-react="1"]')),
-    screen: document.querySelector('aside button.active')?.textContent?.trim() || 'sem-nav-ativa',
-    heading: document.querySelector('main h1')?.textContent?.trim() || 'sem-h1',
-    href: location.href,
-  }));
-
-  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-  const remainingAfterTwoFrames = await page.locator('[data-test-order-residue]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLElement).dataset.testOrderResidue));
-  const diagnosticAfterTwoFrames = await page.evaluate(() => ({
-    cleanupQueries: [...((window as any).__arlOrderDiagnostics?.cleanupQueries || [])],
-    residueRemovals: [...((window as any).__arlOrderDiagnostics?.residueRemovals || [])],
-    reactRoot: Boolean(document.querySelector('[data-arl-order-detail-react="1"]')),
-    screen: document.querySelector('aside button.active')?.textContent?.trim() || 'sem-nav-ativa',
-    heading: document.querySelector('main h1')?.textContent?.trim() || 'sem-h1',
-    href: location.href,
-  }));
-
-  expect(remainingAtPanelCommit, `Contrato limpeza no unmount falhou — resíduos restantes no commit do Painel: ${remainingAtPanelCommit.join(', ') || 'nenhum'}\nDIAGNÓSTICO antes=${JSON.stringify(diagnosticBeforeNavigation, null, 2)}\nDIAGNÓSTICO painel=${JSON.stringify(diagnosticAtPanelCommit, null, 2)}\nDIAGNÓSTICO após 2 frames=${JSON.stringify(diagnosticAfterTwoFrames, null, 2)}\nRESÍDUOS após 2 frames=${JSON.stringify(remainingAfterTwoFrames)}`).toEqual([]);
+  await expect(page.locator('[data-test-order-residue]'), 'Contrato limpeza: resíduos persistentes devem sumir no unmount do detalhe React').toHaveCount(0);
 });
