@@ -60,7 +60,7 @@ test('Histórico de alterações exibe auditoria em linguagem legível', async (
   const root = page.locator('[data-arl-unified-order-editor-host="1"]');
   await root.getByText('Histórico de alterações', { exact: true }).click();
   await expect(root.getByText(`Cliente alterado de ${originalName} para ${replacementName}`, { exact: true })).toBeVisible();
-  await expect(root.getByText('Equipamento alterado de não informado para Notebook histórico + carregador', { exact: true })).toBeVisible();
+  await expect(root.getByText(`Equipamento alterado de ${equipmentType.name} para Notebook histórico + carregador`, { exact: true })).toBeVisible();
   await expect(root.getByText('service_order.edited', { exact: true })).toHaveCount(0);
   await expect(root.getByText('client_id', { exact: true })).toHaveCount(0);
   await expect(root.getByText('equipment_description', { exact: true })).toHaveCount(0);
