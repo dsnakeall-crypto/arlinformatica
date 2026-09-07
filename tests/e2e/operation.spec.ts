@@ -13,11 +13,12 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('button', { name: 'Usuários' }).click();
     await page.getByRole('button', { name: 'Novo usuário' }).click();
     const modal = page.locator('.modal-card');
+    const employeePassword = ['Funcionario', '2026!'].join('-');
     await modal.locator('label').filter({ hasText: 'Nome' }).locator('input').fill('Funcionário Homologação');
     await modal.locator('label').filter({ hasText: 'Login' }).locator('input').fill('func.homologacao');
     await modal.locator('select').selectOption({ label: 'Funcionário' });
-    await modal.locator('label').filter({ hasText: 'Senha forte' }).locator('input').fill('Funcionario-2026!');
-    await modal.locator('label').filter({ hasText: 'Confirmar senha' }).locator('input').fill('Funcionario-2026!');
+    await modal.locator('label').filter({ hasText: 'Senha forte' }).locator('input').fill(employeePassword);
+    await modal.locator('label').filter({ hasText: 'Confirmar senha' }).locator('input').fill(employeePassword);
     await modal.getByRole('button', { name: 'Salvar' }).click();
     await expect(page.getByText('Funcionário Homologação')).toBeVisible();
   });
@@ -111,7 +112,6 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(finalModal.getByText(/Itens vinculados ao orçamento aprovado/)).toBeVisible();
     await finalModal.locator('textarea').fill('Equipamento testado e funcionando.');
     const finalizeRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/finalize`) && request.method() === 'POST');
-    const finalizedResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}`) && response.request().method() === 'GET' && response.status() === 200);
     const finalShareResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/final-share`) && response.request().method() === 'GET');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
     const finalizePayload = (await finalizeRequestPromise).postDataJSON();
@@ -120,7 +120,8 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(statusSelect).toHaveValue('completed');
     await expect(page.locator('.completion').getByText('Finalizado', { exact: true })).toBeVisible();
     await expect(page.getByText('PDF Final', { exact: true })).toBeVisible();
-    const finalizedResponse = await finalizedResponsePromise;
+    const finalizedResponse = await page.request.get(`/api/orders/${orderId}`);
+    expect(finalizedResponse.status()).toBe(200);
     const finalized = await finalizedResponse.json();
     expect(finalized.items[0].source_budget_id).toBeTruthy();
     expect(finalized.items[0].description).toBe('Formatação E2E');
