@@ -83,38 +83,38 @@ test('Financeiro abre sem depender do relatório mensal e carrega mensal sob dem
 test('Serviços e Produtos cria e edita tipo, preço e garantia adicional', async ({ page }) => {
   await login(page);
   await page.locator('aside').getByRole('button', { name: 'Serviços', exact: true }).click();
-  const heading = page.getByRole('heading', { name: 'Serviços e Produtos' });
-  await expect(heading).toBeVisible();
-  const card = page.locator('section.form-card.admin-list').filter({ has: heading });
+  await expect(page.getByRole('heading', { name: 'Serviços e Produtos', exact: true })).toBeVisible();
+  const catalog = page.getByTestId('services-page');
+  await expect(catalog).toBeVisible();
 
-  await card.getByLabel('Nome / descrição').fill('Garantia E2E');
-  await card.getByLabel('Valor em R$').fill('89,90');
-  await card.getByLabel('Tipo').selectOption('product');
-  await card.getByRole('checkbox', { name: 'Garantia adicional' }).check();
-  await card.getByLabel('Duração da garantia').fill('6');
-  await card.getByLabel('Unidade da garantia').selectOption('months');
+  await catalog.getByLabel('Nome ou descrição do serviço').fill('Garantia E2E');
+  await catalog.getByLabel('Valor em R$').fill('89,90');
+  await catalog.getByLabel('Tipo do item').selectOption('product');
+  await catalog.getByRole('checkbox', { name: /Garantia adicional/ }).check();
+  await catalog.getByLabel('Duração da garantia').fill('6');
+  await catalog.getByLabel('Unidade da garantia').selectOption('months');
   const createResponsePromise = page.waitForResponse((response) => response.url().endsWith('/api/catalogs/services') && response.request().method() === 'POST');
-  await card.getByRole('button', { name: 'Adicionar' }).click();
+  await catalog.getByRole('button', { name: 'Adicionar', exact: true }).click();
   expect((await createResponsePromise).status()).toBe(201);
 
-  const row = page.locator('section.form-card.admin-list article').filter({ hasText: 'Garantia E2E' });
+  const row = page.locator('.services-row').filter({ hasText: 'Garantia E2E' });
   await expect(row).toBeVisible();
   await expect(row).toContainText('Produto');
   await expect(row).toContainText('Garantia 6 meses');
 
-  await row.getByRole('button', { name: 'Editar' }).click();
-  const modal = page.locator('.modal-card').filter({ hasText: 'Editar serviço/produto' });
+  await row.getByRole('button', { name: 'Editar', exact: true }).click();
+  const modal = page.getByRole('dialog', { name: 'Editar serviço ou produto' });
   await expect(modal).toBeVisible();
   await modal.getByLabel('Tipo').selectOption('service');
-  await modal.getByLabel('Valor em R$').fill('99,90');
-  await modal.getByLabel('Duração da garantia').fill('2');
-  await modal.getByLabel('Unidade da garantia').selectOption('years');
+  await modal.getByLabel('Valor (R$)').fill('99,90');
+  await modal.getByLabel('Duração').fill('2');
+  await modal.getByLabel('Unidade').selectOption('years');
   const updateResponsePromise = page.waitForResponse((response) => response.url().includes('/api/catalogs/services/') && response.request().method() === 'PATCH');
-  await modal.getByRole('button', { name: 'Salvar' }).click();
+  await modal.getByRole('button', { name: 'Salvar alterações', exact: true }).click();
   expect((await updateResponsePromise).status()).toBe(200);
 
   await expect(row).toContainText('Serviço');
-  await expect(row).toContainText('R$ 99.90');
+  await expect(row).toContainText('R$ 99,90');
   await expect(row).toContainText('Garantia 2 anos');
 });
 
