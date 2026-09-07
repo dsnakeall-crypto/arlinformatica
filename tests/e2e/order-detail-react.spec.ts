@@ -47,6 +47,7 @@ async function openOrder(page: Page, clientName: string, orderNumber: string) {
 test('Ver OS React possui uma única raiz e blocos funcionais sem duplicação legada', async ({ page }) => {
   const { clientName, order } = await createActiveOrder(page, 1);
   const root = await openOrder(page, clientName, order.number);
+  await expect(root.getByRole('heading', { name: 'Serviços / Produtos', exact: true })).toBeVisible();
 
   const cardinality = await root.evaluate((node) => ({
     detailGrid: node.querySelectorAll('.detail-grid').length,
@@ -97,7 +98,7 @@ test('OS finalizada/paga permite equipamento, atendimento e relato e preserva ca
 
   await expect(dialog.getByLabel('Cliente da OS'), 'Contrato protegido: client_id não pode ser exposto para edição após finalização').toHaveCount(0);
   await expect(dialog.getByRole('heading', { name: 'Checklist', exact: true }), 'Contrato protegido: checklist não pode ser exposto para edição após finalização').toHaveCount(0);
-  await expect(dialog.getByLabel('Serviço para adicionar no editor'), 'Contrato protegido: itens/serviços não podem ser expostos para edição após finalização').toHaveCount(0);
+  await expect(dialog.getByLabel('Pesquisar Serviço / Produto no editor'), 'Contrato protegido: itens/serviços não podem ser expostos para edição após finalização').toHaveCount(0);
   await expect(dialog.getByText('Laudo Final', { exact: true }), 'Contrato protegido: laudo final não pode ser exposto para edição após finalização').toHaveCount(0);
 
   const protectedAttempts = [
@@ -187,7 +188,13 @@ test('Guards impedem qualquer enhancer legado de mutar a árvore React do Ver OS
   const root = await openOrder(page, clientName, order.number);
   await expect(root.getByText('Pagamento ainda não registrado.', { exact: true }), 'Pré-condição do guard: PaymentBox React ainda estava carregando').toBeVisible();
   await expect(root.getByText('Nenhum orçamento criado.', { exact: true }), 'Pré-condição do guard: BudgetBox React ainda estava carregando').toBeVisible();
-  await expect(root.getByLabel('Serviço para adicionar').locator('option').first(), 'Pré-condição do guard: catálogo de serviços React ainda estava carregando').toBeAttached();
+  const services = await api(page, '/catalogs/services');
+  const service = services.body?.[0];
+  expect(service, 'Pré-condição do guard: catálogo ativo precisa ter ao menos um Serviço / Produto').toBeTruthy();
+  const search = root.getByLabel('Pesquisar Serviço / Produto');
+  await search.fill(service.name);
+  await expect(root.getByRole('button', { name: `Adicionar ${service.name}` }), 'Pré-condição do guard: busca por digitação não exibiu o item ativo').toBeVisible();
+  await search.fill('');
 
   const quickActions = root.locator('.arl-order-quick-actions');
   await expect(quickActions, 'Contrato guard: ações rápidas React desapareceram').toHaveCount(1);

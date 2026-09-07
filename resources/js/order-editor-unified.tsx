@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
 
 type Props = {
   orderId: number;
@@ -35,7 +36,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
   const [order, setOrder] = useState<any>();
   const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
-  const [catalog, setCatalog] = useState<any[]>([]);
+  const [catalog, setCatalog] = useState<ServiceProductCatalogItem[]>([]);
   const [termIssued, setTermIssued] = useState(false);
   const [clientId, setClientId] = useState('');
   const [equipment, setEquipment] = useState('');
@@ -43,7 +44,6 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
   const [problem, setProblem] = useState('');
   const [checks, setChecks] = useState<ChecklistState>({});
   const [items, setItems] = useState<ServiceLine[]>([]);
-  const [serviceId, setServiceId] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [dirty, setDirty] = useState(false);
@@ -84,7 +84,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
         setOrder(nextOrder);
         setClients(Array.isArray(clientPayload?.data) ? clientPayload.data : []);
         setTemplates(nextTemplates);
-        setCatalog(Array.isArray(serviceRows) ? serviceRows : []);
+        setCatalog(Array.isArray(serviceRows) ? serviceRows.filter((row: any) => row.active !== false) : []);
         setTermIssued(Array.isArray(documents) && documents.some((row: any) => row.type === 'term'));
         setClientId(String(nextOrder.client_id));
         setEquipment(nextOrder.equipment_description || '');
@@ -93,7 +93,6 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
         setChecks(nextChecks);
         setItems(nextItems);
         setDirty(false);
-        if (serviceRows?.[0]) setServiceId(String(serviceRows[0].id));
       } catch (reason: any) {
         if (active) setError(reason.message);
       }
@@ -115,9 +114,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     setChecks((current) => ({ ...current, [id]: { ...current[id], ...patch } }));
   };
 
-  const addService = () => {
-    const entry = catalog.find((row) => String(row.id) === serviceId);
-    if (!entry) return;
+  const addService = (entry: ServiceProductCatalogItem) => {
     markDirty();
     setItems((current) => {
       const found = current.find((row) => row.catalog_id === Number(entry.id));
@@ -196,8 +193,8 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
         </div>;
       }) : <span>Nenhuma opção para este equipamento.</span>}</div>
 
-      <h3>Serviços</h3>
-      <div className="arl-od-service-top"><select aria-label="Serviço para adicionar no editor" value={serviceId} onChange={(event) => setServiceId(event.target.value)}>{catalog.map((row) => <option key={row.id} value={row.id}>{row.name} — {money(row.price_cents)}</option>)}</select><button type="button" onClick={addService}>Adicionar serviço</button></div>
+      <h3>Serviços / Produtos</h3>
+      <ServiceProductSearch items={catalog} ariaLabel="Pesquisar Serviço / Produto no editor" onSelect={addService}/>
       <div className="arl-od-lines">{items.length ? items.map((row, index) => <div className="arl-od-line" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade no editor de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(event) => { markDirty(); setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: Math.max(1, Math.min(999, Number(event.target.value) || 1)) } : item)); }}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" aria-label={`Remover ${row.description} do editor`} onClick={() => { markDirty(); setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)); }}>×</button></div>) : <p>Nenhum serviço adicionado.</p>}</div>
       <div className="arl-od-foot"><span/><strong>Subtotal: {money(subtotal)}</strong></div>
     </>}

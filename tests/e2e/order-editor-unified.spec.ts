@@ -18,6 +18,9 @@ async function hasUnsavedGuard(page: Page) {
   });
 }
 
+const formattedMoney = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+const warrantyUnit = (unit: string | null) => unit === 'months' ? 'meses' : unit === 'years' ? 'anos' : 'dias';
+
 test('Editar OS usa um editor único para cliente, equipamento, atendimento, problema, checklist e serviços', async ({ page }) => {
   await login(page);
   const suffix = Date.now();
@@ -89,7 +92,20 @@ test('Editar OS usa um editor único para cliente, equipamento, atendimento, pro
   await expect(dialog.getByLabel('Atendimento')).toBeVisible();
   await expect(dialog.getByLabel('Problema relatado')).toBeVisible();
   await expect(dialog.getByText('Checklist', { exact: true })).toBeVisible();
-  await expect(dialog.getByText('Serviços', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Serviços / Produtos', { exact: true })).toBeVisible();
+
+  const serviceSearch = dialog.getByLabel('Pesquisar Serviço / Produto no editor');
+  await serviceSearch.fill(service.name);
+  const serviceResult = dialog.getByRole('button', { name: `Adicionar ${service.name}` });
+  await expect(serviceResult, 'Contrato busca: digitar o nome deve exibir o Serviço / Produto ativo').toBeVisible();
+  await expect(serviceResult).toContainText(service.name);
+  await expect(serviceResult).toContainText(formattedMoney(Number(service.price_cents)));
+  await expect(serviceResult).toContainText(service.category === 'product' ? 'Produto' : 'Serviço');
+  await expect(serviceResult).toContainText(service.warranty_enabled ? `Garantia ${service.warranty_term} ${warrantyUnit(service.warranty_unit)}` : 'Sem garantia');
+  await expect(serviceResult).toHaveAttribute('data-category', service.category === 'product' ? 'product' : 'service');
+  await expect(serviceResult.locator('svg'), 'Contrato visual: resultado deve exibir o ícone Wrench/Box').toHaveCount(1);
+  await serviceResult.click();
+  await expect(dialog.getByLabel(`Quantidade no editor de ${service.name}`), 'Contrato busca: selecionar item já presente deve incrementar a quantidade').toHaveValue('2');
 
   await dialog.getByLabel('Cliente da OS').selectOption(String(replacement.body.id));
   await expect(dialog.getByRole('alert')).toContainText(`Termo de Recebimento já emitido permanece com o cliente ${originalName}`);

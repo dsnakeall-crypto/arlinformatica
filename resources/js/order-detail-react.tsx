@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Camera, Pencil, Plus, Wallet, X } from 'lucide-react';
+import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
 
 type Props = { id: number; back: () => void; onEdit?: () => void; onDirtyChange?: (dirty: boolean) => void };
 type ApiError = Error & { errors?: Record<string, string[]> };
@@ -164,13 +165,12 @@ function InterruptionModal({ order, onClose, onSaved }: any) {
 }
 
 function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
-  const [catalog, setCatalog] = useState<any[]>([]);
+  const [catalog, setCatalog] = useState<ServiceProductCatalogItem[]>([]);
   const [items, setItems] = useState<any[]>(() => (order.items || []).filter((row: any) => !row.finalization_id && row.catalog_id).map((row: any) => ({ catalog_id: Number(row.catalog_id), description: row.description, quantity: Number(row.quantity), unit_price_cents: Number(row.unit_price_cents) })));
-  const [selected, setSelected] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [dirty, setDirty] = useState(false);
-  useEffect(() => { void api('/catalogs/services').then((rows) => { setCatalog(rows); if (!selected && rows[0]) setSelected(String(rows[0].id)); }); }, [order.id]);
+  useEffect(() => { void api('/catalogs/services').then((rows) => setCatalog(Array.isArray(rows) ? rows.filter((row: any) => row.active !== false) : [])); }, [order.id]);
   useEffect(() => {
     setItems((order.items || []).filter((row: any) => !row.finalization_id && row.catalog_id).map((row: any) => ({ catalog_id: Number(row.catalog_id), description: row.description, quantity: Number(row.quantity), unit_price_cents: Number(row.unit_price_cents) })));
     setDirty(false);
@@ -184,10 +184,9 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
     setDirty(true);
     onDirtyChange?.(true);
   };
-  const add = () => changeItems((current) => {
-    const entry = catalog.find((row) => String(row.id) === selected); if (!entry) return current;
-    const found = current.find((row) => row.catalog_id === entry.id);
-    return found ? current.map((row) => row.catalog_id === entry.id ? { ...row, quantity: Math.min(999, row.quantity + 1) } : row) : [...current, { catalog_id: entry.id, description: entry.name, quantity: 1, unit_price_cents: entry.price_cents }];
+  const add = (entry: ServiceProductCatalogItem) => changeItems((current) => {
+    const found = current.find((row) => row.catalog_id === Number(entry.id));
+    return found ? current.map((row) => row.catalog_id === Number(entry.id) ? { ...row, quantity: Math.min(999, row.quantity + 1) } : row) : [...current, { catalog_id: Number(entry.id), description: entry.name, quantity: 1, unit_price_cents: Number(entry.price_cents) }];
   });
   const persist = async (notify = false) => {
     if (!dirty) {
@@ -210,8 +209,8 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
   };
   pendingSaveRef.current = () => persist(false);
   const save = async () => { try { await persist(true); } catch { /* mensagem já exibida */ } };
-  return <section className="wide arl-od-services"><h2>Serviços / itens realizados</h2><p>Independente do orçamento: registre o que realmente foi feito e a quantidade.</p>
-    <div className="arl-od-service-top"><select aria-label="Serviço para adicionar" value={selected} onChange={(e) => setSelected(e.target.value)}>{catalog.map((row) => <option key={row.id} value={row.id}>{row.name} — {money(row.price_cents)}</option>)}</select><button type="button" onClick={add}>Adicionar serviço</button></div>
+  return <section className="wide arl-od-services"><h2>Serviços / Produtos</h2><p>Independente do orçamento: registre o que realmente foi feito e a quantidade.</p>
+    <ServiceProductSearch items={catalog} ariaLabel="Pesquisar Serviço / Produto" onSelect={add}/>
     <div className="arl-od-lines">{items.length ? items.map((row, index) => <div className="arl-od-line" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(e) => changeItems((current) => current.map((item, i) => i === index ? { ...item, quantity: Math.max(1, Math.min(999, Number(e.target.value) || 1)) } : item))}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" aria-label={`Remover ${row.description}`} onClick={() => changeItems((current) => current.filter((_, i) => i !== index))}>×</button></div>) : <p>Nenhum serviço adicionado.</p>}</div>
     <div className="arl-od-foot"><span>{message}</span><strong>Subtotal: {money(items.reduce((sum, row) => sum + row.quantity * row.unit_price_cents, 0))}</strong><button type="button" className="arl-od-save" disabled={busy} onClick={save}>{busy ? 'Salvando…' : 'Salvar serviços'}</button></div>
   </section>;
