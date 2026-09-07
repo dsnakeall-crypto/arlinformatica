@@ -19,8 +19,6 @@ def regex_once(path: str, pattern: str, replacement: str) -> None:
     p.write_text(updated)
 
 
-# Configuração de mensagens: abertura e acompanhamento ficam fixos/ocultos;
-# somente Google e Instagram permanecem editáveis.
 opening = Path('resources/js/opening-whatsapp.ts')
 s = opening.read_text()
 new_settings = '''function reveal(element: HTMLElement | null | undefined) {
@@ -62,8 +60,6 @@ if count != 1:
     raise RuntimeError(f'syncMessageSettings replacement count={count}')
 opening.write_text(s)
 
-
-# Link público final: token aleatório no URL, somente hash persistido, validade de 48 h.
 Path('app/Http/Controllers/FinalShareController.php').write_text('''<?php
 
 namespace App\\Http\\Controllers;
@@ -145,7 +141,6 @@ replace_once(
     "'status' => 'required|in:analysis,waiting_part,completed,interrupted,paid',",
 )
 
-# Regressões E2E alinhadas às decisões aprovadas, sem enfraquecer os fluxos.
 regex_once(
     'tests/e2e/post-sale-navigation.spec.ts',
     r"await expect\(page\.locator\('\.arl-post-sale-editor'\)\)\.toBeVisible\(\);",
@@ -171,11 +166,10 @@ settings_test = '''test('configurações mantém editáveis somente Google e Ins
 });'''
 regex_once(
     'tests/e2e/settings-editors.spec.ts',
-    r"test\('configurações não expõe mensagens automáticas de WhatsApp editáveis'.*?^\}\);",
+    r"test\('configurações não expõe mensagens automáticas de WhatsApp editáveis'.*?\n\}\);",
     settings_test,
 )
 
-# Cobertura do token/hash e da expiração em banco.
 final_test = Path('tests/Feature/FinalShareTest.php')
 s = final_test.read_text()
 needle = '        $this->assertStringContainsString("/share/orders/{$order->id}/final/1", $share[\'url\']);\n'
