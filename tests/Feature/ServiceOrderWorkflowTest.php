@@ -75,13 +75,22 @@ class ServiceOrderWorkflowTest extends TestCase
         $this->assertDatabaseHas('service_orders', ['id' => $order->id, 'technical_report' => null]);
     }
 
-    public function test_legacy_in_service_is_rejected_and_interrupted_order_cannot_be_finalized(): void
+    public function test_in_service_is_accepted_and_interrupted_order_cannot_be_finalized(): void
     {
         $user = $this->master();
         $order = $this->order($user);
 
         $this->patchJson("/api/orders/{$order->id}/status", ['status' => 'in_service'])
-            ->assertStatus(422);
+            ->assertOk()
+            ->assertJsonPath('status', 'in_service');
+        $this->assertDatabaseHas('service_orders', ['id' => $order->id, 'status' => 'in_service']);
+        $this->assertDatabaseHas('status_history', [
+            'service_order_id' => $order->id,
+            'to_status' => 'in_service',
+        ]);
+        $this->getJson('/api/orders/desk')
+            ->assertOk()
+            ->assertJsonFragment(['id' => $order->id, 'status' => 'in_service']);
 
         $this->patchJson("/api/orders/{$order->id}/status", [
             'status' => 'interrupted',

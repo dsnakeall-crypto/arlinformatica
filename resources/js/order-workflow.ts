@@ -157,12 +157,6 @@ function forceOrdersReload() {
   window.requestAnimationFrame(() => nativeSetInput(input, value));
 }
 
-function removeDesk() {
-  document.querySelectorAll<HTMLButtonElement>('aside nav button').forEach((button) => {
-    if (button.textContent?.includes('Mesa de Chamados')) button.remove();
-  });
-}
-
 function normalizeLabels() {
   const waitingLabel = 'Aguardando';
   document.querySelectorAll<HTMLOptionElement>('option[value="waiting_part"]').forEach((option) => {
@@ -273,7 +267,6 @@ function syncScope() {
 }
 
 function syncUi() {
-  removeDesk();
   syncScope();
   normalizeLabels();
   installFinalizedToggle();
