@@ -72,6 +72,13 @@ class FinalShareTest extends TestCase
             ->json();
 
         $this->assertStringContainsString("/share/orders/{$order->id}/final/1", $share['url']);
+        $pathOnly = parse_url($share['url'], PHP_URL_PATH);
+        $token = basename((string) $pathOnly);
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $token);
+        $stored = DB::table('final_share_tokens')->where('service_order_id', $order->id)->where('revision', 1)->first();
+        $this->assertNotNull($stored);
+        $this->assertSame(hash('sha256', $token), $stored->token_hash);
+        $this->assertNotSame($token, $stored->token_hash);
         $expires = Carbon::parse($share['expires_at']);
         $this->assertTrue($expires->between(now()->addHours(47)->addMinutes(59), now()->addHours(48)->addMinute()));
 
@@ -82,5 +89,8 @@ class FinalShareTest extends TestCase
 
         $tampered = str_replace('/final/1', '/final/2', $share['url']);
         $this->get($tampered)->assertForbidden();
+
+        DB::table('final_share_tokens')->where('id', $stored->id)->update(['expires_at' => now()->subSecond()]);
+        $this->get($share['url'])->assertForbidden();
     }
 }

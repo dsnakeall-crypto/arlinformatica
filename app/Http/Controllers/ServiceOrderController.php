@@ -52,7 +52,7 @@ class ServiceOrderController extends Controller
         $postSales->catchUp(true);
         $orders = ServiceOrder::query()
             ->with('client:id,name,phone,street,number,district,city,state')
-            ->whereIn('status', ['analysis', 'waiting_part', 'in_service'])
+            ->whereIn('status', ['analysis', 'waiting_part'])
             ->oldest('received_at')
             ->get();
 
@@ -171,7 +171,7 @@ class ServiceOrderController extends Controller
     public function updateStatus(Request $r, ServiceOrder $order): JsonResponse
     {
         $data = $r->validate([
-            'status' => 'required|in:analysis,waiting_part,in_service,completed,interrupted,paid',
+            'status' => 'required|in:analysis,waiting_part,completed,interrupted,paid',
             'interruption_reason' => 'nullable|required_if:status,interrupted|string|max:10000',
         ]);
 

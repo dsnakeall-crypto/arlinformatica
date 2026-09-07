@@ -18,6 +18,7 @@ class FinalizationController extends Controller
     public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents): JsonResponse
     {
         abort_if($order->status === 'completed', 409, 'A OS já possui uma finalização imutável.');
+        abort_if($order->status === 'interrupted', 409, 'Uma OS interrompida deve voltar ao fluxo antes de ser finalizada.');
         $data = $request->validate([
             'result' => 'required|in:'.implode(',', self::RESULTS), 'result_other' => 'nullable|required_if:result,other|string|max:255',
             'technical_report' => 'nullable|string|max:20000', 'discount_cents' => 'required|integer|min:0|max:999999999',

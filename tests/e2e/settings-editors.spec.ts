@@ -29,16 +29,22 @@ test('configurações separa textos de documentos em subabas com editor expandid
   await expect(budgetEditor).toBeHidden();
 });
 
-test('configurações não expõe mensagens automáticas de WhatsApp editáveis', async ({ page }) => {
+test('configurações mantém editáveis somente Google e Instagram', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
+  const messages = page.locator('.arl-settings-tab[data-section="messages"]');
+  await expect(messages).toBeVisible();
+  await messages.click();
 
-  await expect(page.getByRole('heading', { name: 'Pós-Venda / Mensagens', exact: true })).toBeHidden();
+  await expect(page.locator('.arl-opening-message-panel')).toBeHidden();
+  await expect(page.locator('.arl-message-subnav [data-msg-tab="opening"]')).toHaveCount(0);
   await expect(page.getByLabel('Mensagem de acompanhamento')).toBeHidden();
-  await expect(page.getByLabel('Mensagem para avaliação Google')).toBeHidden();
-  await expect(page.getByLabel('Mensagem para Instagram')).toBeHidden();
-  await expect(page.locator('.arl-settings-tab[data-section="messages"]')).toBeHidden();
+  await expect(page.locator('.arl-message-subnav [data-msg-tab="google"]')).toBeVisible();
+  await expect(page.locator('.arl-post-message-panel[data-msg-panel="google"] textarea')).toBeVisible();
+
+  await page.locator('.arl-message-subnav [data-msg-tab="instagram"]').click();
+  await expect(page.locator('.arl-post-message-panel[data-msg-panel="instagram"] textarea')).toBeVisible();
 });
 
 test('configurações não expõe cadastros automáticos de equipamento, fabricante ou checklist', async ({ page }) => {

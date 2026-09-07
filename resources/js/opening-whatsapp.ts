@@ -121,31 +121,33 @@ function removeLegacyOpeningShare() {
   });
 }
 
+function reveal(element: HTMLElement | null | undefined) {
+  if (!element) return;
+  element.hidden = false;
+  element.removeAttribute('aria-hidden');
+  element.style.removeProperty('display');
+}
+
 function syncMessageSettings() {
   const settingsHeading = qa<HTMLHeadingElement>('main h1').find((item) => item.textContent?.trim() === 'Configurações');
   if (!settingsHeading) return;
 
   hide(q<HTMLElement>('.arl-opening-message-panel'));
   hide(q<HTMLElement>('.arl-post-sale-editor'));
-  hide(q<HTMLElement>('.arl-message-subnav'));
-  hide(q<HTMLElement>('.arl-settings-tab[data-section="messages"]'));
-  qa<HTMLElement>('.arl-post-message-panel').forEach(hide);
 
-  const settingsCard = qa<HTMLElement>('.setting-cards article').find((item) => item.textContent?.trim() === 'Pós-Venda');
-  hide(settingsCard);
-
-  const settingsForm = q<HTMLElement>('form.settings-form');
-  if (!settingsForm) return;
-  const messageHeading = qa<HTMLHeadingElement>('h2', settingsForm).find((item) => item.textContent?.trim() === 'Pós-Venda / Mensagens');
-  if (!messageHeading) return;
-
-  hide(messageHeading);
-  let sibling = messageHeading.nextElementSibling as HTMLElement | null;
-  while (sibling && sibling.tagName !== 'H2') {
-    const next = sibling.nextElementSibling as HTMLElement | null;
-    hide(sibling);
-    sibling = next;
+  const messagesTab = q<HTMLElement>('.arl-settings-tab[data-section="messages"]');
+  reveal(messagesTab);
+  const nav = q<HTMLElement>('.arl-message-subnav');
+  reveal(nav);
+  nav?.querySelector('[data-msg-tab="opening"]')?.remove();
+  if (!document.documentElement.dataset.arlMessageSubtab || document.documentElement.dataset.arlMessageSubtab === 'opening') {
+    document.documentElement.dataset.arlMessageSubtab = 'google';
   }
+  qa<HTMLElement>('.arl-post-message-panel').forEach(reveal);
+
+  const followUp = q<HTMLTextAreaElement>('textarea[name="post_sale_follow_up"], textarea[data-key="post_sale_follow_up"]');
+  const followUpField = followUp?.closest<HTMLElement>('label, .field, .form-field');
+  hide(followUpField || followUp);
 }
 
 function syncPostSale() {
