@@ -13,6 +13,7 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostSaleController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\ServiceOrderAuditController;
 use App\Http\Controllers\ServiceOrderController;
 use App\Http\Controllers\ServiceOrderMaintenanceController;
 use App\Http\Controllers\SettingsController;
@@ -60,6 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/desk', [ServiceOrderController::class, 'desk']);
     Route::post('/orders', [ServiceOrderController::class, 'store']);
     Route::get('/orders/{order}', [ServiceOrderController::class, 'show']);
+    Route::get('/orders/{order}/audit-history', [ServiceOrderAuditController::class, 'index']);
     Route::middleware('role:Master,Administrador')->group(function () {
         Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
         Route::delete('/orders/{order}', [ServiceOrderMaintenanceController::class, 'destroy']);

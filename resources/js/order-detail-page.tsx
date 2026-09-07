@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import OrderDetailReact from './order-detail-react';
 import UnifiedOrderEditor from './order-editor-unified';
+import OrderAuditHistory from './order-audit-history';
 
 type Props = { id: number; back: () => void; onDirtyChange?: (dirty: boolean) => void };
 
@@ -86,6 +87,7 @@ export default function OrderDetailPage(props: Props) {
       onEdit={openEditor}
       onDirtyChange={setDetailDirty}
     />
+    <OrderAuditHistory orderId={props.id}/>
     {editorOpen && <UnifiedOrderEditor
       orderId={props.id}
       onDirtyChange={setEditorDirty}
