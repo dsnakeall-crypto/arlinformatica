@@ -6,13 +6,13 @@ type FinalOrder = { id: number; number: string; total_cents?: number; client?: {
 const STATUS_LABELS: Record<string, string> = {
   analysis: 'Em Análise',
   waiting_part: 'Aguardando',
+  in_service: 'Em Serviço',
   completed: 'Finalizado',
   interrupted: 'Interrompido',
   paid: 'Pago',
 };
 
 const LEGACY_LABELS: Record<string, string> = {
-  'Em Serviço': 'Em Análise',
   'Aguardando Peça': 'Aguardando',
   'Aguardando Peça/Cliente': 'Aguardando',
   Concluído: 'Finalizado',
@@ -49,7 +49,6 @@ function installStyles() {
 }
 
 function normalizeStatuses() {
-  qa<HTMLOptionElement>('option[value="in_service"]').forEach((option) => { if (!option.closest('[data-arl-order-detail-react="1"]')) option.remove(); });
   qa<HTMLOptionElement>('.status-picker option, select[aria-label="Filtrar status"] option').forEach((option) => {
     if (option.closest('[data-arl-order-detail-react="1"]')) return;
     const label = STATUS_LABELS[option.value];

@@ -1,0 +1,120 @@
+import { expect, test, type Page } from '@playwright/test';
+import { api, login, uniqueDocument } from './helpers';
+
+type StatusCase = {
+  code: 'analysis' | 'waiting_part' | 'in_service' | 'interrupted' | 'completed';
+  label: string;
+};
+
+const statuses: StatusCase[] = [
+  { code: 'analysis', label: 'Em Análise' },
+  { code: 'waiting_part', label: 'Aguardando' },
+  { code: 'in_service', label: 'Em Serviço' },
+  { code: 'interrupted', label: 'Interrompido' },
+  { code: 'completed', label: 'Finalizado' },
+];
+
+async function createOrder(page: Page, index: number, label: string) {
+  await login(page);
+  const clientName = `Contrato Status ${index} ${label}`;
+  const client = await api(page, '/clients', 'POST', {
+    name: clientName,
+    document: uniqueDocument(20260907120 + index),
+    phone: `3598877${String(8100 + index).slice(-4)}`,
+    postal_code: '37160000',
+    street: 'Rua Contrato Status',
+    number: String(200 + index),
+    district: 'Centro',
+    city: 'Campos Gerais',
+    state: 'MG',
+  });
+  expect(client.status, `Criação do cliente para ${label}: ${JSON.stringify(client.body)}`).toBe(201);
+
+  const equipment = await api(page, '/catalogs/equipment');
+  const equipmentType = equipment.body?.[0];
+  expect(equipmentType, `Criação da OS para ${label}: catálogo de equipamentos vazio`).toBeTruthy();
+
+  const created = await api(page, '/orders', 'POST', {
+    client_id: client.body.id,
+    equipment_type_id: equipmentType.id,
+    manufacturer_id: null,
+    attendance_type: 'bench',
+    reported_problem: `Contrato de status ${label}`,
+    checklist: [],
+  });
+  expect(created.status, `Criação da OS para ${label}: ${JSON.stringify(created.body)}`).toBe(201);
+  expect(created.body.status, `Toda OS deve nascer em Em Análise antes da transição para ${label}`).toBe('analysis');
+
+  return { clientName, order: created.body };
+}
+
+async function moveToStatus(page: Page, order: any, status: StatusCase) {
+  if (status.code === 'analysis') return;
+
+  if (status.code === 'completed') {
+    const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
+      result: 'no_fault',
+      result_other: null,
+      technical_report: 'Contrato E2E: finalização sem defeito constatado.',
+      discount_cents: 0,
+      approved_budget_id: null,
+      photo_ids: [],
+      items: [],
+    });
+    expect(finalized.status, `Transição para Finalizado: ${JSON.stringify(finalized.body)}`).toBe(201);
+    return;
+  }
+
+  const payload: Record<string, unknown> = { status: status.code };
+  if (status.code === 'interrupted') payload.interruption_reason = 'Contrato E2E: atendimento interrompido.';
+  const changed = await api(page, `/orders/${order.id}/status`, 'PATCH', payload);
+  expect(changed.status, `Transição para ${status.label}: ${JSON.stringify(changed.body)}`).toBe(200);
+  expect(changed.body.status, `Resposta da transição deveria permanecer em ${status.code}`).toBe(status.code);
+}
+
+for (const [index, status] of statuses.entries()) {
+  test(`status ${status.label}: criação, persistência e exibição preservam o estado operacional`, async ({ page }) => {
+    const { clientName, order } = await createOrder(page, index + 1, status.label);
+    await moveToStatus(page, order, status);
+
+    const persisted = await api(page, `/orders/${order.id}`);
+    expect(persisted.status, `Persistência de ${status.label}: GET da OS falhou`).toBe(200);
+    expect(persisted.body.status, `Persistência de ${status.label}: backend devolveu outro estado`).toBe(status.code);
+
+    if (status.code === 'in_service') {
+      const desk = await api(page, '/orders/desk');
+      expect(desk.status, 'Mesa de Chamados deveria aceitar consulta com OS Em Serviço').toBe(200);
+      expect(desk.body.some((row: any) => row.id === order.id), 'OS Em Serviço desapareceu da Mesa de Chamados').toBe(true);
+    }
+
+    await page.getByRole('button', { name: 'Painel' }).click();
+    const filter = page.getByLabel('Filtrar status');
+    await expect(filter.locator('option[value="analysis"]')).toHaveText('Em Análise');
+    await expect(filter.locator('option[value="waiting_part"]')).toHaveText('Aguardando');
+    await expect(filter.locator('option[value="in_service"]'), 'Filtro do Painel perdeu a opção Em Serviço').toHaveText('Em Serviço');
+    await expect(filter.locator('option[value="interrupted"]')).toHaveText('Interrompido');
+    await expect(filter.locator('option[value="completed"]')).toHaveText('Finalizado');
+
+    const dashboardRow = page.locator('.dashboard-row:not(.head)').filter({ hasText: clientName });
+    await expect(dashboardRow, `Painel não exibiu a OS em ${status.label}`).toBeVisible();
+    await expect(dashboardRow.locator('.badge'), `Painel mentiu sobre o estado ${status.code}`).toHaveText(status.label);
+    await dashboardRow.getByRole('button', { name: 'Ver OS' }).click();
+
+    const root = page.locator('[data-arl-order-detail-react="1"]');
+    await expect(root, `Detalhe React não abriu para ${status.label}`).toHaveCount(1);
+    const picker = root.locator('.status-picker select');
+    await expect(picker, `Seletor do detalhe não persistiu ${status.code}`).toHaveValue(status.code);
+    await expect(picker.locator('option:checked'), `Seletor do detalhe exibiu rótulo errado para ${status.code}`).toHaveText(status.label);
+
+    if (status.code !== 'completed') {
+      await expect(picker.locator('option[value="analysis"]')).toHaveText('Em Análise');
+      await expect(picker.locator('option[value="waiting_part"]')).toHaveText('Aguardando');
+      await expect(picker.locator('option[value="in_service"]'), 'Detalhe React perdeu Em Serviço como opção selecionável').toHaveText('Em Serviço');
+      await expect(picker.locator('option[value="interrupted"]')).toHaveText('Interrompido');
+      await expect(picker.locator('option[value="completed"]')).toHaveText('Finalizado');
+    }
+
+    const history = root.locator('section').filter({ has: page.getByRole('heading', { name: 'Histórico de status', exact: true }) });
+    await expect(history.getByText(new RegExp(`^${status.label} ·`)), `Histórico exibiu rótulo errado para ${status.code}`).toBeVisible();
+  });
+}

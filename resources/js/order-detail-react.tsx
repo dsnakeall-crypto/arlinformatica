@@ -38,7 +38,7 @@ const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
 const statusLabel: Record<string, string> = {
   analysis: 'Em Análise',
   waiting_part: 'Aguardando',
-  in_service: 'Em Análise',
+  in_service: 'Em Serviço',
   completed: 'Finalizado',
   interrupted: 'Interrompido',
   paid: 'Pago',
@@ -317,7 +317,7 @@ export default function OrderDetailPage({ id, back }: Props) {
     try { await api(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: value }) }); await load(); } catch (e: any) { window.alert(e.message); await load(); }
   };
   const shownStatus = order.archived ? 'paid' : order.status;
-  const activeStatusOptions = [['analysis', 'Em Análise'], ['waiting_part', 'Aguardando'], ['interrupted', 'Interrompido'], ['completed', 'Finalizado']];
+  const activeStatusOptions = [['analysis', 'Em Análise'], ['waiting_part', 'Aguardando'], ['in_service', 'Em Serviço'], ['interrupted', 'Interrompido'], ['completed', 'Finalizado']];
   const statusOptions = order.archived ? [['paid', 'Pago']] : order.status === 'completed' ? [['completed', 'Finalizado'], ['paid', 'Pago']] : activeStatusOptions;
   return <div data-arl-order-detail-react="1">
     <button onClick={back}>← Voltar</button>
