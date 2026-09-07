@@ -25,6 +25,8 @@ class ServiceOrderMaintenanceController extends Controller
     public function update(Request $request, ServiceOrder $order): JsonResponse
     {
         $data = $request->validate([
+            'client_id' => ['sometimes', 'required', 'integer', 'exists:clients,id'],
+            'equipment_description' => ['sometimes', 'required', 'string', 'max:500'],
             'attendance_type' => ['sometimes', 'required', 'in:bench,external'],
             'reported_problem' => ['sometimes', 'required', 'string', 'max:10000'],
             'final_report' => ['sometimes', 'nullable', 'string', 'max:20000'],
@@ -37,14 +39,11 @@ class ServiceOrderMaintenanceController extends Controller
         ]);
 
         abort_if($data === [], 422, 'Informe ao menos uma alteração para a OS.');
+        abort_if($order->archived || $order->status === 'completed', 422, 'Uma OS finalizada ou paga não pode ter os dados de atendimento alterados.');
 
-        $changesHistoricalContent = array_key_exists('checklist', $data)
-            || array_key_exists('items', $data)
-            || array_key_exists('final_report', $data);
-        if ($changesHistoricalContent) {
-            abort_if($order->archived || $order->status === 'completed', 422, 'Checklist, serviços e Laudo Final só podem ser alterados enquanto a OS estiver ativa.');
-        }
-
+        $newClient = array_key_exists('client_id', $data)
+            ? Client::query()->findOrFail((int) $data['client_id'])
+            : null;
         $checklist = array_key_exists('checklist', $data)
             ? $this->resolveChecklist($order, $data['checklist'])
             : null;
@@ -62,26 +61,26 @@ class ServiceOrderMaintenanceController extends Controller
             }
         }
 
-        $order->load(['checklists', 'items']);
-        $before = [
-            'attendance_type' => $order->attendance_type,
-            'reported_problem' => $order->reported_problem,
-            'final_report' => $order->final_report,
-            'checklist' => $order->checklists->map(fn ($item) => ['label' => $item->label, 'note' => $item->note])->values()->all(),
-            'items' => $order->items->whereNull('finalization_id')->map(fn ($item) => [
-                'catalog_id' => $item->catalog_id,
-                'description' => $item->description,
-                'quantity' => (int) $item->quantity,
-                'unit_price_cents' => (int) $item->unit_price_cents,
-            ])->values()->all(),
-        ];
+        $order->load(['client', 'checklists', 'items', 'snapshot']);
+        $before = $this->auditState($order);
+        $termIssued = $this->termIssued($order);
 
-        DB::transaction(function () use ($request, $order, $data, $before, $checklist, $items) {
+        DB::transaction(function () use ($request, $order, $data, $before, $newClient, $checklist, $items, $termIssued) {
             $scalar = [];
-            foreach (['attendance_type', 'reported_problem', 'final_report'] as $field) {
-                if (array_key_exists($field, $data)) {
-                    $scalar[$field] = $field === 'final_report' && blank($data[$field]) ? null : $data[$field];
+            foreach (['client_id', 'equipment_description', 'attendance_type', 'reported_problem', 'final_report'] as $field) {
+                if (! array_key_exists($field, $data)) {
+                    continue;
                 }
+
+                $value = $data[$field];
+                if ($field === 'client_id') {
+                    $value = (int) $value;
+                } elseif ($field === 'equipment_description') {
+                    $value = trim((string) $value);
+                } elseif ($field === 'final_report' && blank($value)) {
+                    $value = null;
+                }
+                $scalar[$field] = $value;
             }
             if ($scalar !== []) {
                 $order->forceFill($scalar)->save();
@@ -102,25 +101,32 @@ class ServiceOrderMaintenanceController extends Controller
                 ])->save();
             }
 
-            $fresh = $order->fresh()->load(['checklists', 'items']);
+            $identityChanged = array_key_exists('client_id', $data) || array_key_exists('equipment_description', $data);
+            if ($identityChanged && ! $termIssued) {
+                $snapshot = $order->snapshot()->first();
+                if ($snapshot) {
+                    $snapshotClient = $newClient ?? Client::withTrashed()->findOrFail($order->client_id);
+                    $snapshotData = ['client' => $snapshotClient->toArray()];
+                    if (array_key_exists('equipment_description', $data)) {
+                        $equipment = is_array($snapshot->equipment) ? $snapshot->equipment : [];
+                        $equipment['type_id'] = $order->equipment_type_id;
+                        $equipment['manufacturer_id'] = $order->manufacturer_id;
+                        $equipment['name'] = $order->equipment_description;
+                        $equipment['description'] = $order->equipment_description;
+                        $snapshotData['equipment'] = $equipment;
+                    }
+                    $snapshot->forceFill($snapshotData)->save();
+                }
+            }
+
+            $fresh = $order->fresh()->load(['client', 'checklists', 'items', 'snapshot']);
             DB::table('audit_logs')->insert([
                 'user_id' => $request->user()->id,
                 'action' => 'service_order.edited',
                 'subject_type' => 'service_order',
                 'subject_id' => $order->id,
                 'before' => json_encode($before),
-                'after' => json_encode([
-                    'attendance_type' => $fresh->attendance_type,
-                    'reported_problem' => $fresh->reported_problem,
-                    'final_report' => $fresh->final_report,
-                    'checklist' => $fresh->checklists->map(fn ($item) => ['label' => $item->label, 'note' => $item->note])->values()->all(),
-                    'items' => $fresh->items->whereNull('finalization_id')->map(fn ($item) => [
-                        'catalog_id' => $item->catalog_id,
-                        'description' => $item->description,
-                        'quantity' => (int) $item->quantity,
-                        'unit_price_cents' => (int) $item->unit_price_cents,
-                    ])->values()->all(),
-                ]),
+                'after' => json_encode($this->auditState($fresh)),
                 'ip_address' => $request->ip(),
                 'created_at' => now(),
             ]);
@@ -351,6 +357,37 @@ class ServiceOrderMaintenanceController extends Controller
                 'warranty_snapshot' => $warranty ? json_encode($warranty) : null,
             ];
         })->values()->all();
+    }
+
+    private function auditState(ServiceOrder $order): array
+    {
+        $order->loadMissing(['client', 'checklists', 'items']);
+
+        return [
+            'client' => [
+                'id' => (int) $order->client_id,
+                'name' => $order->client?->name,
+            ],
+            'equipment_description' => $order->equipment_description,
+            'attendance_type' => $order->attendance_type,
+            'reported_problem' => $order->reported_problem,
+            'final_report' => $order->final_report,
+            'checklist' => $order->checklists->map(fn ($item) => ['label' => $item->label, 'note' => $item->note])->values()->all(),
+            'items' => $order->items->whereNull('finalization_id')->map(fn ($item) => [
+                'catalog_id' => $item->catalog_id,
+                'description' => $item->description,
+                'quantity' => (int) $item->quantity,
+                'unit_price_cents' => (int) $item->unit_price_cents,
+            ])->values()->all(),
+        ];
+    }
+
+    private function termIssued(ServiceOrder $order): bool
+    {
+        return DB::table('generated_documents')
+            ->where('service_order_id', $order->id)
+            ->where('type', 'term')
+            ->exists();
     }
 
     private function paidCentsForOrder(ServiceOrder $order): int
