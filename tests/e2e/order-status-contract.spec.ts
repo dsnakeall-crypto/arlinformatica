@@ -95,8 +95,16 @@ for (const [index, status] of statuses.entries()) {
     await expect(filter.locator('option[value="interrupted"]')).toHaveText('Interrompido');
     await expect(filter.locator('option[value="completed"]')).toHaveText('Finalizado');
 
-    const dashboardRow = page.locator('.dashboard-row:not(.head)').filter({ hasText: clientName });
-    await expect(dashboardRow, `Painel não exibiu a OS em ${status.label}`).toBeVisible();
+    const search = page.getByPlaceholder('OS, cliente ou problema…');
+    const dashboardResponse = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return url.pathname === '/api/orders' && url.searchParams.get('q') === clientName && response.request().method() === 'GET';
+    });
+    await search.fill(clientName);
+    expect((await dashboardResponse).status(), `Painel não concluiu a busca da OS em ${status.label}`).toBe(200);
+
+    const dashboardRow = page.locator('.dashboard-table .dashboard-row:not(.head)').filter({ hasText: clientName });
+    await expect(dashboardRow, `Painel não exibiu a OS em ${status.label} após filtrar pelo cliente`).toBeVisible();
     await expect(dashboardRow.locator('.badge'), `Painel mentiu sobre o estado ${status.code}`).toHaveText(status.label);
     await dashboardRow.getByRole('button', { name: 'Ver OS' }).click();
 

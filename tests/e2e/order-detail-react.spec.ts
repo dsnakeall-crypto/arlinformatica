@@ -183,6 +183,10 @@ test('Unmount do Ver OS limpa resíduos persistentes e o sharebar legado é apos
       const residue = document.createElement('div');
       residue.className = className;
       residue.dataset.testOrderResidue = className;
+      residue.style.pointerEvents = 'none';
+      residue.style.position = 'fixed';
+      residue.style.left = '-10000px';
+      residue.style.top = '-10000px';
       document.body.append(residue);
     });
   }, residueClasses);

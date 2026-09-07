@@ -9,7 +9,7 @@ test('Mesa de Chamados permanece no menu e OS Finalizadas continua acessível em
   await deskButton.click();
   await expect(page.getByRole('heading', { name: 'Mesa de Chamados', exact: true }), 'Contrato de navegação: botão da Mesa deve abrir a tela operacional').toBeVisible();
   await expect(page.getByRole('heading', { name: 'Em Análise', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Aguardando', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Aguardando Peça', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Em Serviço', exact: true }), 'Contrato de navegação: Mesa deve preservar a coluna Em Serviço').toBeVisible();
 
   await page.locator('aside').getByRole('button', { name: 'Ordens de Serviço' }).click();
