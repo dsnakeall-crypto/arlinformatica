@@ -149,8 +149,31 @@ test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem m
   await popup.close();
   expect(apiWrites).toEqual([]);
 
-  const photo = actions.locator('input[type=file]');
-  await expect(photo).toHaveAttribute('capture', 'environment');
+  const cameraProbeInstalled = await page.evaluate(() => {
+    const input = document.querySelector<HTMLInputElement>('[data-arl-order-detail-react="1"] .arl-order-photo-tools input[type=file]');
+    if (!input) return false;
+    (window as any).__arlMobileCameraProbe = { clicks: 0, capture: input.getAttribute('capture'), accept: input.getAttribute('accept') };
+    input.addEventListener('click', (event) => {
+      event.preventDefault();
+      const probe = (window as any).__arlMobileCameraProbe;
+      probe.clicks += 1;
+      probe.capture = input.getAttribute('capture');
+      probe.accept = input.getAttribute('accept');
+    });
+    return true;
+  });
+  expect(cameraProbeInstalled, 'Contrato câmera mobile: input React de foto não existe para receber o atalho externo').toBe(true);
+  await actions.getByRole('button', { name: 'Adicionar foto' }).click();
+  const photoChoice = page.getByRole('dialog', { name: 'Adicionar foto' });
+  await expect(photoChoice, 'Contrato câmera mobile: atalho Foto não abriu a escolha de origem').toBeVisible();
+  await photoChoice.getByRole('button', { name: 'Enviar arquivo' }).click();
+  const cameraProbe = await page.evaluate(() => (window as any).__arlMobileCameraProbe);
+  expect(cameraProbe, `Contrato câmera mobile: caminho Atalho Foto → Enviar arquivo não acionou o input traseiro corretamente; recebido=${JSON.stringify(cameraProbe)}`).toEqual({
+    clicks: 1,
+    capture: 'environment',
+    accept: 'image/jpeg,image/png,image/webp',
+  });
+
   await actions.getByRole('button', { name: 'Status', exact: true }).click();
   await expect(page.locator('.status-picker select')).toBeFocused();
   await actions.getByRole('button', { name: 'Finalizar' }).click();
