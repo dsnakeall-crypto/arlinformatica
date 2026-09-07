@@ -35,7 +35,7 @@ class StageTenAuditTest extends TestCase
                 'client_id' => $client->id,
                 'equipment_type_id' => $equipment,
                 'attendance_type' => 'bench',
-                'status' => ['analysis', 'waiting_part', 'in_service'][($i - 1) % 3],
+                'status' => ['analysis', 'waiting_part'][($i - 1) % 2],
                 'reported_problem' => "Chamado aberto {$i}",
                 'received_at' => now()->subMinutes($i),
                 'created_by' => $user->id,
