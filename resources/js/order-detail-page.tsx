@@ -54,6 +54,20 @@ export default function OrderDetailPage(props: Props) {
     return () => window.removeEventListener('beforeunload', beforeUnload);
   }, [hasUnsavedChanges]);
 
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const guardSidebarNavigation = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element) || !target.closest('aside nav button')) return;
+      if (window.confirm(UNSAVED_MESSAGE)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    };
+    document.addEventListener('click', guardSidebarNavigation, true);
+    return () => document.removeEventListener('click', guardSidebarNavigation, true);
+  }, [hasUnsavedChanges]);
+
   const guardBack = () => {
     if (hasUnsavedChanges && !window.confirm(UNSAVED_MESSAGE)) return;
     setEditorDirty(false);

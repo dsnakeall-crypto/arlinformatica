@@ -194,6 +194,15 @@ test('rascunhos avisam saída e o Laudo Final é persistido antes da finalizaç�
   expect(navigationMessage).toContain('alterações não salvas');
   await expect(page.getByRole('heading', { name: `OS #${created.body.number}`, exact: true }), 'Contrato rascunho: cancelar saída interna deve manter a OS aberta').toBeVisible();
 
+  let backMessage = '';
+  page.once('dialog', async (dialog) => {
+    backMessage = dialog.message();
+    await dialog.dismiss();
+  });
+  await root.getByRole('button', { name: '← Voltar', exact: true }).click();
+  expect(backMessage).toContain('alterações não salvas');
+  await expect(page.getByRole('heading', { name: `OS #${created.body.number}`, exact: true }), 'Contrato rascunho: cancelar Voltar deve manter a OS aberta').toBeVisible();
+
   const reportFlush = page.waitForResponse((response) => {
     const request = response.request();
     if (new URL(response.url()).pathname !== `/api/orders/${created.body.id}` || request.method() !== 'PATCH') return false;
