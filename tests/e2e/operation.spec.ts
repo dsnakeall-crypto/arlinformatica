@@ -166,12 +166,11 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('button', { name: 'Registrar novo pagamento' }).click();
     const finalPaymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
     await finalPaymentModal.getByRole('button', { name: /Pagar valor total/ }).click();
-    const paidSummaryPromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/payments`) && response.request().method() === 'GET');
     await finalPaymentModal.getByRole('button', { name: 'Confirmar pagamento' }).click();
     await expect(page.getByText('Pago integralmente')).toBeVisible();
     await expect(page.getByText('Saldo zerado.')).toBeVisible();
 
-    const paidResponse = await paidSummaryPromise;
+    const paidResponse = await page.request.get(`/api/orders/${orderId}/payments`);
     expect(paidResponse.status()).toBe(200);
     const paid = await paidResponse.json();
     expect(paid.paid_cents).toBe(15000);
