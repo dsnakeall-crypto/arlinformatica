@@ -61,7 +61,7 @@ test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa os ci
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText('Ordena E2E Alpha');
   await expect(rows.first()).toContainText('Rua Alpha, 12 · Jardim');
-  await expect(rows.first()).toContainText('Campos Gerais - MG');
+  await expect(rows.first()).toContainText('Campos Gerais - MG · CEP 37160-000');
   expect(clientGets).toEqual(['?all=1']);
 
   const actionSources = await rows.first().locator('.clients-actions img').evaluateAll(images => images.map(image => image.getAttribute('src')));

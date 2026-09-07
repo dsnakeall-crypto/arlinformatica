@@ -27,12 +27,15 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   const nav = page.locator('aside nav');
   await nav.getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
-  await expect(page.locator('.clients-workspace')).toBeVisible();
+  await expect(page.locator('.clients-react-page')).toBeVisible();
   await expect(page.locator('.clients-list-panel')).toBeVisible();
-  await expect(page.locator('.clients-editor')).toBeHidden();
+  await expect(page.getByRole('dialog', { name: 'Novo cliente' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Novo cliente', exact: true }).click();
-  await expect(page.locator('.clients-editor').getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
-  await page.locator('.clients-editor').getByRole('button', { name: 'Cancelar', exact: true }).click();
+  const clientModal = page.getByRole('dialog', { name: 'Novo cliente' });
+  await expect(clientModal).toBeVisible();
+  await expect(clientModal.getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
+  await clientModal.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(clientModal).toHaveCount(0);
 
   await nav.getByRole('button', { name: 'Nova OS' }).click();
   const form = page.locator('form.os-form');
@@ -67,6 +70,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await expect(mobileAside).toHaveClass(/open/);
   await mobileAside.getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
+  await expect(page.locator('.clients-react-page')).toBeVisible();
   await expect(mobileAside).not.toHaveClass(/open/);
   const box = await mobileAside.boundingBox();
   expect(box).not.toBeNull();

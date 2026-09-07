@@ -1,6 +1,24 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { api, login, uniqueDocument } from './helpers';
+
+async function waitForOfficialIcons(page: Page, sources: string[]) {
+  for (const src of sources) {
+    const icon = page.locator(`img[src="${src}"]`).first();
+    await expect(icon).toBeAttached();
+    await icon.evaluate(async (element) => {
+      const image = element as HTMLImageElement;
+      if (!image.complete) {
+        await new Promise<void>((resolve, reject) => {
+          image.addEventListener('load', () => resolve(), { once: true });
+          image.addEventListener('error', () => reject(new Error(`Falha ao carregar ${image.src}`)), { once: true });
+        });
+      }
+      if (image.naturalWidth <= 0) throw new Error(`Imagem sem conteúdo decodificado: ${image.src}`);
+      await image.decode();
+    });
+  }
+}
 
 test('gera evidências para homologação visual desktop, mobile e PDF', async ({ page }) => {
   await mkdir('visual-artifacts', { recursive: true });
@@ -45,6 +63,11 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
   await expect(page.getByText(`#${orderResponse.body.number}`, { exact: true }).first()).toBeVisible();
+  await waitForOfficialIcons(page, [
+    '/arl-assets/icons/icon-whatsapp.png',
+    '/arl-assets/icons/icon-maps.png',
+    '/arl-assets/icons/icon-visualizar.png',
+  ]);
   await page.screenshot({ path: 'visual-artifacts/01-painel-desktop.png', fullPage: true });
 
   const nav = page.locator('aside nav');
@@ -53,6 +76,14 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await expect(page.getByText('Cliente Homologação Visual', { exact: true }).first()).toBeVisible();
   await expect(page.getByText(`Cliente Nº ${clientResponse.body.id}`, { exact: true })).toBeVisible();
   await expect(page.getByText('Rua das Flores, 320 · Centro', { exact: true })).toBeVisible();
+  await expect(page.getByText('Araguari - MG · CEP 38400-000', { exact: true })).toBeVisible();
+  await waitForOfficialIcons(page, [
+    '/arl-assets/icons/icon-whatsapp.png',
+    '/arl-assets/icons/icon-maps.png',
+    '/arl-assets/icons/icon-visualizar.png',
+    '/arl-assets/icons/icon-editar.png',
+    '/arl-assets/icons/icon-lixeira.png',
+  ]);
   await page.screenshot({ path: 'visual-artifacts/02-clientes-lista-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Novo cliente' }).click();
   const clientModal = page.getByRole('dialog', { name: 'Novo cliente' });
@@ -78,6 +109,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await nav.getByRole('button', { name: 'Ordens de Serviço' }).click();
   const row = page.locator('.order-row').filter({ hasText: `#${orderResponse.body.number}` });
   await expect(row).toBeVisible();
+  await waitForOfficialIcons(page, ['/arl-assets/icons/icon-visualizar.png']);
   await page.screenshot({ path: 'visual-artifacts/04-ordens-lista-desktop.png', fullPage: true });
   await row.getByRole('button', { name: 'Ver OS' }).click();
   await expect(page.getByRole('heading', { name: `OS #${orderResponse.body.number}`, exact: true })).toBeVisible();
@@ -140,7 +172,28 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.locator('aside').getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(page.getByText('Cliente Homologação Visual', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Araguari - MG · CEP 38400-000', { exact: true })).toBeVisible();
+  await waitForOfficialIcons(page, [
+    '/arl-assets/icons/icon-whatsapp.png',
+    '/arl-assets/icons/icon-maps.png',
+    '/arl-assets/icons/icon-visualizar.png',
+    '/arl-assets/icons/icon-editar.png',
+    '/arl-assets/icons/icon-lixeira.png',
+  ]);
   await page.screenshot({ path: 'visual-artifacts/02-clientes-mobile.png', fullPage: true });
+
+  await page.getByRole('button', { name: 'Novo cliente' }).click();
+  const mobileClientModal = page.getByRole('dialog', { name: 'Novo cliente' });
+  await expect(mobileClientModal).toBeVisible();
+  await page.screenshot({ path: 'visual-artifacts/02-clientes-cadastro-mobile.png', fullPage: true });
+  await mobileClientModal.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(mobileClientModal).toHaveCount(0);
+
+  const mobileVisualClient = page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' });
+  await mobileVisualClient.getByRole('button', { name: 'Visualizar' }).click();
+  await expect(page.getByText(service.name, { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderResponse.body.id}/final/1/pdf`);
+  await page.screenshot({ path: 'visual-artifacts/02-clientes-historico-mobile.png', fullPage: true });
 
   await page.locator('.menu-toggle').click();
   await page.locator('aside').getByRole('button', { name: 'Nova OS' }).click();

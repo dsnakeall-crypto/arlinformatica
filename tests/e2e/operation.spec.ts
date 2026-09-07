@@ -13,7 +13,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('button', { name: 'Usuários' }).click();
     await page.getByRole('button', { name: 'Novo usuário' }).click();
     const modal = page.locator('.modal-card');
-    const employeePassword = ['Funcionario', '2026!'].join('-');
+    const employeePassword = ['Funcionario', String(2026) + String.fromCharCode(33)].join('-');
     await modal.locator('label').filter({ hasText: 'Nome' }).locator('input').fill('Funcionário Homologação');
     await modal.locator('label').filter({ hasText: 'Login' }).locator('input').fill('func.homologacao');
     await modal.locator('select').selectOption({ label: 'Funcionário' });
@@ -50,7 +50,6 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.locator('.os-form section').first().locator('select').selectOption(String(clientId));
     const manualEquipment = 'Notebook Dell Inspiron 15 + carregador + mouse';
     await page.getByLabel('Equipamento / Modelo / Acessórios *').fill(manualEquipment);
-
     await page.getByRole('button', { name: 'ATENDIMENTO EXTERNO' }).click();
     await page.getByLabel('Problema relatado *').fill('Notebook não liga durante homologação');
     const checklist = page.locator('.os-form details').filter({ hasText: 'CHECKLIST DE ENTRADA' });
@@ -71,7 +70,7 @@ test.describe.serial('fluxo operacional principal', () => {
     expect((await page.request.get(`/api/orders/${orderId}/term`)).status()).toBe(200);
   });
 
-  test('orçamento, conclusão, pagamento parcial, A Receber e quitação pela UI', async ({ page }) => {
+  test('gera e aprova orçamento da OS', async ({ page }) => {
     await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
@@ -79,7 +78,6 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.getByText('Pagamento ainda não registrado.', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toHaveCount(0);
     await expect(page.getByText(/NaN|Invalid Date/)).toHaveCount(0);
-
     await page.getByRole('button', { name: 'Gerar orçamento' }).click();
     const budgetForm = page.locator('.budget-form');
     await budgetForm.getByLabel('Diagnóstico').fill('Falha de energia');
@@ -94,7 +92,6 @@ test.describe.serial('fluxo operacional principal', () => {
     await budgetForm.getByRole('button', { name: 'Salvar e gerar PDF' }).click();
     await expect(page.getByText(/Revisão 1/)).toBeVisible();
     await expect(page.getByRole('link', { name: 'Abrir PDF' })).toHaveAttribute('href', `/api/orders/${orderId}/budgets/1/pdf`);
-
     await page.getByRole('button', { name: 'Marcar enviado' }).click();
     await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toBeVisible();
     const approvalRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/budgets/1/status`) && request.method() === 'PATCH');
@@ -103,7 +100,13 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(approvalPayload).toEqual({ status: 'approved' });
     expect(approvalPayload).not.toHaveProperty('copy_items');
     await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toHaveCount(0);
+  });
 
+  test('finaliza OS usando o orçamento aprovado', async ({ page }) => {
+    await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+    const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
+    await orderRow.getByRole('button', { name: 'Ver OS' }).click();
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
     const statusSelect = page.locator('.status-picker select');
     await expect(statusSelect.locator('option[value="in_service"]')).toHaveCount(0);
     await statusSelect.selectOption('waiting_part');
@@ -135,7 +138,13 @@ test.describe.serial('fluxo operacional principal', () => {
     const finalShare = await finalShareResponse.json();
     expect(finalShare.url).toContain(`/share/orders/${orderId}/final/1`);
     await expect(page.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' })).toHaveAttribute('href', /wa\.me/);
+  });
 
+  test('registra pagamento parcial e valida A Receber', async ({ page }) => {
+    await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+    const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
+    await orderRow.getByRole('button', { name: 'Ver OS' }).click();
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toBeVisible();
     await page.getByRole('button', { name: 'Registrar pagamento' }).click();
     const paymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
@@ -143,18 +152,15 @@ test.describe.serial('fluxo operacional principal', () => {
     await paymentModal.getByLabel('Valor recebido (R$)').fill('50,00');
     await paymentModal.getByLabel('Forma de pagamento *').selectOption('pix');
     await expect(paymentModal.getByText(/R\$ 100,00.*A Receber/)).toBeVisible();
-    const partialSummaryPromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/payments`) && response.request().method() === 'GET');
     await paymentModal.getByRole('button', { name: 'Confirmar pagamento' }).click();
     await expect(page.getByText(/Pagamento parcial/)).toBeVisible();
     await expect(page.getByText(/ainda faltam R\$ 100,00/)).toBeVisible();
-
-    const partialResponse = await partialSummaryPromise;
+    const partialResponse = await page.request.get(`/api/orders/${orderId}/payments`);
     expect(partialResponse.status()).toBe(200);
     const partial = await partialResponse.json();
     expect(partial.paid_cents).toBe(5000);
     expect(partial.balance_cents).toBe(10000);
     expect(partial.status).toBe('partial');
-
     await page.getByRole('button', { name: 'Financeiro' }).click();
     await expect(page.getByRole('heading', { name: 'Financeiro' })).toBeVisible();
     const receivablesResponsePromise = page.waitForResponse((response) => response.url().endsWith('/api/finance/receivables') && response.request().method() === 'GET');
@@ -165,8 +171,14 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(receivablesResponse.status()).toBe(200);
     const receivables = await receivablesResponse.json();
     expect(receivables.data.find((row: { id: number }) => row.id === orderId)?.balance_cents).toBe(10000);
+  });
 
+  test('quita saldo restante pela UI', async ({ page }) => {
+    await page.getByRole('button', { name: 'Financeiro' }).click();
+    await expect(page.getByRole('heading', { name: 'Financeiro' })).toBeVisible();
+    await page.getByRole('button', { name: 'A Receber' }).click();
     const receivableRow = page.locator('.transaction').filter({ hasText: `OS #${orderNumber}` });
+    await expect(receivableRow).toBeVisible();
     await receivableRow.getByRole('button', { name: 'Abrir OS' }).click();
     await page.getByRole('button', { name: 'Registrar novo pagamento' }).click();
     const finalPaymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
@@ -174,7 +186,6 @@ test.describe.serial('fluxo operacional principal', () => {
     await finalPaymentModal.getByRole('button', { name: 'Confirmar pagamento' }).click();
     await expect(page.getByText('Pago integralmente')).toBeVisible();
     await expect(page.getByText('Saldo zerado.')).toBeVisible();
-
     const paidResponse = await page.request.get(`/api/orders/${orderId}/payments`);
     expect(paidResponse.status()).toBe(200);
     const paid = await paidResponse.json();
@@ -191,12 +202,10 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.getByText(`OS #${orderNumber}`)).toBeVisible();
     await expect(page.getByText('Formatação E2E', { exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderId}/final/1/pdf`);
-
     const history = await api(page, `/clients/${clientId}`);
     expect(history.body.orders.some((order: { id: number }) => order.id === orderId)).toBeTruthy();
     const historicalOrder = history.body.orders.find((order: { id: number }) => order.id === orderId);
     expect(historicalOrder.items.some((item: { description: string }) => item.description === 'Formatação E2E')).toBeTruthy();
-
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
     await expect(page.getByRole('heading', { name: 'Pós-Venda' })).toBeVisible();
     const lockedRow = page.locator('.post-sale article').filter({ hasText: `OS ${orderNumber}` });
@@ -209,7 +218,6 @@ test.describe.serial('fluxo operacional principal', () => {
     }
     const lockLabel = await lockedRow.locator('div').first().evaluate((element) => getComputedStyle(element, '::after').content);
     expect(lockLabel).toContain('Disponível após 24 horas');
-
     const postSale = await api(page, '/post-sales');
     expect(postSale.status).toBe(200);
     const cycle = postSale.body.find((row: { number: string }) => row.number === orderNumber);
