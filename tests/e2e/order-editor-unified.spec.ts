@@ -10,6 +10,14 @@ async function openOrder(page: Page, clientName: string, orderNumber: string) {
   return page.locator('[data-arl-unified-order-editor-host="1"]');
 }
 
+async function hasUnsavedGuard(page: Page) {
+  return page.evaluate(() => {
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+}
+
 test('Editar OS usa um editor único para cliente, equipamento, atendimento, problema, checklist e serviços', async ({ page }) => {
   await login(page);
   const suffix = Date.now();
@@ -130,4 +138,113 @@ test('Editar OS usa um editor único para cliente, equipamento, atendimento, pro
   await expect(root.getByText(replacementName, { exact: true })).toBeVisible();
   await expect(root.getByText(changedEquipment, { exact: true })).toBeVisible();
   await expect(root.getByText(changedProblem, { exact: true })).toBeVisible();
+});
+
+test('rascunhos avisam saída e o Laudo Final é persistido antes da finalização', async ({ page }) => {
+  await login(page);
+  const suffix = Date.now() + 1000;
+  const clientName = `Cliente Rascunho ${suffix}`;
+  const client = await api(page, '/clients', 'POST', {
+    name: clientName,
+    document: uniqueDocument(suffix),
+    phone: '35999992001',
+    postal_code: '37160000',
+    street: 'Rua Rascunho',
+    number: '30',
+    district: 'Centro',
+    city: 'Campos Gerais',
+    state: 'MG',
+  });
+  expect(client.status, JSON.stringify(client.body)).toBe(201);
+
+  const equipment = await api(page, '/catalogs/equipment');
+  const services = await api(page, '/catalogs/services');
+  const equipmentType = equipment.body?.[0];
+  const service = services.body?.find((row: any) => row.name === 'Formatação E2E') ?? services.body?.[0];
+  expect(equipmentType).toBeTruthy();
+  expect(service).toBeTruthy();
+
+  const checklist = await api(page, `/catalogs/checklist?equipment_type_id=${equipmentType.id}`);
+  const checklistOption = checklist.body?.[0];
+  expect(checklistOption).toBeTruthy();
+
+  const created = await api(page, '/orders', 'POST', {
+    client_id: client.body.id,
+    equipment_type_id: equipmentType.id,
+    manufacturer_id: null,
+    attendance_type: 'bench',
+    reported_problem: 'Relato inicial do teste de rascunho',
+    checklist: [],
+    items: [{ catalog_id: service.id, quantity: 1 }],
+  });
+  expect(created.status, JSON.stringify(created.body)).toBe(201);
+
+  const root = await openOrder(page, clientName, created.body.number);
+  const report = root.locator('.arl-od-report textarea');
+  const reportDraft = 'Laudo rascunho protegido antes da finalização';
+  await report.fill(reportDraft);
+  expect(await hasUnsavedGuard(page), 'Contrato rascunho: recarregar/fechar deveria ser bloqueado após editar o Laudo Final').toBe(true);
+
+  let navigationMessage = '';
+  page.once('dialog', async (dialog) => {
+    navigationMessage = dialog.message();
+    await dialog.dismiss();
+  });
+  await page.locator('aside').getByRole('button', { name: 'Painel', exact: true }).click();
+  expect(navigationMessage).toContain('alterações não salvas');
+  await expect(page.getByRole('heading', { name: `OS #${created.body.number}`, exact: true }), 'Contrato rascunho: cancelar saída interna deve manter a OS aberta').toBeVisible();
+
+  const reportFlush = page.waitForResponse((response) => {
+    const request = response.request();
+    if (new URL(response.url()).pathname !== `/api/orders/${created.body.id}` || request.method() !== 'PATCH') return false;
+    return request.postDataJSON()?.final_report === reportDraft;
+  });
+  await root.getByRole('button', { name: 'Concluir OS', exact: true }).click();
+  const reportSaved = await reportFlush;
+  expect(reportSaved.status(), 'Contrato de flush: o Laudo Final pendente deve ser salvo no servidor antes de abrir a finalização').toBe(200);
+  const finalization = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
+  await expect(finalization).toBeVisible();
+  const persistedReport = await api(page, `/orders/${created.body.id}`);
+  expect(persistedReport.body?.final_report).toBe(reportDraft);
+  await finalization.locator('.modal-close').click();
+  expect(await hasUnsavedGuard(page), 'Contrato de flush: após persistir o Laudo Final, não deve restar aviso desse rascunho').toBe(false);
+
+  const serviceQuantity = root.getByLabel(`Quantidade de ${service.name}`);
+  await serviceQuantity.fill('2');
+  expect(await hasUnsavedGuard(page), 'Contrato rascunho: quantidade de serviço pendente também deve proteger saída').toBe(true);
+  const serviceSave = page.waitForResponse((response) => {
+    const request = response.request();
+    if (new URL(response.url()).pathname !== `/api/orders/${created.body.id}` || request.method() !== 'PATCH') return false;
+    const body = request.postDataJSON();
+    return Array.isArray(body?.items) && body.items.some((row: any) => Number(row.catalog_id) === Number(service.id) && Number(row.quantity) === 2);
+  });
+  await root.getByRole('button', { name: 'Salvar serviços', exact: true }).click();
+  expect((await serviceSave).status()).toBe(200);
+  await expect(root.getByText('Serviços salvos.', { exact: true })).toBeVisible();
+  expect(await hasUnsavedGuard(page), 'Contrato rascunho: salvar serviços deve remover o aviso de saída pendente').toBe(false);
+
+  await root.getByRole('button', { name: 'Editar OS', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: `Editar OS #${created.body.number}` });
+  await expect(editor).toBeVisible();
+  await editor.getByLabel('Atendimento').selectOption('external');
+  await editor.getByLabel('Problema relatado').fill('Problema ainda não salvo no editor');
+  await editor.getByLabel(checklistOption.label).check();
+  if (checklistOption.allows_note) {
+    await editor.getByLabel(`Observação de ${checklistOption.label}`).fill('Observação ainda não salva');
+  }
+  expect(await hasUnsavedGuard(page), 'Contrato rascunho: atendimento/problema/checklist pendentes devem proteger recarga e fechamento').toBe(true);
+
+  let cancelMessage = '';
+  page.once('dialog', async (dialog) => {
+    cancelMessage = dialog.message();
+    await dialog.dismiss();
+  });
+  await editor.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  expect(cancelMessage).toContain('alterações não salvas');
+  await expect(editor, 'Contrato rascunho: rejeitar o descarte deve manter o editor aberto').toBeVisible();
+
+  page.once('dialog', async (dialog) => { await dialog.accept(); });
+  await editor.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(editor).toBeHidden();
+  expect(await hasUnsavedGuard(page), 'Contrato rascunho: descarte confirmado deve limpar o estado pendente').toBe(false);
 });
