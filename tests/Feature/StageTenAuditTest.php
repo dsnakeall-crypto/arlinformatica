@@ -35,7 +35,7 @@ class StageTenAuditTest extends TestCase
                 'client_id' => $client->id,
                 'equipment_type_id' => $equipment,
                 'attendance_type' => 'bench',
-                'status' => ['analysis', 'waiting_part'][($i - 1) % 2],
+                'status' => ['analysis', 'waiting_part', 'in_service'][($i - 1) % 3],
                 'reported_problem' => "Chamado aberto {$i}",
                 'received_at' => now()->subMinutes($i),
                 'created_by' => $user->id,
@@ -48,6 +48,9 @@ class StageTenAuditTest extends TestCase
 
         $this->actingAs($user)->getJson('/api/orders?page=1')->assertOk()->assertJsonPath('per_page', 20)->assertJsonCount(20, 'data');
         $desk = $this->getJson('/api/orders/desk')->assertOk()->assertJsonCount(25)->json();
+        $this->assertTrue(collect($desk)->contains(fn ($order) => $order['status'] === 'analysis'));
+        $this->assertTrue(collect($desk)->contains(fn ($order) => $order['status'] === 'waiting_part'));
+        $this->assertTrue(collect($desk)->contains(fn ($order) => $order['status'] === 'in_service'));
         $this->assertFalse(collect($desk)->contains(fn ($order) => $order['status'] === 'completed'));
     }
 
