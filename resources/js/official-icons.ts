@@ -65,7 +65,6 @@ function installStyles() {
 function mark(element: Element, className: string, label: string) {
   const html = element as HTMLElement;
   html.classList.add(className);
-  if (!html.getAttribute('aria-label')) html.setAttribute('aria-label', label);
   if (!html.getAttribute('title')) html.setAttribute('title', label);
 }
 
