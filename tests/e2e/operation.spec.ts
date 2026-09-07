@@ -111,6 +111,8 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(finalModal.getByText(/Itens vinculados ao orçamento aprovado/)).toBeVisible();
     await finalModal.locator('textarea').fill('Equipamento testado e funcionando.');
     const finalizeRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/finalize`) && request.method() === 'POST');
+    const finalizedResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}`) && response.request().method() === 'GET' && response.status() === 200);
+    const finalShareResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/final-share`) && response.request().method() === 'GET');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
     const finalizePayload = (await finalizeRequestPromise).postDataJSON();
     expect(finalizePayload.approved_budget_id).toBeTruthy();
@@ -118,12 +120,14 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(statusSelect).toHaveValue('completed');
     await expect(page.locator('.completion').getByText('Finalizado', { exact: true })).toBeVisible();
     await expect(page.getByText('PDF Final', { exact: true })).toBeVisible();
-    const finalized = await api(page, `/orders/${orderId}`);
-    expect(finalized.body.items[0].source_budget_id).toBeTruthy();
-    expect(finalized.body.items[0].description).toBe('Formatação E2E');
-    const finalShare = await api(page, `/orders/${orderId}/final-share`);
-    expect(finalShare.status).toBe(200);
-    expect(finalShare.body.url).toContain(`/share/orders/${orderId}/final/1`);
+    const finalizedResponse = await finalizedResponsePromise;
+    const finalized = await finalizedResponse.json();
+    expect(finalized.items[0].source_budget_id).toBeTruthy();
+    expect(finalized.items[0].description).toBe('Formatação E2E');
+    const finalShareResponse = await finalShareResponsePromise;
+    expect(finalShareResponse.status()).toBe(200);
+    const finalShare = await finalShareResponse.json();
+    expect(finalShare.url).toContain(`/share/orders/${orderId}/final/1`);
     await expect(page.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' })).toHaveAttribute('href', /wa\.me/);
 
     await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toBeVisible();
@@ -133,37 +137,45 @@ test.describe.serial('fluxo operacional principal', () => {
     await paymentModal.getByLabel('Valor recebido (R$)').fill('50,00');
     await paymentModal.getByLabel('Forma de pagamento *').selectOption('pix');
     await expect(paymentModal.getByText(/R\$ 100,00.*A Receber/)).toBeVisible();
+    const partialSummaryPromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/payments`) && response.request().method() === 'GET');
     await paymentModal.getByRole('button', { name: 'Confirmar pagamento' }).click();
     await expect(page.getByText(/Pagamento parcial/)).toBeVisible();
     await expect(page.getByText(/ainda faltam R\$ 100,00/)).toBeVisible();
 
-    const partial = await api(page, `/orders/${orderId}/payments`);
-    expect(partial.body.paid_cents).toBe(5000);
-    expect(partial.body.balance_cents).toBe(10000);
-    expect(partial.body.status).toBe('partial');
+    const partialResponse = await partialSummaryPromise;
+    expect(partialResponse.status()).toBe(200);
+    const partial = await partialResponse.json();
+    expect(partial.paid_cents).toBe(5000);
+    expect(partial.balance_cents).toBe(10000);
+    expect(partial.status).toBe('partial');
 
     await page.getByRole('button', { name: 'Financeiro' }).click();
     await expect(page.getByRole('heading', { name: 'Financeiro' })).toBeVisible();
+    const receivablesResponsePromise = page.waitForResponse((response) => response.url().endsWith('/api/finance/receivables') && response.request().method() === 'GET');
     await page.getByRole('button', { name: 'A Receber' }).click();
     await expect(page.getByText(`OS #${orderNumber} · Cliente E2E`)).toBeVisible();
     await expect(page.getByText('Falta R$ 100,00')).toBeVisible();
-    const receivables = await api(page, '/finance/receivables');
-    expect(receivables.status).toBe(200);
-    expect(receivables.body.data.find((row: { id: number }) => row.id === orderId)?.balance_cents).toBe(10000);
+    const receivablesResponse = await receivablesResponsePromise;
+    expect(receivablesResponse.status()).toBe(200);
+    const receivables = await receivablesResponse.json();
+    expect(receivables.data.find((row: { id: number }) => row.id === orderId)?.balance_cents).toBe(10000);
 
     const receivableRow = page.locator('.transaction').filter({ hasText: `OS #${orderNumber}` });
     await receivableRow.getByRole('button', { name: 'Abrir OS' }).click();
     await page.getByRole('button', { name: 'Registrar novo pagamento' }).click();
     const finalPaymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
     await finalPaymentModal.getByRole('button', { name: /Pagar valor total/ }).click();
+    const paidSummaryPromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/payments`) && response.request().method() === 'GET');
     await finalPaymentModal.getByRole('button', { name: 'Confirmar pagamento' }).click();
     await expect(page.getByText('Pago integralmente')).toBeVisible();
     await expect(page.getByText('Saldo zerado.')).toBeVisible();
 
-    const paid = await api(page, `/orders/${orderId}/payments`);
-    expect(paid.body.paid_cents).toBe(15000);
-    expect(paid.body.balance_cents).toBe(0);
-    expect(paid.body.status).toBe('paid');
+    const paidResponse = await paidSummaryPromise;
+    expect(paidResponse.status()).toBe(200);
+    const paid = await paidResponse.json();
+    expect(paid.paid_cents).toBe(15000);
+    expect(paid.balance_cents).toBe(0);
+    expect(paid.status).toBe('paid');
   });
 
   test('histórico do cliente e pós-venda aparecem imediatamente, mas ficam bloqueados por 24h', async ({ page }) => {
