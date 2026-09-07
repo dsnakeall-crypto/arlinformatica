@@ -66,7 +66,7 @@ test('Ver OS React possui uma única raiz e blocos funcionais sem duplicação l
   });
 });
 
-test('OS finalizada permanece imutável e Editar OS mostra somente o aviso de preservação', async ({ page }) => {
+test('OS finalizada permite só correção administrativa e preserva campos históricos explicitamente', async ({ page }) => {
   const { clientName, order } = await createActiveOrder(page, 2);
   const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
     result: 'no_fault',
@@ -82,10 +82,52 @@ test('OS finalizada permanece imutável e Editar OS mostra somente o aviso de pr
   const root = await openOrder(page, clientName, order.number);
   await root.getByRole('button', { name: 'Editar OS' }).click();
   const dialog = page.getByRole('dialog', { name: `Editar OS #${order.number}` });
-  await expect(dialog, 'Contrato imutabilidade: Editar OS finalizada deveria abrir o aviso de preservação').toBeVisible();
-  await expect(dialog.getByText(/conteúdo histórico não pode ser alterado/i), 'Contrato imutabilidade: mensagem clara de bloqueio da OS finalizada desapareceu').toBeVisible();
-  const editableFields = await dialog.locator('input:not([type=hidden]), textarea, select').count();
-  expect(editableFields, `Contrato imutabilidade: aviso de OS finalizada expôs ${editableFields} campo(s) editável(is)`).toBe(0);
+  await expect(dialog, 'Contrato imutabilidade: Editar OS finalizada deveria abrir o editor administrativo').toBeVisible();
+  await expect(
+    dialog.getByText(/fechamento, valores, cliente, equipamento, checklist e serviços permanecem preservados/i),
+    'Contrato imutabilidade: aviso explícito de preservação histórica desapareceu',
+  ).toBeVisible();
+
+  await expect(dialog.getByLabel('Atendimento'), 'Contrato administrativo: attendance_type deve permanecer corrigível').toBeVisible();
+  await expect(dialog.getByLabel('Atendimento'), 'Contrato administrativo: attendance_type deve permanecer habilitado').toBeEnabled();
+  await expect(dialog.getByLabel('Problema relatado'), 'Contrato administrativo: reported_problem deve permanecer corrigível').toBeVisible();
+  await expect(dialog.getByLabel('Problema relatado'), 'Contrato administrativo: reported_problem deve permanecer habilitado').toBeEnabled();
+
+  await expect(dialog.getByLabel('Cliente da OS'), 'Contrato protegido: client_id não pode ser exposto para edição após finalização').toHaveCount(0);
+  await expect(dialog.getByLabel('Equipamento / Modelo / Acessórios'), 'Contrato protegido: equipamento não pode ser exposto para edição após finalização').toHaveCount(0);
+  await expect(dialog.getByRole('heading', { name: 'Checklist', exact: true }), 'Contrato protegido: checklist não pode ser exposto para edição após finalização').toHaveCount(0);
+  await expect(dialog.getByLabel('Serviço para adicionar no editor'), 'Contrato protegido: itens/serviços não podem ser expostos para edição após finalização').toHaveCount(0);
+  await expect(dialog.getByText('Laudo Final', { exact: true }), 'Contrato protegido: laudo final não pode ser exposto para edição após finalização').toHaveCount(0);
+
+  const protectedAttempts = [
+    ['client_id', { client_id: order.client_id }],
+    ['items', { items: [] }],
+    ['equipment_description', { equipment_description: 'Equipamento pós-fechamento indevido' }],
+    ['final_report', { final_report: 'Laudo pós-fechamento indevido' }],
+    ['checklist', { checklist: [] }],
+  ] as const;
+  for (const [field, payload] of protectedAttempts) {
+    const response = await api(page, `/orders/${order.id}`, 'PATCH', payload);
+    expect(response.status, `Contrato protegido: ${field} foi aceito após finalização; body=${JSON.stringify(response.body)}`).toBe(422);
+  }
+
+  await dialog.getByLabel('Atendimento').selectOption('external');
+  await dialog.getByLabel('Problema relatado').fill('Problema administrativo corrigido após finalização');
+  const saveResponse = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === `/api/orders/${order.id}` && response.request().method() === 'PATCH'
+  );
+  await dialog.getByRole('button', { name: 'Salvar alterações' }).click();
+  const saved = await saveResponse;
+  expect(saved.status(), 'Contrato administrativo: PATCH permitido de atendimento/problema falhou').toBe(200);
+
+  const persisted = await api(page, `/orders/${order.id}`);
+  expect(persisted.status).toBe(200);
+  expect(persisted.body?.attendance_type, 'Contrato administrativo: attendance_type corrigido não persistiu').toBe('external');
+  expect(persisted.body?.reported_problem, 'Contrato administrativo: reported_problem corrigido não persistiu').toBe('Problema administrativo corrigido após finalização');
+  expect(Number(persisted.body?.client_id), 'Contrato protegido: client_id mudou indevidamente').toBe(Number(order.client_id));
+  expect(persisted.body?.equipment_description ?? null, 'Contrato protegido: equipamento mudou indevidamente').toBe(order.equipment_description ?? null);
+  expect(persisted.body?.final_report ?? null, 'Contrato protegido: laudo final mudou indevidamente').toBe(order.final_report ?? null);
+  expect(persisted.body?.checklists ?? [], 'Contrato protegido: checklist mudou indevidamente').toEqual([]);
 });
 
 test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PATCH nem finaliza', async ({ page }) => {
