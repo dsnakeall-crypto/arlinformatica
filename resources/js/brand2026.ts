@@ -92,7 +92,7 @@ function enhanceShell(){
   if(!q('.arl-sidebar-slogan',aside)){const slogan=document.createElement('small');slogan.className='arl-sidebar-slogan';slogan.textContent='TECNOLOGIA QUE FAZ MAIS POR VOCÊ';aside.append(slogan)}
   const mobile=q<HTMLElement>('.mobile-logo');
   if(mobile && once(mobile,'arlBrand')){mobile.innerHTML='';mobile.append(brandImage());mark(mobile,'arlBrand')}
-  const layout=q<HTMLElement>('.device-layout'); if(layout){layout.classList.add('arl-device-layout');if(!q('.arl-layout-label',layout)){const s=document.createElement('span');s.className='arl-layout-label';s.textContent='Layout';layout.prepend(s)}}
+  const layout=q<HTMLElement>('.device-layout'); if(layout) layout.classList.add('arl-device-layout');
 }
 
 function titleEyebrow(title:HTMLElement, label:string){
@@ -260,7 +260,7 @@ function enhanceServicesSettingsBoundary(){
   if(text(q('h1'))==='Configurações') qa<HTMLElement>('.admin-list').forEach(x=>x.classList.add('arl-settings-admin-card'));
 }
 
-function runEnhancements(){installFixedTheme();enhanceShell();enhanceDashboard();enhanceClients();enhanceNewOrder();enhanceOrderView();enhanceServices();enhancePostSale();enhanceSettings();enhanceServicesSettingsBoundary()}
+function runEnhancements(){installFixedTheme();enhanceShell();enhanceDashboard();enhanceClients();enhanceNewOrder();enhanceOrderView();enhancePostSale();enhanceSettings();enhanceServicesSettingsBoundary()}
 
 installFixedTheme();installFetchObserver();
 const observer=new MutationObserver(()=>{window.requestAnimationFrame(runEnhancements)});
