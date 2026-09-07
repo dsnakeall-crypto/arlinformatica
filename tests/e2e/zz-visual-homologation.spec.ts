@@ -51,11 +51,16 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await nav.getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(page.getByText('Cliente Homologação Visual', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(`Cliente Nº ${clientResponse.body.id}`, { exact: true })).toBeVisible();
+  await expect(page.getByText('Rua das Flores, 320 · Centro', { exact: true })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-lista-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Novo cliente' }).click();
-  await expect(page.getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
+  const clientModal = page.getByRole('dialog', { name: 'Novo cliente' });
+  await expect(clientModal).toBeVisible();
+  await expect(clientModal.getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-cadastro-desktop.png', fullPage: true });
-  await page.getByRole('button', { name: 'Cancelar' }).click();
+  await clientModal.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(clientModal).toHaveCount(0);
 
   await nav.getByRole('button', { name: 'Nova OS' }).click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
@@ -108,6 +113,13 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   const pdf = await page.context().request.get(`/api/orders/${orderResponse.body.id}/final/1/pdf`);
   expect(pdf.ok()).toBeTruthy();
   await writeFile('visual-artifacts/05-fechamento-final.pdf', Buffer.from(await pdf.body()));
+
+  await nav.getByRole('button', { name: 'Clientes' }).click();
+  const visualClient = page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' });
+  await visualClient.getByRole('button', { name: 'Visualizar' }).click();
+  await expect(page.getByText(service.name, { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderResponse.body.id}/final/1/pdf`);
+  await page.screenshot({ path: 'visual-artifacts/02-clientes-historico-desktop.png', fullPage: true });
 
   await nav.getByRole('button', { name: 'Pós-Venda' }).click();
   await expect(page.getByRole('heading', { name: 'Pós-Venda & Reputação' })).toBeVisible();

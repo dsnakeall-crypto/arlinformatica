@@ -94,6 +94,8 @@ function setVisualIcon(action: HTMLElement, kind: keyof typeof ICONS) {
 
 function syncExactIcons() {
   qa<HTMLElement>('.client-list .contact-links a,.client-list .contact-links button,.dashboard-contact,.dashboard-address,.arl-order-mini-action,.dashboard-row:not(.head) button,.order-row:not(.head) button,.arl-client-delete,.arl-order-delete').forEach((action) => {
+    // A nova Gestão de Clientes é integralmente React; não tocar em seus nós.
+    if (action.closest('[data-arl-clients-react="1"]')) return;
     const label = `${action.getAttribute('aria-label') || ''} ${action.getAttribute('title') || ''} ${action.textContent || ''}`;
     if (action.classList.contains('arl-client-delete') || action.classList.contains('arl-order-delete') || /Excluir/i.test(label)) return setVisualIcon(action, 'lixeira');
     if (action.classList.contains('dashboard-contact') || /WhatsApp/i.test(label)) return setVisualIcon(action, 'whatsapp');

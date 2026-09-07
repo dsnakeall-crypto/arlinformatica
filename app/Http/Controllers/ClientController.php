@@ -33,7 +33,13 @@ class ClientController extends Controller
             // sem esconder os demais resultados que contêm o termo.
             $q->orderByRaw('CASE WHEN LOWER(name) LIKE ? THEN 0 ELSE 1 END', [mb_strtolower($search).'%']);
         }
-        $q->orderBy('name');
+        $q->orderBy('name')->orderBy('id');
+
+        // A Gestão de Clientes carrega o catálogo inteiro uma única vez e filtra localmente.
+        // Os demais consumidores continuam usando a paginação existente por padrão.
+        if ($r->boolean('all')) {
+            return response()->json(['data' => $q->get()]);
+        }
 
         $perPage = max(1, min(100, (int) $r->integer('per_page', $search !== '' ? 100 : 20)));
 
@@ -78,7 +84,13 @@ class ClientController extends Controller
 
     public function show(Client $client): JsonResponse
     {
-        $orders = $client->serviceOrders()->latest('received_at')->with(['documents' => fn ($q) => $q->where('type', 'final')->latest('revision')])->get();
+        $orders = $client->serviceOrders()
+            ->latest('received_at')
+            ->with([
+                'items' => fn ($q) => $q->orderBy('id'),
+                'documents' => fn ($q) => $q->where('type', 'final')->latest('revision'),
+            ])
+            ->get();
 
         return response()->json(['client' => $client, 'orders' => $orders]);
     }

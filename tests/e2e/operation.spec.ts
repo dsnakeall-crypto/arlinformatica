@@ -26,16 +26,21 @@ test.describe.serial('fluxo operacional principal', () => {
   test('cadastra cliente com fallback manual, CPF válido, edição e links', async ({ page }) => {
     await page.getByRole('button', { name: 'Clientes' }).click();
     await page.getByRole('button', { name: 'Novo cliente' }).click();
-    const form = page.locator('.form-card');
+    const modal = page.getByRole('dialog', { name: 'Novo cliente' });
+    await expect(modal).toBeVisible();
+    const form = modal.locator('form');
     const values: Record<string, string> = { name: 'Cliente E2E', document, phone: '34999998888', postal_code: '99999999', street: 'Rua Manual', number: '10', district: 'Centro', city: 'Araguari', state: 'MG' };
     for (const [name, value] of Object.entries(values)) await form.locator(`[name="${name}"]`).fill(value);
     await form.getByRole('button', { name: 'Salvar cliente' }).click();
+    await expect(page.getByRole('dialog', { name: 'Novo cliente' })).toHaveCount(0);
     const clientCard = page.locator('.client-list article').filter({ hasText: 'Cliente E2E' });
     await expect(clientCard).toBeVisible();
     await expect(clientCard.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', /wa\.me|whatsapp/);
     await expect(clientCard.getByRole('link', { name: 'Maps' })).toHaveAttribute('href', /google/);
     const found = await api(page, `/clients?q=${document}`);
     clientId = found.body.data[0].id;
+    await expect(clientCard).toContainText(`Cliente Nº ${clientId}`);
+    await expect(clientCard).toContainText('Rua Manual, 10');
     const duplicate = await api(page, '/clients', 'POST', { ...values, name: 'Duplicado', document, postal_code: '99999999' });
     expect(duplicate.status).toBe(422);
   });
@@ -184,9 +189,13 @@ test.describe.serial('fluxo operacional principal', () => {
     await clientCard.getByRole('button', { name: 'Visualizar' }).click();
     await expect(page.getByRole('heading', { name: 'Cliente E2E' })).toBeVisible();
     await expect(page.getByText(`OS #${orderNumber}`)).toBeVisible();
+    await expect(page.getByText('Formatação E2E', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderId}/final/1/pdf`);
 
     const history = await api(page, `/clients/${clientId}`);
     expect(history.body.orders.some((order: { id: number }) => order.id === orderId)).toBeTruthy();
+    const historicalOrder = history.body.orders.find((order: { id: number }) => order.id === orderId);
+    expect(historicalOrder.items.some((item: { description: string }) => item.description === 'Formatação E2E')).toBeTruthy();
 
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
     await expect(page.getByRole('heading', { name: 'Pós-Venda' })).toBeVisible();

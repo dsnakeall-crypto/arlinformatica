@@ -118,6 +118,8 @@ function enhanceDashboard(){
 function normalizedStatus(label:string){return label.includes('Análise')?'analysis':label.includes('Peça')?'waiting':label.includes('Serviço')?'service':label.includes('Concluído')?'completed':'interrupted'}
 
 function enhanceClients(){
+  // Gestão de Clientes nova é React puro. Os enhancers legados não tocam nessa árvore.
+  if(q('[data-arl-clients-react="1"]')) return;
   const h=qa<HTMLHeadingElement>('h1').find(x=>['Cadastro de Clientes','Gestão de Clientes'].includes(text(x))); if(!h) return;
   h.textContent='Gestão de Clientes'; const title=h.closest<HTMLElement>('.title'); if(title) titleEyebrow(title,'ARL INFORMÁTICA');
   const panel=q<HTMLElement>('.clients-list-panel'); if(!panel) return; panel.classList.add('arl-clients-panel');
