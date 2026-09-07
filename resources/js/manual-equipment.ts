@@ -9,6 +9,7 @@ declare global {
 
 const INTERNAL_EQUIPMENT = 'Informado manualmente';
 const UI_ORDER_NUMBER_KEY = 'arl:ui-created-order-number';
+const reactOrderDetailActive = () => Boolean(document.querySelector('[data-arl-order-detail-react="1"]'));
 
 function nativeSetSelect(select: HTMLSelectElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
@@ -82,8 +83,6 @@ function installManualField() {
       (option) => option.textContent?.trim() === INTERNAL_EQUIPMENT,
     );
     if (manualOption) {
-      // Preserve a checklist category selected before this enhancer finishes initializing.
-      // Only fall back to the internal manual type when the controlled select is still empty.
       if (!typeSelect.value) nativeSetSelect(typeSelect, manualOption.value);
       form.dataset.arlManualEquipmentInitialized = '1';
     }
@@ -112,7 +111,6 @@ function removeAutomaticCatalogEditors() {
   document.querySelectorAll<HTMLElement>('.admin-list').forEach((card) => {
     const title = card.querySelector('h2')?.textContent?.trim();
     if (title === 'Equipamentos' || title === 'Fabricantes') {
-      // These cards belong to React. Hide them without detaching nodes React must later unmount.
       card.hidden = true;
       card.style.display = 'none';
       card.setAttribute('aria-hidden', 'true');
@@ -140,6 +138,7 @@ function cleanupUnexpectedOpeningModal() {
 }
 
 function syncOrderDetailDescription() {
+  if (reactOrderDetailActive()) return;
   const order = window.__arlOrderDetailState;
   if (!order?.equipment_description) {
     document.querySelector('.arl-manual-equipment-detail')?.remove();
@@ -195,7 +194,6 @@ function installFetch() {
           nextInit = { ...init, body: JSON.stringify(payload) };
         }
       } catch {
-        // Mantém o request original quando o corpo não for JSON válido.
       }
     }
 

@@ -1,6 +1,7 @@
 export {};
 
 const statusIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2"/></svg>';
+const reactOrderDetailActive = () => Boolean(document.querySelector('[data-arl-order-detail-react="1"]'));
 
 const checklistCategoryEquipment: Record<string, { preferred: string; accepted: string[] }> = {
   notebooks: { preferred: 'Notebook', accepted: ['Notebook', 'Mac Apple'] },
@@ -35,6 +36,7 @@ function syncPostSaleAccessibility() {
 }
 
 function syncExternalStatusAction() {
+  if (reactOrderDetailActive()) return;
   const actions = document.querySelector<HTMLElement>('.external-actions');
   if (!actions || actions.querySelector('.arl-restored-external-status')) return;
 

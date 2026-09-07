@@ -1,0 +1,345 @@
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import { Camera, Pencil, Plus, Wallet, X } from 'lucide-react';
+
+type Props = { id: number; back: () => void };
+type ApiError = Error & { errors?: Record<string, string[]> };
+type PaymentSummary = { total_cents: number; paid_cents: number; balance_cents: number; status: 'unpaid' | 'partial' | 'paid'; payments: any[] };
+
+type FinalShare = { url: string; expires_at: string; revision: number };
+
+const csrf = () => document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
+const api = async (url: string, options: RequestInit = {}) => {
+  const response = await fetch(`/api${url}`, {
+    credentials: 'same-origin',
+    ...options,
+    headers: {
+      Accept: 'application/json',
+      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(csrf() ? { 'X-CSRF-TOKEN': csrf() } : {}),
+      ...options.headers,
+    },
+  });
+  const body = await response.json().catch(() => ({ message: 'Resposta inválida do servidor.' }));
+  if (!response.ok) throw Object.assign(new Error(body.message || 'Não foi possível concluir.'), { errors: body.errors }) as ApiError;
+  return body;
+};
+
+const digits = (value: string) => value.replace(/\D/g, '');
+const masks = {
+  document: (value: string) => {
+    const n = digits(value).slice(0, 14);
+    return n.length <= 11
+      ? n.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+      : n.replace(/(\d{2})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
+  },
+  phone: (value: string) => digits(value).slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2'),
+};
+const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+const statusLabel: Record<string, string> = {
+  analysis: 'Em Análise',
+  waiting_part: 'Aguardando',
+  in_service: 'Em Análise',
+  completed: 'Finalizado',
+  interrupted: 'Interrompido',
+  paid: 'Pago',
+};
+const paymentMethodLabel = (value: string) => ({ pix: 'Pix', cash: 'Dinheiro', debit: 'Débito', credit: 'Crédito', transfer: 'Transferência', other: 'Outro' } as Record<string, string>)[value] || value;
+
+function TextField({ label, value, onChange, required = false, type = 'text', name }: any) {
+  return <label className="field"><span>{label}{required ? ' *' : ''}</span><input name={name} type={type} value={value} onChange={onChange} required={required}/></label>;
+}
+
+function CameraModal({ onClose, onFile }: { onClose: () => void; onFile: (file: File) => void }) {
+  const video = useRef<HTMLVideoElement>(null);
+  const stream = useRef<MediaStream | null>(null);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let active = true;
+    void navigator.mediaDevices?.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+      .then((media) => {
+        if (!active) return media.getTracks().forEach((track) => track.stop());
+        stream.current = media;
+        if (video.current) video.current.srcObject = media;
+      })
+      .catch((reason) => setError(reason?.message || 'Não foi possível acessar a câmera.'));
+    return () => {
+      active = false;
+      stream.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
+  const shot = () => {
+    const source = video.current;
+    if (!source?.videoWidth) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = source.videoWidth;
+    canvas.height = source.videoHeight;
+    canvas.getContext('2d')?.drawImage(source, 0, 0);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      onFile(new File([blob], `camera-${Date.now()}.webp`, { type: 'image/webp' }));
+    }, 'image/webp', .86);
+  };
+  return <div className="arl-camera-modal" role="dialog" aria-modal="true" aria-label="Capturar foto">
+    <div className="arl-camera-card">
+      <button className="arl-camera-close" type="button" onClick={onClose}>×</button>
+      <h2>Capturar foto</h2><p>A imagem será anexada diretamente à ordem de serviço.</p>
+      <video ref={video} autoPlay playsInline muted/>
+      <div className="arl-camera-error">{error}</div>
+      <div className="arl-camera-actions"><button type="button" onClick={onClose}>Cancelar</button><button type="button" onClick={shot}>◉ Tirar foto</button></div>
+    </div>
+  </div>;
+}
+
+function PhotoChoice({ onClose, onUpload, onCamera }: { onClose: () => void; onUpload: () => void; onCamera: () => void }) {
+  return <div className="arl-photo-choice" role="dialog" aria-modal="true" aria-label="Adicionar foto"><div>
+    <h3>Adicionar foto</h3>
+    <button type="button" className="primary" onClick={onUpload}>Enviar arquivo</button>
+    <button type="button" onClick={onCamera}>Usar câmera / webcam</button>
+    <button type="button" onClick={onClose}>Cancelar</button>
+  </div></div>;
+}
+
+function EditOrderModal({ order, onClose, onSaved }: any) {
+  const [attendance, setAttendance] = useState(order.attendance_type);
+  const [problem, setProblem] = useState(order.reported_problem);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    void api(`/catalogs/checklist?equipment_type_id=${order.equipment_type_id}`).then((rows: any[]) => {
+      setTemplates(rows);
+      const names = new Set((order.checklists || []).map((row: any) => row.label));
+      setSelected(new Set(rows.filter((row) => names.has(row.label)).map((row) => row.id)));
+    }).catch((reason) => setError(reason.message));
+  }, [order]);
+  const toggle = (id: number, checked: boolean) => setSelected((current) => {
+    const next = new Set(current);
+    checked ? next.add(id) : next.delete(id);
+    return next;
+  });
+  const save = async () => {
+    setBusy(true); setError('');
+    try {
+      const updated = await api(`/orders/${order.id}`, { method: 'PATCH', body: JSON.stringify({ attendance_type: attendance, reported_problem: problem.trim(), checklist: Array.from(selected).map((template_id) => ({ template_id })) }) });
+      onSaved(updated);
+    } catch (reason: any) {
+      setError(Object.values(reason.errors || {}).flat()[0] as string || reason.message);
+    } finally { setBusy(false); }
+  };
+  return <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Editar OS #${order.number}`}>
+    <h2>Editar OS #{order.number}</h2><p>Corrija o relato e o checklist da OS ativa. Pagamentos são corrigidos separadamente e ficam auditados.</p>
+    <label>Atendimento<select value={attendance} onChange={(e) => setAttendance(e.target.value)}><option value="bench">Bancada</option><option value="external">Externo</option></select></label>
+    <label>Problema relatado<textarea value={problem} onChange={(e) => setProblem(e.target.value)}/></label>
+    <label>Checklist selecionado</label><div className="arl-od-checks">{templates.length ? templates.map((row) => <label key={row.id}><input type="checkbox" checked={selected.has(row.id)} onChange={(e) => toggle(row.id, e.target.checked)}/>{row.label}</label>) : <span>Nenhuma opção para este equipamento.</span>}</div>
+    {error && <div className="alert">{error}</div>}
+    <div className="arl-od-actions"><button type="button" onClick={onClose}>Cancelar</button><button type="button" className="primary" disabled={busy} onClick={save}>{busy ? 'Salvando…' : 'Salvar alterações'}</button></div>
+  </section></div>;
+}
+
+function ImmutableModal({ order, onClose }: any) {
+  return <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Editar OS #${order.number}`}>
+    <h2>OS #{order.number} preservada</h2>
+    <p>Esta OS está {order.archived ? 'paga e arquivada' : 'finalizada'} e o conteúdo histórico não pode ser alterado. Uma futura etapa tratará o fluxo de reabertura/retorno sem modificar esta OS original.</p>
+    <div className="arl-od-actions"><button type="button" className="primary" onClick={onClose}>Fechar</button></div>
+  </section></div>;
+}
+
+function InterruptionModal({ order, onClose, onSaved }: any) {
+  const [reason, setReason] = useState(order.status === 'interrupted' ? (order.interruption_reason || order.technical_report || '') : '');
+  const [error, setError] = useState('');
+  const save = async () => {
+    if (!reason.trim()) { setError('Informe o motivo da interrupção.'); return; }
+    try {
+      await api(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'interrupted', interruption_reason: reason.trim() }) });
+      onSaved();
+    } catch (e: any) { setError(e.message); }
+  };
+  return <div className="arl-status-modal"><section className="arl-status-modal-card" role="dialog" aria-modal="true" aria-label="Interromper OS">
+    <h2>Interromper OS</h2><p className="arl-status-modal-note">Descreva por que o atendimento foi interrompido. O motivo ficará salvo enquanto a OS estiver interrompida.</p>
+    <label>Motivo da interrupção<textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ex.: cliente pediu pausa, aguardando decisão, atendimento suspenso..."/></label>
+    <div className="arl-status-modal-error">{error}</div>
+    <div className="arl-status-modal-actions"><button type="button" onClick={onClose}>Cancelar</button><button type="button" className="primary" onClick={save}>Salvar interrupção</button></div>
+  </section></div>;
+}
+
+function ServicesPanel({ order, reload }: any) {
+  const [catalog, setCatalog] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>(() => (order.items || []).filter((row: any) => !row.finalization_id && row.catalog_id).map((row: any) => ({ catalog_id: Number(row.catalog_id), description: row.description, quantity: Number(row.quantity), unit_price_cents: Number(row.unit_price_cents) })));
+  const [selected, setSelected] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  useEffect(() => { void api('/catalogs/services').then((rows) => { setCatalog(rows); if (!selected && rows[0]) setSelected(String(rows[0].id)); }); }, [order.id]);
+  useEffect(() => { setItems((order.items || []).filter((row: any) => !row.finalization_id && row.catalog_id).map((row: any) => ({ catalog_id: Number(row.catalog_id), description: row.description, quantity: Number(row.quantity), unit_price_cents: Number(row.unit_price_cents) }))); }, [order.items]);
+  if (order.archived || order.status === 'completed') return null;
+  const add = () => setItems((current) => {
+    const entry = catalog.find((row) => String(row.id) === selected); if (!entry) return current;
+    const found = current.find((row) => row.catalog_id === entry.id);
+    return found ? current.map((row) => row.catalog_id === entry.id ? { ...row, quantity: Math.min(999, row.quantity + 1) } : row) : [...current, { catalog_id: entry.id, description: entry.name, quantity: 1, unit_price_cents: entry.price_cents }];
+  });
+  const save = async () => {
+    setBusy(true); setMessage('');
+    try {
+      await api(`/orders/${order.id}`, { method: 'PATCH', body: JSON.stringify({ items: items.map((row) => ({ catalog_id: row.catalog_id, quantity: row.quantity })) }) });
+      setMessage('Serviços salvos.'); await reload();
+    } catch (e: any) { setMessage(e.message); } finally { setBusy(false); }
+  };
+  return <section className="wide arl-od-services"><h2>Serviços / itens realizados</h2><p>Independente do orçamento: registre o que realmente foi feito e a quantidade.</p>
+    <div className="arl-od-service-top"><select aria-label="Serviço para adicionar" value={selected} onChange={(e) => setSelected(e.target.value)}>{catalog.map((row) => <option key={row.id} value={row.id}>{row.name} — {money(row.price_cents)}</option>)}</select><button type="button" onClick={add}>Adicionar serviço</button></div>
+    <div className="arl-od-lines">{items.length ? items.map((row, index) => <div className="arl-od-line" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(e) => setItems((current) => current.map((item, i) => i === index ? { ...item, quantity: Math.max(1, Math.min(999, Number(e.target.value) || 1)) } : item))}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" aria-label={`Remover ${row.description}`} onClick={() => setItems((current) => current.filter((_, i) => i !== index))}>×</button></div>) : <p>Nenhum serviço adicionado.</p>}</div>
+    <div className="arl-od-foot"><span>{message}</span><strong>Subtotal: {money(items.reduce((sum, row) => sum + row.quantity * row.unit_price_cents, 0))}</strong><button type="button" className="arl-od-save" disabled={busy} onClick={save}>{busy ? 'Salvando…' : 'Salvar serviços'}</button></div>
+  </section>;
+}
+
+function FinalReportPanel({ order, value, setValue, reload }: any) {
+  const [message, setMessage] = useState('');
+  const readOnly = Boolean(order.archived || order.status === 'completed');
+  const save = async () => {
+    setMessage('');
+    try { await api(`/orders/${order.id}`, { method: 'PATCH', body: JSON.stringify({ final_report: value.trim() || null }) }); setMessage('Salvo.'); await reload(); }
+    catch (e: any) { setMessage(e.message); }
+  };
+  return <section className="wide arl-od-report"><h2>Laudo Final</h2><p>O que foi feito, pontos de atenção e recomendações. Este texto sai no PDF final.</p>
+    <textarea readOnly={readOnly} placeholder="Descreva o serviço executado e observações..." value={value} onChange={(e) => setValue(e.target.value)}/>
+    {!readOnly && <div className="arl-od-report-actions"><small>{message}</small><button type="button" className="arl-od-save" onClick={save}>Salvar Laudo Final</button></div>}
+  </section>;
+}
+
+function BudgetBox({ order, openSignal = 0 }: any) {
+  const [list, setList] = useState<any[]>([]), [open, setOpen] = useState(false), [validity, setValidity] = useState(7);
+  const [diagnosis, setDiagnosis] = useState(''), [proposal, setProposal] = useState(''), [description, setDescription] = useState(''), [quantity, setQuantity] = useState(1), [price, setPrice] = useState('0'), [warranty, setWarranty] = useState(false), [term, setTerm] = useState(30), [unit, setUnit] = useState('days');
+  const load = () => api(`/orders/${order.id}/budgets`).then(setList);
+  useEffect(() => { void load(); void api('/operational-settings').then((x) => setValidity(+x.budget_validity_days || 7)).catch(() => undefined); }, [order.id]);
+  useEffect(() => { if (openSignal) setOpen(true); }, [openSignal]);
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    await api(`/orders/${order.id}/budgets`, { method: 'POST', body: JSON.stringify({ diagnosis, proposal, validity_days: validity, items: [{ description, quantity, unit_price_cents: Math.round(Number(price.replace(',', '.')) * 100), warranty_enabled: warranty, warranty_term: warranty ? term : null, warranty_unit: warranty ? unit : null }] }) });
+    setOpen(false); await load();
+  };
+  return <section className="wide"><div className="section-title"><h2>Orçamentos</h2><button className="primary" data-arl-quick-source="budget" onClick={() => setOpen(!open)}><Plus/>Gerar orçamento</button></div>
+    {open && <form className="budget-form" onSubmit={submit}><label className="field"><span>Diagnóstico</span><textarea required value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}/></label><label className="field"><span>Serviço proposto</span><textarea required value={proposal} onChange={(e) => setProposal(e.target.value)}/></label><div className="form-grid"><TextField label="Validade (dias)" value={validity} onChange={(e: any) => setValidity(+e.target.value)} required/><TextField label="Item" value={description} onChange={(e: any) => setDescription(e.target.value)} required/><TextField label="Quantidade" value={quantity} onChange={(e: any) => setQuantity(+e.target.value)} required/><TextField label="Valor unitário" value={price} onChange={(e: any) => setPrice(e.target.value)} required/><label className="field"><span>Garantia</span><label><input type="checkbox" checked={warranty} onChange={(e) => setWarranty(e.target.checked)}/> Este item tem garantia</label></label>{warranty && <><TextField label="Duração" value={term} onChange={(e: any) => setTerm(+e.target.value)}/><label className="field"><span>Unidade</span><select value={unit} onChange={(e) => setUnit(e.target.value)}><option value="days">Dias</option><option value="months">Meses</option><option value="years">Anos</option></select></label></>}</div><button className="primary">Salvar e gerar PDF</button></form>}
+    {list.length ? list.map((budget) => <p key={budget.id}>Revisão {budget.revision} · {budget.status} · R$ {(budget.total_cents / 100).toFixed(2)} · <a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/budgets/${budget.revision}/pdf`}>Abrir PDF</a> {budget.status === 'draft' && <button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'sent' }) }).then(load)}>Marcar enviado</button>}{budget.status === 'sent' && <><button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'approved' }) }).then(load)}>Aprovar orçamento</button><button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'refused' }) }).then(load)}>Recusar</button></>}</p>) : <p>Nenhum orçamento criado.</p>}
+  </section>;
+}
+
+function PaymentCorrection({ order, payment, onClose, onSaved }: any) {
+  const [value, setValue] = useState((payment.effective_cents / 100).toFixed(2).replace('.', ','));
+  const [reason, setReason] = useState(''); const [error, setError] = useState('');
+  const save = async () => {
+    const cents = Math.round(Number(value.replace(',', '.')) * 100);
+    if (!Number.isFinite(cents) || cents < 0 || reason.trim().length < 3) { setError('Informe valor e motivo válidos.'); return; }
+    try { await api(`/finance/transactions/${payment.transaction_id}/adjust`, { method: 'POST', body: JSON.stringify({ new_cents: cents, reason: reason.trim() }) }); onSaved(); }
+    catch (e: any) { setError(e.message); }
+  };
+  return <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Corrigir pagamento da OS #${order.number}`}><h2>Corrigir pagamento da OS #{order.number}</h2><p>A correção mantém o lançamento original e fica auditada.</p><label>Novo valor (R$)<input value={value} onChange={(e) => setValue(e.target.value)}/></label><label>Motivo<textarea value={reason} onChange={(e) => setReason(e.target.value)}/></label>{error && <div className="alert">{error}</div>}<div className="arl-od-actions"><button type="button" onClick={onClose}>Cancelar</button><button type="button" className="primary" onClick={save}>Salvar correção</button></div></section></div>;
+}
+
+function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
+  const [summary, setSummary] = useState<PaymentSummary | null>(null), [open, setOpen] = useState(false), [method, setMethod] = useState('pix'), [amount, setAmount] = useState('0,00'), [busy, setBusy] = useState(false), [error, setError] = useState(''), [correcting, setCorrecting] = useState<any>();
+  const load = async () => { const next = await api(`/orders/${order.id}/payments`) as PaymentSummary; setSummary(next); setAmount(((next.balance_cents || 0) / 100).toFixed(2).replace('.', ',')); onSummary?.(next); };
+  useEffect(() => { void load(); }, [order.id, order.total_cents]);
+  useEffect(() => { if (openSignal && summary && summary.balance_cents > 0 && summary.total_cents > 0) { setAmount((summary.balance_cents / 100).toFixed(2).replace('.', ',')); setError(''); setOpen(true); } }, [openSignal]);
+  if (!summary) return <section className="wide"><h2>Pagamento</h2><p>Carregando situação do pagamento…</p></section>;
+  const { total_cents: total, paid_cents: paid, balance_cents: balance } = summary;
+  const entered = Math.round(Number(amount.replace(',', '.')) * 100), remainingAfter = Number.isFinite(entered) ? Math.max(0, balance - entered) : balance;
+  const save = async () => {
+    const cents = Math.round(Number(amount.replace(',', '.')) * 100); if (!Number.isFinite(cents) || cents <= 0) { setError('Informe um valor recebido válido.'); return; }
+    setBusy(true); setError(''); try { await api(`/orders/${order.id}/payment`, { method: 'POST', body: JSON.stringify({ amount_cents: cents, method, idempotency_key: crypto.randomUUID() }) }); setOpen(false); await load(); } catch (e: any) { setError(Object.values(e.errors || {}).flat()[0] as string || e.message); } finally { setBusy(false); }
+  };
+  const compact = summary.status !== 'unpaid' || summary.payments.length > 0;
+  return <section className={`wide ${compact ? 'arl-payment-compact' : 'arl-payment-empty'}`}><div className="section-title"><div><h2>Pagamento</h2><p>Registro financeiro independente do status operacional.</p></div>{balance > 0 && total > 0 && <button className="primary" data-arl-quick-source="payment" onClick={() => { setAmount((balance / 100).toFixed(2).replace('.', ',')); setError(''); setOpen(true); }}><Wallet/>{paid > 0 ? 'Registrar novo pagamento' : 'Registrar pagamento'}</button>}</div>
+    <div className="finance-cards"><article><small>Total da OS</small><strong>{money(total)}</strong></article><article><small>Total pago</small><strong>{money(paid)}</strong></article><article><small>Falta pagar</small><strong>{money(balance)}</strong></article></div>
+    {summary.status === 'paid' ? <div className="payment-ok"><b>Pago integralmente</b><span>Saldo zerado.</span></div> : summary.status === 'partial' ? <div className="notice"><b>Pagamento parcial</b> · ainda faltam {money(balance)}.</div> : <p>Pagamento ainda não registrado.</p>}
+    {summary.payments.map((payment) => <article className="transaction" key={payment.id}><div><b>{money(payment.effective_cents)}</b><small>{paymentMethodLabel(payment.method)} · {new Date(payment.paid_at).toLocaleString('pt-BR')} · {payment.user_name}</small></div>{['Master', 'Administrador'].includes(role) && <button type="button" className="arl-pay-edit" title="Corrigir valor pago" aria-label="Corrigir valor pago" onClick={() => setCorrecting(payment)}><Pencil/></button>}</article>)}
+    {open && <div className="modal"><div className="modal-card" role="dialog" aria-modal="true" aria-label={`Pagamento da OS #${order.number}`}><button className="modal-close" onClick={() => setOpen(false)}><X/></button><h1>Pagamento da OS #{order.number}</h1><div className="finance-cards"><article><small>Total</small><strong>{money(total)}</strong></article><article><small>Já pago</small><strong>{money(paid)}</strong></article><article><small>Saldo</small><strong>{money(balance)}</strong></article></div><button type="button" onClick={() => setAmount((balance / 100).toFixed(2).replace('.', ','))}>Pagar valor total ({money(balance)})</button><TextField label="Valor recebido (R$)" value={amount} onChange={(e: any) => setAmount(e.target.value)} required/><label className="field"><span>Forma de pagamento *</span><select value={method} onChange={(e) => setMethod(e.target.value)}>{[['pix', 'Pix'], ['cash', 'Dinheiro'], ['debit', 'Débito'], ['credit', 'Crédito'], ['transfer', 'Transferência'], ['other', 'Outro']].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>{Number.isFinite(entered) && entered > 0 && entered < balance && <div className="notice">Pagamento parcial: após confirmar, ainda ficarão <b>{money(remainingAfter)}</b> em A Receber.</div>}{error && <div className="alert">{error}</div>}<div className="actions"><button onClick={() => setOpen(false)}>Cancelar</button><button className="primary" disabled={busy} onClick={save}>{busy ? 'Salvando…' : 'Confirmar pagamento'}</button></div></div></div>}
+    {correcting && <PaymentCorrection order={order} payment={correcting} onClose={() => setCorrecting(null)} onSaved={async () => { setCorrecting(null); await load(); }}/>} 
+  </section>;
+}
+
+function FinalizationBox({ order, reload, openSignal = 0, finalReport, onShare }: any) {
+  const seeded = () => (order.items || []).filter((row: any) => !row.finalization_id).map((row: any) => { let warranty = row.warranty_snapshot; if (typeof warranty === 'string') try { warranty = JSON.parse(warranty); } catch { warranty = null; } return { catalog_id: row.catalog_id, description: row.description, quantity: row.quantity, unit_price_cents: row.unit_price_cents, warranty_enabled: !!warranty, warranty_term: warranty?.term, warranty_unit: warranty?.unit, warranty_description: warranty?.description }; });
+  const [open, setOpen] = useState(false), [result, setResult] = useState('repair_completed'), [other, setOther] = useState(''), [discount, setDiscount] = useState('0'), [items, setItems] = useState<any[]>(seeded), [catalog, setCatalog] = useState<any[]>([]), [budgets, setBudgets] = useState<any[]>([]), [sourceBudgetId, setSourceBudgetId] = useState<number | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
+  const loadLists = () => Promise.all([api('/catalogs/services'), api(`/orders/${order.id}/budgets`)]).then(([services, budgetRows]) => { setCatalog(services); setBudgets(budgetRows); });
+  useEffect(() => { void loadLists(); }, [order.id]); useEffect(() => { setItems(seeded()); }, [order.items]); useEffect(() => { if (openSignal) { setOpen(true); void loadLists(); } }, [openSignal]);
+  if (order.status === 'completed') return <section className="wide completion"><h2>Finalização da OS</h2><b>Finalizado</b><p>{order.technical_report}</p><strong>Total: {money(order.total_cents)}</strong></section>;
+  const approved = budgets.find((row) => row.status === 'approved');
+  const budgetItems = approved ? approved.items.map((row: any) => { let warranty = row.warranty_snapshot; if (typeof warranty === 'string') try { warranty = JSON.parse(warranty); } catch { warranty = null; } return { catalog_id: row.catalog_id, description: row.description, quantity: row.quantity, unit_price_cents: row.unit_price_cents, warranty_enabled: !!warranty, warranty_term: warranty?.term, warranty_unit: warranty?.unit }; }) : [];
+  const shownItems = sourceBudgetId ? budgetItems : items, subtotal = shownItems.reduce((sum: number, row: any) => sum + row.quantity * row.unit_price_cents, 0), disc = Math.round(Number(discount.replace(',', '.')) * 100), total = Math.max(0, subtotal - disc);
+  const add = (entry: any) => { setSourceBudgetId(null); setItems((current) => [...current, { catalog_id: entry.id, description: entry.name, quantity: 1, unit_price_cents: entry.price_cents, warranty_enabled: !!entry.warranty_enabled, warranty_term: entry.warranty_term, warranty_unit: entry.warranty_unit }]); };
+  const finish = async () => {
+    setBusy(true); setError('');
+    try {
+      if (finalReport.trim()) await api(`/orders/${order.id}`, { method: 'PATCH', body: JSON.stringify({ final_report: finalReport.trim() }) });
+      const payload: any = { result, result_other: other, technical_report: finalReport.trim(), discount_cents: disc, approved_budget_id: sourceBudgetId, photo_ids: (order.photos || []).map((row: any) => row.id) };
+      if (!sourceBudgetId) payload.items = items;
+      await api(`/orders/${order.id}/finalize`, { method: 'POST', body: JSON.stringify(payload) });
+      const share = await api(`/orders/${order.id}/final-share`).catch(() => null);
+      if (share?.url) onShare(share);
+      setOpen(false); await reload();
+    } catch (e: any) { setError(Object.values(e.errors || {}).flat()[0] as string || e.message); } finally { setBusy(false); }
+  };
+  return <section className="wide"><div className="section-title"><div><h2>Finalização da OS</h2><p>Concluir exige resultado, validação e snapshot histórico.</p></div><button id="finalization-action" className="primary" onClick={() => { setOpen(true); void loadLists(); }}>Concluir OS</button></div>
+    {open && <div className="modal"><div className="modal-card arl-finalization" role="dialog" aria-modal="true" aria-label="FINALIZAÇÃO DA OS"><button className="modal-close" onClick={() => setOpen(false)}><X/></button><h1>FINALIZAÇÃO DA OS</h1><label className="field"><span>Resultado do atendimento *</span><select value={result} onChange={(e) => setResult(e.target.value)}><option value="repair_completed">Reparo realizado</option><option value="irreparable">Equipamento sem possibilidade de reparo</option><option value="client_cancelled">Cliente desistiu/cancelou</option><option value="economically_unviable">Reparo economicamente inviável</option><option value="no_fault">Sem defeito constatado</option><option value="other">Outro</option></select></label>{result === 'other' && <TextField label="Descreva o outro resultado" value={other} onChange={(e: any) => setOther(e.target.value)} required/>}<label className="field"><span>LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO {result !== 'repair_completed' ? '*' : ''}</span><textarea value={finalReport} readOnly/></label><div className="section-title"><h2>Serviços da OS</h2>{approved && <button onClick={() => { setSourceBudgetId(approved.id); setItems([]); }}>USAR ITENS DO ORÇAMENTO APROVADO</button>}</div><div className="notice arl-final-note">A finalização pode usar os serviços cadastrados na OS ou os itens de um orçamento aprovado selecionado.</div>{sourceBudgetId && <div className="notice">Itens vinculados ao orçamento aprovado. Preço, quantidade e garantia serão lidos diretamente do servidor. <button onClick={() => setSourceBudgetId(null)}>Usar itens manuais</button></div>}<div className="catalog-pills">{catalog.map((entry) => <button key={entry.id} onClick={() => add(entry)}>+ {entry.name}</button>)}</div>{shownItems.map((row: any, index: number) => <div className="finish-item" key={`${row.catalog_id}-${index}`}><input disabled={!!sourceBudgetId} value={row.description} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, description: e.target.value } : item))}/><input disabled={!!sourceBudgetId} type="number" min="1" value={row.quantity} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, quantity: +e.target.value } : item))}/><input disabled={!!sourceBudgetId} value={(row.unit_price_cents / 100).toFixed(2)} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, unit_price_cents: Math.round(+e.target.value.replace(',', '.') * 100) } : item))}/><span>{money(row.quantity * row.unit_price_cents)}</span>{!sourceBudgetId && <button onClick={() => setItems(items.filter((_, i) => i !== index))}>Remover</button>}</div>)}<div className="money"><span>Subtotal <b>{money(subtotal)}</b></span><label>Desconto (R$)<input value={discount} onChange={(e) => setDiscount(e.target.value)}/></label><strong>Total {money(total)}</strong></div>{error && <div className="alert">{error}</div>}<div className="actions"><button onClick={() => setOpen(false)}>Cancelar</button><button className="primary" disabled={busy} onClick={finish}>{busy ? 'Finalizando…' : 'Salvar e concluir OS'}</button></div></div></div>}
+  </section>;
+}
+
+function ReportBox({ order }: any) {
+  const [list, setList] = useState<any[]>([]), [templates, setTemplates] = useState<any[]>([]), [open, setOpen] = useState(false), [template, setTemplate] = useState<any>(), [content, setContent] = useState<any>({ customer_report: order.reported_problem, technical_analysis: '', tests_performed: '', components: '', diagnosis: '', conclusion: '', equipment_situation: '', responsible_technician: '', qualification: '', certification: '', electrical_conclusion: '', confirmed: false, photo_ids: [] }), [error, setError] = useState('');
+  const load = () => Promise.all([api(`/orders/${order.id}/reports`), api('/report-templates')]).then(([reports, rows]) => { setList(reports); setTemplates(rows); setTemplate((current: any) => current || rows[0]); });
+  useEffect(() => { void load(); }, [order.id]); const set = (key: string, value: any) => setContent((current: any) => ({ ...current, [key]: value }));
+  const issue = async () => { setError(''); try { const draft = await api(`/orders/${order.id}/reports`, { method: 'POST', body: JSON.stringify({ template_id: template.id, content: { ...content, confirmed: true } }) }); await api(`/orders/${order.id}/reports/${draft.revision}/issue`, { method: 'POST', body: '{}' }); setOpen(false); await load(); } catch (e: any) { setError(e.message); } };
+  return <section className="wide arl-old-report"><div className="section-title"><h2>Laudos técnicos</h2><button className="primary" onClick={() => setOpen(!open)}>GERAR LAUDO TÉCNICO</button></div>{open && <div className="report-form"><div className="notice">O conteúdo técnico deve ser revisado e confirmado pelo profissional responsável antes da emissão.</div><label className="field"><span>Modelo</span><select value={template?.id || ''} onChange={(e) => setTemplate(templates.find((row) => row.id === +e.target.value))}>{templates.filter((row) => row.active).map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>{[['customer_report', 'Relato'], ['technical_analysis', 'Análise técnica'], ['tests_performed', 'Testes realizados'], ['components', 'Componentes avaliados/danificados'], ['diagnosis', 'Diagnóstico'], ['conclusion', 'Conclusão'], ['equipment_situation', 'Situação do equipamento'], ['observations', 'Observações'], ['responsible_technician', 'Técnico responsável'], ['qualification', 'Qualificação'], ['certification', 'Registro/certificação (opcional)']].map(([key, label]) => <label className="field" key={key}><span>{label}</span>{['responsible_technician', 'qualification', 'certification', 'equipment_situation'].includes(key) ? <input value={content[key] || ''} onChange={(e) => set(key, e.target.value)}/> : <textarea value={content[key] || ''} onChange={(e) => set(key, e.target.value)}/>}</label>)}{error && <div className="alert">{error}</div>}<button className="primary" onClick={issue}>Revisar, confirmar e emitir</button></div>}{list.map((row) => <p key={row.id}>Laudo {row.template_name} · Revisão {row.revision} · {row.status === 'issued' ? 'Emitido' : 'Rascunho'} {row.status === 'issued' && <a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/reports/${row.revision}/pdf`}>Visualizar / imprimir / baixar</a>}</p>)}</section>;
+}
+
+function DocumentsBox({ order }: any) {
+  const [docs, setDocs] = useState<any[]>([]); useEffect(() => { void api(`/orders/${order.id}/documents`).then(setDocs); }, [order.id, order.status]);
+  return <section className="wide"><h2>Documentos</h2><div className="documents"><a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de recebimento</a>{docs.filter((row) => row.type !== 'term').map((row) => { const href = row.type === 'final' ? `/api/orders/${order.id}/final/${row.revision}/pdf` : row.type === 'technical-report' ? `/api/orders/${order.id}/reports/${row.revision}/pdf` : `/api/orders/${order.id}/budgets/${row.revision}/pdf`; return <article key={row.id}><div><b>{row.type === 'final' ? 'PDF Final' : row.type === 'technical-report' ? 'Laudo Técnico' : 'Orçamento'}</b><small>Revisão {row.revision} · {new Date(row.issued_at).toLocaleString('pt-BR')} · {row.issued_by_name}</small></div><a target="_blank" rel="noreferrer" href={href}>Visualizar</a><a href={href} download>Baixar PDF</a><button onClick={() => { const popup = window.open(href); popup?.addEventListener('load', () => popup.print()); }}>Imprimir</button></article>; })}</div></section>;
+}
+
+function FinalShareCard({ order, share, onClose }: { order: any; share: FinalShare; onClose: () => void }) {
+  const phone = digits(order.client?.phone || ''); const full = phone.startsWith('55') ? phone : `55${phone}`;
+  const message = [`Olá, ${order.client?.name || 'cliente'} 👋`, `Seu Equipamento está pronto da OS ${order.number}! 🎉`, '📋 Detalhes do Serviço:', `- Valor: ${money(order.total_cents || 0)}`, `- Acesse o PDF da Ordem de Serviço aqui: ${share.url}`, '💳 Formas de Pagamento:', '- PIX (Chave): 35988285777', '- Cartão: (Com taxas inclusas)', '- Dinheiro: (Favor trazer trocado)', '⚠️ A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.', 'Agradecemos pela preferência! 😊'].join('\n');
+  const whatsapp = full ? `https://wa.me/${full}?text=${encodeURIComponent(message)}` : '';
+  return <div className="arl-final-share-host"><section className="arl-final-share-card" role="status" aria-label="Compartilhar fechamento da OS"><h2>OS #{order.number} finalizada</h2><p>O PDF Final está pronto. O link abaixo expira em 48 horas; o PDF original continua preservado no histórico.</p><div className="arl-final-share-actions"><a target="_blank" rel="noreferrer" href={share.url}>Abrir PDF</a>{whatsapp && <a className="whatsapp" target="_blank" rel="noreferrer" href={whatsapp} onClick={(e) => { e.preventDefault(); if (window.confirm('Deseja abrir o WhatsApp para enviar a mensagem de finalização desta OS?')) window.open(whatsapp, '_blank', 'noopener'); }}>Enviar PDF pelo WhatsApp</a>}<button type="button" onClick={onClose}>Fechar</button></div></section></div>;
+}
+
+export default function OrderDetailPage({ id, back }: Props) {
+  const [order, setOrder] = useState<any>(), [role, setRole] = useState(''), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [interruptOpen, setInterruptOpen] = useState(false), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [share, setShare] = useState<FinalShare | null>(null), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null), statusSelect = useRef<HTMLSelectElement>(null);
+  const load = async () => { try { const next = await api(`/orders/${id}`); setOrder(next); setFinalReport(next.final_report || (next.status === 'completed' ? next.technical_report || '' : '')); setError(''); } catch (e: any) { setError(e.message); } };
+  useEffect(() => { void Promise.all([load(), api('/me').then((me) => setRole(me.role || '')).catch(() => undefined)]); }, [id]);
+  if (error) return <div className="state error">{error}</div>; if (!order) return <div className="state">Carregando OS…</div>;
+  const immutable = Boolean(order.archived || order.status === 'completed');
+  const uploadFile = async (file?: File | null) => { if (!file) return; const form = new FormData(); form.append('photo', file); try { await api(`/orders/${order.id}/photos`, { method: 'POST', body: form }); await load(); } catch (e: any) { setError(e.message); } };
+  const changeStatus = async (value: string) => {
+    if (value === 'completed') { setFinalSignal((x) => x + 1); return; }
+    if (value === 'interrupted') { setInterruptOpen(true); return; }
+    try { await api(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: value }) }); await load(); } catch (e: any) { window.alert(e.message); await load(); }
+  };
+  const shownStatus = order.archived ? 'paid' : order.status;
+  const activeStatusOptions = [['analysis', 'Em Análise'], ['waiting_part', 'Aguardando'], ['interrupted', 'Interrompido'], ['completed', 'Finalizado']];
+  const statusOptions = order.archived ? [['paid', 'Pago']] : order.status === 'completed' ? [['completed', 'Finalizado'], ['paid', 'Pago']] : activeStatusOptions;
+  return <div data-arl-order-detail-react="1">
+    <button onClick={back}>← Voltar</button>
+    <div className="title page-title"><div><span className="arl-eyebrow">ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1><p>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</p><label className={`status-picker status-${shownStatus}`}><span>Status</span><select ref={statusSelect} value={shownStatus} disabled={order.archived} onChange={(e) => void changeStatus(e.target.value)}>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label></div><div className="arl-od-tools"><button type="button" className="arl-od-btn" onClick={() => setEditOpen(true)}><Pencil/><span>Editar OS</span></button></div></div>
+    {order.attendance_type === 'external' && <div className="contact-links external-actions" aria-label="Atalhos do atendimento externo"><a href={order.mobile_actions?.whatsapp_url} target="_blank" rel="noreferrer" aria-label="WhatsApp">WhatsApp</a><a href={order.mobile_actions?.maps_url} target="_blank" rel="noreferrer" aria-label="Google Maps">Maps</a><button type="button" aria-label="Adicionar foto" onClick={() => setPhotoChoice(true)}>Foto</button><button type="button" aria-label="Status" onClick={() => statusSelect.current?.focus()}>Status</button><button type="button" data-arl-finalize="1" disabled={immutable} onClick={() => setFinalSignal((x) => x + 1)}>Finalizar</button></div>}
+    <div className="arl-order-quick-actions"><button type="button" data-quick="budget" onClick={() => setBudgetSignal((x) => x + 1)}><span>Gerar orçamento</span></button>{paymentSummary && paymentSummary.balance_cents > 0 && paymentSummary.total_cents > 0 && <button type="button" className="primary" data-quick="payment" onClick={() => setPaymentSignal((x) => x + 1)}><Wallet/><span>{paymentSummary.paid_cents > 0 ? 'Registrar novo pagamento' : 'Registrar pagamento'}</span></button>}</div>
+    <div className="detail-grid arl-order-detail">
+      <section><h2>Cliente</h2><b>{order.client.name}</b><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></section>
+      {order.equipment_description && <section className="arl-manual-equipment-detail"><h2>Equipamento / Modelo / Acessórios</h2><p>{order.equipment_description}</p></section>}
+      <section><h2>Problema relatado</h2><p>{order.reported_problem}</p></section>
+      <section className={!order.checklists?.length ? 'arl-checklist-ok' : ''}><h2>Checklist</h2>{order.checklists?.length ? order.checklists.map((row: any) => <p key={row.id}>• {row.label}{row.note ? `: ${row.note}` : ''}</p>) : <p className="ok">CHECKLIST DE ENTRADA: 100% OK</p>}</section>
+      <section><h2>Fotos</h2><div className="arl-order-photo-tools"><label>↑ Enviar foto<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={(e) => void uploadFile(e.target.files?.[0])}/></label><button type="button" className="arl-camera-button" onClick={() => setCamera(true)}>◉ Usar câmera</button></div><div className="photos">{order.photos?.length ? order.photos.map((photo: any) => <img key={photo.id} src={`/api/orders/${order.id}/photos/${photo.id}`} alt={`Foto ${photo.id} da OS`}/>) : <p>Nenhuma foto anexada.</p>}</div></section>
+      {immutable && order.items?.length > 0 && <section className="wide order-items-summary"><h2>Serviços / Itens da OS</h2>{order.items.map((item: any) => <div className="order-item-line" key={item.id}><div><b>{item.description}</b><small>{item.quantity} × {money(item.unit_price_cents)}</small></div><strong>{money(item.subtotal_cents)}</strong></div>)}</section>}
+      {!immutable && <ServicesPanel order={order} reload={load}/>}<FinalReportPanel order={order} value={finalReport} setValue={setFinalReport} reload={load}/>
+      {order.status === 'interrupted' && (order.interruption_reason || order.technical_report) && <section className="wide arl-interruption-note"><h2>Motivo da interrupção</h2><p>{order.interruption_reason || order.technical_report}</p></section>}
+      <section className="wide"><h2>Histórico de status</h2>{order.histories.map((history: any, index: number) => <p key={history.id || index}>{statusLabel[history.to_status] || history.to_status} · {new Date(history.created_at).toLocaleString('pt-BR')} · {history.user?.name}</p>)}</section>
+      <BudgetBox order={order} openSignal={budgetSignal}/><PaymentBox order={order} role={role} openSignal={paymentSignal} onSummary={setPaymentSummary}/><FinalizationBox order={order} reload={load} openSignal={finalSignal} finalReport={finalReport} onShare={setShare}/><ReportBox order={order}/><DocumentsBox order={order}/>
+    </div>
+    {editOpen && (immutable ? <ImmutableModal order={order} onClose={() => setEditOpen(false)}/> : <EditOrderModal order={order} onClose={() => setEditOpen(false)} onSaved={async () => { setEditOpen(false); await load(); }}/>) }
+    {interruptOpen && <InterruptionModal order={order} onClose={() => setInterruptOpen(false)} onSaved={async () => { setInterruptOpen(false); await load(); }}/>} 
+    {photoChoice && <PhotoChoice onClose={() => setPhotoChoice(false)} onUpload={() => { setPhotoChoice(false); fileInput.current?.click(); }} onCamera={() => { setPhotoChoice(false); setCamera(true); }}/>} 
+    {camera && <CameraModal onClose={() => setCamera(false)} onFile={(file) => { setCamera(false); void uploadFile(file); }}/>} 
+    {share && <FinalShareCard order={order} share={share} onClose={() => setShare(null)}/>} 
+  </div>;
+}

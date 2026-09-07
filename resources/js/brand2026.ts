@@ -21,6 +21,7 @@ const once = (el:Element|null, key:string) => !!el && (el as HTMLElement).datase
 const mark = (el:Element|null, key:string) => { if (el) (el as HTMLElement).dataset[key] = '1'; };
 const escapeHtml = (value:string) => value.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c] ?? c));
 const digits = (value:string) => value.replace(/\D/g,'');
+const reactOrderDetailActive = () => Boolean(document.querySelector('[data-arl-order-detail-react="1"]'));
 const maskPhone = (value:string) => digits(value).slice(0,11).replace(/^(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2');
 const formatDoc = (value:string) => {
   const n=digits(value).slice(0,14);
@@ -118,7 +119,6 @@ function enhanceDashboard(){
 function normalizedStatus(label:string){return label.includes('Análise')?'analysis':label.includes('Peça')?'waiting':label.includes('Serviço')?'service':label.includes('Concluído')?'completed':'interrupted'}
 
 function enhanceClients(){
-  // Gestão de Clientes nova é React puro. Os enhancers legados não tocam nessa árvore.
   if(q('[data-arl-clients-react="1"]')) return;
   const h=qa<HTMLHeadingElement>('h1').find(x=>['Cadastro de Clientes','Gestão de Clientes'].includes(text(x))); if(!h) return;
   h.textContent='Gestão de Clientes'; const title=h.closest<HTMLElement>('.title'); if(title) titleEyebrow(title,'ARL INFORMÁTICA');
@@ -186,6 +186,7 @@ function openCamera(onFile:(file:File)=>void){
 }
 
 function enhanceOrderView(){
+  if(reactOrderDetailActive()) return;
   const h=qa<HTMLHeadingElement>('h1').find(x=>text(x).startsWith('OS #')); if(!h) return;
   const title=h.closest<HTMLElement>('.title'); if(title) titleEyebrow(title,'ORDEM DE SERVIÇO'); q('.detail-grid')?.classList.add('arl-order-detail');
   qa<HTMLElement>('.detail-grid section').forEach(section=>{const heading=text(q('h2',section));if(heading==='Fotos') installOrderPhotoTools(section);if(heading==='Checklist' && text(section).includes('100% OK')) section.classList.add('arl-checklist-ok')});
@@ -258,7 +259,6 @@ function applySettingsSection(form:HTMLFormElement,id:string){tagSettingsForm(fo
 async function createOpeningMessagePanel(form:HTMLFormElement){const panel=document.createElement('section');panel.className='arl-opening-message-panel';panel.hidden=true;panel.innerHTML='<h2>Mensagem de abertura da OS</h2><p>Use as variáveis <code>{{nome_cliente}}</code>, <code>{{numero_os}}</code> e <code>{{empresa}}</code>.</p><textarea></textarea><div class="arl-message-preview"></div><button type="button">Salvar mensagem</button><span></span>';form.before(panel);try{let settings=await api('/settings');const area=q<HTMLTextAreaElement>('textarea',panel)!;area.value=settings.order_opened_whatsapp||'';const preview=q<HTMLElement>('.arl-message-preview',panel)!;const render=()=>preview.textContent=template(area.value,{nome_cliente:'Cliente Exemplo',numero_os:'0000123',empresa:settings.trade_name||settings.company_name||'ARL Informática'});render();area.addEventListener('input',render);q<HTMLButtonElement>('button',panel)?.addEventListener('click',async()=>{const status=q<HTMLElement>('span:last-child',panel)!;status.textContent='Salvando…';try{settings={...settings,order_opened_whatsapp:area.value};await api('/settings',{method:'PUT',body:JSON.stringify(settings)});status.textContent='Mensagem salva.'}catch(e:any){status.textContent=e.message}})}catch{panel.innerHTML='<p>Não foi possível carregar a mensagem de abertura.</p>'}}
 
 function enhanceServicesSettingsBoundary(){
-  // Configurações mantém catálogos técnicos agrupados; o menu Serviços continua com o catálogo comercial principal.
   if(text(q('h1'))==='Configurações') qa<HTMLElement>('.admin-list').forEach(x=>x.classList.add('arl-settings-admin-card'));
 }
 

@@ -29,6 +29,7 @@ const ICONS = {
 const digits = (value: string) => value.replace(/\D/g, '');
 const q = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const qa = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => Array.from(root.querySelectorAll<T>(selector));
+const reactOrderDetailActive = () => Boolean(document.querySelector('[data-arl-order-detail-react="1"]'));
 
 function installStyles() {
   if (document.getElementById('arl-completion-polish-style')) return;
@@ -48,14 +49,15 @@ function installStyles() {
 }
 
 function normalizeStatuses() {
-  qa<HTMLOptionElement>('option[value="in_service"]').forEach((option) => option.remove());
+  qa<HTMLOptionElement>('option[value="in_service"]').forEach((option) => { if (!option.closest('[data-arl-order-detail-react="1"]')) option.remove(); });
   qa<HTMLOptionElement>('.status-picker option, select[aria-label="Filtrar status"] option').forEach((option) => {
+    if (option.closest('[data-arl-order-detail-react="1"]')) return;
     const label = STATUS_LABELS[option.value];
     if (label) option.textContent = label;
   });
 
   qa<HTMLElement>('.badge, .completion b, .completion strong, .completion span, .detail-grid section p').forEach((element) => {
-    if (element.children.length) return;
+    if (element.closest('[data-arl-order-detail-react="1"]') || element.children.length) return;
     const current = element.textContent?.trim() || '';
     if (LEGACY_LABELS[current]) {
       element.textContent = LEGACY_LABELS[current];
@@ -94,8 +96,7 @@ function setVisualIcon(action: HTMLElement, kind: keyof typeof ICONS) {
 
 function syncExactIcons() {
   qa<HTMLElement>('.client-list .contact-links a,.client-list .contact-links button,.dashboard-contact,.dashboard-address,.arl-order-mini-action,.dashboard-row:not(.head) button,.order-row:not(.head) button,.arl-client-delete,.arl-order-delete').forEach((action) => {
-    // A nova Gestão de Clientes é integralmente React; não tocar em seus nós.
-    if (action.closest('[data-arl-clients-react="1"]')) return;
+    if (action.closest('[data-arl-clients-react="1"]') || action.closest('[data-arl-order-detail-react="1"]')) return;
     const label = `${action.getAttribute('aria-label') || ''} ${action.getAttribute('title') || ''} ${action.textContent || ''}`;
     if (action.classList.contains('arl-client-delete') || action.classList.contains('arl-order-delete') || /Excluir/i.test(label)) return setVisualIcon(action, 'lixeira');
     if (action.classList.contains('dashboard-contact') || /WhatsApp/i.test(label)) return setVisualIcon(action, 'whatsapp');
@@ -179,7 +180,6 @@ async function prepareFinalShare(orderId: string) {
     if (!share.url) return;
     showFinalShare(order, share);
   } catch {
-    // A finalização permanece concluída mesmo se o atalho de compartilhamento não puder ser montado.
   }
 }
 
@@ -191,7 +191,7 @@ function installFinalizationObserver() {
     const method = (init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
     const finalMatch = url.origin === location.origin ? url.pathname.match(/^\/api\/orders\/(\d+)\/finalize$/) : null;
     const response = await nativeFetch(input, init);
-    if (finalMatch && method === 'POST' && response.ok) void prepareFinalShare(finalMatch[1]);
+    if (finalMatch && method === 'POST' && response.ok && !reactOrderDetailActive()) void prepareFinalShare(finalMatch[1]);
     return response;
   };
 }

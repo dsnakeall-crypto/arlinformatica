@@ -12,6 +12,9 @@ function remove(selector: string) {
 }
 
 function closeDetachedOverlays() {
+  // A nova tela Ver OS é dona do próprio ciclo de vida. Enquanto a raiz React
+  // estiver ativa, o legado não remove overlays nem resíduos dela no capture.
+  if (q('[data-arl-order-detail-react="1"]')) return;
   remove('.arl-od-modal, .arl-status-modal, .arl-photo-choice, .arl-camera-modal, .arl-order-opened-modal');
 }
 

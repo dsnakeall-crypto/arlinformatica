@@ -20,6 +20,7 @@ declare global {
 }
 
 const scope = (): OrderScope => window.__arlOrderScope ?? 'active';
+const reactOrderDetailActive = () => Boolean(document.querySelector('[data-arl-order-detail-react="1"]'));
 
 function installStyles() {
   if (document.getElementById('arl-order-workflow-style')) return;
@@ -93,6 +94,7 @@ function installFetchWorkflow() {
     const raw = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
     const url = new URL(raw, location.origin);
     const method = (init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+    const reactDetail = reactOrderDetailActive();
 
     if (url.origin === location.origin && url.pathname === '/api/orders' && method === 'GET') {
       url.searchParams.set('finalized', scope() === 'finalized' ? '1' : '0');
@@ -100,7 +102,7 @@ function installFetchWorkflow() {
     }
 
     const statusMatch = url.origin === location.origin ? url.pathname.match(/^\/api\/orders\/(\d+)\/status$/) : null;
-    if (statusMatch && method === 'PATCH' && typeof init?.body === 'string') {
+    if (!reactDetail && statusMatch && method === 'PATCH' && typeof init?.body === 'string') {
       const payload = JSON.parse(init.body || '{}');
       if (payload.status === 'interrupted' && !payload.interruption_reason) {
         const current = window.__arlWorkflowOrder?.status === 'interrupted'
@@ -118,7 +120,7 @@ function installFetchWorkflow() {
     const response = await nativeFetch(nextInput, nextInit);
 
     const showMatch = url.origin === location.origin ? url.pathname.match(/^\/api\/orders\/(\d+)$/) : null;
-    if (showMatch && method === 'GET' && response.ok) {
+    if (!reactDetail && showMatch && method === 'GET' && response.ok) {
       void response.clone().json().then((order) => {
         window.__arlWorkflowOrder = order;
         window.requestAnimationFrame(syncUi);
@@ -130,7 +132,7 @@ function installFetchWorkflow() {
       window.__arlOrderScope = 'active';
     }
 
-    if (statusMatch && method === 'PATCH' && !response.ok && typeof init?.body === 'string') {
+    if (!reactDetail && statusMatch && method === 'PATCH' && !response.ok && typeof init?.body === 'string') {
       const payload = JSON.parse(init.body || '{}');
       if (payload.status === 'paid') {
         void response.clone().json().then((body) => alert(body?.message || 'Não foi possível marcar a OS como paga.')).catch(() => undefined);
@@ -164,6 +166,7 @@ function removeDesk() {
 function normalizeLabels() {
   const waitingLabel = 'Aguardando';
   document.querySelectorAll<HTMLOptionElement>('option[value="waiting_part"]').forEach((option) => {
+    if (option.closest('[data-arl-order-detail-react="1"]')) return;
     if (option.textContent?.trim() !== waitingLabel) option.textContent = waitingLabel;
   });
   document.querySelectorAll<HTMLElement>('.badge').forEach((badge) => {
@@ -213,6 +216,7 @@ function updateOrdersScopeUi() {
 }
 
 function syncOrderDetail() {
+  if (reactOrderDetailActive()) return;
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => /^OS #/.test(item.textContent?.trim() || ''));
   if (!heading) return;
   const order = window.__arlWorkflowOrder;
