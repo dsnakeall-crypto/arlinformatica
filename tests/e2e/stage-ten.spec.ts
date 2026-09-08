@@ -12,9 +12,12 @@ test('painel mantém a consulta operacional e o menu exibe Mesa de Chamados', as
   await expect(nav.getByRole('button', { name: 'Ordens de Serviço', exact: true })).toBeVisible();
 });
 
-test('layout é persistido por dispositivo e os três modos alteram o shell', async ({ page }) => {
+test('layout oferece dois modos, usa Web/PC por padrão e persiste por dispositivo', async ({ page }) => {
   await login(page);
   const selector = page.getByLabel('Layout neste dispositivo');
+  await expect(selector).toHaveValue('desktop');
+  await expect(selector.locator('option')).toHaveCount(2);
+  await expect(selector.locator('option', { hasText: 'Automático' })).toHaveCount(0);
   await selector.selectOption('mobile');
   await expect(page.locator('.shell')).toHaveClass(/layout-mobile/);
   await page.reload();
@@ -23,8 +26,9 @@ test('layout é persistido por dispositivo e os três modos alteram o shell', as
   await expect(page.locator('.shell')).toHaveClass(/layout-desktop/);
   await page.reload();
   await expect(selector).toHaveValue('desktop');
-  await selector.selectOption('automatic');
-  await expect(page.locator('.shell')).toHaveClass(/layout-automatic/);
+  await page.evaluate(() => localStorage.setItem('arl-layout-mode', 'automatic'));
+  await page.reload();
+  await expect(selector).toHaveValue('desktop');
 });
 
 test('Funcionário vê somente operação e o backend continua sendo a autoridade', async ({ page }) => {

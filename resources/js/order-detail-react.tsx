@@ -344,7 +344,7 @@ function FinalShareCard({ order, share, onClose }: { order: any; share: FinalSha
   return <div className="arl-final-share-host"><section className="arl-final-share-card" role="status" aria-label="Compartilhar fechamento da OS"><h2>OS #{order.number} finalizada</h2><p>O PDF Final está pronto. O link abaixo expira em 48 horas; o PDF original continua preservado no histórico.</p><div className="arl-final-share-actions"><a target="_blank" rel="noreferrer" href={share.url}>Abrir PDF</a>{whatsapp && <a className="whatsapp" target="_blank" rel="noreferrer" href={whatsapp} onClick={(e) => { e.preventDefault(); if (window.confirm('Deseja abrir o WhatsApp para enviar a mensagem de finalização desta OS?')) window.open(whatsapp, '_blank', 'noopener'); }}>Enviar PDF pelo WhatsApp</a>}<button type="button" onClick={onClose}>Fechar</button></div></section></div>;
 }
 
-export default function OrderDetailPage({ id, back, onEdit, onDirtyChange }: Props) {
+export default function OrderDetailPage({ id, back, readOnly = false, onEdit, onDirtyChange }: Props & { readOnly?: boolean }) {
   const [order, setOrder] = useState<any>(), [role, setRole] = useState(''), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [interruptOpen, setInterruptOpen] = useState(false), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [servicesDirty, setServicesDirty] = useState(false), [finalReportDirty, setFinalReportDirty] = useState(false), [share, setShare] = useState<FinalShare | null>(null), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null), statusSelect = useRef<HTMLSelectElement>(null), pendingServicesSave = useRef<null | (() => Promise<any>)>(null);
   const load = async () => { try { const next = await api(`/orders/${id}`); setOrder(next); if (!finalReportDirty) setFinalReport(next.final_report || (next.status === 'completed' ? next.technical_report || '' : '')); setError(''); } catch (e: any) { setError(e.message); } };
@@ -390,6 +390,18 @@ export default function OrderDetailPage({ id, back, onEdit, onDirtyChange }: Pro
     '*ARL Informática*',
   ].join('\n');
   const openingWhatsapp = openingFullPhone ? `https://wa.me/${openingFullPhone}?text=${encodeURIComponent(openingMessage)}` : '';
+  const mapsAddress = [order.client?.street, order.client?.number, order.client?.district, order.client?.city, order.client?.state].filter(Boolean).join(', ');
+  const mapsUrl = order.mobile_actions?.maps_url || (mapsAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsAddress)}` : '');
+  if (readOnly) return <div data-arl-order-detail-react="1" data-mobile-read-only="1" className="arl-mobile-read-only">
+    <header className="arl-mobile-read-only-header"><button type="button" onClick={back} aria-label="Voltar para OS abertas">←</button><div><span>ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1></div></header>
+    <div className="arl-read-only-banner">Somente leitura · edite pelo PC</div>
+    <div className="arl-mobile-read-only-actions">{openingWhatsapp && <a href={openingWhatsapp} target="_blank" rel="noreferrer">WhatsApp</a>}{mapsUrl && <a href={mapsUrl} target="_blank" rel="noreferrer">Rota</a>}</div>
+    <section><h2>Cliente</h2><strong>{order.client.name}</strong><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></section>
+    <section><h2>Equipamento</h2><p>{order.equipment_description || 'Equipamento não informado'}</p><p>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</p></section>
+    <section><h2>Problema relatado</h2><p>{order.reported_problem}</p></section>
+    <section><h2>Checklist</h2>{order.checklists?.length ? order.checklists.map((row: any) => <p key={row.id}>• {row.label}{row.note ? `: ${row.note}` : ''}</p>) : <p className="ok">CHECKLIST DE ENTRADA: 100% OK</p>}</section>
+    <section><h2>Serviços</h2>{order.items?.length ? order.items.map((item: any) => <p key={item.id}>{item.quantity} × {item.description}</p>) : <p>Nenhum serviço registrado.</p>}</section>
+  </div>;
   const stages = ['Entrada', 'Orçamento', 'Execução', 'Finalização', 'Pagamento'];
   const currentStage = order.archived ? -1 : order.status === 'completed' ? 4 : ['in_service', 'waiting_part', 'interrupted'].includes(order.status) ? 2 : order.status === 'analysis' ? 1 : 0;
   const stageState = (index: number) => order.archived ? 'completed' : index < currentStage ? 'completed' : index === currentStage ? 'current' : 'future';
