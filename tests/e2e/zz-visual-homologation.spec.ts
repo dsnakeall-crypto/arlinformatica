@@ -117,12 +117,14 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.screenshot({ path: 'visual-artifacts/04-status-os-desktop.png', fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
   await page.locator('.menu-toggle').click();
   await page.locator('aside nav').getByRole('button', { name: 'Painel' }).click();
   const mobileHome = page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' });
   await expect(mobileHome).toBeVisible();
   await expect(mobileHome.getByText(`OS #${orderResponse.body.number} · Em Análise`, { exact: true })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/01-painel-mobile.png', fullPage: true });
+  await page.getByLabel('Layout neste dispositivo').selectOption('desktop');
   await page.setViewportSize({ width: 1440, height: 900 });
 
   const finalization = await api(page, `/orders/${orderResponse.body.id}/finalize`, 'POST', {
@@ -168,6 +170,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.screenshot({ path: 'visual-artifacts/08-configuracoes-desktop.png', fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
   await page.locator('.menu-toggle').click();
   await page.locator('aside').getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();

@@ -15,7 +15,20 @@ export default defineConfig({
   },
   projects: [
     { name: 'desktop-chromium', testIgnore: /mobile\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile-chromium', testMatch: /mobile\.spec\.ts/, use: { ...devices['Pixel 7'] } },
+    {
+      name: 'mobile-chromium',
+      testMatch: /mobile\.spec\.ts/,
+      use: {
+        ...devices['Pixel 7'],
+        storageState: {
+          cookies: [],
+          origins: [{
+            origin: 'http://127.0.0.1:8000',
+            localStorage: [{ name: 'arl-layout-mode', value: 'mobile' }],
+          }],
+        },
+      },
+    },
   ],
   webServer: {
     command: 'bash scripts/e2e-server.sh',

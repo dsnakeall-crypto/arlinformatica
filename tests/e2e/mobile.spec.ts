@@ -24,7 +24,8 @@ test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado'
   });
   expect(client.status).toBe(201);
 
-  const homeButtons = await home.locator('button').evaluateAll((elements) => elements.map((element) => {
+  const bottomNavigation = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
+  const homeButtons = await bottomNavigation.locator('button').evaluateAll((elements) => elements.map((element) => {
     const rect = element.getBoundingClientRect();
     return { width: rect.width, height: rect.height };
   }));
@@ -33,7 +34,7 @@ test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado'
     expect(box.height).toBeGreaterThanOrEqual(44);
   }
 
-  await home.getByRole('button', { name: 'Clientes', exact: true }).click();
+  await bottomNavigation.getByRole('button', { name: 'Clientes', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   const firstClient = page.locator('.clients-list-panel .client-list article').filter({ hasText: 'Cliente Mobile Navegação' });
   await expect(firstClient).toBeVisible();
@@ -56,9 +57,7 @@ test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado'
   const clientsDocumentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(clientsDocumentWidth).toBeLessThanOrEqual(viewportSize!.width);
 
-  await page.locator('.menu-toggle').click();
-  await expect(page.locator('aside.open')).toBeVisible();
-  await page.locator('aside').getByRole('button', { name: 'Nova OS' }).click();
+  await bottomNavigation.getByRole('button', { name: 'Nova OS', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
   const manual = page.getByLabel('Equipamento / Modelo / Acessórios *');
   await expect(manual).toBeVisible();
@@ -72,7 +71,7 @@ test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado'
   await expect(page.getByRole('button', { name: /Usar câmera/ })).toBeVisible();
 });
 
-test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem marcar WhatsApp como enviado', async ({ page }) => {
+test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Status ou Finalizar', async ({ page }) => {
   await login(page);
   const client = await api(page, '/clients', 'POST', {
     name: 'Cliente Mobile Externo',
@@ -104,36 +103,27 @@ test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem m
   });
   expect(order.status).toBe(201);
 
-  await page.locator('.menu-toggle').click();
-  await page.locator('aside').getByRole('button', { name: 'Ordens de Serviço' }).click();
-  const row = page.locator('.order-row').filter({ hasText: 'Cliente Mobile Externo' });
-  await expect(row).toBeVisible();
-  await row.getByRole('button', { name: 'Ver OS' }).click();
+  await page.reload();
+  const card = page.locator('.arl-mobile-order-card').filter({ hasText: 'Cliente Mobile Externo' });
+  await expect(card).toBeVisible();
+  await card.click();
   await expect(page.getByRole('heading', { name: `OS #${order.body.number}`, exact: true })).toBeVisible();
 
-  const actions = page.locator('[aria-label="Atalhos do atendimento externo"]');
-  await expect(actions).toBeVisible();
-  const actionBoxes = await actions.locator(':scope > a, :scope > label, :scope > button').evaluateAll((elements) => elements.map((element) => {
-    const rect = element.getBoundingClientRect();
-    return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
-  }));
-  for (let i = 0; i < actionBoxes.length; i += 1) {
-    for (let j = i + 1; j < actionBoxes.length; j += 1) {
-      const a = actionBoxes[i];
-      const b = actionBoxes[j];
-      const overlaps = Math.min(a.right, b.right) > Math.max(a.left, b.left) && Math.min(a.bottom, b.bottom) > Math.max(a.top, b.top);
-      expect(overlaps).toBeFalsy();
-    }
-  }
-  const whatsapp = actions.getByRole('link', { name: 'WhatsApp' });
-  const maps = actions.getByRole('link', { name: 'Maps' });
+  const detail = page.locator('[data-mobile-read-only="1"]');
+  await expect(detail.getByText('Somente leitura · edite pelo PC')).toBeVisible();
+  const whatsapp = detail.getByRole('link', { name: 'WhatsApp' });
+  const maps = detail.getByRole('link', { name: 'Rota' });
   await expect(whatsapp).toHaveAttribute('target', '_blank');
   await expect(maps).toHaveAttribute('href', /google\.com\/maps/);
   const whatsappHref = await whatsapp.getAttribute('href');
   expect(whatsappHref).toContain('wa.me');
   const decoded = decodeURIComponent(whatsappHref ?? '');
-  expect(decoded).toContain(`OS #${order.body.number}`);
-  expect(decoded).toContain('Carcaça Trincada');
+  expect(decoded).toContain(`Ordem de Serviço nº ${order.body.number}`);
+  await expect(detail.getByText('Carcaça Trincada', { exact: false })).toBeVisible();
+  await expect(detail.getByRole('button', { name: 'Adicionar foto' })).toHaveCount(0);
+  await expect(detail.getByRole('button', { name: 'Status', exact: true })).toHaveCount(0);
+  await expect(detail.getByRole('button', { name: 'Finalizar' })).toHaveCount(0);
+  await expect(detail.locator('input[type=file]')).toHaveCount(0);
 
   const apiWrites: string[] = [];
   page.on('request', (request) => {
@@ -149,35 +139,4 @@ test('OS externa no mobile expõe WhatsApp, Maps, Foto, Status e Finalizar sem m
   await popup.close();
   expect(apiWrites).toEqual([]);
 
-  const cameraProbeInstalled = await page.evaluate(() => {
-    const input = document.querySelector<HTMLInputElement>('[data-arl-order-detail-react="1"] .arl-order-photo-tools input[type=file]');
-    if (!input) return false;
-    (window as any).__arlMobileCameraProbe = { clicks: 0, capture: input.getAttribute('capture'), accept: input.getAttribute('accept') };
-    input.addEventListener('click', (event) => {
-      event.preventDefault();
-      const probe = (window as any).__arlMobileCameraProbe;
-      probe.clicks += 1;
-      probe.capture = input.getAttribute('capture');
-      probe.accept = input.getAttribute('accept');
-    });
-    return true;
-  });
-  expect(cameraProbeInstalled, 'Contrato câmera mobile: input React de foto não existe para receber o atalho externo').toBe(true);
-  await actions.getByRole('button', { name: 'Adicionar foto' }).click();
-  const photoChoice = page.getByRole('dialog', { name: 'Adicionar foto' });
-  await expect(photoChoice, 'Contrato câmera mobile: atalho Foto não abriu a escolha de origem').toBeVisible();
-  await photoChoice.getByRole('button', { name: 'Enviar arquivo' }).click();
-  const cameraProbe = await page.evaluate(() => (window as any).__arlMobileCameraProbe);
-  expect(cameraProbe, `Contrato câmera mobile: caminho Atalho Foto → Enviar arquivo não acionou o input traseiro corretamente; recebido=${JSON.stringify(cameraProbe)}`).toEqual({
-    clicks: 1,
-    capture: 'environment',
-    accept: 'image/jpeg,image/png,image/webp',
-  });
-
-  await actions.getByRole('button', { name: 'Status', exact: true }).click();
-  await expect(page.locator('.status-picker select')).toBeFocused();
-  await actions.getByRole('button', { name: 'Finalizar' }).click();
-  const finalModal = page.locator('.modal-card').filter({ hasText: 'FINALIZAÇÃO DA OS' });
-  await expect(finalModal).toBeVisible();
-  await finalModal.locator('.modal-close').click();
 });
