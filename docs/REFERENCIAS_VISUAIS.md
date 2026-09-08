@@ -14,6 +14,9 @@ As referências abaixo foram reenviadas e confirmadas pelo proprietário em **04
 | 6 | `06 - Menu Pos Venda.jpg` | Inspiração visual do Pós-Venda | `f5c2253c91713a843bc6ba1590c16854fcd79be3da3000caad6f5a41216cde6f` |
 | 7 | `LOGO.png` | Logomarca oficial ARL Informática | `f3dbf2abf49a5a2adc348aabb16e5d10b681d015370dba1d46ec82bb6313b2e2` |
 | 8 | `TIMBRADO.png` | Referência visual oficial para Orçamentos/Laudos | `2016d92d8bacda902c2198eddc8f46cc10e1d2819f39f909326d2e0ca535e824` |
+| 9 | `resources/images/documents/papel-timbrado.png` | Fundo oficial imutável de Orçamentos e PDFs de finalização | `5e640a129a7b33d954e9f3b44a872b6f003ed8266f30039a578c11fe599e0087` |
+
+O papel timbrado de produção mede exatamente **1055 × 1491 px**. Sua integridade é validada antes da geração documental; o arquivo não deve ser recortado, deformado, reamostrado ou regravado.
 
 Se os anexos não estiverem montados em um chat futuro, **pesquisar a Library pelos nomes exatos acima antes de pedir novo envio ao proprietário**. Não declarar que uma imagem diferente é a referência oficial apenas por semelhança.
 

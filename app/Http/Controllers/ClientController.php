@@ -8,6 +8,7 @@ use App\Services\DocumentValidator;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
@@ -88,9 +89,19 @@ class ClientController extends Controller
             ->latest('received_at')
             ->with([
                 'items' => fn ($q) => $q->orderBy('id'),
-                'documents' => fn ($q) => $q->where('type', 'final')->latest('revision'),
+                'documents' => fn ($q) => $q->whereIn('type', ['final', 'budget'])->latest('issued_at'),
             ])
             ->get();
+
+        $budgets = DB::table('budgets')
+            ->whereIn('service_order_id', $orders->pluck('id'))
+            ->orderByDesc('revision')
+            ->get()
+            ->groupBy('service_order_id');
+
+        $orders->each(function ($order) use ($budgets) {
+            $order->setAttribute('budgets', $budgets->get($order->id, collect())->values());
+        });
 
         return response()->json(['client' => $client, 'orders' => $orders]);
     }
