@@ -56,12 +56,15 @@ DB_PORT=3306
 DB_DATABASE=...
 DB_USERNAME=...
 DB_PASSWORD=...
+DB_TIMEZONE=+00:00
 QUEUE_CONNECTION=sync
 BACKUP_AUTOMATIC=true
 BACKUP_FREQUENCY=daily
 BACKUP_RETENTION=7
 BACKUP_MAX_UPLOAD_KB=512000
 ```
+
+Mantenha `DB_TIMEZONE=+00:00` em produção. A conexão MySQL usa essa variável para fixar a sessão em UTC, garantindo que os campos `TIMESTAMP` financeiros sejam gravados e consultados no mesmo fuso mesmo que o provedor altere o timezone padrão do servidor. `APP_TIMEZONE` permanece `America/Sao_Paulo` para os limites do caixa e a apresentação das datas locais.
 
 `QUEUE_CONNECTION=sync` evita depender de Supervisor. Ajuste o limite de backup à capacidade real e confira `upload_max_filesize` e `post_max_size`; ambos precisam aceitar o mesmo tamanho. Dê escrita ao usuário PHP somente em `storage/` e `bootstrap/cache/`. Fotos, PDFs e backups permanecem no disco privado; `storage:link` não deve publicá-los.
 

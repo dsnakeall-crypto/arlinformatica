@@ -235,18 +235,55 @@ class FinanceController extends Controller
         $items = collect();
         $discount = 0;
         if ($orderIds->isNotEmpty()) {
+            $allOrderReceipts = $this->effective()
+                ->join('payments', 'payments.id', '=', 'financial_transactions.payment_id')
+                ->where('financial_transactions.origin', 'service_order')
+                ->whereIn('payments.service_order_id', $orderIds->all())
+                ->where('financial_transactions.occurred_at', '<=', $utcBounds[1])
+                ->addSelect('payments.service_order_id')
+                ->get()
+                ->groupBy('service_order_id');
+            $ordersById = DB::table('service_orders')->whereIn('id', $orderIds->all())->get(['id', 'total_cents', 'discount_cents'])->keyBy('id');
+            $allocation = $orderIds->mapWithKeys(function (int $orderId) use ($allOrderReceipts, $ordersById, $utcBounds) {
+                $receipts = $allOrderReceipts->get($orderId, collect());
+                $before = (int) $receipts
+                    ->filter(fn ($row) => CarbonImmutable::parse($row->occurred_at, 'UTC')->lt($utcBounds[0]))
+                    ->sum('effective_cents');
+                $through = (int) $receipts->sum('effective_cents');
+                $order = $ordersById->get($orderId);
+
+                return [$orderId => [
+                    'before_cents' => $before,
+                    'through_cents' => $through,
+                    'total_cents' => (int) $order->total_cents,
+                ]];
+            });
+
             $items = DB::table('service_order_items')
                 ->whereIn('service_order_id', $orderIds->all())
-                ->get(['description', 'quantity', 'subtotal_cents'])
+                ->get(['service_order_id', 'description', 'quantity', 'subtotal_cents'])
+                ->map(function ($item) use ($allocation) {
+                    $share = $allocation->get((int) $item->service_order_id);
+
+                    return [
+                        'description' => $item->description,
+                        'quantity' => $this->allocatedPart((int) $item->quantity, $share),
+                        'total_cents' => $this->allocatedPart((int) $item->subtotal_cents, $share),
+                    ];
+                })
+                ->filter(fn ($item) => $item['quantity'] > 0 || $item['total_cents'] > 0)
                 ->groupBy('description')
                 ->map(fn ($group, $description) => [
                     'description' => (string) $description,
                     'quantity' => (int) $group->sum('quantity'),
-                    'total_cents' => (int) $group->sum('subtotal_cents'),
+                    'total_cents' => (int) $group->sum('total_cents'),
                 ])
                 ->sortByDesc('total_cents')
                 ->values();
-            $discount = (int) DB::table('service_orders')->whereIn('id', $orderIds->all())->sum('discount_cents');
+            $discount = (int) $ordersById->sum(fn ($order) => $this->allocatedPart(
+                (int) $order->discount_cents,
+                $allocation->get((int) $order->id)
+            ));
         }
 
         $daily = $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))
@@ -262,6 +299,7 @@ class FinanceController extends Controller
             'paid_orders' => $paidOrderCount,
             'average_ticket_cents' => $paidOrderCount ? intdiv((int) $orders->sum('effective_cents'), $paidOrderCount) : 0,
             'discount_cents' => $discount,
+            'allocation_note' => 'Itens e descontos são rateados proporcionalmente ao recebimento acumulado de cada OS; o cálculo cumulativo atribui eventuais centavos residuais à parcela final.',
             'daily' => $daily,
             'methods' => $methods,
             'transactions' => $rows->values(),
@@ -440,6 +478,20 @@ class FinanceController extends Controller
             ->leftJoinSub($latest, 'latest_adjustment', 'latest_adjustment.transaction_id', '=', 'financial_transactions.id')
             ->leftJoin('financial_adjustments as adjustment', 'adjustment.id', '=', 'latest_adjustment.adjustment_id')
             ->select('financial_transactions.*', DB::raw('COALESCE(adjustment.new_cents, financial_transactions.amount_cents) as effective_cents'));
+    }
+
+    /** @param array{before_cents: int, through_cents: int, total_cents: int} $share */
+    private function allocatedPart(int $value, array $share): int
+    {
+        if ($value <= 0 || $share['total_cents'] <= 0) {
+            return 0;
+        }
+
+        $total = $share['total_cents'];
+        $before = min($total, max(0, $share['before_cents']));
+        $through = min($total, max($before, $share['through_cents']));
+
+        return intdiv($value * $through, $total) - intdiv($value * $before, $total);
     }
 
     private function dayBounds(?string $date): array
