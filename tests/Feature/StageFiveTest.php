@@ -150,6 +150,65 @@ class StageFiveTest extends TestCase
         $this->getJson('/api/finance/overview?date=2026-09-01')->assertJsonPath('today_cents', 7500)->assertJsonPath('month_total_cents', 7500);
     }
 
+    public function test_month_boundary_uses_sao_paulo_local_time(): void
+    {
+        Carbon::setTestNow('2026-09-01 02:30:00 UTC'); // 31/08 23:30 em São Paulo
+        $this->actingAs($this->employee)->postJson("/api/orders/{$this->order->id}/payment", [
+            'amount_cents' => 3000,
+            'method' => 'pix',
+            'idempotency_key' => 'month-boundary-august',
+        ])->assertCreated();
+
+        Carbon::setTestNow('2026-09-01 03:30:00 UTC'); // 01/09 00:30 em São Paulo
+        $this->postJson("/api/orders/{$this->order->id}/payment", [
+            'amount_cents' => 4000,
+            'method' => 'cash',
+            'idempotency_key' => 'month-boundary-september',
+        ])->assertCreated();
+
+        $this->getJson('/api/finance/month?period=2026-08')->assertOk()->assertJsonPath('total_cents', 3000);
+        $this->getJson('/api/finance/month?period=2026-09')->assertOk()->assertJsonPath('total_cents', 4000);
+    }
+
+    public function test_items_and_discount_are_allocated_across_payment_months(): void
+    {
+        $this->order->update(['subtotal_cents' => 10000, 'discount_cents' => 1000, 'total_cents' => 9000]);
+        DB::table('service_order_items')->insert([
+            'service_order_id' => $this->order->id,
+            'description' => 'Serviço parcelado',
+            'quantity' => 2,
+            'unit_price_cents' => 5000,
+            'subtotal_cents' => 10000,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Carbon::setTestNow('2026-08-20 15:00:00 UTC');
+        $this->actingAs($this->employee)->postJson("/api/orders/{$this->order->id}/payment", [
+            'amount_cents' => 4500,
+            'method' => 'pix',
+            'idempotency_key' => 'allocated-august',
+        ])->assertCreated();
+
+        Carbon::setTestNow('2026-09-20 15:00:00 UTC');
+        $this->postJson("/api/orders/{$this->order->id}/payment", [
+            'amount_cents' => 4500,
+            'method' => 'credit',
+            'idempotency_key' => 'allocated-september',
+        ])->assertCreated();
+
+        foreach (['2026-08', '2026-09'] as $period) {
+            $this->getJson("/api/finance/month?period={$period}")
+                ->assertOk()
+                ->assertJsonPath('service_orders_cents', 4500)
+                ->assertJsonPath('discount_cents', 500)
+                ->assertJsonPath('items.0.description', 'Serviço parcelado')
+                ->assertJsonPath('items.0.quantity', 1)
+                ->assertJsonPath('items.0.total_cents', 5000)
+                ->assertJsonPath('allocation_note', 'Itens e descontos são rateados proporcionalmente ao recebimento acumulado de cada OS; o cálculo cumulativo atribui eventuais centavos residuais à parcela final.');
+        }
+    }
+
     public function test_month_counts_order_once_when_it_has_multiple_payments(): void
     {
         Carbon::setTestNow('2026-09-15 15:00:00 UTC');
