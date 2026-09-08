@@ -58,7 +58,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(header.locator('.status-picker')).toBeVisible();
   await expect(header.getByRole('button', { name: 'Editar OS' })).toBeVisible();
   await expect(header.getByRole('button', { name: 'Gerar orçamento' })).toBeVisible();
-  await expect(header.getByRole('button', { name: 'Registrar pagamento' })).toBeVisible();
+  await expect(header.getByRole('button', { name: 'Registrar pagamento' })).toHaveCount(0);
 
   const opening = header.locator('.arl-opening-call');
   await expect(opening.getByText('Abertura do chamado', { exact: true })).toBeVisible();
@@ -125,6 +125,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   expect(await accordions.locator('summary').allTextContents()).toEqual(['Histórico de status', 'Histórico de alterações', 'Documentos']);
   for (let index = 0; index < 3; index += 1) await expect(accordions.nth(index)).not.toHaveAttribute('open', '');
   await expect(record.locator('[role="tab"]')).toHaveCount(0);
+  await accordions.nth(2).locator('summary').click();
   await expect(record.getByRole('link', { name: 'Termo de recebimento' })).toHaveCount(1);
 
   const layoutText = await page.locator('.device-layout').innerText();

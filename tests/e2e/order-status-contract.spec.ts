@@ -122,7 +122,8 @@ for (const [index, status] of statuses.entries()) {
       await expect(picker.locator('option[value="completed"]')).toHaveText('Finalizado');
     }
 
-    const history = root.locator('section').filter({ has: page.getByRole('heading', { name: 'Histórico de status', exact: true }) });
+    const history = root.locator('details.arl-record-accordion').filter({ hasText: 'Histórico de status' });
+    await history.locator('summary').click();
     await expect(history.getByText(new RegExp(`^${status.label} ·`)), `Histórico exibiu rótulo errado para ${status.code}`).toBeVisible();
   });
 }

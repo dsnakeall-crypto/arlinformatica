@@ -402,7 +402,7 @@ export default function OrderDetailPage({ id, back, onEdit, onDirtyChange }: Pro
       <div className="arl-order-quick-actions arl-order-header-actions">
         <button type="button" className="arl-od-btn" onClick={editOrder}><Pencil/><span>Editar OS</span></button>
         <button type="button" data-quick="budget" onClick={() => setBudgetSignal((x) => x + 1)}><Plus/><span>Gerar orçamento</span></button>
-        <button type="button" className="primary" data-quick="payment" disabled={!paymentEnabled} title={paymentEnabled ? undefined : 'Disponível quando houver valor a receber.'} onClick={() => setPaymentSignal((x) => x + 1)}><Wallet/><span>{paymentSummary?.paid_cents ? 'Registrar novo pagamento' : 'Registrar pagamento'}</span></button>
+        {paymentEnabled && <button type="button" className="primary" data-quick="payment" onClick={() => setPaymentSignal((x) => x + 1)}><Wallet/><span>{paymentSummary?.paid_cents ? 'Registrar novo pagamento' : 'Registrar pagamento'}</span></button>}
         <details className="arl-opening-call"><summary>Abertura do chamado</summary>{' '}<div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}{' '}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a></div></details>
       </div>
     </header>
