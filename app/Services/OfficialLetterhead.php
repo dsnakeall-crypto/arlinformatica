@@ -14,7 +14,9 @@ class OfficialLetterhead
 
     public static function path(): string
     {
-        $path = resource_path('images/documents/papel-timbrado.png');
+        // This service is also used by a plain PHPUnit test, before Laravel's
+        // application container (and therefore resource_path()) is available.
+        $path = dirname(__DIR__, 2).'/resources/images/documents/papel-timbrado.png';
         $size = @getimagesize($path);
 
         if ($size === false || $size[0] !== self::WIDTH || $size[1] !== self::HEIGHT || hash_file('sha256', $path) !== self::SHA256) {

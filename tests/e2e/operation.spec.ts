@@ -85,7 +85,9 @@ test.describe.serial('fluxo operacional principal', () => {
     await budgetForm.getByLabel('Serviço proposto').fill('Reparo completo');
     await budgetForm.getByLabel('Validade (dias)').fill('7');
     await budgetForm.getByLabel('Buscar serviço ou produto para o orçamento').fill('Formatação');
-    await budgetForm.getByRole('option', { name: /Formatação/ }).first().click();
+    const catalogResult = budgetForm.getByRole('button', { name: 'Adicionar Formatação E2E' });
+    await expect(catalogResult).toBeVisible();
+    await catalogResult.click();
     const selectedItem = budgetForm.locator('.finish-item').filter({ hasText: 'Formatação' });
     await expect(selectedItem).toBeVisible();
     await selectedItem.getByLabel(/Quantidade de/).fill('1');
