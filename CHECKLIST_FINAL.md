@@ -43,7 +43,7 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Web Push backend com `minishlink/web-push` v11, VAPID por configuração segura, payload mínimo e tratamento de inscrições expiradas.
 - [PENDENTE] Validação física do Web Push em Android/iPhone com HTTPS e VAPID reais; roteiro em `docs/HOMOLOGACAO_WEB_PUSH.md`.
 - [OK] Métricas/limpeza de fotos, Backup/restore ZIP com manifesto/checksums, proteção Zip Slip, staging, backup de segurança e autorização Master.
-- [OK] Configurações em cards funcionais; layout Automático/Web-PC/Mobile-Tablet é preferência local por dispositivo.
+- [OK] Configurações em cards funcionais; seletor Web/PC e Mobile/Tablet é preferência local por dispositivo, com Web/PC como padrão e migração do valor antigo `automatic`.
 - [OK] Menu/telas respeitam Master, Administrador e Funcionário; backend permanece autoridade de autorização.
 - [OK] Backup manual/automático, retenção, heartbeat e guia de hospedagem/migração sem processo residente.
 
@@ -55,8 +55,11 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Telas operacionais usam backend real e tratam loading, erro, vazio e validação.
 - [OK] Clientes desktop usa composição lista + cadastro; Nova OS usa painel de Serviços/Produtos; mobile é mobile-first.
 - [OK] Playwright E2E versionado com `retries: 0`; não são usados `force:true`, clique JavaScript ou timeout artificial para esconder defeito.
-- [OK] Preferência Automático/Web-PC/Mobile-Tablet é local por dispositivo; não existe `layout_mode` global em Settings.
-- [OK] OS externa mobile possui WhatsApp, Maps, Foto, Status e Finalizar, com hitboxes validados geometricamente e clique real.
+- [OK] Preferência Web/PC ou Mobile/Tablet é local por dispositivo; não existe opção Automático nem `layout_mode` global em Settings.
+- [OK] Mobile/Tablet explícito limita a navegação a OS abertas, Nova OS e Clientes; URL fora do alcance retorna ao início sem alterar autorização backend.
+- [OK] Barra inferior fixa com OS abertas, Nova OS e Clientes respeita a safe area e está presente em todas as telas mobile.
+- [OK] Card abre a OS mobile somente para leitura com cliente, equipamento, problema, checklist, serviços, WhatsApp e Rota; fotos, laudo, orçamento, pagamento e finalização não são renderizados.
+- [OK] Web/PC preserva o fluxo completo, incluindo Foto, Status e Finalizar; a restrição mobile anterior de atendimento externo foi substituída pelo modo somente leitura desta etapa.
 - [OK] Runtime PHP do servidor embutido E2E fica sem Zend OPcache; verificação explícita impede regressão do ambiente de teste sem alterar OPcache de produção.
 - [OK] Persistência do tema após reload sincronizada com a resposta real de `GET /api/theme`.
 - [OK] Workflow temporário `.github/workflows/diagnose-segfault.yml` removido; não permanece na branch.

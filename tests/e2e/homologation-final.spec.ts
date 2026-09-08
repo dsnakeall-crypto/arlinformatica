@@ -65,6 +65,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
+  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
   await page.locator('.menu-toggle').click();
   const mobileAside = page.locator('aside');
   await expect(mobileAside).toHaveClass(/open/);

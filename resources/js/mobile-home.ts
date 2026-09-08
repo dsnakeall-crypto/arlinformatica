@@ -21,7 +21,6 @@ type MobileOrder = {
   client: MobileClient;
 };
 
-const mobileMedia = window.matchMedia('(max-width: 800px)');
 const statusLabels: Record<string, string> = {
   analysis: 'Em Análise',
   waiting_part: 'Aguardando Peça/Cliente',
@@ -30,12 +29,9 @@ const statusLabels: Record<string, string> = {
 
 const whatsappIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.5L3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 20.5 11.7Z"/><path d="M8.2 8.7c.8 3 3.2 5.4 6.2 6.2"/></svg>';
 const mapsIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg>';
-const clientsIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
-const plusIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
 
 function isEffectiveMobile() {
-  const mode = document.documentElement.dataset.layout || 'automatic';
-  return mode === 'mobile' || (mode === 'automatic' && mobileMedia.matches);
+  return document.documentElement.dataset.layout === 'mobile';
 }
 
 function isDashboardVisible() {
@@ -46,18 +42,6 @@ function isDashboardVisible() {
 
 function appMain() {
   return document.querySelector<HTMLElement>('.shell > main');
-}
-
-function findNavButton(label: string) {
-  return Array.from(document.querySelectorAll<HTMLButtonElement>('aside nav button')).find(
-    (button) => button.querySelector('span')?.textContent?.trim() === label,
-  );
-}
-
-function navigate(label: string) {
-  const button = findNavButton(label);
-  if (!button) return;
-  button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
 }
 
 function whatsappUrl(client: MobileClient) {
@@ -106,6 +90,12 @@ function renderOrders(list: HTMLElement, orders: MobileOrder[]) {
     const card = document.createElement('article');
     card.className = 'arl-mobile-order-card';
     card.dataset.orderId = String(order.id);
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', `Abrir OS ${order.number} de ${order.client.name}`);
+    const openOrder = () => window.dispatchEvent(new CustomEvent('arl-open-order', { detail: order.id }));
+    card.addEventListener('click', (event) => { if (!(event.target as Element).closest('a')) openOrder(); });
+    card.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openOrder(); } });
 
     const info = document.createElement('div');
     info.className = 'arl-mobile-order-info';
@@ -168,18 +158,9 @@ function buildHome() {
         <h1>OS abertas</h1>
         <small data-mobile-count>Carregando…</small>
       </div>
-      <button type="button" class="arl-mobile-new-order">${plusIcon}<span>Nova OS</span></button>
     </div>
-    <div class="arl-mobile-order-list" data-mobile-orders></div>
-    <nav class="arl-mobile-bottom-nav" aria-label="Atalhos mobile">
-      <button type="button" data-mobile-nav="Clientes">${clientsIcon}<span>Clientes</span></button>
-      <button type="button" data-mobile-nav="Nova OS" class="primary-shortcut">${plusIcon}<span>Nova OS</span></button>
-    </nav>`;
+    <div class="arl-mobile-order-list" data-mobile-orders></div>`;
 
-  home.querySelector<HTMLButtonElement>('.arl-mobile-new-order')?.addEventListener('click', () => navigate('Nova OS'));
-  home.querySelectorAll<HTMLButtonElement>('[data-mobile-nav]').forEach((button) => {
-    button.addEventListener('click', () => navigate(button.dataset.mobileNav || ''));
-  });
 
   return home;
 }
@@ -225,6 +206,5 @@ observer.observe(document.documentElement, {
   attributes: true,
   attributeFilter: ['data-layout'],
 });
-mobileMedia.addEventListener('change', scheduleSync);
 document.addEventListener('DOMContentLoaded', scheduleSync);
 scheduleSync();
