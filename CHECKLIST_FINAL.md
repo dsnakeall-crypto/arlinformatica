@@ -89,3 +89,10 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 5. Testar PWA/Web Push em dispositivo real quando VAPID/HTTPS estiverem configurados.
 6. Smoke test real: login, banco, OS, clientes, fotos, PDFs, financeiro, backup, scheduler/heartbeat e diagnóstico.
 7. Merge continua sendo ação manual do proprietário; não fazer automaticamente.
+
+## Continuação da PR #11 — papel timbrado oficial
+- [OK] `papel-timbrado.png` validado em runtime e por teste com 1055 × 1491 px e SHA-256 `5e640a129a7b33d954e9f3b44a872b6f003ed8266f30039a578c11fe599e0087`, sem alteração do arquivo recebido.
+- [OK] Orçamento e PDF final usam a base A4 compartilhada, com fundo integral e área útil de 180 × 195 mm (margens 68/34/15 mm), sem redesenhar ou duplicar logo/dados empresariais.
+- [OK] Termo permanece fora do papel timbrado e novos termos incluem o parágrafo LGPD; versões e PDFs já emitidos permanecem imutáveis.
+- [OK] Geração de orçamento ocorre em modal com busca do catálogo, itens, quantidades, valores e total, mantendo o fluxo E2E de geração e aprovação.
+- [OK] Histórico do cliente lista todas as revisões de orçamento e oferece acesso ao PDF preservado.
