@@ -131,7 +131,9 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(finalizePayload).not.toHaveProperty('items');
     await expect(statusSelect).toHaveValue('completed');
     await expect(page.locator('.completion').getByText('Finalizado', { exact: true })).toBeVisible();
-    await expect(page.getByText('PDF Final', { exact: true })).toBeVisible();
+    const documents = page.locator('details.arl-record-accordion').filter({ hasText: 'Documentos' });
+    await documents.locator('summary').click();
+    await expect(documents.getByText('PDF Final', { exact: true })).toBeVisible();
     const finalizedResponse = await page.request.get(`/api/orders/${orderId}`);
     expect(finalizedResponse.status()).toBe(200);
     const finalized = await finalizedResponse.json();
