@@ -108,6 +108,8 @@ test.describe.serial('fluxo operacional principal', () => {
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
     const statusSelect = page.locator('.status-picker select');
+    const statusHistory = page.locator('details.arl-record-accordion').filter({ hasText: 'Histórico de status' });
+    await statusHistory.locator('summary').click();
     await expect(statusSelect.locator('option[value="in_service"]'), 'Fluxo operacional deve manter Em Serviço como opção válida').toHaveText('Em Serviço');
     await statusSelect.selectOption('in_service');
     await expect(page.getByText(/Em Serviço ·/).last()).toBeVisible();
