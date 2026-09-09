@@ -1,5 +1,36 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
+
+const money = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+
+async function openOrder(page: Page, orderNumber: string) {
+  await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+  const row = page.locator('.order-row').filter({ hasText: orderNumber });
+  await expect(row, `A OS #${orderNumber} deve aparecer na listagem`).toBeVisible();
+  await row.getByRole('button', { name: 'Ver OS' }).click();
+  await expect(page.getByRole('heading', { name: `OS #${orderNumber}`, exact: true })).toBeVisible();
+}
+
+async function finalizeThroughUi(page: Page, order: { id: number; number: string }, discountCents: number) {
+  await openOrder(page, order.number);
+  await page.getByRole('button', { name: 'Concluir OS' }).click();
+  const modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
+  await expect(modal).toBeVisible();
+  await expect(modal.getByDisplayValue('Formatação E2E')).toBeVisible();
+  await modal.getByLabel('Desconto (R$)').fill((discountCents / 100).toFixed(2).replace('.', ','));
+
+  const responsePromise = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === `/api/orders/${order.id}/finalize` && response.request().method() === 'POST'
+  );
+  await modal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
+  const response = await responsePromise;
+  expect(response.status(), `A finalização da OS #${order.number} pela interface deve retornar 201`).toBe(201);
+  await expect(page.locator('.completion').getByText('Finalizado', { exact: true })).toBeVisible();
+
+  const share = page.getByRole('status', { name: 'Compartilhar fechamento da OS' });
+  await expect(share).toBeVisible();
+  await share.getByRole('button', { name: 'Fechar' }).click();
+}
 
 test('histórico do cliente exibe equipamento e somente descontos aplicados, com ida e volta pela OS', async ({ page }) => {
   await login(page);
@@ -23,7 +54,7 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
   const notebook = equipment.body.find((item: { name: string }) => item.name === 'Notebook');
   const service = services.body.find((item: { name: string }) => item.name === 'Formatação E2E');
   expect(notebook, 'Catálogo deve conter Notebook para validar o equipamento no histórico').toBeDefined();
-  expect(service, 'Catálogo deve conter Formatação E2E para finalizar a OS pelo fluxo real').toBeDefined();
+  expect(service, 'Catálogo deve conter Formatação E2E para preparar a OS pelo padrão E2E').toBeDefined();
 
   const createOrder = async (problem: string) => {
     const response = await api(page, '/orders', 'POST', {
@@ -41,33 +72,11 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
   const discountedOrder = await createOrder('OS com desconto visível');
   const zeroDiscountOrder = await createOrder('OS sem desconto');
 
-  for (const [order, discount] of [[discountedOrder, 1250], [zeroDiscountOrder, 0]] as const) {
-    const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
-      result: 'repair_completed',
-      technical_report: 'Serviço concluído para validar o histórico.',
-      discount_cents: discount,
-      approved_budget_id: null,
-      photo_ids: [],
-      items: [{
-        catalog_id: service.id,
-        description: service.name,
-        quantity: 1,
-        unit_price_cents: service.price_cents,
-        warranty_enabled: Boolean(service.warranty_enabled),
-        warranty_term: service.warranty_enabled ? service.warranty_term : null,
-        warranty_unit: service.warranty_enabled ? service.warranty_unit : null,
-      }],
-    });
-    expect(finalized.status, `OS ${order.number} não foi finalizada: ${JSON.stringify(finalized.body)}`).toBe(201);
-  }
-
-  await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
-  const orderRow = page.locator('.order-row').filter({ hasText: discountedOrder.number });
-  await expect(orderRow).toBeVisible();
-  await orderRow.getByRole('button', { name: 'Ver OS' }).click();
+  await finalizeThroughUi(page, discountedOrder, 1250);
+  await finalizeThroughUi(page, zeroDiscountOrder, 0);
+  await openOrder(page, discountedOrder.number);
 
   const detail = page.locator('[data-arl-order-detail-react="1"]');
-  await expect(detail.getByRole('heading', { name: `OS #${discountedOrder.number}`, exact: true })).toBeVisible();
   await detail.getByRole('button', { name: 'Ver histórico do cliente' }).click();
 
   await expect(page.getByRole('heading', { name: clientName, exact: true })).toBeVisible();
@@ -75,10 +84,14 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
   const zeroHistory = page.locator('.clients-history-order').filter({ hasText: `OS #${zeroDiscountOrder.number}` });
   await expect(discountedHistory.getByText('Equipamento: Notebook', { exact: true })).toBeVisible();
   await expect(discountedHistory.getByText('Desconto: R$ 12,50', { exact: true })).toBeVisible();
-  await expect(discountedHistory.getByText('Total: R$ 137,50', { exact: true })).toBeVisible();
+  await expect(discountedHistory.getByText(`Total: ${money(Number(service.price_cents) - 1250)}`, { exact: true })).toBeVisible();
   await expect(zeroHistory.getByText(/^Desconto:/)).toHaveCount(0);
-  await expect(zeroHistory.getByText('Total: R$ 150,00', { exact: true })).toBeVisible();
+  await expect(zeroHistory.getByText(`Total: ${money(Number(service.price_cents))}`, { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Voltar para a OS' }).click();
   await expect(page.getByRole('heading', { name: `OS #${discountedOrder.number}`, exact: true })).toBeVisible();
+  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  const mobileDetail = page.locator('[data-mobile-read-only="1"]');
+  await expect(mobileDetail).toBeVisible();
+  await expect(mobileDetail.getByRole('button', { name: 'Ver histórico do cliente' })).toHaveCount(0);
 });
