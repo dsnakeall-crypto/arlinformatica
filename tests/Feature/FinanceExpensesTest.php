@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Role;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class FinanceExpensesTest extends TestCase
@@ -15,14 +15,15 @@ class FinanceExpensesTest extends TestCase
     use RefreshDatabase;
 
     private User $master;
+
     private User $employee;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(DatabaseSeeder::class);
-        $this->master = User::factory()->create(['role_id' => Role::where('name', 'Master')->value('id')]);
-        $this->employee = User::factory()->create(['role_id' => Role::where('name', 'Funcionário')->value('id')]);
+        $this->master = $this->user('Master', 'master');
+        $this->employee = $this->user('Funcionário', 'employee');
     }
 
     public function test_expense_updates_month_totals_and_daily_chart_without_contaminating_another_month(): void
@@ -67,5 +68,16 @@ class FinanceExpensesTest extends TestCase
         $this->assertDatabaseHas('financial_expenses', ['id' => $id, 'deleted_by' => $this->master->id]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'finance.expense_deleted', 'subject_id' => $id]);
         $this->getJson('/api/finance/month?period=2026-09')->assertJsonPath('expense_cents', 0);
+    }
+
+    private function user(string $role, string $login): User
+    {
+        return User::create([
+            'role_id' => DB::table('roles')->where('name', $role)->value('id'),
+            'name' => $role,
+            'login' => $login,
+            'password' => Hash::make('password-password'),
+            'active' => true,
+        ]);
     }
 }
