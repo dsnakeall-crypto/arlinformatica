@@ -67,7 +67,7 @@ test('Administrador acessa administração permitida sem funções exclusivas do
   await expect(tabs.getByRole('button', { name: /Sistema e Diagnóstico/ })).toBeHidden();
 });
 
-test('Financeiro abre sem depender do relatório mensal e carrega mensal sob demanda', async ({ page }) => {
+test('Financeiro carrega o mês no topo e reaproveita os dados na aba mensal', async ({ page }) => {
   await login(page);
   const monthRequests: string[] = [];
   page.on('request', (request) => {
@@ -76,33 +76,23 @@ test('Financeiro abre sem depender do relatório mensal e carrega mensal sob dem
 
   await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
   await expect(page.getByRole('heading', { name: 'Financeiro' })).toBeVisible();
-  await expect(page.getByText('Total do mês')).toBeVisible();
-  expect(monthRequests).toHaveLength(0);
+  await expect(page.getByText('RECEBIDO NO MÊS')).toBeVisible();
+  await expect.poll(() => monthRequests.length).toBe(1);
 
   await page.getByRole('button', { name: 'Mensal', exact: true }).click();
-  await expect.poll(() => monthRequests.length).toBe(1);
   await expect(page.getByText('Faturamento', { exact: true })).toBeVisible();
+  expect(monthRequests).toHaveLength(1);
 });
 
 test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vazar do card', async ({ page }) => {
   await login(page);
-  await page.route('**/api/finance/overview', async (route) => {
+  await page.route('**/api/finance/month?period=*', async (route) => {
     await route.fulfill({
       json: {
-        timezone: 'America/Sao_Paulo',
-        today_cents: 32500,
-        paid_orders_today: 2,
-        average_ticket_today_cents: 16250,
-        month_total_cents: 47500,
-        yesterday_cents: 15000,
-        today_vs_yesterday_cents: 17500,
-        daily_average_cents: 23750,
-        best_day: { date: '2026-09-04', amount_cents: 32500 },
-        paid_orders_month: 3,
-        daily: [
-          { date: '2026-09-03', amount_cents: 15000 },
-          { date: '2026-09-04', amount_cents: 32500 },
-        ],
+        period: '2026-09', total_cents: 47500, service_orders_cents: 47500,
+        quick_entries_cents: 0, paid_orders: 3, average_ticket_cents: 15833,
+        discount_cents: 0, daily: { '2026-09-03': 15000, '2026-09-04': 32500 },
+        methods: {}, transactions: [], items: [],
       },
     });
   });
@@ -110,13 +100,14 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
   await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
   const chart = page.getByTestId('daily-revenue-chart');
   await expect(chart).toBeVisible();
-  await expect(chart.getByTestId('daily-revenue-column')).toHaveCount(2);
+  await expect(chart.getByTestId('daily-revenue-column')).toHaveCount(30);
   await expect(chart.locator('.revenue-y-axis span')).toHaveCount(3);
   await expect(chart.locator('.revenue-column').filter({ hasText: 'R$ 150,00' })).toBeVisible();
   await expect(chart.locator('.revenue-column').filter({ hasText: 'R$ 325,00' })).toBeVisible();
   await expect(chart.getByText('03/09/2026', { exact: true })).toBeVisible();
   await expect(chart.getByText('04/09/2026', { exact: true })).toBeVisible();
-  await expect(page.locator('.finance-cards article').filter({ hasText: 'Melhor dia' })).toContainText('04/09/2026');
+  await expect(page.getByText('RECEBIDO NO MÊS').locator('..')).toContainText('R$ 475,00');
+  await expect(page.getByText('A RECEBER', { exact: true })).toBeVisible();
 
   const panel = page.getByRole('heading', { name: 'Faturamento dia a dia' }).locator('..');
   const [panelBox, chartBox] = await Promise.all([panel.boundingBox(), chart.boundingBox()]);
@@ -125,6 +116,31 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
   expect(chartBox!.x).toBeGreaterThanOrEqual(panelBox!.x);
   expect(chartBox!.x + chartBox!.width).toBeLessThanOrEqual(panelBox!.x + panelBox!.width + 1);
   expect(chartBox!.y + chartBox!.height).toBeLessThanOrEqual(panelBox!.y + panelBox!.height + 1);
+  const overflow = await chart.evaluate((element) => ({ scrollWidth: element.scrollWidth, clientWidth: element.clientWidth }));
+  expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
+});
+
+test('seletor de mês troca protagonistas, visão geral e gráfico', async ({ page }) => {
+  await login(page);
+  await page.route('**/api/finance/month?period=*', async (route) => {
+    const period = new URL(route.request().url()).searchParams.get('period');
+    const september = period === '2026-09';
+    await route.fulfill({ json: {
+      period, total_cents: september ? 91000 : 42000, service_orders_cents: september ? 91000 : 42000,
+      quick_entries_cents: 0, paid_orders: 1, average_ticket_cents: september ? 91000 : 42000,
+      discount_cents: 0, daily: { [`${period}-01`]: september ? 91000 : 42000 }, methods: {}, transactions: [], items: [],
+    }});
+  });
+  await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
+  const selector = page.getByLabel('Mês exibido');
+  await selector.fill('2026-09');
+  await expect(page.getByText('RECEBIDO NO MÊS').locator('..')).toContainText('R$ 910,00');
+  await expect(page.locator('.finance-overview article').filter({ hasText: 'Sobrou' })).toContainText('R$ 910,00');
+  await expect(page.getByTestId('daily-revenue-chart').getByText('01/09/2026', { exact: true })).toBeVisible();
+  await selector.fill('2026-08');
+  await expect(page.getByText('RECEBIDO NO MÊS').locator('..')).toContainText('R$ 420,00');
+  await expect(page.locator('.finance-overview article').filter({ hasText: 'Sobrou' })).toContainText('R$ 420,00');
+  await expect(page.getByTestId('daily-revenue-chart').getByText('01/08/2026', { exact: true })).toBeVisible();
 });
 
 test('Serviços e Produtos cria e edita tipo, preço e garantia adicional', async ({ page }) => {
