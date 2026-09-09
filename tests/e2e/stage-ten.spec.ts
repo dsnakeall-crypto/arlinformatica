@@ -91,8 +91,8 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
       json: {
         period: '2026-09', total_cents: 47500, service_orders_cents: 47500,
         quick_entries_cents: 0, paid_orders: 3, average_ticket_cents: 15833,
-        discount_cents: 0, daily: { '2026-09-03': 15000, '2026-09-04': 32500 },
-        methods: {}, transactions: [], items: [],
+        discount_cents: 0, expense_cents: 7500, daily: { '2026-09-03': 15000, '2026-09-04': 32500 },
+        daily_expenses: { '2026-09-04': 7500 }, expenses: [], methods: {}, transactions: [], items: [],
       },
     });
   });
@@ -106,6 +106,12 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
   await expect(chart.locator('.revenue-column').filter({ hasText: 'R$ 325,00' })).toBeVisible();
   await expect(chart.getByText('03/09/2026', { exact: true })).toBeVisible();
   await expect(chart.getByText('04/09/2026', { exact: true })).toBeVisible();
+  const expenseBar = chart.getByTestId('daily-expense-bar');
+  await expect(expenseBar).toHaveCount(1);
+  await expect(expenseBar).toHaveCSS('background-color', 'rgb(201, 0, 28)');
+  await expect(expenseBar).toHaveAttribute('title', /04\/09\/2026 — saída: R\$ 75,00/);
+  await expect(page.locator('.finance-overview article').filter({ hasText: 'Gasto' })).toContainText('R$ 75,00');
+  await expect(page.locator('.finance-overview article').filter({ hasText: 'Sobrou' })).toContainText('R$ 400,00');
   await expect(page.getByText('RECEBIDO NO MÊS').locator('..')).toContainText('R$ 475,00');
   await expect(page.getByText('A RECEBER', { exact: true })).toBeVisible();
 

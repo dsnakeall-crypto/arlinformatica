@@ -81,6 +81,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/finance/receivables', [FinanceController::class, 'receivables']);
     Route::get('/finance/month', [FinanceController::class, 'month']);
     Route::post('/finance/transactions/{transaction}/adjust', [FinanceController::class, 'adjust'])->middleware('role:Master,Administrador');
+    Route::middleware('role:Master,Administrador')->group(function () {
+        Route::post('/finance/expenses', [FinanceController::class, 'storeExpense']);
+        Route::delete('/finance/expenses/{expense}', [FinanceController::class, 'destroyExpense']);
+    });
     Route::post('/finance/reports', [FinanceController::class, 'issueReport']);
     Route::get('/finance/reports/{document}/pdf', [FinanceController::class, 'report']);
     Route::middleware('role:Master,Administrador')->group(function () {
