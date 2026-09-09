@@ -69,7 +69,7 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [PENDENTE] Deploy real na KingHost e smoke test no ambiente real.
 
 ## Auditoria da Etapa 10
-- [OK] Financeiro exibe o faturamento dia a dia contido no card, com eixo de valores, valor e data brasileira por barra; "Melhor dia" e o seletor de Layout também usam rótulos sem duplicação.
+- [OK] Financeiro exibe o faturamento dia a dia contido no card, com eixo de valores, valor e data brasileira por barra; "Melhor dia" usa o formato brasileiro.
 - [OK] Painel operacional **sem faturamento**, com indicadores de OS, ações rápidas, dados reais, busca, filtros, ordenação e paginação. A referência histórica com faturamento não substitui essa regra atual.
 - [OK] Mesa usa endpoint dedicado sem paginação e retorna todas as OS abertas nos status operacionais.
 - [OK] Status Concluído encaminha obrigatoriamente à finalização; `Pago` não é reintroduzido como status porque pagamento é domínio separado.

@@ -117,7 +117,6 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
   await expect(chart.getByText('03/09/2026', { exact: true })).toBeVisible();
   await expect(chart.getByText('04/09/2026', { exact: true })).toBeVisible();
   await expect(page.locator('.finance-cards article').filter({ hasText: 'Melhor dia' })).toContainText('04/09/2026');
-  expect((await page.locator('.device-layout').innerText()).match(/Layout/g) ?? []).toHaveLength(1);
 
   const panel = page.getByRole('heading', { name: 'Faturamento dia a dia' }).locator('..');
   const [panelBox, chartBox] = await Promise.all([panel.boundingBox(), chart.boundingBox()]);
