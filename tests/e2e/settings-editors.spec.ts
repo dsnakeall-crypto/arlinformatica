@@ -1,6 +1,38 @@
 import { expect, test } from '@playwright/test';
 import { login } from './helpers';
 
+test('Empresa persiste alterações e abas sem edição não exibem a barra geral de salvar', async ({ page }) => {
+  await login(page);
+  await page.getByRole('button', { name: 'Configurações', exact: true }).click();
+
+  const form = page.locator('form.settings-form');
+  const saveBar = form.locator('.actions');
+  const tradeName = `ARL Empresa E2E ${Date.now()}`;
+
+  await expect(page.locator('.arl-settings-tab[data-section="company"]')).toHaveClass(/active/);
+  await expect(saveBar).toBeVisible();
+  await form.getByLabel('Nome fantasia').fill(tradeName);
+
+  const savedResponse = page.waitForResponse((response) =>
+    response.url().endsWith('/api/settings') && response.request().method() === 'PUT',
+  );
+  await form.getByRole('button', { name: 'Salvar configurações' }).click();
+  expect((await savedResponse).status()).toBe(200);
+  await expect(form.getByText('Configurações salvas com segurança.')).toBeVisible();
+  await expect(form.getByLabel('Nome fantasia')).toHaveValue(tradeName);
+
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();
+  await expect(page.locator('form.settings-form').getByLabel('Nome fantasia')).toHaveValue(tradeName);
+
+  await page.locator('.arl-settings-tab[data-section="finance"]').click();
+  await expect(page.locator('form.settings-form .actions')).toBeHidden();
+
+  await page.locator('.arl-settings-tab[data-section="storage"]').click();
+  await expect(page.locator('form.settings-form .actions')).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Fotos e Armazenamento' })).toBeVisible();
+});
+
 test('configurações separa textos de documentos em subabas com editor expandido', async ({ page }) => {
   await login(page);
 
