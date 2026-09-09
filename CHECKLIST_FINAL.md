@@ -94,6 +94,11 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 6. Smoke test real: login, banco, OS, clientes, fotos, PDFs, financeiro, backup, scheduler/heartbeat e diagnóstico.
 7. Merge continua sendo ação manual do proprietário; não fazer automaticamente.
 
+## Configurações — correções da tela atual
+- [OK] Alterações em Dados da Empresa são enviadas ao backend, persistidas e recarregadas pela interface; a regressão possui cobertura E2E.
+- [OK] A barra geral de salvar aparece somente nas abas com configurações editáveis por esse formulário e não antecede o conteúdo de Armazenamento.
+- [PENDENTE] O CEP da empresa continua vazio porque não há valor cadastrado em `settings` e o valor inicial oficial também não foi fornecido; nenhum CEP foi inventado.
+
 ## Continuação da PR #11 — papel timbrado oficial
 - [OK] `papel-timbrado.png` validado em runtime e por teste com 1055 × 1491 px e SHA-256 `5e640a129a7b33d954e9f3b44a872b6f003ed8266f30039a578c11fe599e0087`, sem alteração do arquivo recebido.
 - [OK] Orçamento e PDF final usam a base A4 compartilhada, com fundo integral e área útil de 180 × 195 mm (margens 68/34/15 mm), sem redesenhar ou duplicar logo/dados empresariais.
