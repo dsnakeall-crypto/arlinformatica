@@ -4,7 +4,7 @@ import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-
 import OrderAuditHistory from './order-audit-history';
 import '../css/order-detail-layout.css';
 
-type Props = { id: number; back: () => void; onEdit?: () => void; onDirtyChange?: (dirty: boolean) => void };
+type Props = { id: number; back: () => void; onEdit?: () => void; onDirtyChange?: (dirty: boolean) => void; onOpenClientHistory?: (clientId: number) => void };
 type ApiError = Error & { errors?: Record<string, string[]> };
 type PaymentSummary = { total_cents: number; paid_cents: number; balance_cents: number; status: 'unpaid' | 'partial' | 'paid'; payments: any[] };
 
@@ -344,7 +344,7 @@ function FinalShareCard({ order, share, onClose }: { order: any; share: FinalSha
   return <div className="arl-final-share-host"><section className="arl-final-share-card" role="status" aria-label="Compartilhar fechamento da OS"><h2>OS #{order.number} finalizada</h2><p>O PDF Final está pronto. O link abaixo expira em 48 horas; o PDF original continua preservado no histórico.</p><div className="arl-final-share-actions"><a target="_blank" rel="noreferrer" href={share.url}>Abrir PDF</a>{whatsapp && <a className="whatsapp" target="_blank" rel="noreferrer" href={whatsapp} onClick={(e) => { e.preventDefault(); if (window.confirm('Deseja abrir o WhatsApp para enviar a mensagem de finalização desta OS?')) window.open(whatsapp, '_blank', 'noopener'); }}>Enviar PDF pelo WhatsApp</a>}<button type="button" onClick={onClose}>Fechar</button></div></section></div>;
 }
 
-export default function OrderDetailPage({ id, back, readOnly = false, onEdit, onDirtyChange }: Props & { readOnly?: boolean }) {
+export default function OrderDetailPage({ id, back, readOnly = false, onEdit, onDirtyChange, onOpenClientHistory }: Props & { readOnly?: boolean }) {
   const [order, setOrder] = useState<any>(), [role, setRole] = useState(''), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [interruptOpen, setInterruptOpen] = useState(false), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [servicesDirty, setServicesDirty] = useState(false), [finalReportDirty, setFinalReportDirty] = useState(false), [share, setShare] = useState<FinalShare | null>(null), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null), statusSelect = useRef<HTMLSelectElement>(null), pendingServicesSave = useRef<null | (() => Promise<any>)>(null);
   const load = async () => { try { const next = await api(`/orders/${id}`); setOrder(next); if (!finalReportDirty) setFinalReport(next.final_report || (next.status === 'completed' ? next.technical_report || '' : '')); setError(''); } catch (e: any) { setError(e.message); } };
@@ -410,7 +410,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
     <header className="arl-order-sticky-header">
       <div className="arl-order-header-main">
         <button type="button" className="arl-order-back" onClick={back}>← Voltar</button>
-        <div className="arl-order-header-identity"><span className="arl-eyebrow">ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1><div className="arl-order-header-meta"><strong>{order.client.name}</strong><span>{order.equipment_description || 'Equipamento não informado'}</span><span>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</span></div></div>
+        <div className="arl-order-header-identity"><span className="arl-eyebrow">ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1><div className="arl-order-header-meta"><span className="arl-order-client-link"><strong>{order.client.name}</strong>{onOpenClientHistory&&<button type="button" onClick={()=>onOpenClientHistory(order.client.id)}>Ver histórico do cliente</button>}</span><span>{order.equipment_description || 'Equipamento não informado'}</span><span>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</span></div></div>
         <label className={`status-picker status-${shownStatus}`}><span>Status</span><select ref={statusSelect} value={shownStatus} disabled={order.archived} onChange={(e) => void changeStatus(e.target.value)}>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       </div>
       <div className="arl-order-quick-actions arl-order-header-actions">
