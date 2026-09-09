@@ -145,20 +145,55 @@ class FinanceController extends Controller
 
     public function quickEntry(Request $request): JsonResponse
     {
-        $data = $request->validate(['amount_cents' => ['required', 'integer', 'min:1']]);
+        $data = $request->validate([
+            'amount_cents' => ['required', 'integer', 'min:1'],
+            'description' => ['nullable', 'string', 'max:160'],
+        ]);
+        $description = trim((string) ($data['description'] ?? '')) ?: 'Serviço rápido não cadastrado';
         $now = CarbonImmutable::now('UTC');
         $id = DB::table('financial_transactions')->insertGetId([
             'origin' => 'quick_entry',
-            'description' => 'Serviço rápido não cadastrado',
+            'description' => $description,
             'amount_cents' => $data['amount_cents'],
             'occurred_at' => $now,
             'user_id' => $request->user()->id,
             'created_at' => $now,
             'updated_at' => $now,
         ]);
-        $this->audit($request, 'finance.quick_entry', 'financial_transaction', $id, null, $data);
+        $this->audit($request, 'finance.quick_entry', 'financial_transaction', $id, null, [...$data, 'description' => $description]);
 
         return response()->json(DB::table('financial_transactions')->find($id), 201);
+    }
+
+    public function storeExpense(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'spent_on' => ['required', 'date_format:Y-m-d'],
+            'description' => ['required', 'string', 'max:160'],
+            'amount_cents' => ['required', 'integer', 'min:1'],
+        ]);
+        $now = CarbonImmutable::now('UTC');
+        $id = DB::table('financial_expenses')->insertGetId([
+            ...$data,
+            'created_by' => $request->user()->id,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        $this->audit($request, 'finance.expense_created', 'financial_expense', $id, null, $data);
+
+        return response()->json(DB::table('financial_expenses')->find($id), 201);
+    }
+
+    public function destroyExpense(Request $request, int $expense): JsonResponse
+    {
+        $row = DB::table('financial_expenses')->whereNull('deleted_at')->find($expense);
+        abort_unless($row, 404);
+        $now = CarbonImmutable::now('UTC');
+        DB::table('financial_expenses')->where('id', $expense)->update(['deleted_at' => $now, 'deleted_by' => $request->user()->id, 'updated_at' => $now]);
+        $before = ['spent_on' => $row->spent_on, 'description' => $row->description, 'amount_cents' => (int) $row->amount_cents];
+        $this->audit($request, 'finance.expense_deleted', 'financial_expense', $expense, $before, ['deleted_at' => $now->toIso8601String()]);
+
+        return response()->json(['message' => 'Despesa excluída com registro de auditoria.']);
     }
 
     public function overview(Request $request): JsonResponse
@@ -220,6 +255,9 @@ class FinanceController extends Controller
         $start = CarbonImmutable::createFromFormat('Y-m-d H:i:s', "$period-01 00:00:00", self::TZ);
         $end = $start->endOfMonth();
         $utcBounds = [$start->utc(), $end->utc()];
+        $expenses = DB::table('financial_expenses')->whereNull('deleted_at')
+            ->whereBetween('spent_on', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->orderBy('spent_on')->get();
 
         $rows = $this->effective()
             ->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')
@@ -288,6 +326,7 @@ class FinanceController extends Controller
 
         $daily = $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))
             ->map(fn ($day) => (int) $day->sum('effective_cents'))->sortKeys();
+        $dailyExpenses = $expenses->groupBy('spent_on')->map(fn ($day) => (int) $day->sum('amount_cents'))->sortKeys();
         $methods = $orders->filter(fn ($row) => $row->method)->groupBy('method')
             ->map(fn ($method) => ['quantity' => $method->count(), 'total_cents' => (int) $method->sum('effective_cents')]);
 
@@ -296,11 +335,14 @@ class FinanceController extends Controller
             'total_cents' => (int) $rows->sum('effective_cents'),
             'service_orders_cents' => (int) $orders->sum('effective_cents'),
             'quick_entries_cents' => (int) $rows->where('origin', 'quick_entry')->sum('effective_cents'),
+            'expense_cents' => (int) $expenses->sum('amount_cents'),
             'paid_orders' => $paidOrderCount,
             'average_ticket_cents' => $paidOrderCount ? intdiv((int) $orders->sum('effective_cents'), $paidOrderCount) : 0,
             'discount_cents' => $discount,
             'allocation_note' => 'Itens e descontos são rateados proporcionalmente ao recebimento acumulado de cada OS; o cálculo cumulativo atribui eventuais centavos residuais à parcela final.',
             'daily' => $daily,
+            'daily_expenses' => $dailyExpenses,
+            'expenses' => $expenses->values(),
             'methods' => $methods,
             'transactions' => $rows->values(),
             'items' => $items,

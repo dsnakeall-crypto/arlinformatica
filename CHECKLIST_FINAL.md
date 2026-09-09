@@ -100,3 +100,8 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] Termo permanece fora do papel timbrado e novos termos incluem o parágrafo LGPD; versões e PDFs já emitidos permanecem imutáveis.
 - [OK] Geração de orçamento ocorre em modal com busca do catálogo, itens, quantidades, valores e total, mantendo o fluxo E2E de geração e aprovação.
 - [OK] Histórico do cliente lista todas as revisões de orçamento e oferece acesso ao PDF preservado.
+
+## Financeiro — Parte 3C
+- [OK] Despesa simples de material de uso registra apenas data, descrição e valor; Master/Administrador podem criar e excluir, sempre com auditoria e exclusão lógica.
+- [OK] Despesas alimentam Gasto/Sobrou no mês selecionado e aparecem em vermelho, no dia correspondente, junto das entradas do gráfico.
+- [OK] Entrada Rápida Web/PC identifica recebimento avulso sem cliente/OS e aceita descrição curta do serviço de rua; o atalho não é exposto no modo Mobile/Tablet.
