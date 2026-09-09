@@ -19,8 +19,11 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
   expect(client.status, `Cliente do histórico não foi criado: ${JSON.stringify(client.body)}`).toBe(201);
 
   const equipment = await api(page, '/catalogs/equipment');
+  const services = await api(page, '/catalogs/services');
   const notebook = equipment.body.find((item: { name: string }) => item.name === 'Notebook');
+  const service = services.body.find((item: { name: string }) => item.name === 'Formatação E2E');
   expect(notebook, 'Catálogo deve conter Notebook para validar o equipamento no histórico').toBeDefined();
+  expect(service, 'Catálogo deve conter Formatação E2E para finalizar a OS pelo fluxo real').toBeDefined();
 
   const createOrder = async (problem: string) => {
     const response = await api(page, '/orders', 'POST', {
@@ -30,6 +33,7 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
       attendance_type: 'bench',
       reported_problem: problem,
       checklist: [],
+      items: [{ catalog_id: service.id, quantity: 1 }],
     });
     expect(response.status, `OS do histórico não foi criada: ${JSON.stringify(response.body)}`).toBe(201);
     return response.body;
@@ -44,7 +48,15 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
       discount_cents: discount,
       approved_budget_id: null,
       photo_ids: [],
-      items: [{ description: 'Manutenção preventiva', quantity: 1, unit_price_cents: 10000 }],
+      items: [{
+        catalog_id: service.id,
+        description: service.name,
+        quantity: 1,
+        unit_price_cents: service.price_cents,
+        warranty_enabled: Boolean(service.warranty_enabled),
+        warranty_term: service.warranty_enabled ? service.warranty_term : null,
+        warranty_unit: service.warranty_enabled ? service.warranty_unit : null,
+      }],
     });
     expect(finalized.status, `OS ${order.number} não foi finalizada: ${JSON.stringify(finalized.body)}`).toBe(201);
   }
@@ -63,9 +75,9 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
   const zeroHistory = page.locator('.clients-history-order').filter({ hasText: `OS #${zeroDiscountOrder.number}` });
   await expect(discountedHistory.getByText('Equipamento: Notebook', { exact: true })).toBeVisible();
   await expect(discountedHistory.getByText('Desconto: R$ 12,50', { exact: true })).toBeVisible();
-  await expect(discountedHistory.getByText('Total: R$ 87,50', { exact: true })).toBeVisible();
+  await expect(discountedHistory.getByText('Total: R$ 137,50', { exact: true })).toBeVisible();
   await expect(zeroHistory.getByText(/^Desconto:/)).toHaveCount(0);
-  await expect(zeroHistory.getByText('Total: R$ 100,00', { exact: true })).toBeVisible();
+  await expect(zeroHistory.getByText('Total: R$ 150,00', { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Voltar para a OS' }).click();
   await expect(page.getByRole('heading', { name: `OS #${discountedOrder.number}`, exact: true })).toBeVisible();
