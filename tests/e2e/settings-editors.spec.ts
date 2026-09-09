@@ -22,6 +22,7 @@ test('Empresa persiste alterações e abas sem edição não exibem a barra gera
   await expect(form.getByLabel('Nome fantasia')).toHaveValue(tradeName);
 
   await page.reload();
+  await page.getByRole('button', { name: 'Configurações', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();
   await expect(page.locator('form.settings-form').getByLabel('Nome fantasia')).toHaveValue(tradeName);
 
