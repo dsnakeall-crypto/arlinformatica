@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#09080A">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="ARL Informática">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./arl-assets/icons/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="./arl-assets/icons/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./arl-assets/icons/icon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./arl-assets/icons/icon-180.png">
     <title>ARL Informática</title>
     @auth
         @vite(['resources/js/brand2026.ts','resources/js/brand2026-access.ts','resources/js/client-search.ts','resources/js/order-maintenance.ts','resources/js/order-workflow.ts','resources/js/new-order-search.ts','resources/js/opening-whatsapp.ts','resources/js/completion-polish.ts','resources/js/record-management.ts','resources/js/ui-final-polish.ts','resources/js/ui-regression-guard.ts','resources/js/manual-equipment.ts','resources/js/main.tsx','resources/js/mobile-home.ts','resources/js/page-isolation.ts','resources/js/official-icons.ts','resources/css/brand2026.css'])
