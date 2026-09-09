@@ -16,7 +16,7 @@ async function finalizeThroughUi(page: Page, order: { id: number; number: string
   await page.getByRole('button', { name: 'Concluir OS' }).click();
   const modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(modal).toBeVisible();
-  await expect(modal.getByDisplayValue('Formatação E2E')).toBeVisible();
+  await expect(modal.locator('.finish-item input').first()).toHaveValue('Formatação E2E');
   await modal.getByLabel('Desconto (R$)').fill((discountCents / 100).toFixed(2).replace('.', ','));
 
   const responsePromise = page.waitForResponse((response) =>
