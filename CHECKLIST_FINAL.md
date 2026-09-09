@@ -49,7 +49,7 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 
 ## Interface, qualidade e entrega
 - [OK] Shell desktop responsivo, menu, cards, filtros, tabela e experiência mobile própria.
-- [OK] PWA instalável com manifesto e ícones 192/512.
+- [OK] PWA instalável com manifesto válido, navegação `standalone`, cores pretas, caminhos relativos para shared hosting, ícones 192/512/maskable e tags favicon/Apple Touch Icon.
 - [OK] Documentação de arquitetura e deploy KingHost.
 - [OK] CI valida backend SQLite, backend MySQL 8, Composer audit, dependências PHP de produção `--no-dev`, npm audit, TypeScript, build e Playwright.
 - [OK] Telas operacionais usam backend real e tratam loading, erro, vazio e validação.
