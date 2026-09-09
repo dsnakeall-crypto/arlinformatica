@@ -110,4 +110,4 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 ## Financeiro — Parte 3C
 - [OK] Despesa simples de material de uso registra apenas data, descrição e valor; Master/Administrador podem criar e excluir, sempre com auditoria e exclusão lógica.
 - [OK] Despesas alimentam Gasto/Sobrou no mês selecionado e aparecem em vermelho, no dia correspondente, junto das entradas do gráfico.
-- [OK] Entrada Rápida Web/PC identifica recebimento avulso sem cliente/OS e aceita descrição curta do serviço de rua; o atalho não é exposto no modo Mobile/Tablet.
+- [OK] Entrada Rápida no Painel, Financeiro e cabeçalho Mobile/Tablet aceita somente o valor; descrição curta é opcional e, quando vazia, preserva o padrão do backend. O atalho mobile não libera acesso ao Financeiro.
