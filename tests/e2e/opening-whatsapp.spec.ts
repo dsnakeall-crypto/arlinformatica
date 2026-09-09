@@ -80,12 +80,10 @@ test('Configurações não oferece mais edição da mensagem de abertura', async
   await expect(page.locator('.arl-settings-tabs')).toBeVisible();
 
   const messages = page.locator('.arl-settings-tab[data-section="messages"]');
-  await expect(messages).toBeVisible();
-  await messages.click();
-
+  await expect(messages).toHaveCount(0);
   await expect(page.locator('.arl-message-subnav [data-msg-tab="opening"]')).toHaveCount(0);
   await expect(page.locator('.arl-opening-message-panel')).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Avaliação Google' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Instagram' })).toBeVisible();
+  await expect(page.locator('.arl-message-subnav')).toBeHidden();
+  await expect(page.locator('.arl-post-message-panel')).toBeHidden();
   await expect(page.getByText('Mensagem de abertura da OS', { exact: true })).toBeHidden();
 });

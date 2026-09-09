@@ -17,14 +17,17 @@ test('Empresa persiste alterações e abas sem edição não exibem a barra gera
   expect(streetWidth).toBeGreaterThan(stateWidth);
   expect(streetWidth).toBeGreaterThan(postalWidth);
   const secondary = form.locator('.company-secondary-fields');
+  const complement = secondary.locator('input[name="complement"]');
+  const instagram = secondary.locator('input[name="instagram"]');
+  const googleReview = secondary.locator('input[name="google_review"]');
   await expect(secondary).not.toHaveAttribute('open', '');
-  await expect(form.getByLabel('Complemento')).toBeHidden();
-  await expect(form.getByLabel('Instagram')).toBeHidden();
-  await expect(form.getByLabel('Avaliação Google')).toBeHidden();
+  await expect(complement).toBeHidden();
+  await expect(instagram).toBeHidden();
+  await expect(googleReview).toBeHidden();
   await secondary.getByText('Informações complementares', { exact: true }).click();
-  await expect(form.getByLabel('Complemento')).toBeVisible();
-  await expect(form.getByLabel('Instagram')).toBeVisible();
-  await expect(form.getByLabel('Avaliação Google')).toBeVisible();
+  await expect(complement).toBeVisible();
+  await expect(instagram).toBeVisible();
+  await expect(googleReview).toBeVisible();
   await expect(saveBar).toBeVisible();
   await form.getByLabel('Nome fantasia').fill(tradeName);
 
