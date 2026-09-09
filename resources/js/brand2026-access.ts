@@ -19,8 +19,6 @@ function syncPostSaleScope() {
 
 const documentSubtabs = [
   ['term', 'Termo de recebimento'],
-  ['budget', 'Orçamento'],
-  ['reports', 'Modelos de laudos'],
 ] as const;
 
 function syncDocumentSubtabState() {

@@ -195,15 +195,15 @@ test('Configurações usa sanfona exclusiva e salva Garantia Geral', async ({ pa
 
   const tabs = page.locator('.arl-settings-tabs');
   await expect(tabs).toBeVisible();
-  const company = tabs.getByRole('button', { name: /Empresa/ });
-  const identity = tabs.getByRole('button', { name: /Identidade Visual/ });
-  const orders = tabs.getByRole('button', { name: /Ordens de Serviço/ });
+  const company = tabs.getByRole('tab', { name: 'Empresa', exact: true });
+  const identity = tabs.getByRole('tab', { name: 'Identidade', exact: true });
+  const warranty = tabs.getByRole('tab', { name: 'Garantia', exact: true });
   await expect(company).toHaveClass(/active/);
   await identity.click();
   await expect(identity).toHaveClass(/active/);
   await expect(company).not.toHaveClass(/active/);
-  await orders.click();
-  await expect(orders).toHaveClass(/active/);
+  await warranty.click();
+  await expect(warranty).toHaveClass(/active/);
   await expect(identity).not.toHaveClass(/active/);
 
   const form = page.locator('form.settings-form');
