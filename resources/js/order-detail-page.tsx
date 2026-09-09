@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import OrderDetailReact from './order-detail-react';
 import UnifiedOrderEditor from './order-editor-unified';
 
-type Props = { id: number; back: () => void; readOnly?: boolean; onDirtyChange?: (dirty: boolean) => void };
+type Props = { id: number; back: () => void; readOnly?: boolean; onDirtyChange?: (dirty: boolean) => void; onOpenClientHistory?: (clientId: number) => void };
 
 const UNSAVED_MESSAGE = 'Existem alterações não salvas. Deseja sair sem salvar?';
 const DETACHED_ORDER_ARTIFACTS = [
@@ -86,6 +86,7 @@ export default function OrderDetailPage(props: Props) {
       readOnly={props.readOnly}
       onEdit={openEditor}
       onDirtyChange={setDetailDirty}
+      onOpenClientHistory={props.onOpenClientHistory}
     />
     {!props.readOnly && editorOpen && <UnifiedOrderEditor
       orderId={props.id}

@@ -99,3 +99,5 @@ main:has([data-arl-order-detail-react="1"]) .device-layout>.arl-layout-label{dis
   [data-arl-order-detail-react="1"] .arl-order-workflow>.arl-payment-empty>.section-title{display:grid!important}
   [data-arl-order-detail-react="1"] .arl-record-documents .documents>article{align-items:flex-start}
 }
+[data-arl-order-detail-react="1"] .arl-order-client-link{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+[data-arl-order-detail-react="1"] .arl-order-client-link button{min-height:26px;border:1px solid #dccfd2;border-radius:7px;background:#fff;color:#7d2635;padding:3px 7px;font-size:10px;font-weight:800;cursor:pointer}
