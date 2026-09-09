@@ -97,6 +97,7 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 ## Configurações — correções da tela atual
 - [OK] Alterações em Dados da Empresa são enviadas ao backend, persistidas e recarregadas pela interface; a regressão possui cobertura E2E.
 - [OK] A barra geral de salvar aparece somente nas abas com configurações editáveis por esse formulário e não antecede o conteúdo de Armazenamento.
+- [OK] A navegação de Configurações exibe em uma única linha somente Empresa, Identidade, Documentos, Garantia, Notificações, Backup, Sistema e Armazenamento; recursos ocultos continuam preservados no código e no banco.
 - [PENDENTE] O CEP da empresa continua vazio porque não há valor cadastrado em `settings` e o valor inicial oficial também não foi fornecido; nenhum CEP foi inventado.
 
 ## Continuação da PR #11 — papel timbrado oficial
