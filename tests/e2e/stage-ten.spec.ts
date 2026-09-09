@@ -84,6 +84,50 @@ test('Financeiro abre sem depender do relatório mensal e carrega mensal sob dem
   await expect(page.getByText('Faturamento', { exact: true })).toBeVisible();
 });
 
+test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vazar do card', async ({ page }) => {
+  await login(page);
+  await page.route('**/api/finance/overview', async (route) => {
+    await route.fulfill({
+      json: {
+        timezone: 'America/Sao_Paulo',
+        today_cents: 32500,
+        paid_orders_today: 2,
+        average_ticket_today_cents: 16250,
+        month_total_cents: 47500,
+        yesterday_cents: 15000,
+        today_vs_yesterday_cents: 17500,
+        daily_average_cents: 23750,
+        best_day: { date: '2026-09-04', amount_cents: 32500 },
+        paid_orders_month: 3,
+        daily: [
+          { date: '2026-09-03', amount_cents: 15000 },
+          { date: '2026-09-04', amount_cents: 32500 },
+        ],
+      },
+    });
+  });
+
+  await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
+  const chart = page.getByTestId('daily-revenue-chart');
+  await expect(chart).toBeVisible();
+  await expect(chart.getByTestId('daily-revenue-column')).toHaveCount(2);
+  await expect(chart.locator('.revenue-y-axis span')).toHaveCount(3);
+  await expect(chart.locator('.revenue-column').filter({ hasText: 'R$ 150,00' })).toBeVisible();
+  await expect(chart.locator('.revenue-column').filter({ hasText: 'R$ 325,00' })).toBeVisible();
+  await expect(chart.getByText('03/09/2026', { exact: true })).toBeVisible();
+  await expect(chart.getByText('04/09/2026', { exact: true })).toBeVisible();
+  await expect(page.locator('.finance-cards article').filter({ hasText: 'Melhor dia' })).toContainText('04/09/2026');
+  expect((await page.locator('.device-layout').innerText()).match(/Layout/g) ?? []).toHaveLength(1);
+
+  const panel = page.getByRole('heading', { name: 'Faturamento dia a dia' }).locator('..');
+  const [panelBox, chartBox] = await Promise.all([panel.boundingBox(), chart.boundingBox()]);
+  expect(panelBox).not.toBeNull();
+  expect(chartBox).not.toBeNull();
+  expect(chartBox!.x).toBeGreaterThanOrEqual(panelBox!.x);
+  expect(chartBox!.x + chartBox!.width).toBeLessThanOrEqual(panelBox!.x + panelBox!.width + 1);
+  expect(chartBox!.y + chartBox!.height).toBeLessThanOrEqual(panelBox!.y + panelBox!.height + 1);
+});
+
 test('Serviços e Produtos cria e edita tipo, preço e garantia adicional', async ({ page }) => {
   await login(page);
   await page.locator('aside').getByRole('button', { name: 'Serviços', exact: true }).click();
