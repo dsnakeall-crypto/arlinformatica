@@ -84,6 +84,8 @@ test('Configurações não oferece mais edição da mensagem de abertura', async
   await expect(page.locator('.arl-message-subnav [data-msg-tab="opening"]')).toHaveCount(0);
   await expect(page.locator('.arl-opening-message-panel')).toBeHidden();
   await expect(page.locator('.arl-message-subnav')).toBeHidden();
-  await expect(page.locator('.arl-post-message-panel')).toBeHidden();
-  await expect(page.getByText('Mensagem de abertura da OS', { exact: true })).toBeHidden();
+  const postMessagePanels = page.locator('.arl-post-message-panel');
+  await expect(postMessagePanels).toHaveCount(2);
+  expect(await postMessagePanels.evaluateAll((panels) => panels.map((panel) => panel.hidden))).toEqual([true, true]);
+  await expect(page.locator('.arl-opening-message-panel').getByText('Mensagem de abertura da OS', { exact: true })).toBeHidden();
 });
