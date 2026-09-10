@@ -102,14 +102,19 @@ class FinalizationController extends Controller
         if (! $previous || (int) $previous->total_cents === $newTotal) {
             return null;
         }
+
         $transactions = DB::table('financial_transactions as ft')->join('payments as p', 'p.id', '=', 'ft.payment_id')->where('p.service_order_id', $order->id)->orderBy('ft.id')->get(['ft.id', 'ft.amount_cents']);
         if ($transactions->isEmpty()) {
             return null;
         }
-        $effective = $transactions->sum(function ($row) { return (int) (DB::table('financial_adjustments')->where('transaction_id', $row->id)->latest('id')->value('new_cents') ?? $row->amount_cents); });
+
+        $effective = $transactions->sum(function ($row) {
+            return (int) (DB::table('financial_adjustments')->where('transaction_id', $row->id)->latest('id')->value('new_cents') ?? $row->amount_cents);
+        });
         if ($effective <= $newTotal) {
             return null;
         }
+
         $last = $transactions->last();
         $previousEffective = (int) (DB::table('financial_adjustments')->where('transaction_id', $last->id)->latest('id')->value('new_cents') ?? $last->amount_cents);
         $newEffective = max(0, $previousEffective - ($effective - $newTotal));

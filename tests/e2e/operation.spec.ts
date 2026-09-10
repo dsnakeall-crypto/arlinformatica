@@ -256,7 +256,10 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.locator('.status-picker select')).toHaveValue('completed');
     const documents = page.locator('details.arl-record-accordion').filter({ hasText: 'Documentos' });
     await documents.locator('summary').click();
-    await expect(documents.getByText('Revisão 2', { exact: false })).toBeVisible();
+    const finalRevision = documents.locator('article').filter({ hasText: 'PDF Final' });
+    await expect(finalRevision.getByText('Revisão 2', { exact: false })).toBeVisible();
+    const preservedBudgetRevision = documents.locator('article').filter({ hasText: 'Orçamento' }).filter({ hasText: 'Revisão 2' });
+    await expect(preservedBudgetRevision, 'A outra Revisão 2 é o PDF histórico do orçamento excluído logicamente, não uma duplicata do fechamento').toHaveCount(1);
     const audit = page.locator('details.arl-record-accordion').filter({ hasText: 'Histórico de alterações' });
     await audit.locator('summary').click();
     await expect(audit.getByText('Reabertura da OS', { exact: true })).toBeVisible();

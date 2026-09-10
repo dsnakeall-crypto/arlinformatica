@@ -197,7 +197,9 @@ class ServiceOrderMaintenanceController extends Controller
         ServiceOrder $order,
     ): JsonResponse {
         abort_unless($order->status === 'completed', 422, 'Somente uma OS concluída pode ser reaberta.');
+
         $data = $request->validate(['note' => ['required', 'string', 'max:5000']]);
+
         DB::transaction(function () use ($request, $order, $data) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             abort_unless($locked->status === 'completed', 409, 'Esta OS já foi reaberta.');
@@ -210,6 +212,7 @@ class ServiceOrderMaintenanceController extends Controller
                     'warranty_snapshot' => $item->warranty_snapshot, 'created_at' => now(), 'updated_at' => now(),
                 ]);
             }
+
             $before = ['status' => $locked->status, 'total_cents' => (int) $locked->total_cents, 'completed_at' => $locked->completed_at];
             $locked->update(['status' => 'analysis', 'completed_at' => null, 'archived' => false]);
             DB::table('status_history')->insert(['service_order_id' => $locked->id, 'from_status' => 'completed', 'to_status' => 'analysis', 'user_id' => $request->user()->id, 'created_at' => now()]);
@@ -224,6 +227,7 @@ class ServiceOrderMaintenanceController extends Controller
                 'created_at' => now(),
             ]);
         });
+
         return response()->json($order->fresh()->load(['client', 'items', 'histories.user:id,name']));
     }
 
