@@ -51,6 +51,7 @@ class BudgetController extends Controller
 
     public function status(Request $request, ServiceOrder $order, int $revision): JsonResponse
     {
+        abort_if($order->status === 'completed', 409, 'Não é possível alterar orçamento de uma OS finalizada.');
         $data = $request->validate(['status' => 'required|in:sent,approved,refused', 'note' => 'nullable|string|max:1000']);
         $budget = DB::table('budgets')->where(['service_order_id' => $order->id, 'revision' => $revision])->whereNull('deleted_at')->first();
         abort_unless($budget, 404);
@@ -62,6 +63,7 @@ class BudgetController extends Controller
 
     public function destroy(Request $request, ServiceOrder $order, int $revision): JsonResponse
     {
+        abort_if($order->status === 'completed', 409, 'Não é possível excluir orçamento de uma OS finalizada.');
         $budget = DB::table('budgets')->where(['service_order_id' => $order->id, 'revision' => $revision])->whereNull('deleted_at')->first();
         abort_unless($budget, 404);
         abort_if(

@@ -93,6 +93,32 @@ class BudgetDeletionTest extends TestCase
         $this->assertDatabaseCount('budgets', 0);
     }
 
+    public function test_completed_order_rejects_budget_deletion(): void
+    {
+        $budget = $this->budget('approved');
+        $this->order->update(['status' => 'completed', 'completed_at' => now()]);
+
+        $this->actingAs($this->master)->deleteJson("/api/orders/{$this->order->id}/budgets/1")
+            ->assertConflict()
+            ->assertJsonPath('message', 'Não é possível excluir orçamento de uma OS finalizada.');
+
+        $this->assertNull(DB::table('budgets')->where('id', $budget)->value('deleted_at'));
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'budget.deleted', 'subject_id' => $budget]);
+    }
+
+    public function test_completed_order_rejects_budget_status_change(): void
+    {
+        $budget = $this->budget('sent');
+        $this->order->update(['status' => 'completed', 'completed_at' => now()]);
+
+        $this->actingAs($this->master)->patchJson("/api/orders/{$this->order->id}/budgets/1/status", ['status' => 'approved'])
+            ->assertConflict()
+            ->assertJsonPath('message', 'Não é possível alterar orçamento de uma OS finalizada.');
+
+        $this->assertSame('sent', DB::table('budgets')->where('id', $budget)->value('status'));
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'budget.status_changed', 'subject_id' => $budget]);
+    }
+
     private function budget(string $status, int $revision = 1): int
     {
         return DB::table('budgets')->insertGetId(['service_order_id' => $this->order->id, 'revision' => $revision, 'status' => $status, 'diagnosis' => 'Falha', 'proposal' => 'Reparo', 'validity_days' => 7, 'total_cents' => 10000, 'created_by' => $this->master->id, 'created_at' => now(), 'updated_at' => now()]);
