@@ -248,7 +248,11 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
   const remove = async (budget: any) => {
     if (!window.confirm(`Excluir o orçamento Revisão ${budget.revision}? O PDF já emitido continuará preservado.`)) return;
     setError('');
-    try { await api(`/orders/${order.id}/budgets/${budget.revision}`, { method: 'DELETE' }); await load(); }
+    try {
+      await api(`/orders/${order.id}/budgets/${budget.revision}`, { method: 'DELETE' });
+      setList((current) => current.filter((entry) => entry.id !== budget.id));
+      await load();
+    }
     catch (e: any) { setError(e.message); }
   };
   return <section className="wide"><div className="section-title"><h2>Orçamentos</h2>{order.status !== 'completed' && <button className="primary" data-arl-quick-source="budget" onClick={() => setOpen(true)}><Plus/>Gerar orçamento</button>}</div>
