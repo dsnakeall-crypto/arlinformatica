@@ -103,6 +103,25 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(approvalPayload).toEqual({ status: 'approved' });
     expect(approvalPayload).not.toHaveProperty('copy_items');
     await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toHaveCount(0);
+
+    const services = await api(page, '/catalogs/services');
+    const formatting = services.body.find((row: any) => row.name === 'Formatação E2E');
+    const secondBudget = await api(page, `/orders/${orderId}/budgets`, 'POST', {
+      diagnosis: 'Revisão descartável', proposal: 'Teste de exclusão lógica', validity_days: 7,
+      items: [{ catalog_id: formatting.id, description: formatting.name, quantity: 1, unit_price_cents: formatting.price_cents, warranty_enabled: false }],
+    });
+    expect(secondBudget.status).toBe(201);
+    await page.reload();
+    await expect(page.getByText(/Revisão 2/)).toBeVisible();
+    page.once('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('confirm');
+      expect(dialog.message()).toContain('Revisão 2');
+      await dialog.accept();
+    });
+    await page.getByText(/Revisão 2/).getByRole('button', { name: 'Excluir orçamento' }).click();
+    await expect(page.getByText(/Revisão 2/)).toHaveCount(0);
+    const remainingBudgets = await api(page, `/orders/${orderId}/budgets`);
+    expect(remainingBudgets.body).toHaveLength(1);
   });
 
   test('finaliza OS usando o orçamento aprovado', async ({ page }) => {
@@ -142,6 +161,11 @@ test.describe.serial('fluxo operacional principal', () => {
     const finalized = await finalizedResponse.json();
     expect(finalized.items[0].source_budget_id).toBeTruthy();
     expect(finalized.items[0].description).toBe('Formatação E2E');
+    await expect(page.getByRole('button', { name: 'Gerar orçamento' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Excluir orçamento' })).toHaveCount(0);
+    const blockedBudget = await api(page, `/orders/${orderId}/budgets`, 'POST', {});
+    expect(blockedBudget.status).toBe(409);
+    expect(blockedBudget.body?.message).toBe('Não é possível criar orçamento para uma OS finalizada.');
     const finalShareResponse = await finalShareResponsePromise;
     expect(finalShareResponse.status()).toBe(200);
     const finalShare = await finalShareResponse.json();

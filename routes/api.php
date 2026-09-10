@@ -100,6 +100,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/budgets', [BudgetController::class, 'index']);
     Route::post('/orders/{order}/budgets', [BudgetController::class, 'store']);
     Route::patch('/orders/{order}/budgets/{revision}/status', [BudgetController::class, 'status']);
+    Route::delete('/orders/{order}/budgets/{revision}', [BudgetController::class, 'destroy'])->middleware('role:Master,Administrador');
     Route::get('/orders/{order}/budgets/{revision}/pdf', [DocumentController::class, 'budget']);
     Route::get('/orders/{order}/documents', [DocumentController::class, 'index']);
     Route::get('/orders/{order}/final/{revision}/pdf', [DocumentController::class, 'finalDocument']);

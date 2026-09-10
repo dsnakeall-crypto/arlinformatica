@@ -98,7 +98,9 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   for (let index = 1; index < ordered.length; index += 1) {
     expect(position(ordered[index]), `Ordem do fluxo incorreta entre ${ordered[index - 1]} e ${ordered[index]}`).toBeGreaterThan(position(ordered[index - 1]));
   }
-  await expect(workflow.getByRole('heading', { name: 'Laudos técnicos', exact: true }), 'Laudos técnicos existentes não podem ser removidos pelo novo layout').toBeVisible();
+  await expect(workflow.getByRole('heading', { name: 'Laudos técnicos', exact: true }), 'O fluxo reativável de laudos técnicos deve ficar oculto').toHaveCount(0);
+  await expect(workflow.getByRole('button', { name: 'GERAR LAUDO TÉCNICO' })).toHaveCount(0);
+  await expect(workflow.getByRole('heading', { name: 'Laudo Final', exact: true }), 'O texto livre usado no PDF final deve continuar disponível').toBeVisible();
 
   const paymentCard = workflow.locator('section').filter({ has: page.getByRole('heading', { name: 'Pagamento', exact: true }) }).first();
   await expect(paymentCard.getByText('Pagamento ainda não registrado.', { exact: true })).toBeVisible();
