@@ -287,6 +287,7 @@ document.addEventListener('click', (event) => {
   if (target?.closest('.arl-settings-tab')) {
     window.requestAnimationFrame(() => {
       removeChecklistSettingsEditor();
+      syncDocumentEditors();
       window.requestAnimationFrame(syncSettingsEditorHeights);
     });
   }

@@ -11,6 +11,9 @@ test('Empresa persiste alterações e abas sem edição não exibem a barra gera
 
   await expect(page.locator('.arl-settings-tab[data-section="company"]')).toHaveClass(/active/);
   await expect(form.getByRole('note')).toContainText('não são impressos nos PDFs porque o papel timbrado já traz essas informações');
+  await expect(form.getByLabel('CNPJ (somente números)')).toHaveValue('18.588.208/0001-39');
+  await expect(form.getByLabel('Telefone / WhatsApp')).toHaveValue('(35) 98828-5777');
+  await expect(form.getByLabel('CEP (somente números)')).toHaveValue('37160-000');
   const streetWidth = await form.getByLabel('Endereço').evaluate((el) => el.getBoundingClientRect().width);
   const stateWidth = await form.getByLabel('Estado').evaluate((el) => el.getBoundingClientRect().width);
   const postalWidth = await form.getByLabel('CEP (somente números)').evaluate((el) => el.getBoundingClientRect().width);
@@ -35,14 +38,24 @@ test('Empresa persiste alterações e abas sem edição não exibem a barra gera
     response.url().endsWith('/api/settings') && response.request().method() === 'PUT',
   );
   await form.getByRole('button', { name: 'Salvar configurações' }).click();
-  expect((await savedResponse).status()).toBe(200);
+  const response = await savedResponse;
+  expect(response.status()).toBe(200);
+  expect(response.request().postDataJSON()).toMatchObject({
+    cnpj: '18588208000139',
+    phone: '35988285777',
+    postal_code: '37160000',
+  });
   await expect(form.getByText('Configurações salvas com segurança.')).toBeVisible();
   await expect(form.getByLabel('Nome fantasia')).toHaveValue(tradeName);
 
   await page.reload();
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();
-  await expect(page.locator('form.settings-form').getByLabel('Nome fantasia')).toHaveValue(tradeName);
+  const reloadedForm = page.locator('form.settings-form');
+  await expect(reloadedForm.getByLabel('Nome fantasia')).toHaveValue(tradeName);
+  await expect(reloadedForm.getByLabel('CNPJ (somente números)')).toHaveValue('18.588.208/0001-39');
+  await expect(reloadedForm.getByLabel('Telefone / WhatsApp')).toHaveValue('(35) 98828-5777');
+  await expect(reloadedForm.getByLabel('CEP (somente números)')).toHaveValue('37160-000');
 
   await page.locator('.arl-settings-tab[data-section="notifications"]').click();
   await expect(page.locator('form.settings-form .actions')).toBeHidden();
