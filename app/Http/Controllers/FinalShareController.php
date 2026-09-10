@@ -51,6 +51,9 @@ class FinalShareController extends Controller
             ->exists();
         abort_unless($valid, 403, 'Este link não é válido ou já expirou.');
 
-        return $documents->response($order, 'final', $revision);
+        $response = $documents->response($order, 'final', $revision);
+        $response->headers->set('X-Robots-Tag', 'noindex');
+
+        return $response;
     }
 }

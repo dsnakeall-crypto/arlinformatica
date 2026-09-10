@@ -174,7 +174,14 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(finalShareResponse.status()).toBe(200);
     const finalShare = await finalShareResponse.json();
     expect(finalShare.url).toContain(`/share/orders/${orderId}/final/1`);
-    await expect(page.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' })).toHaveAttribute('href', /wa\.me/);
+    const whatsappHref = await page.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' }).getAttribute('href');
+    expect(whatsappHref).toMatch(/wa\.me/);
+    expect(decodeURIComponent(whatsappHref || '')).not.toContain('Acesse o PDF da Ordem de Serviço aqui');
+    await page.reload();
+    const documentMenu = page.locator('.arl-opening-call');
+    await documentMenu.locator('summary').click();
+    await expect(documentMenu.getByRole('button', { name: 'Relatório Técnico Final' })).toBeVisible();
+    await expect(documentMenu.getByRole('button', { name: 'Reabrir OS' })).toBeVisible();
   });
 
   test('registra pagamento parcial e valida A Receber', async ({ page }) => {
@@ -229,6 +236,34 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(paid.paid_cents).toBe(15000);
     expect(paid.balance_cents).toBe(0);
     expect(paid.status).toBe('paid');
+  });
+
+  test('reabre a mesma OS, finaliza nova revisão e ajusta cobrança', async ({ page }) => {
+    await page.goto(`/orders/${orderId}`);
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
+    const menu = page.locator('.arl-opening-call');
+    await menu.locator('summary').click();
+    await menu.getByRole('button', { name: 'Reabrir OS' }).click();
+    const reopen = page.getByRole('dialog', { name: `Reabrir OS #${orderNumber}` });
+    await reopen.locator('textarea').fill('Correção do valor cobrado após conferência.');
+    await reopen.getByRole('button', { name: 'Confirmar reabertura' }).click();
+    await expect(page.locator('.status-picker select')).toHaveValue('analysis');
+    await page.getByRole('button', { name: 'Concluir OS' }).click();
+    const finalModal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
+    await finalModal.getByLabel('Valor unitário de Formatação E2E').fill('140,00');
+    await finalModal.locator('textarea').fill('Valor corrigido e equipamento reconferido.');
+    await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
+    await expect(page.locator('.status-picker select')).toHaveValue('completed');
+    const documents = page.locator('details.arl-record-accordion').filter({ hasText: 'Documentos' });
+    await documents.locator('summary').click();
+    await expect(documents.getByText('Revisão 2', { exact: false })).toBeVisible();
+    const audit = page.locator('details.arl-record-accordion').filter({ hasText: 'Histórico de alterações' });
+    await audit.locator('summary').click();
+    await expect(audit.getByText('Reabertura da OS', { exact: true })).toBeVisible();
+    const payments = await api(page, `/orders/${orderId}/payments`);
+    expect(payments.body.paid_cents).toBe(14000);
+    const daily = await api(page, '/finance/daily');
+    expect(daily.body.transactions.filter((row: any) => row.order_number === orderNumber).reduce((sum: number, row: any) => sum + row.effective_cents, 0)).toBe(14000);
   });
 
   test('histórico do cliente e pós-venda aparecem imediatamente, mas ficam bloqueados por 24h', async ({ page }) => {

@@ -53,7 +53,7 @@ class RecordManagementTest extends TestCase
             ->assertJsonPath('client.name', 'Cliente Removível');
     }
 
-    public function test_active_and_paid_orders_are_soft_deleted_but_financial_and_document_history_is_preserved(): void
+    public function test_order_without_payment_is_deleted_but_order_with_payment_is_refused(): void
     {
         $user = $this->master('record-order-master');
         $client = $this->client('Cliente OS', '11144477735');
@@ -83,7 +83,10 @@ class RecordManagementTest extends TestCase
             'status' => 'completed',
             'archived' => true,
             'completed_at' => now(),
+            'total_cents' => 10000,
         ])->save();
+        $payment = DB::table('payments')->insertGetId(['service_order_id' => $paid['id'], 'amount_cents' => 10000, 'method' => 'pix', 'paid_at' => now(), 'user_id' => $user->id, 'idempotency_key' => 'delete-protection', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('financial_transactions')->insert(['payment_id' => $payment, 'origin' => 'service_order', 'description' => 'OS paga', 'amount_cents' => 10000, 'occurred_at' => now(), 'user_id' => $user->id, 'created_at' => now(), 'updated_at' => now()]);
 
         DB::table('generated_documents')->insert([
             'service_order_id' => $paid['id'],
@@ -99,22 +102,17 @@ class RecordManagementTest extends TestCase
         ]);
 
         $this->deleteJson("/api/orders/{$paid['id']}")
-            ->assertOk()
-            ->assertJsonPath('deleted', true);
+            ->assertConflict()
+            ->assertSee('possui pagamento registrado');
 
-        $this->assertSoftDeleted('service_orders', ['id' => $paid['id']]);
+        $this->assertNotSoftDeleted('service_orders', ['id' => $paid['id']]);
         $this->assertDatabaseHas('generated_documents', [
             'service_order_id' => $paid['id'],
             'type' => 'final',
             'revision' => 1,
         ]);
-        $this->assertDatabaseHas('audit_logs', [
-            'action' => 'service_order.deleted',
-            'subject_id' => $paid['id'],
-        ]);
-
         $finalized = $this->getJson('/api/orders?finalized=1')->assertOk()->json('data');
-        $this->assertNotContains($paid['id'], array_column($finalized, 'id'));
+        $this->assertContains($paid['id'], array_column($finalized, 'id'));
     }
 
     private function master(string $login): User

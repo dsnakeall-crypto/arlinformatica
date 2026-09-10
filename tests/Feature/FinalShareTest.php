@@ -85,7 +85,8 @@ class FinalShareTest extends TestCase
         auth()->logout();
         $this->get($share['url'])
             ->assertOk()
-            ->assertHeader('Content-Type', 'application/pdf');
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('X-Robots-Tag', 'noindex');
 
         $tampered = str_replace('/final/1', '/final/2', $share['url']);
         $this->get($tampered)->assertForbidden();

@@ -61,11 +61,12 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(header.getByRole('button', { name: 'Registrar pagamento' })).toHaveCount(0);
 
   const opening = header.locator('.arl-opening-call');
-  await expect(opening.getByText('Abertura do chamado', { exact: true })).toBeVisible();
+  await expect(opening.getByText("PDF's e Reaberturas OS", { exact: true })).toBeVisible();
   await opening.locator('summary').click();
   await expect(opening.getByRole('link', { name: 'Mensagem de abertura' })).toBeVisible();
   await expect(opening.getByRole('link', { name: 'Termo de Recebimento PDF' })).toBeVisible();
-  await expect(root.getByText('Abertura do chamadoMensagem de aberturaTermo de Recebimento PDF', { exact: true })).toHaveCount(0);
+  await expect(opening.getByText('Relatório Técnico Final', { exact: true })).toBeVisible();
+  await expect(opening.getByText('Reabrir OS', { exact: true })).toBeVisible();
 
   const rail = root.locator('.arl-order-stage-rail');
   await expect(rail).toBeVisible();
