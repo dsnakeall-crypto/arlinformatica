@@ -119,3 +119,13 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] PDFs de orçamento emitidos não são apagados nem alterados pela exclusão lógica do orçamento.
 - [OK] OS finalizada não oferece criação de novo orçamento na interface e a rota de criação responde com conflito.
 - [OK] A rota da OS aberta é persistida no navegador; recarregar `/orders/{id}` mantém a tela e recarrega orçamentos não excluídos, enquanto somente registros com `deleted_at` são omitidos.
+
+## Bloco 3 — PDF's e Reaberturas OS (especificação de 10/09/2026)
+- [OK] Menu da OS renomeado para "PDF's e Reaberturas OS", preservando Mensagem de abertura e Termo de Recebimento PDF e acrescentando Relatório Técnico Final e Reabrir OS.
+- [OK] Relatório Técnico Final permanece acessível após recarregar a OS; usa Web Share com PDF no aparelho compatível e download + WhatsApp como fallback/desktop.
+- [OK] Mensagens de conclusão React e legada não incluem URL pública; rota pública preservada com `X-Robots-Tag: noindex`.
+- [OK] Reabrir destrava a mesma OS, registra status/auditoria e permite nova finalização e nova revisão do PDF sem sobrescrever revisões anteriores.
+- [OK] Redução de total já pago cria ajuste financeiro auditado, identificado com o número da OS e os valores anterior/novo.
+- [OK] Após reabertura e refinalização, o E2E confere no Histórico de alterações a reabertura, seu motivo, os valores anterior/novo e o ajuste de cobrança registrado no financeiro.
+- [OK] Histórico do cliente mantém uma única linha por OS e exibe somente os itens e o PDF da finalização vigente após reabertura e refinalização; revisões anteriores continuam preservadas no histórico da OS.
+- [OK] Exclusão lógica é recusada no backend quando existe qualquer pagamento registrado; OS sem pagamento continua removível.

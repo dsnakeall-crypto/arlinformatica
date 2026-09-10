@@ -174,7 +174,14 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(finalShareResponse.status()).toBe(200);
     const finalShare = await finalShareResponse.json();
     expect(finalShare.url).toContain(`/share/orders/${orderId}/final/1`);
-    await expect(page.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' })).toHaveAttribute('href', /wa\.me/);
+    const whatsappHref = await page.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' }).getAttribute('href');
+    expect(whatsappHref).toMatch(/wa\.me/);
+    expect(decodeURIComponent(whatsappHref || '')).not.toContain('Acesse o PDF da Ordem de Serviço aqui');
+    await page.reload();
+    const documentMenu = page.locator('.arl-opening-call');
+    await documentMenu.locator('summary').click();
+    await expect(documentMenu.getByRole('button', { name: 'Relatório Técnico Final' })).toBeVisible();
+    await expect(documentMenu.getByRole('button', { name: 'Reabrir OS' })).toBeVisible();
   });
 
   test('registra pagamento parcial e valida A Receber', async ({ page }) => {
@@ -231,18 +238,55 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(paid.status).toBe('paid');
   });
 
+  test('reabre a mesma OS, finaliza nova revisão e ajusta cobrança', async ({ page }) => {
+    await page.goto(`/orders/${orderId}`);
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
+    const menu = page.locator('.arl-opening-call');
+    await menu.locator('summary').click();
+    await menu.getByRole('button', { name: 'Reabrir OS' }).click();
+    const reopen = page.getByRole('dialog', { name: `Reabrir OS #${orderNumber}` });
+    await reopen.locator('textarea').fill('Correção do valor cobrado após conferência.');
+    await reopen.getByRole('button', { name: 'Confirmar reabertura' }).click();
+    await expect(page.locator('.status-picker select')).toHaveValue('analysis');
+    await page.getByRole('button', { name: 'Concluir OS' }).click();
+    const finalModal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
+    await finalModal.getByLabel('Valor unitário de Formatação E2E').fill('140,00');
+    await finalModal.locator('textarea').fill('Valor corrigido e equipamento reconferido.');
+    await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
+    await expect(page.locator('.status-picker select')).toHaveValue('completed');
+    const documents = page.locator('details.arl-record-accordion').filter({ hasText: 'Documentos' });
+    await documents.locator('summary').click();
+    const finalRevision = documents.locator('article').filter({ hasText: 'PDF Final' });
+    await expect(finalRevision.getByText('Revisão 2', { exact: false })).toBeVisible();
+    const preservedBudgetRevision = documents.locator('article').filter({ hasText: 'Orçamento' }).filter({ hasText: 'Revisão 2' });
+    await expect(preservedBudgetRevision, 'A outra Revisão 2 é o PDF histórico do orçamento excluído logicamente, não uma duplicata do fechamento').toHaveCount(1);
+    const audit = page.locator('details.arl-audit-history').filter({ hasText: 'Histórico de alterações' });
+    await audit.locator('summary').click();
+    await expect(audit.getByText('Reabertura da OS', { exact: true })).toBeVisible();
+    await expect(audit.getByText('Motivo: Correção do valor cobrado após conferência.', { exact: true })).toBeVisible();
+    await expect(audit.getByText('Valor alterado de R$ 150,00 para R$ 140,00', { exact: true })).toBeVisible();
+    await expect(audit.getByText('Ajuste de cobrança registrado no financeiro para esta OS.', { exact: true })).toBeVisible();
+    const payments = await api(page, `/orders/${orderId}/payments`);
+    expect(payments.body.paid_cents).toBe(14000);
+    const daily = await api(page, '/finance/daily');
+    expect(daily.body.transactions.filter((row: any) => row.order_number === orderNumber).reduce((sum: number, row: any) => sum + row.effective_cents, 0)).toBe(14000);
+  });
+
   test('histórico do cliente e pós-venda aparecem imediatamente, mas ficam bloqueados por 24h', async ({ page }) => {
     await page.getByRole('button', { name: 'Clientes' }).click();
     const clientCard = page.locator('.client-list article').filter({ hasText: 'Cliente E2E' });
     await clientCard.getByRole('button', { name: 'Visualizar' }).click();
     await expect(page.getByRole('heading', { name: 'Cliente E2E' })).toBeVisible();
     await expect(page.getByText(`OS #${orderNumber}`)).toBeVisible();
-    await expect(page.getByText('Formatação E2E', { exact: true })).toBeVisible();
-    await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderId}/final/1/pdf`);
+    const latestService = page.locator('.clients-history-item-description').filter({ hasText: 'Formatação E2E' });
+    await expect(latestService, 'A mesma OS deve ocupar uma única linha com somente os itens da finalização vigente').toHaveCount(1);
+    await expect(latestService.locator('xpath=ancestor::li').getByText('R$ 140,00', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderId}/final/2/pdf`);
     const history = await api(page, `/clients/${clientId}`);
     expect(history.body.orders.some((order: { id: number }) => order.id === orderId)).toBeTruthy();
     const historicalOrder = history.body.orders.find((order: { id: number }) => order.id === orderId);
-    expect(historicalOrder.items.some((item: { description: string }) => item.description === 'Formatação E2E')).toBeTruthy();
+    expect(historicalOrder.items.filter((item: { description: string }) => item.description === 'Formatação E2E')).toHaveLength(1);
+    expect(historicalOrder.items[0].unit_price_cents).toBe(14000);
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
     await expect(page.getByRole('heading', { name: 'Pós-Venda' })).toBeVisible();
     const lockedRow = page.locator('.post-sale article').filter({ hasText: `OS ${orderNumber}` });

@@ -134,7 +134,6 @@ function showFinalShare(order: FinalOrder, share: FinalShare) {
     `Seu Equipamento está pronto da OS ${order.number}! 🎉`,
     '📋 Detalhes do Serviço:',
     `- Valor: ${money(order.total_cents || 0)}`,
-    `- Acesse o PDF da Ordem de Serviço aqui: ${share.url}`,
     '💳 Formas de Pagamento:',
     '- PIX (Chave): 35988285777',
     '- Cartão: (Com taxas inclusas)',

@@ -139,6 +139,12 @@ class ServiceOrderAuditController extends Controller
         if (array_key_exists('total_cents', $after)) {
             $changes[] = 'Total final: '.$this->money((int) $after['total_cents']);
         }
+        if (isset($after['previous_total_cents']) && (int) $after['previous_total_cents'] !== (int) ($after['total_cents'] ?? 0)) {
+            $changes[] = 'Valor alterado de '.$this->money((int) $after['previous_total_cents']).' para '.$this->money((int) $after['total_cents']);
+        }
+        if (! empty($after['financial_adjustment_id'])) {
+            $changes[] = 'Ajuste de cobrança registrado no financeiro para esta OS.';
+        }
         if (! empty($after['approved_budget_id'])) {
             $changes[] = 'Finalização vinculada a orçamento aprovado.';
         }
@@ -148,9 +154,7 @@ class ServiceOrderAuditController extends Controller
 
     private function reopenChanges(array $after): array
     {
-        $label = $this->text($after['reopen_label'] ?? 'retorno');
-        $number = $this->text($after['new_number'] ?? null);
-        $changes = ["OS reaberta como {$label}; nova OS {$number}."];
+        $changes = ['A mesma OS foi reaberta para correção e nova finalização.'];
         if (! empty($after['note'])) {
             $changes[] = 'Motivo: '.$this->text($after['note']);
         }

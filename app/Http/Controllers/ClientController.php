@@ -88,7 +88,18 @@ class ClientController extends Controller
         $orders = $client->serviceOrders()
             ->latest('received_at')
             ->with([
-                'items' => fn ($q) => $q->orderBy('id'),
+                'items' => fn ($q) => $q
+                    ->where(function ($items) {
+                        $items->where(function ($draftItems) {
+                            $draftItems->whereNull('finalization_id')
+                                ->whereNotExists(function ($finalizations) {
+                                    $finalizations->selectRaw('1')
+                                        ->from('service_order_finalizations')
+                                        ->whereColumn('service_order_finalizations.service_order_id', 'service_order_items.service_order_id');
+                                });
+                        })->orWhereRaw('finalization_id = (SELECT latest_finalization.id FROM service_order_finalizations AS latest_finalization WHERE latest_finalization.service_order_id = service_order_items.service_order_id ORDER BY latest_finalization.revision DESC LIMIT 1)');
+                    })
+                    ->orderBy('id'),
                 'documents' => fn ($q) => $q->whereIn('type', ['final', 'budget'])->latest('issued_at'),
             ])
             ->get();
