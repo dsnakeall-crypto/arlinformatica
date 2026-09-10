@@ -112,14 +112,15 @@ test.describe.serial('fluxo operacional principal', () => {
     });
     expect(secondBudget.status).toBe(201);
     await page.reload();
-    await expect(page.getByText(/Revisão 2/)).toBeVisible();
+    const budgetsSection = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Orçamentos', exact: true }) });
+    await expect(budgetsSection.getByText(/Revisão 2/)).toBeVisible();
     page.once('dialog', async (dialog) => {
       expect(dialog.type()).toBe('confirm');
       expect(dialog.message()).toContain('Revisão 2');
       await dialog.accept();
     });
-    await page.getByText(/Revisão 2/).getByRole('button', { name: 'Excluir orçamento' }).click();
-    await expect(page.getByText(/Revisão 2/)).toHaveCount(0);
+    await budgetsSection.getByText(/Revisão 2/).getByRole('button', { name: 'Excluir orçamento' }).click();
+    await expect(budgetsSection.getByText(/Revisão 2/)).toHaveCount(0);
     const remainingBudgets = await api(page, `/orders/${orderId}/budgets`);
     expect(remainingBudgets.body).toHaveLength(1);
   });
