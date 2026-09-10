@@ -118,3 +118,4 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] Master e Administrador podem excluir logicamente um orçamento após confirmação, com auditoria; funcionário não pode excluir e orçamento usado na finalização é protegido.
 - [OK] PDFs de orçamento emitidos não são apagados nem alterados pela exclusão lógica do orçamento.
 - [OK] OS finalizada não oferece criação de novo orçamento na interface e a rota de criação responde com conflito.
+- [OK] A rota da OS aberta é persistida no navegador; recarregar `/orders/{id}` mantém a tela e recarrega orçamentos não excluídos, enquanto somente registros com `deleted_at` são omitidos.

@@ -47,6 +47,19 @@ class BudgetDeletionTest extends TestCase
         $this->actingAs($this->master)->getJson("/api/orders/{$this->order->id}/budgets")->assertOk()->assertExactJson([]);
     }
 
+    public function test_index_keeps_non_deleted_budgets_and_filters_only_deleted_ones(): void
+    {
+        $deleted = $this->budget('draft');
+        DB::table('budgets')->where('id', $deleted)->update(['deleted_at' => now()]);
+        $active = $this->budget('sent', 2);
+
+        $this->actingAs($this->master)->getJson("/api/orders/{$this->order->id}/budgets")
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.id', $active)
+            ->assertJsonPath('0.revision', 2);
+    }
+
     public function test_employee_cannot_delete_budget(): void
     {
         $budget = $this->budget('draft');
@@ -80,9 +93,9 @@ class BudgetDeletionTest extends TestCase
         $this->assertDatabaseCount('budgets', 0);
     }
 
-    private function budget(string $status): int
+    private function budget(string $status, int $revision = 1): int
     {
-        return DB::table('budgets')->insertGetId(['service_order_id' => $this->order->id, 'revision' => 1, 'status' => $status, 'diagnosis' => 'Falha', 'proposal' => 'Reparo', 'validity_days' => 7, 'total_cents' => 10000, 'created_by' => $this->master->id, 'created_at' => now(), 'updated_at' => now()]);
+        return DB::table('budgets')->insertGetId(['service_order_id' => $this->order->id, 'revision' => $revision, 'status' => $status, 'diagnosis' => 'Falha', 'proposal' => 'Reparo', 'validity_days' => 7, 'total_cents' => 10000, 'created_by' => $this->master->id, 'created_at' => now(), 'updated_at' => now()]);
     }
 
     private function user(string $role, string $login): User
