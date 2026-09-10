@@ -88,18 +88,18 @@ class StageFourTest extends TestCase
         $this->assertDatabaseCount('service_order_items', 1);
     }
 
-    public function test_report_requires_human_electrical_conclusion_and_emitted_revision_is_immutable(): void
+    public function test_technical_report_creation_is_blocked_while_existing_documents_remain_available(): void
     {
         $template = DB::table('technical_report_templates')->where('kind', 'electrical')->value('id');
         $content = ['technical_analysis' => 'Análise visual', 'diagnosis' => 'Componente danificado', 'conclusion' => 'Avaliação técnica', 'equipment_situation' => 'repairable', 'responsible_technician' => 'Técnico', 'confirmed' => true];
-        $draft = $this->actingAs($this->user)->postJson("/api/orders/{$this->order->id}/reports", ['template_id' => $template, 'content' => $content])->assertCreated()->json();
-        $this->postJson("/api/orders/{$this->order->id}/reports/{$draft['revision']}/issue", [])->assertUnprocessable()->assertJsonValidationErrors('electrical_conclusion');
-        $content['electrical_conclusion'] = 'inconclusive';
-        $this->putJson("/api/orders/{$this->order->id}/reports/1", ['template_id' => $template, 'content' => $content])->assertOk();
-        $this->postJson("/api/orders/{$this->order->id}/reports/1/issue", [])->assertOk();
-        $this->putJson("/api/orders/{$this->order->id}/reports/1", ['template_id' => $template, 'content' => $content])->assertConflict();
-        $this->postJson("/api/orders/{$this->order->id}/reports", ['template_id' => $template, 'content' => $content])->assertCreated()->assertJsonPath('revision', 2);
-        $this->assertDatabaseHas('generated_documents', ['service_order_id' => $this->order->id, 'type' => 'technical-report', 'revision' => 1]);
+        $this->actingAs($this->user)
+            ->postJson("/api/orders/{$this->order->id}/reports", ['template_id' => $template, 'content' => $content])
+            ->assertStatus(410)
+            ->assertJsonPath('message', 'A emissão de laudos técnicos está desativada. Use o Laudo Final da OS.');
+
+        $this->assertDatabaseCount('technical_reports', 0);
+        $this->get("/orders/{$this->order->id}/reports")
+            ->assertRedirect("/orders/{$this->order->id}");
     }
 
     private function finalize(array $payload)

@@ -93,16 +93,36 @@ test.describe.serial('fluxo operacional principal', () => {
     await selectedItem.getByLabel(/Quantidade de/).fill('1');
     await selectedItem.getByLabel(/Valor unitário de/).fill('150,00');
     await budgetForm.getByRole('button', { name: 'Salvar e gerar PDF' }).click();
-    await expect(page.getByText(/Revisão 1/)).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Abrir PDF' })).toHaveAttribute('href', `/api/orders/${orderId}/budgets/1/pdf`);
-    await page.getByRole('button', { name: 'Marcar enviado' }).click();
-    await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toBeVisible();
+    const budgetsSection = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Orçamentos', exact: true }) });
+    await expect(budgetsSection.getByText(/Revisão 1/)).toBeVisible();
+    await expect(budgetsSection.getByRole('link', { name: 'Abrir PDF' })).toHaveAttribute('href', `/api/orders/${orderId}/budgets/1/pdf`);
+    await budgetsSection.getByRole('button', { name: 'Marcar enviado' }).click();
+    await expect(budgetsSection.getByRole('button', { name: 'Aprovar orçamento' })).toBeVisible();
     const approvalRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/budgets/1/status`) && request.method() === 'PATCH');
-    await page.getByRole('button', { name: 'Aprovar orçamento' }).click();
+    await budgetsSection.getByRole('button', { name: 'Aprovar orçamento' }).click();
     const approvalPayload = (await approvalRequestPromise).postDataJSON();
     expect(approvalPayload).toEqual({ status: 'approved' });
     expect(approvalPayload).not.toHaveProperty('copy_items');
-    await expect(page.getByRole('button', { name: 'Aprovar orçamento' })).toHaveCount(0);
+    await expect(budgetsSection.getByRole('button', { name: 'Aprovar orçamento' })).toHaveCount(0);
+
+    const services = await api(page, '/catalogs/services');
+    const formatting = services.body.find((row: any) => row.name === 'Formatação E2E');
+    const secondBudget = await api(page, `/orders/${orderId}/budgets`, 'POST', {
+      diagnosis: 'Revisão descartável', proposal: 'Teste de exclusão lógica', validity_days: 7,
+      items: [{ catalog_id: formatting.id, description: formatting.name, quantity: 1, unit_price_cents: formatting.price_cents, warranty_enabled: false }],
+    });
+    expect(secondBudget.status).toBe(201);
+    await page.reload();
+    await expect(budgetsSection.getByText(/Revisão 2/)).toBeVisible();
+    page.once('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('confirm');
+      expect(dialog.message()).toContain('Revisão 2');
+      await dialog.accept();
+    });
+    await budgetsSection.getByText(/Revisão 2/).getByRole('button', { name: 'Excluir orçamento' }).click();
+    await expect(budgetsSection.getByText(/Revisão 2/)).toHaveCount(0);
+    const remainingBudgets = await api(page, `/orders/${orderId}/budgets`);
+    expect(remainingBudgets.body).toHaveLength(1);
   });
 
   test('finaliza OS usando o orçamento aprovado', async ({ page }) => {
@@ -115,11 +135,11 @@ test.describe.serial('fluxo operacional principal', () => {
     await statusHistory.locator('summary').click();
     await expect(statusSelect.locator('option[value="in_service"]'), 'Fluxo operacional deve manter Em Serviço como opção válida').toHaveText('Em Serviço');
     await statusSelect.selectOption('in_service');
-    await expect(page.getByText(/Em Serviço ·/).last()).toBeVisible();
+    await expect(statusHistory.getByText(/Em Serviço ·/)).toBeVisible();
     await statusSelect.selectOption('waiting_part');
-    await expect(page.getByText(/Aguardando ·/).last()).toBeVisible();
+    await expect(statusHistory.getByText(/Aguardando ·/)).toBeVisible();
     await statusSelect.selectOption('analysis');
-    await expect(page.getByText(/Em Análise ·/).last()).toBeVisible();
+    await expect(statusHistory.getByText(/Em Análise ·/)).toBeVisible();
     await statusSelect.selectOption('completed');
     const finalModal = page.locator('.modal-card').filter({ hasText: 'FINALIZAÇÃO DA OS' });
     await expect(finalModal).toBeVisible();
@@ -142,6 +162,14 @@ test.describe.serial('fluxo operacional principal', () => {
     const finalized = await finalizedResponse.json();
     expect(finalized.items[0].source_budget_id).toBeTruthy();
     expect(finalized.items[0].description).toBe('Formatação E2E');
+    await expect(page.getByRole('button', { name: 'Gerar orçamento' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Excluir orçamento' })).toHaveCount(0);
+    const blockedDeletion = await api(page, `/orders/${orderId}/budgets/1`, 'DELETE');
+    expect(blockedDeletion.status).toBe(409);
+    expect(blockedDeletion.body?.message).toBe('Não é possível excluir orçamento de uma OS finalizada.');
+    const blockedBudget = await api(page, `/orders/${orderId}/budgets`, 'POST', {});
+    expect(blockedBudget.status).toBe(409);
+    expect(blockedBudget.body?.message).toBe('Não é possível criar orçamento para uma OS finalizada.');
     const finalShareResponse = await finalShareResponsePromise;
     expect(finalShareResponse.status()).toBe(200);
     const finalShare = await finalShareResponse.json();

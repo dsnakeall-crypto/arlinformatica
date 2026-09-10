@@ -111,3 +111,11 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] Despesa simples de material de uso registra apenas data, descrição e valor; Master/Administrador podem criar e excluir, sempre com auditoria e exclusão lógica.
 - [OK] Despesas alimentam Gasto/Sobrou no mês selecionado e aparecem em vermelho, no dia correspondente, junto das entradas do gráfico.
 - [OK] Entrada Rápida no Painel, Financeiro e cabeçalho Mobile/Tablet aceita somente o valor; descrição curta é opcional e, quando vazia, preserva o padrão do backend. O atalho mobile não libera acesso ao Financeiro.
+
+## Finalização e orçamentos — 10/09/2026
+- [OK] O modal de finalização lista descrição, quantidade, valor unitário e subtotal de todos os itens persistidos na OS; itens de orçamento aprovado também são exibidos quando selecionados.
+- [OK] O fluxo separado de Laudo Técnico está oculto e suas rotas de escrita estão bloqueadas; código, dados e PDFs anteriores permanecem preservados. O campo Laudo Final continua editável e presente no PDF A4.
+- [OK] Master e Administrador podem excluir logicamente um orçamento após confirmação, com auditoria; funcionário não pode excluir e orçamento usado na finalização é protegido.
+- [OK] PDFs de orçamento emitidos não são apagados nem alterados pela exclusão lógica do orçamento.
+- [OK] OS finalizada não oferece criação de novo orçamento na interface e a rota de criação responde com conflito.
+- [OK] A rota da OS aberta é persistida no navegador; recarregar `/orders/{id}` mantém a tela e recarrega orçamentos não excluídos, enquanto somente registros com `deleted_at` são omitidos.

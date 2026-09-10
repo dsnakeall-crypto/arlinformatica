@@ -12,4 +12,5 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 Route::get('/share/orders/{order}/final/{revision}/{token}', [FinalShareController::class, 'download'])
     ->where('token', '[A-Fa-f0-9]{64}')
     ->name('orders.final.public');
+Route::redirect('/orders/{order}/reports', '/orders/{order}');
 Route::view('/{path?}', 'app')->where('path', '^(?!api|up|share).*$');

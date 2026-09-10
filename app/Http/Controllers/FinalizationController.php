@@ -26,7 +26,7 @@ class FinalizationController extends Controller
         ]);
 
         if (! empty($data['approved_budget_id'])) {
-            $approved = DB::table('budgets')->where(['id' => $data['approved_budget_id'], 'service_order_id' => $order->id, 'status' => 'approved'])->first();
+            $approved = DB::table('budgets')->where(['id' => $data['approved_budget_id'], 'service_order_id' => $order->id, 'status' => 'approved'])->whereNull('deleted_at')->first();
             abort_unless($approved, 422, 'O orçamento informado não está aprovado para esta OS.');
             abort_if(DB::table('service_order_items')->where('source_budget_id', $approved->id)->exists(), 409, 'Os itens deste orçamento já foram usados.');
             $data['items'] = DB::table('budget_items')->where('budget_id', $approved->id)->orderBy('id')->get()->map(function ($item) {
