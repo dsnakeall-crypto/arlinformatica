@@ -20,6 +20,7 @@ class FinanceController extends Controller
 
     public function pay(Request $request, ServiceOrder $order): JsonResponse
     {
+        abort_if($order->status === 'interrupted', 422, 'Uma OS interrompida não gera valores a receber. Retome o atendimento antes de registrar pagamento.');
         $data = $request->validate([
             'amount_cents' => ['required', 'integer', 'min:1'],
             'method' => ['required', Rule::in(['pix', 'cash', 'debit', 'credit', 'transfer', 'other'])],
@@ -517,8 +518,11 @@ class FinanceController extends Controller
         $latest = DB::table('financial_adjustments')->select('transaction_id', DB::raw('MAX(id) as adjustment_id'))->groupBy('transaction_id');
 
         return DB::table('financial_transactions')
+            ->leftJoin('payments as effective_payment', 'effective_payment.id', '=', 'financial_transactions.payment_id')
+            ->leftJoin('service_orders as effective_order', 'effective_order.id', '=', 'effective_payment.service_order_id')
             ->leftJoinSub($latest, 'latest_adjustment', 'latest_adjustment.transaction_id', '=', 'financial_transactions.id')
             ->leftJoin('financial_adjustments as adjustment', 'adjustment.id', '=', 'latest_adjustment.adjustment_id')
+            ->where(fn ($query) => $query->whereNull('effective_order.id')->orWhere('effective_order.status', '<>', 'interrupted'))
             ->select('financial_transactions.*', DB::raw('COALESCE(adjustment.new_cents, financial_transactions.amount_cents) as effective_cents'));
     }
 

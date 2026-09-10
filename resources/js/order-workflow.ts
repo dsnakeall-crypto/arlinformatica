@@ -160,7 +160,7 @@ function forceOrdersReload() {
 function normalizeLabels() {
   const waitingLabel = 'Aguardando';
   document.querySelectorAll<HTMLOptionElement>('option[value="waiting_part"]').forEach((option) => {
-    if (option.closest('[data-arl-order-detail-react="1"]')) return;
+    if (option.closest('[data-arl-order-detail-react="1"], .service-orders-table')) return;
     if (option.textContent?.trim() !== waitingLabel) option.textContent = waitingLabel;
   });
   document.querySelectorAll<HTMLElement>('.badge').forEach((badge) => {
@@ -169,6 +169,10 @@ function normalizeLabels() {
 }
 
 function installFinalizedToggle() {
+  if (document.querySelector('.order-tabs')) {
+    document.querySelector('.arl-finalized-toggle')?.remove();
+    return;
+  }
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Ordens de Serviço');
   if (!heading) return;
   const title = heading.closest<HTMLElement>('.title');

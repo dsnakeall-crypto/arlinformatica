@@ -129,3 +129,11 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] Após reabertura e refinalização, o E2E confere no Histórico de alterações a reabertura, seu motivo, os valores anterior/novo e o ajuste de cobrança registrado no financeiro.
 - [OK] Histórico do cliente mantém uma única linha por OS e exibe somente os itens e o PDF da finalização vigente após reabertura e refinalização; revisões anteriores continuam preservadas no histórico da OS.
 - [OK] Exclusão lógica é recusada no backend quando existe qualquer pagamento registrado; OS sem pagamento continua removível.
+
+## Bloco 4 — Lista de OS e Painel
+
+- [OK] Lista com abas Todas, Em Andamento, Finalizadas e Interrompidas, busca conjunta por número/cliente e paginação server-side padrão de 50.
+- [OK] Tabela compartilhada com cliente/equipamento, Maps preservado, status em linha, valor exclusivo de Finalizadas e ações autorizadas.
+- [OK] Status manual omite Finalizado/Pago; interrupção exige motivo e registra histórico e auditoria.
+- [OK] OS interrompida é excluída dinamicamente do faturamento e não aceita novo pagamento até retornar ao fluxo ativo.
+- [OK] Painel sem filtros/paginação, com funil de quatro contagens, lista de não finalizadas e atalho Ver todas.

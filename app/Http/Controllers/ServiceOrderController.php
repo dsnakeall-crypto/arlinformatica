@@ -23,8 +23,16 @@ class ServiceOrderController extends Controller
         $postSales->catchUp(true);
         $q = ServiceOrder::query()->with('client:id,name,phone,street,number,district,city,state');
         $requestedStatus = (string) $r->query('status', '');
-        $finalized = $r->boolean('finalized') || $requestedStatus === 'paid';
-        $q->where('archived', $finalized);
+        $tab = (string) $r->query('tab', 'all');
+        if ($r->boolean('finalized') || $requestedStatus === 'paid') {
+            $tab = 'finalized';
+        }
+        match ($tab) {
+            'progress' => $q->whereIn('status', ['analysis', 'waiting_part', 'in_service']),
+            'finalized' => $q->where('status', 'completed'),
+            'interrupted' => $q->where('status', 'interrupted'),
+            default => null,
+        };
         if ($requestedStatus !== '') {
             if ($requestedStatus !== 'paid') {
                 $q->where('status', $requestedStatus);
@@ -42,9 +50,18 @@ class ServiceOrderController extends Controller
         $summary = [
             'open' => ServiceOrder::whereNotIn('status', ['completed', 'interrupted'])->count(),
             'completed_week' => ServiceOrder::where('status', 'completed')->where('completed_at', '>=', now()->startOfWeek())->count(),
+            'statuses' => ServiceOrder::query()->selectRaw('status, COUNT(*) as aggregate')->groupBy('status')->pluck('aggregate', 'status'),
         ];
 
-        return response()->json([...$q->paginate(20)->toArray(), 'summary' => $summary]);
+        if ($r->boolean('dashboard')) {
+            $q->where('status', '<>', 'completed');
+
+            return response()->json(['data' => $q->get(), 'summary' => $summary]);
+        }
+
+        $perPage = min(100, max(10, (int) $r->query('per_page', 50)));
+
+        return response()->json([...$q->paginate($perPage)->toArray(), 'summary' => $summary]);
     }
 
     public function desk(PostSaleService $postSales): JsonResponse
@@ -228,6 +245,17 @@ class ServiceOrderController extends Controller
                 'from_status' => $before,
                 'to_status' => $data['status'],
                 'user_id' => $r->user()->id,
+                'reason' => $reason,
+            ]);
+            DB::table('audit_logs')->insert([
+                'user_id' => $r->user()->id,
+                'action' => 'service_order.status_changed',
+                'subject_type' => 'service_order',
+                'subject_id' => $order->id,
+                'before' => json_encode(['status' => $before]),
+                'after' => json_encode(['status' => $data['status'], 'interruption_reason' => $reason]),
+                'ip_address' => $r->ip(),
+                'created_at' => now(),
             ]);
         });
 
