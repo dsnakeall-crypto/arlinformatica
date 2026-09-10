@@ -39,6 +39,52 @@ class StageThreeTest extends TestCase
         $this->actingAs($this->user)->putJson('/api/settings', [...$payload, 'cnpj' => '123'])->assertUnprocessable()->assertJsonValidationErrors('cnpj');
     }
 
+    public function test_company_settings_normalize_formatted_identifiers_before_persisting(): void
+    {
+        $payload = $this->companySettingsPayload([
+            'cnpj' => '18.588.208/0001-39',
+            'phone' => '(35) 98828-5777',
+            'postal_code' => '37160-000',
+            'state' => ' mg ',
+        ]);
+
+        $this->actingAs($this->user)->putJson('/api/settings', $payload)->assertOk()
+            ->assertJsonPath('cnpj', '18588208000139')
+            ->assertJsonPath('phone', '35988285777')
+            ->assertJsonPath('postal_code', '37160000')
+            ->assertJsonPath('state', 'MG');
+
+        $this->assertSame('18588208000139', DB::table('settings')->where('key', 'cnpj')->value('value'));
+        $this->assertSame('35988285777', DB::table('settings')->where('key', 'phone')->value('value'));
+        $this->assertSame('37160000', DB::table('settings')->where('key', 'postal_code')->value('value'));
+        $this->assertSame('MG', DB::table('settings')->where('key', 'state')->value('value'));
+    }
+
+    public function test_company_settings_validation_messages_are_in_portuguese(): void
+    {
+        $response = $this->actingAs($this->user)->putJson('/api/settings', $this->companySettingsPayload([
+            'cnpj' => '123', 'phone' => '123', 'postal_code' => '123', 'state' => 'M',
+        ]));
+
+        $response->assertUnprocessable()
+            ->assertJsonPath('errors.cnpj.0', 'O CNPJ deve conter 14 números.')
+            ->assertJsonPath('errors.phone.0', 'O telefone deve conter 10 ou 11 números.')
+            ->assertJsonPath('errors.postal_code.0', 'O CEP deve conter 8 números.')
+            ->assertJsonPath('errors.state.0', 'A UF deve conter exatamente 2 letras.');
+    }
+
+    private function companySettingsPayload(array $overrides = []): array
+    {
+        return array_replace([
+            'company_name' => 'ARL Informática', 'trade_name' => 'ARL', 'cnpj' => '18588208000139', 'phone' => '35988285777',
+            'email' => 'arl@example.com', 'postal_code' => '37160000', 'street' => 'Rua Nossa Senhora do Carmo', 'number' => '331',
+            'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG', 'complement' => '',
+            'instagram' => 'https://www.instagram.com/allanluttembarck', 'google_review' => 'https://example.com/review',
+            'budget_validity_days' => 7, 'budget_observation' => '', 'budget_institutional_text' => 'Texto profissional',
+            'term_text' => 'Termo configurável', 'show_company_document' => true, 'show_company_address' => true,
+        ], $overrides);
+    }
+
     public function test_logo_variants_are_generated(): void
     {
         Storage::fake('local');
