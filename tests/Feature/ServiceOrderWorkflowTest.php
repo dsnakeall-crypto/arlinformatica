@@ -128,6 +128,10 @@ class ServiceOrderWorkflowTest extends TestCase
 
         $this->getJson('/api/orders')
             ->assertOk()
+            ->assertJsonFragment(['id' => $order->id, 'archived' => 1]);
+
+        $this->getJson('/api/orders?tab=progress')
+            ->assertOk()
             ->assertJsonMissing(['id' => $order->id]);
 
         $this->getJson('/api/orders?finalized=1')

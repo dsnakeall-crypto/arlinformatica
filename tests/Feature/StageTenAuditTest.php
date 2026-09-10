@@ -24,12 +24,12 @@ class StageTenAuditTest extends TestCase
         $this->seed(DatabaseSeeder::class);
     }
 
-    public function test_desk_returns_every_open_order_beyond_the_twenty_item_listing_page(): void
+    public function test_desk_returns_every_open_order_independently_from_the_fifty_item_listing_page(): void
     {
         $user = $this->user('Master', 'desk-master');
         $client = $this->client();
         $equipment = DB::table('equipment_types')->value('id');
-        for ($i = 1; $i <= 25; $i++) {
+        for ($i = 1; $i <= 55; $i++) {
             ServiceOrder::create([
                 'number' => str_pad((string) (7000000 + $i), 7, '0', STR_PAD_LEFT),
                 'client_id' => $client->id,
@@ -46,8 +46,8 @@ class StageTenAuditTest extends TestCase
             'status' => 'completed', 'reported_problem' => 'Chamado encerrado', 'received_at' => now(), 'completed_at' => now(), 'created_by' => $user->id,
         ]);
 
-        $this->actingAs($user)->getJson('/api/orders?page=1')->assertOk()->assertJsonPath('per_page', 20)->assertJsonCount(20, 'data');
-        $desk = $this->getJson('/api/orders/desk')->assertOk()->assertJsonCount(25)->json();
+        $this->actingAs($user)->getJson('/api/orders?page=1')->assertOk()->assertJsonPath('per_page', 50)->assertJsonCount(50, 'data');
+        $desk = $this->getJson('/api/orders/desk')->assertOk()->assertJsonCount(55)->json();
         $this->assertTrue(collect($desk)->contains(fn ($order) => $order['status'] === 'analysis'));
         $this->assertTrue(collect($desk)->contains(fn ($order) => $order['status'] === 'waiting_part'));
         $this->assertTrue(collect($desk)->contains(fn ($order) => $order['status'] === 'in_service'));

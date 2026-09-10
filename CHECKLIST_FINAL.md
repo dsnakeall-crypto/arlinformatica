@@ -133,6 +133,8 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 ## Bloco 4 — Lista de OS e Painel
 
 - [OK] Lista com abas Todas, Em Andamento, Finalizadas e Interrompidas, busca conjunta por número/cliente e paginação server-side padrão de 50.
+- [OK] As linhas da lista e do Painel preservam a classe estável `.order-row`; as ações por ícone mantêm nomes acessíveis, incluindo `Ver OS`, sem alterar os localizadores E2E consolidados.
+- [OK] A aba Todas inclui o histórico completo, Em Andamento exclui OS concluídas/pagas e Finalizadas continua exibindo OS concluídas mesmo depois de paga e retirada.
 - [OK] Tabela compartilhada com cliente/equipamento, Maps preservado, status em linha, valor exclusivo de Finalizadas e ações autorizadas.
 - [OK] Status manual omite Finalizado/Pago; interrupção exige motivo e registra histórico e auditoria.
 - [OK] OS interrompida é excluída dinamicamente do faturamento e não aceita novo pagamento até retornar ao fluxo ativo.

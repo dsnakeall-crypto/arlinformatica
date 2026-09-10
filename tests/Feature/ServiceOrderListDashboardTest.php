@@ -15,6 +15,7 @@ class ServiceOrderListDashboardTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private int $equipment;
 
     protected function setUp(): void
