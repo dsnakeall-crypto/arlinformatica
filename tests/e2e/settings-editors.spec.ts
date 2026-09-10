@@ -30,6 +30,7 @@ test('Empresa persiste alterações e abas sem edição não exibem a barra gera
   await expect(googleReview).toBeVisible();
   await expect(saveBar).toBeVisible();
   await form.getByLabel('Nome fantasia').fill(tradeName);
+  await form.getByLabel('CEP (somente números)').fill('37160-000');
 
   const savedResponse = page.waitForResponse((response) =>
     response.url().endsWith('/api/settings') && response.request().method() === 'PUT',
@@ -38,11 +39,13 @@ test('Empresa persiste alterações e abas sem edição não exibem a barra gera
   expect((await savedResponse).status()).toBe(200);
   await expect(form.getByText('Configurações salvas com segurança.')).toBeVisible();
   await expect(form.getByLabel('Nome fantasia')).toHaveValue(tradeName);
+  await expect(form.getByLabel('CEP (somente números)')).toHaveValue('37160-000');
 
   await page.reload();
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();
   await expect(page.locator('form.settings-form').getByLabel('Nome fantasia')).toHaveValue(tradeName);
+  await expect(page.locator('form.settings-form').getByLabel('CEP (somente números)')).toHaveValue('37160-000');
 
   await page.locator('.arl-settings-tab[data-section="notifications"]').click();
   await expect(page.locator('form.settings-form .actions')).toBeHidden();
@@ -50,6 +53,43 @@ test('Empresa persiste alterações e abas sem edição não exibem a barra gera
   await page.locator('.arl-settings-tab[data-section="storage"]').click();
   await expect(page.locator('form.settings-form .actions')).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Fotos e Armazenamento' })).toBeVisible();
+});
+
+test('ações de Configurações nunca montam seções ocultas e não oferecem prévia', async ({ page }) => {
+  await login(page);
+  await page.evaluate(() => {
+    const forbidden = ['Equipamentos', 'Fabricantes', 'Checklist de Entrada', 'Mensagem para avaliação Google', 'Mensagem para Instagram'];
+    (window as any).__mountedHiddenSettings = [];
+    new MutationObserver((records) => {
+      for (const record of records) for (const node of record.addedNodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        for (const text of forbidden) if (node.textContent?.includes(text)) (window as any).__mountedHiddenSettings.push(text);
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+  });
+
+  await page.getByRole('button', { name: 'Configurações', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Visualizar prévia' })).toHaveCount(0);
+
+  await page.locator('.arl-settings-tab[data-section="documents"]').click();
+  const term = page.getByLabel('Texto do termo de recebimento');
+  await term.fill(`${await term.inputValue()} `);
+  await page.getByRole('button', { name: 'Salvar configurações' }).click();
+  await expect(page.getByText('Configurações salvas com segurança.')).toBeVisible();
+
+  await page.locator('.arl-settings-tab[data-section="warranty"]').click();
+  const warranty = page.getByLabel('Mostrar garantia geral no PDF final');
+  await warranty.click();
+  await expect(warranty).toBeVisible();
+
+  await page.locator('.arl-settings-tab[data-section="backup"]').click();
+  const backupResponse = page.waitForResponse((response) => response.url().endsWith('/api/backups') && response.request().method() === 'POST');
+  await page.getByRole('button', { name: 'CRIAR BACKUP AGORA' }).click();
+  expect((await backupResponse).status()).toBe(201);
+  await expect(page.getByText('Backup criado e verificado.')).toBeVisible();
+
+  expect(await page.evaluate(() => (window as any).__mountedHiddenSettings)).toEqual([]);
+  await expect(page.getByRole('button', { name: 'Visualizar prévia' })).toHaveCount(0);
 });
 
 test('configurações mantém somente o termo na aba Documentos', async ({ page }) => {

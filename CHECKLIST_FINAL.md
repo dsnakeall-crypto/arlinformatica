@@ -96,6 +96,10 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 
 ## Configurações — correções da tela atual
 - [OK] Alterações em Dados da Empresa são enviadas ao backend, persistidas e recarregadas pela interface; a regressão possui cobertura E2E.
+- [OK] CEP, CNPJ e telefone da Empresa aceitam máscara na interface e são normalizados no backend; erros de formato são apresentados em português.
+- [OK] Seções desativadas de Equipamentos, Fabricantes, Checklist de Entrada e mensagens de Pós-Venda permanecem no código, mas não são montadas na árvore de Configurações.
+- [OK] Salvar termo, editar garantia e criar backup preservam a aba ativa sem remontar as seções ocultas.
+- [OK] A ação “Visualizar prévia” não é exibida em nenhuma aba de Configurações.
 - [OK] A barra geral de salvar aparece somente nas abas com configurações editáveis por esse formulário e não antecede o conteúdo de Armazenamento.
 - [OK] A navegação de Configurações exibe em uma única linha somente Empresa, Identidade, Documentos, Garantia, Notificações, Backup, Sistema e Armazenamento; recursos ocultos continuam preservados no código e no banco.
 - [PENDENTE] O CEP da empresa continua vazio porque não há valor cadastrado em `settings` e o valor inicial oficial também não foi fornecido; nenhum CEP foi inventado.

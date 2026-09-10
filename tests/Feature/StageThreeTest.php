@@ -39,6 +39,28 @@ class StageThreeTest extends TestCase
         $this->actingAs($this->user)->putJson('/api/settings', [...$payload, 'cnpj' => '123'])->assertUnprocessable()->assertJsonValidationErrors('cnpj');
     }
 
+    public function test_company_settings_accept_masks_and_store_normalized_values(): void
+    {
+        $payload = ['company_name' => 'ARL Informática', 'trade_name' => 'ARL', 'cnpj' => '18.588.208/0001-39', 'phone' => '(35) 98828-5777', 'email' => 'arl@example.com', 'postal_code' => '37160-000', 'street' => 'Rua Nossa Senhora do Carmo', 'number' => '331', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'mg', 'complement' => '', 'instagram' => 'https://www.instagram.com/allanluttembarck', 'google_review' => 'https://example.com/review', 'budget_validity_days' => 7, 'budget_observation' => '', 'budget_institutional_text' => 'Texto profissional', 'term_text' => 'Termo configurável', 'show_company_document' => true, 'show_company_address' => true];
+
+        $this->actingAs($this->user)->putJson('/api/settings', $payload)
+            ->assertOk()
+            ->assertJsonPath('cnpj', '18588208000139')
+            ->assertJsonPath('phone', '35988285777')
+            ->assertJsonPath('postal_code', '37160000')
+            ->assertJsonPath('state', 'MG');
+    }
+
+    public function test_company_settings_return_portuguese_validation_messages(): void
+    {
+        $payload = ['company_name' => 'ARL Informática', 'cnpj' => '123', 'phone' => '', 'email' => '', 'postal_code' => '123', 'street' => '', 'number' => '', 'district' => '', 'city' => '', 'state' => 'M', 'complement' => '', 'instagram' => '', 'google_review' => '', 'budget_validity_days' => 7, 'budget_observation' => '', 'budget_institutional_text' => 'Texto profissional', 'term_text' => 'Termo configurável', 'show_company_document' => true, 'show_company_address' => true];
+
+        $response = $this->actingAs($this->user)->putJson('/api/settings', $payload)->assertUnprocessable();
+
+        $this->assertStringNotContainsString('validation.', $response->getContent());
+        $response->assertJsonValidationErrors(['cnpj', 'postal_code', 'state']);
+    }
+
     public function test_logo_variants_are_generated(): void
     {
         Storage::fake('local');
