@@ -278,12 +278,15 @@ test.describe.serial('fluxo operacional principal', () => {
     await clientCard.getByRole('button', { name: 'Visualizar' }).click();
     await expect(page.getByRole('heading', { name: 'Cliente E2E' })).toBeVisible();
     await expect(page.getByText(`OS #${orderNumber}`)).toBeVisible();
-    await expect(page.getByText('Formatação E2E', { exact: true })).toBeVisible();
-    await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderId}/final/1/pdf`);
+    const latestService = page.locator('.clients-history-item-description').filter({ hasText: 'Formatação E2E' });
+    await expect(latestService, 'A mesma OS deve ocupar uma única linha com somente os itens da finalização vigente').toHaveCount(1);
+    await expect(latestService.locator('xpath=ancestor::li').getByText('R$ 140,00', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderId}/final/2/pdf`);
     const history = await api(page, `/clients/${clientId}`);
     expect(history.body.orders.some((order: { id: number }) => order.id === orderId)).toBeTruthy();
     const historicalOrder = history.body.orders.find((order: { id: number }) => order.id === orderId);
-    expect(historicalOrder.items.some((item: { description: string }) => item.description === 'Formatação E2E')).toBeTruthy();
+    expect(historicalOrder.items.filter((item: { description: string }) => item.description === 'Formatação E2E')).toHaveLength(1);
+    expect(historicalOrder.items[0].unit_price_cents).toBe(14000);
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
     await expect(page.getByRole('heading', { name: 'Pós-Venda' })).toBeVisible();
     const lockedRow = page.locator('.post-sale article').filter({ hasText: `OS ${orderNumber}` });
