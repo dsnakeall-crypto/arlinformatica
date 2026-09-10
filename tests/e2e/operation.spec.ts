@@ -260,9 +260,12 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(finalRevision.getByText('Revisão 2', { exact: false })).toBeVisible();
     const preservedBudgetRevision = documents.locator('article').filter({ hasText: 'Orçamento' }).filter({ hasText: 'Revisão 2' });
     await expect(preservedBudgetRevision, 'A outra Revisão 2 é o PDF histórico do orçamento excluído logicamente, não uma duplicata do fechamento').toHaveCount(1);
-    const audit = page.locator('details.arl-record-accordion').filter({ hasText: 'Histórico de alterações' });
+    const audit = page.locator('details.arl-audit-history').filter({ hasText: 'Histórico de alterações' });
     await audit.locator('summary').click();
     await expect(audit.getByText('Reabertura da OS', { exact: true })).toBeVisible();
+    await expect(audit.getByText('Motivo: Correção do valor cobrado após conferência.', { exact: true })).toBeVisible();
+    await expect(audit.getByText('Valor alterado de R$ 150,00 para R$ 140,00', { exact: true })).toBeVisible();
+    await expect(audit.getByText('Ajuste de cobrança registrado no financeiro para esta OS.', { exact: true })).toBeVisible();
     const payments = await api(page, `/orders/${orderId}/payments`);
     expect(payments.body.paid_cents).toBe(14000);
     const daily = await api(page, '/finance/daily');

@@ -126,4 +126,5 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] Mensagens de conclusão React e legada não incluem URL pública; rota pública preservada com `X-Robots-Tag: noindex`.
 - [OK] Reabrir destrava a mesma OS, registra status/auditoria e permite nova finalização e nova revisão do PDF sem sobrescrever revisões anteriores.
 - [OK] Redução de total já pago cria ajuste financeiro auditado, identificado com o número da OS e os valores anterior/novo.
+- [OK] Após reabertura e refinalização, o E2E confere no Histórico de alterações a reabertura, seu motivo, os valores anterior/novo e o ajuste de cobrança registrado no financeiro.
 - [OK] Exclusão lógica é recusada no backend quando existe qualquer pagamento registrado; OS sem pagamento continua removível.
