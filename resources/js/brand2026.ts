@@ -91,8 +91,6 @@ function enhanceShell(){
   });
   const profile=q<HTMLElement>('.profile',aside); if(profile && !q('.arl-profile-arrow',profile)){const arrow=document.createElement('span');arrow.className='arl-profile-arrow';arrow.textContent='›';profile.append(arrow)}
   if(!q('.arl-sidebar-slogan',aside)){const slogan=document.createElement('small');slogan.className='arl-sidebar-slogan';slogan.textContent='TECNOLOGIA QUE FAZ MAIS POR VOCÊ';aside.append(slogan)}
-  const mobile=q<HTMLElement>('.mobile-logo');
-  if(mobile && once(mobile,'arlBrand')){mobile.innerHTML='';mobile.append(brandImage());mark(mobile,'arlBrand')}
   const layout=q<HTMLElement>('.device-layout'); if(layout) layout.classList.add('arl-device-layout');
 }
 

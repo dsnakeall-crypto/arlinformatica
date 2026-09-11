@@ -60,6 +60,7 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Preferência Web/PC ou Mobile/Tablet é local por dispositivo; não existe opção Automático nem `layout_mode` global em Settings.
 - [OK] Mobile/Tablet explícito limita a navegação a OS abertas, Nova OS e Clientes; URL fora do alcance retorna ao início sem alterar autorização backend.
 - [OK] Barra inferior fixa com OS abertas, Nova OS e Clientes respeita a safe area e está presente em todas as telas mobile.
+- [OK] Cabeçalho Mobile/Tablet sem logomarca, viewport com `viewport-fit=cover`, campos com fonte mínima de 16 px e reserva global da barra inferior em páginas, listas e modais; Layout e sino permanecem acessíveis sem sobreposição.
 - [OK] Card abre a OS mobile somente para leitura com cliente, equipamento, problema, checklist, serviços, WhatsApp e Rota; fotos, laudo, orçamento, pagamento e finalização não são renderizados.
 - [OK] Web/PC preserva o fluxo completo, incluindo Foto, Status e Finalizar; a restrição mobile anterior de atendimento externo foi substituída pelo modo somente leitura desta etapa.
 - [OK] Runtime PHP do servidor embutido E2E fica sem Zend OPcache; verificação explícita impede regressão do ambiente de teste sem alterar OPcache de produção.

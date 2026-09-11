@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -42,7 +42,7 @@
             .login-error{display:none;margin:0 0 16px;padding:11px 13px;border-radius:9px;background:#fff0f3;color:#a7001b;font-size:13px}
             .login-error.visible{display:block}
             .login-note{margin-top:18px;text-align:center;color:#8a8e99;font-size:12px}
-            @media(max-width:520px){.login-shell{padding:14px}.login-card{border-radius:16px}.login-brand,.login-body{padding-left:22px;padding-right:22px}}
+            @media(max-width:520px){.login-field input{font-size:16px}.login-shell{padding:14px}.login-card{border-radius:16px}.login-brand,.login-body{padding-left:22px;padding-right:22px}}
         </style>
     @endauth
 </head>
