@@ -28,3 +28,9 @@
 
 /* Sessão: ação explícita no card do usuário, disponível também no menu mobile. */
 .profile>button{margin-left:auto;min-height:36px;border:0;border-radius:9px;background:transparent;color:inherit;display:flex;align-items:center;gap:6px;padding:7px 9px;font-weight:800;cursor:pointer}.profile>button svg{width:17px;height:17px}.profile>button:hover,.profile>button:focus-visible{background:rgba(255,255,255,.14)}.profile>button span{font-size:12px}
+/* Financeiro: todos os grids encolhem dentro do conteúdo principal; o gráfico nunca dimensiona o cartão pelo eixo. */
+.revenue-panel,.payment-method-section,.origin-section,.finance-total-cards,.report-summary,.refund-total{min-width:0;max-width:100%;box-sizing:border-box;overflow:hidden}
+.finance-chart-subhead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:4px}.finance-chart-subhead p{margin:0;min-width:0}
+.revenue-chart{width:100%;max-width:100%;min-width:0;box-sizing:border-box}.revenue-chart>*{min-width:0}.revenue-plot{max-width:100%;box-sizing:border-box}.revenue-column{overflow:visible}
+.payment-method-grid,.finance-total-cards,.report-summary{min-width:0;max-width:100%}.payment-method-grid>*,.finance-total-cards>*,.report-summary>*{min-width:0;overflow:hidden}.payment-method-grid strong,.finance-total-cards strong,.report-summary strong{overflow-wrap:anywhere}
+@media(max-width:800px){.finance-chart-subhead{align-items:stretch;flex-direction:column}.finance-chart-subhead .primary{align-self:flex-start}.revenue-panel{padding-left:12px;padding-right:12px}}
