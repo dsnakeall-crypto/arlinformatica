@@ -10,21 +10,13 @@ declare global {
 const INTERNAL_EQUIPMENT = 'Informado manualmente';
 const UI_ORDER_NUMBER_KEY = 'arl:ui-created-order-number';
 const reactOrderDetailActive = () => Boolean(document.querySelector('[data-arl-order-detail-react="1"]'));
-const synchronizedSelectValues = new WeakMap<HTMLSelectElement, string>();
 
 function nativeSetSelect(select: HTMLSelectElement, value: string) {
-  const domValueChanged = select.value !== value;
-  const reactValueNeedsSync = synchronizedSelectValues.get(select) !== value;
-  if (!domValueChanged && !reactValueNeedsSync) return;
-
-  if (domValueChanged) {
-    const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
-    if (setter) setter.call(select, value);
-    else select.value = value;
-  }
+  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
+  if (setter) setter.call(select, value);
+  else select.value = value;
   select.dispatchEvent(new Event('input', { bubbles: true }));
   select.dispatchEvent(new Event('change', { bubbles: true }));
-  synchronizedSelectValues.set(select, value);
 }
 
 function equipmentSelect(form: HTMLFormElement) {
