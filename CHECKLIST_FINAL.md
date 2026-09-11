@@ -144,3 +144,13 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] Despesas podem ser editadas por Master/Administrador com valores anterior/novo em `audit_logs` e recálculo do período correto.
 - [OK] OS finalizada aceita estorno parcial/total até o saldo efetivamente pago; preserva o valor original e registra saída na data, auditoria e histórico da OS.
 - [OK] Relatórios mostram Receita, Despesas, Lucro Líquido, Margem e comparação anterior, Receita vs Despesas por dia e total de estornos, sem categorias artificiais.
+
+
+## Bloco 8 — Menu lateral
+
+- [OK] Menu Web/PC e Mobile/Tablet organizado em Operação, Cadastros, Gestão e Administração, preservando permissões por perfil.
+- [OK] Nova OS destacada no topo em vermelho, fora dos grupos de navegação.
+- [OK] Contadores de OS abertas e contatos de Pós-Venda disponíveis vêm do backend e são atualizados ao navegar.
+- [OK] Menu Web/PC recolhível entre 206 px e 58 px, com preferência persistida, nomes no hover e marcador compacto de contador.
+- [OK] Card do usuário e Sair preservados; slogan removido apenas do menu, sem alteração de documentos.
+- [OK] Mesa de Chamados oculta em navegação e atalhos; `/desk` redireciona ao Painel, mantendo implementação e endpoint operacional reativáveis.

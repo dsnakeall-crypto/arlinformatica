@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { api, login } from './helpers';
 
-test('painel mantém a consulta operacional e o menu exibe Mesa de Chamados', async ({ page }) => {
+test('painel mantém a consulta operacional e o menu oculta Mesa de Chamados', async ({ page }) => {
   await login(page);
   await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
   const counters = page.locator('.status-cards');
@@ -13,7 +13,7 @@ test('painel mantém a consulta operacional e o menu exibe Mesa de Chamados', as
   await expect(page.getByRole('main').getByRole('button', { name: 'Nova OS' })).toBeVisible();
 
   const nav = page.locator('aside nav');
-  await expect(nav.getByRole('button', { name: 'Mesa de Chamados', exact: true })).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'Mesa de Chamados', exact: true })).toHaveCount(0);
   await expect(nav.getByRole('button', { name: 'Ordens de Serviço', exact: true })).toBeVisible();
 });
 
@@ -42,7 +42,7 @@ test('Funcionário vê somente operação e o backend continua sendo a autoridad
   expect(me.status).toBe(200);
   expect(me.body.role).toBe('Funcionário');
   const nav = page.locator('aside nav');
-  await expect(nav.getByRole('button', { name: 'Nova OS' })).toBeVisible();
+  await expect(page.locator('aside').getByRole('button', { name: 'Nova OS' })).toBeVisible();
   await expect(nav.getByRole('button', { name: 'Financeiro' })).toHaveCount(0);
   await expect(nav.getByRole('button', { name: 'Serviços' })).toHaveCount(0);
   await expect(nav.getByRole('button', { name: 'Usuários' })).toHaveCount(0);

@@ -51,7 +51,7 @@ test('catálogo de serviços é React, editável e respeita desativação em nov
   await expect(row).toContainText('Inativo');
   await expect(row.getByRole('button', { name: 'Reativar', exact: true })).toBeVisible();
 
-  await nav.getByRole('button', { name: 'Nova OS', exact: true }).click();
+  await page.locator('aside').getByRole('button', { name: 'Nova OS', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS', exact: true })).toBeVisible();
   await expect(page.locator('.opening-catalog button').filter({ hasText: itemName })).toHaveCount(0);
 });
