@@ -364,13 +364,19 @@ function FinalShareCard({ order, share, onClose }: { order: any; share: FinalSha
 }
 
 export default function OrderDetailPage({ id, back, readOnly = false, onEdit, onDirtyChange, onOpenClientHistory }: Props & { readOnly?: boolean }) {
-  const [order, setOrder] = useState<any>(), [role, setRole] = useState(''), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [reopenOpen, setReopenOpen] = useState(false), [reopenNote, setReopenNote] = useState(''), [interruptOpen, setInterruptOpen] = useState(false), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [servicesDirty, setServicesDirty] = useState(false), [finalReportDirty, setFinalReportDirty] = useState(false), [share, setShare] = useState<FinalShare | null>(null), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false);
+  const [order, setOrder] = useState<any>(), [role, setRole] = useState<string | null>(null), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [reopenOpen, setReopenOpen] = useState(false), [reopenNote, setReopenNote] = useState(''), [interruptOpen, setInterruptOpen] = useState(false), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [servicesDirty, setServicesDirty] = useState(false), [finalReportDirty, setFinalReportDirty] = useState(false), [share, setShare] = useState<FinalShare | null>(null), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null), statusSelect = useRef<HTMLSelectElement>(null), pendingServicesSave = useRef<null | (() => Promise<any>)>(null);
   const load = async () => { try { const next = await api(`/orders/${id}`); setOrder(next); if (!finalReportDirty) setFinalReport(next.final_report || (next.status === 'completed' ? next.technical_report || '' : '')); setError(''); } catch (e: any) { setError(e.message); } };
-  useEffect(() => { void Promise.all([load(), api('/me').then((me) => setRole(me.role || '')).catch(() => undefined)]); }, [id]);
+  useEffect(() => {
+    setRole(null);
+    void Promise.all([
+      load(),
+      api('/me').then((me) => setRole(me.role || '')).catch((reason) => setError(reason.message)),
+    ]);
+  }, [id]);
   useEffect(() => { onDirtyChange?.(servicesDirty || finalReportDirty); }, [servicesDirty, finalReportDirty, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [id, onDirtyChange]);
-  if (error) return <div className="state error">{error}</div>; if (!order) return <div className="state">Carregando OS…</div>;
+  if (error) return <div className="state error">{error}</div>; if (!order || role === null) return <div className="state">Carregando OS…</div>;
   const immutable = Boolean(order.archived || order.status === 'completed');
   const persistPendingChanges = async () => {
     let persistedOrder = order;
