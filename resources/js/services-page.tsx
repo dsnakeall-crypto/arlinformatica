@@ -1,6 +1,7 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Ban, Box, CheckCircle2, Pencil, Plus, RotateCcw, Search, ShieldCheck, Wrench, X } from 'lucide-react';
 import '../css/services-page.css';
+import PageHeader from './page-header';
 
 type ServiceItem = {
   id: number;
@@ -205,13 +206,7 @@ export default function ServicesCatalogPage() {
   });
 
   return <div className="services-page" data-testid="services-page">
-    <div className="title services-title">
-      <div>
-        <span className="services-eyebrow">CATÁLOGO ARL</span>
-        <h1>Serviços e Produtos</h1>
-        <p>Cadastre, organize e consulte os itens usados nas ordens de serviço.</p>
-      </div>
-    </div>
+    <PageHeader eyebrow="CATÁLOGO ARL" title="Serviços e Produtos" description="Cadastre, organize e consulte os itens usados nas ordens de serviço." icon={Box}/>
 
     {(error || message) && <div className={error ? 'alert services-feedback' : 'notice services-feedback'} role="status">
       {error || message}

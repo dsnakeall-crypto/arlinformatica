@@ -32,6 +32,12 @@ Implementar a edição dos dados de equipamento da OS ativa, incluindo `equipmen
 
 O Ver OS React está protegido por guards e os E2Es provam que os enhancers legados não podem mutar sua árvore. Ainda assim, código legado continua coexistindo no bundle e deve ser aposentado de forma controlada quando não houver mais dependência de telas antigas. Não remover em massa sem auditoria de consumidores.
 
+### Enhancer legado da página inicial Mobile/Tablet
+
+`resources/js/mobile-home.ts` ainda injeta no DOM a lista de OS abertas específica do modo móvel. Antes do Bloco 5, esse enhancer também criava um segundo cabeçalho e ocultava o cabeçalho React com CSS, o que removia do modo Mobile/Tablet o `PageHeader` e o heading acessível `Painel`.
+
+O segundo cabeçalho e a regra que ocultava o `PageHeader` foram removidos. O enhancer agora se limita ao conteúdo operacional de OS abertas, com `OS abertas` como heading de seção (`h2`), enquanto o cabeçalho único permanece sob responsabilidade do React. Em etapa futura, migrar também essa lista para React e aposentar o enhancer somente após auditar os contratos mobile, sem remover funcionalidades.
+
 ### Fonte única para rótulos de status
 
 O rótulo operacional de `waiting_part` foi consolidado como `Aguardando Peça` em todas as superfícies e contratos, sem alterar o código persistido.

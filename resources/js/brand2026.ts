@@ -97,7 +97,8 @@ function enhanceShell(){
 }
 
 function titleEyebrow(title:HTMLElement, label:string){
-  title.classList.add('page-title'); const group=title.firstElementChild as HTMLElement|null; if(!group) return;
+  title.classList.add('page-title'); if(title.classList.contains('arl-page-header')) return;
+  const group=title.firstElementChild as HTMLElement|null; if(!group) return;
   if(!q('.arl-eyebrow',group)){const e=document.createElement('span');e.className='arl-eyebrow';e.textContent=label;group.prepend(e)}
 }
 

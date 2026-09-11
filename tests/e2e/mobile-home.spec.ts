@@ -45,6 +45,7 @@ test('mobile explícito prioriza OS abertas, mantém barra global e abre OS some
   await page.reload();
 
   const home = page.locator('.arl-mobile-home');
+  await expect(page.getByTestId('page-header').getByRole('heading', { name: 'Painel', exact: true })).toBeVisible();
   await expect(home).toBeVisible();
   await expect(home.getByRole('heading', { name: 'OS abertas' })).toBeVisible();
 
