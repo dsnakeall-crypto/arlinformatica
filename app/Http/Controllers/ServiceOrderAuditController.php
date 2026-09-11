@@ -64,6 +64,7 @@ class ServiceOrderAuditController extends Controller
             'service_order.marked_paid_and_retrieved' => 'Pagamento e retirada',
             'service_order.reopened' => 'Reabertura da OS',
             'service_order.deleted' => 'Remoção da OS',
+            'service_order.refund_created' => 'Estorno da OS',
             default => 'Registro da OS',
         };
     }
@@ -76,6 +77,11 @@ class ServiceOrderAuditController extends Controller
             'service_order.marked_paid_and_retrieved' => ['OS marcada como paga e retirada.'],
             'service_order.reopened' => $this->reopenChanges($after),
             'service_order.deleted' => ['OS removida da operação; histórico financeiro, auditoria e documentos foram preservados.'],
+            'service_order.refund_created' => [
+                'Estorno de '.$this->money((int) ($after['amount_cents'] ?? 0)).' via '.$this->refundMethod($after['method'] ?? null).'.',
+                'Motivo: '.$this->text($after['reason'] ?? null),
+                'O valor original da OS permaneceu em '.$this->money((int) ($after['original_order_total_cents'] ?? 0)).'.',
+            ],
             default => ['Alteração registrada no histórico da OS.'],
         };
     }
@@ -168,6 +174,14 @@ class ServiceOrderAuditController extends Controller
             'bench' => 'Bancada',
             'external' => 'Externo',
             default => 'não informado',
+        };
+    }
+
+    private function refundMethod(mixed $value): string
+    {
+        return match ($value) {
+            'pix' => 'Pix', 'cash' => 'Dinheiro', 'debit' => 'Cartão de débito',
+            'credit' => 'Cartão de crédito', 'transfer' => 'Transferência', default => 'Outro',
         };
     }
 

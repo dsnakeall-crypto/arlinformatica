@@ -70,6 +70,49 @@ class FinanceExpensesTest extends TestCase
         $this->getJson('/api/finance/month?period=2026-09')->assertJsonPath('expense_cents', 0);
     }
 
+    public function test_admin_can_edit_expense_with_audit_and_move_it_between_periods_but_employee_cannot(): void
+    {
+        $id = $this->actingAs($this->master)->postJson('/api/finance/expenses', [
+            'spent_on' => '2026-08-31', 'description' => 'Valor incorreto', 'amount_cents' => 9000,
+        ])->assertCreated()->json('id');
+
+        $corrected = ['spent_on' => '2026-09-10', 'description' => 'Fonte de bancada', 'amount_cents' => 6500];
+        $this->actingAs($this->employee)->putJson("/api/finance/expenses/$id", $corrected)->assertForbidden();
+        $this->actingAs($this->master)->putJson("/api/finance/expenses/$id", $corrected)->assertOk()
+            ->assertJsonPath('amount_cents', 6500)->assertJsonPath('spent_on', '2026-09-10');
+
+        $this->getJson('/api/finance/month?period=2026-08')->assertJsonPath('expense_cents', 0);
+        $this->getJson('/api/finance/month?period=2026-09')->assertJsonPath('expense_cents', 6500);
+        $audit = DB::table('audit_logs')->where(['action' => 'finance.expense_updated', 'subject_id' => $id])->first();
+        $this->assertSame(9000, json_decode($audit->before, true)['amount_cents']);
+        $this->assertSame(6500, json_decode($audit->after, true)['amount_cents']);
+    }
+
+    public function test_refund_is_a_current_outflow_preserves_order_total_and_is_limited_to_effective_payment(): void
+    {
+        $client = DB::table('clients')->insertGetId([
+            'name' => 'Cliente Estorno', 'document' => '12345678909', 'phone' => '35999999999', 'postal_code' => '37130000',
+            'street' => 'Rua A', 'number' => '1', 'district' => 'Centro', 'city' => 'Alfenas', 'state' => 'MG', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $order = DB::table('service_orders')->insertGetId([
+            'number' => '0007777', 'client_id' => $client, 'equipment_type_id' => DB::table('equipment_types')->value('id'), 'attendance_type' => 'bench', 'reported_problem' => 'Garantia',
+            'status' => 'completed', 'total_cents' => 15000, 'received_at' => now(), 'completed_at' => now(), 'created_by' => $this->master->id, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $payment = DB::table('payments')->insertGetId(['service_order_id' => $order, 'amount_cents' => 15000, 'method' => 'pix', 'paid_at' => now(), 'user_id' => $this->master->id, 'idempotency_key' => 'refund-test', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('financial_transactions')->insert(['payment_id' => $payment, 'origin' => 'service_order', 'description' => 'OS 0007777', 'amount_cents' => 15000, 'occurred_at' => now(), 'user_id' => $this->master->id, 'created_at' => now(), 'updated_at' => now()]);
+
+        $payload = ['amount_cents' => 10000, 'reason' => 'Falha do serviço durante a garantia', 'method' => 'pix'];
+        $this->actingAs($this->employee)->postJson("/api/orders/$order/refunds", $payload)->assertForbidden();
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-11 10:00:00', 'America/Sao_Paulo'));
+        $this->actingAs($this->master)->postJson("/api/orders/$order/refunds", $payload)->assertCreated();
+        $this->postJson("/api/orders/$order/refunds", ['amount_cents' => 5001, 'reason' => 'Excedente', 'method' => 'cash'])->assertUnprocessable();
+
+        $this->assertDatabaseHas('service_orders', ['id' => $order, 'total_cents' => 15000]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'service_order.refund_created', 'subject_type' => 'service_order', 'subject_id' => $order]);
+        $this->getJson('/api/finance/month?period=2026-09')->assertJsonPath('refund_cents', 10000)->assertJsonPath('outflow_cents', 10000);
+        $this->getJson("/api/orders/$order/audit-history")->assertJsonFragment(['action' => 'Estorno da OS']);
+    }
+
     private function user(string $role, string $login): User
     {
         return User::create([

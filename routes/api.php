@@ -76,6 +76,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders/{order}/payment', [FinanceController::class, 'payment']);
         Route::get('/orders/{order}/payments', [FinanceController::class, 'payments']);
         Route::post('/orders/{order}/payment', [FinanceController::class, 'pay']);
+        Route::post('/orders/{order}/refunds', [FinanceController::class, 'refund']);
         Route::post('/finance/quick-entry', [FinanceController::class, 'quickEntry']);
         Route::get('/finance/overview', [FinanceController::class, 'overview']);
         Route::get('/finance/daily', [FinanceController::class, 'transactions']);
@@ -83,6 +84,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/finance/month', [FinanceController::class, 'month']);
         Route::post('/finance/transactions/{transaction}/adjust', [FinanceController::class, 'adjust']);
         Route::post('/finance/expenses', [FinanceController::class, 'storeExpense']);
+        Route::put('/finance/expenses/{expense}', [FinanceController::class, 'updateExpense']);
         Route::delete('/finance/expenses/{expense}', [FinanceController::class, 'destroyExpense']);
         Route::post('/finance/reports', [FinanceController::class, 'issueReport']);
         Route::get('/finance/reports/{document}/pdf', [FinanceController::class, 'report']);
