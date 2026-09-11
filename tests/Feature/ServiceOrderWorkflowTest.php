@@ -126,9 +126,15 @@ class ServiceOrderWorkflowTest extends TestCase
             ->assertJsonPath('archived', 1)
             ->assertJsonPath('display_status', 'paid');
 
+        // Sem filtro, a rota representa a aba Todas: o histórico inclui OS pagas/arquivadas.
         $this->getJson('/api/orders')
             ->assertOk()
-            ->assertJsonMissing(['id' => $order->id]);
+            ->assertJsonFragment(['id' => $order->id, 'archived' => 1]);
+
+        // As abas operacionais continuam excluindo a OS arquivada.
+        $this->getJson('/api/orders?tab=progress')->assertOk()->assertJsonMissing(['id' => $order->id]);
+        $this->getJson('/api/orders?tab=interrupted')->assertOk()->assertJsonMissing(['id' => $order->id]);
+        $this->getJson('/api/orders?tab=finalized')->assertOk()->assertJsonFragment(['id' => $order->id, 'archived' => 1]);
 
         $this->getJson('/api/orders?finalized=1')
             ->assertOk()

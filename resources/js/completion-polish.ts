@@ -5,7 +5,7 @@ type FinalOrder = { id: number; number: string; total_cents?: number; client?: {
 
 const STATUS_LABELS: Record<string, string> = {
   analysis: 'Em Análise',
-  waiting_part: 'Aguardando',
+  waiting_part: 'Aguardando Peça',
   in_service: 'Em Serviço',
   completed: 'Finalizado',
   interrupted: 'Interrompido',
@@ -13,8 +13,6 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const LEGACY_LABELS: Record<string, string> = {
-  'Aguardando Peça': 'Aguardando',
-  'Aguardando Peça/Cliente': 'Aguardando',
   Concluído: 'Finalizado',
 };
 

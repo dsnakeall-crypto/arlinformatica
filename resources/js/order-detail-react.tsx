@@ -40,7 +40,7 @@ const masks = {
 const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
 const statusLabel: Record<string, string> = {
   analysis: 'Em Análise',
-  waiting_part: 'Aguardando',
+  waiting_part: 'Aguardando Peça',
   in_service: 'Em Serviço',
   completed: 'Finalizado',
   interrupted: 'Interrompido',
@@ -382,7 +382,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
     try { await api(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: value }) }); await load(); } catch (e: any) { window.alert(e.message); await load(); }
   };
   const shownStatus = order.archived ? 'paid' : order.status;
-  const activeStatusOptions = [['analysis', 'Em Análise'], ['waiting_part', 'Aguardando'], ['in_service', 'Em Serviço'], ['interrupted', 'Interrompido'], ['completed', 'Finalizado']];
+  const activeStatusOptions = [['analysis', 'Em Análise'], ['waiting_part', 'Aguardando Peça'], ['in_service', 'Em Serviço'], ['interrupted', 'Interrompido'], ['completed', 'Finalizado']];
   const statusOptions = order.archived ? [['paid', 'Pago']] : order.status === 'completed' ? [['completed', 'Finalizado'], ['paid', 'Pago']] : activeStatusOptions;
   const editOrder = () => onEdit ? onEdit() : setEditOpen(true);
   const finalMessage = [`Olá, ${order.client?.name || 'cliente'} 👋`, `Seu Equipamento está pronto da OS ${order.number}! 🎉`, '📋 Detalhes do Serviço:', `- Valor: ${money(order.total_cents || 0)}`, '💳 Formas de Pagamento:', '- PIX (Chave): 35988285777', '- Cartão: (Com taxas inclusas)', '- Dinheiro: (Favor trazer trocado)', '⚠️ A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.', 'Agradecemos pela preferência! 😊'].join('\n');
@@ -464,7 +464,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
       <PaymentBox order={order} role={role} openSignal={paymentSignal} onSummary={setPaymentSummary}/>
       <FinalizationBox order={order} reload={load} openSignal={finalSignal} finalReport={finalReport} setFinalReport={setFinalReport} onShare={setShare} persistPendingChanges={persistPendingChanges} onFinalReportDirty={setFinalReportDirty}/>
       <section className="wide arl-order-record"><div className="section-title"><div><span className="arl-eyebrow">REGISTRO</span><h2>Registro da OS</h2><p>Históricos e documentos preservados, recolhidos por padrão.</p></div></div>
-        <details className="arl-record-accordion"><summary>Histórico de status</summary><div className="arl-record-body">{order.histories.map((history: any, index: number) => <p key={history.id || index}>{statusLabel[history.to_status] || history.to_status} · {new Date(history.created_at).toLocaleString('pt-BR')} · {history.user?.name}</p>)}</div></details>
+        <details className="arl-record-accordion"><summary>Histórico de status</summary><div className="arl-record-body">{order.histories.map((history: any, index: number) => <p key={history.id || index}>{statusLabel[history.to_status] || history.to_status} · {new Date(history.created_at).toLocaleString('pt-BR')} · {history.user?.name}{history.reason ? ` · Motivo: ${history.reason}` : ''}</p>)}</div></details>
         <OrderAuditHistory orderId={order.id}/>
         <details className="arl-record-accordion"><summary>Documentos</summary><div className="arl-record-body"><DocumentsBox order={order} embedded/></div></details>
       </section>

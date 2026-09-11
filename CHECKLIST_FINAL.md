@@ -13,7 +13,7 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 
 ## Operação
 - [OK] Clientes: cadastro/listagem, validação CPF/CNPJ, busca/paginação, ViaCEP com fallback manual, edição auditada e histórico de OS.
-- [OK] OS: criação/listagem, número transacional, snapshot, histórico, impedimento de exclusão e separação entre pagamento e status operacional.
+- [OK] OS: criação/listagem compartilhada com o Painel, quatro abas, busca por número/cliente, paginação padrão de 50, número transacional, snapshot, histórico, impedimento de exclusão física e separação entre pagamento e status operacional.
 - [OK] Fotos privadas com otimização, remoção de metadados e limite de tamanho.
 - [OK] Abertura/consulta de OS com Bancada/Externo, equipamento, fabricante, problema, checklist, avarias, foto e Serviços/Produtos opcionais com preço/garantia relidos pelo servidor.
 - [OK] Catálogos de equipamentos, fabricantes, Serviços/Produtos e checklist por equipamento com desativação sem apagar históricos.
@@ -70,9 +70,9 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 
 ## Auditoria da Etapa 10
 - [OK] Financeiro destaca "Recebido no mês" e "A receber", reúne os indicadores de hoje em um card, exibe recebido/gasto/sobrou e permite trocar o mês no topo; o gráfico mostra todos os dias do mês em barras finas, sem rolagem horizontal, preservando eixo, valores e datas brasileiras.
-- [OK] Painel operacional **sem faturamento**, com indicadores de OS, ações rápidas, dados reais, busca, filtros, ordenação e paginação. A referência histórica com faturamento não substitui essa regra atual.
+- [OK] Painel operacional **sem faturamento, filtros ou paginação**, com quatro indicadores por status, ações rápidas, OS não finalizadas e atalho “Ver todas” para a listagem completa.
 - [OK] Mesa usa endpoint dedicado sem paginação e retorna todas as OS abertas nos status operacionais.
-- [OK] Status Concluído encaminha obrigatoriamente à finalização; `Pago` não é reintroduzido como status porque pagamento é domínio separado.
+- [OK] Status editável na lista sem opções Concluído/Pago; interrupção exige motivo persistido no histórico e auditoria, e Concluído continua exigindo a finalização própria.
 - [OK] Cliente mostra dados atuais e histórico decrescente com valor/OS/PDF quando emitido.
 - [OK] Orçamento aprovado só fornece itens à finalização mediante escolha explícita, e o servidor relê os dados autoritativos.
 - [OK] Perfis/menu role-aware e autorização backend preservados.

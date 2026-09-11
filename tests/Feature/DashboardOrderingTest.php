@@ -42,7 +42,7 @@ class DashboardOrderingTest extends TestCase
             'status' => 'analysis', 'reported_problem' => 'Mais recente', 'received_at' => now(), 'created_by' => $user->id,
         ]);
 
-        $this->actingAs($user)->getJson('/api/orders?sort=recent')->assertOk()->assertJsonPath('data.0.number', '8100002')->assertJsonPath('per_page', 20);
+        $this->actingAs($user)->getJson('/api/orders?sort=recent')->assertOk()->assertJsonPath('data.0.number', '8100002')->assertJsonPath('per_page', 50);
         $this->getJson('/api/orders?sort=oldest')->assertOk()->assertJsonPath('data.0.number', '8100001');
         $this->getJson('/api/orders?sort=client')->assertOk()->assertJsonPath('data.0.client.name', 'Alice Cliente');
     }

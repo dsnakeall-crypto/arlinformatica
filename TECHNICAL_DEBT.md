@@ -34,7 +34,7 @@ O Ver OS React está protegido por guards e os E2Es provam que os enhancers lega
 
 ### Fonte única para rótulos de status
 
-Ainda existe divergência de nomenclatura entre superfícies: `waiting_part` aparece como `Aguardando` nos contratos do detalhe React e como `Aguardando Peça` na Mesa atual. Consolidar os rótulos em uma fonte única antes de uma revisão de UX, sem alterar os códigos persistidos.
+O rótulo operacional de `waiting_part` foi consolidado como `Aguardando Peça` em todas as superfícies e contratos, sem alterar o código persistido.
 
 Regra crítica preservada: `in_service` representa **Em Serviço**, deve permanecer selecionável, persistido e exibido como tal, e nunca deve ser remapeado para `analysis`.
 

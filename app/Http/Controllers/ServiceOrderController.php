@@ -23,12 +23,21 @@ class ServiceOrderController extends Controller
         $postSales->catchUp(true);
         $q = ServiceOrder::query()->with('client:id,name,phone,street,number,district,city,state');
         $requestedStatus = (string) $r->query('status', '');
-        $finalized = $r->boolean('finalized') || $requestedStatus === 'paid';
-        $q->where('archived', $finalized);
-        if ($requestedStatus !== '') {
-            if ($requestedStatus !== 'paid') {
-                $q->where('status', $requestedStatus);
-            }
+        $tab = (string) $r->query('tab', 'all');
+        if ($r->has('finalized')) {
+            $q->where('archived', $r->boolean('finalized'));
+        }
+        if ($requestedStatus === 'paid') {
+            $q->where('archived', true);
+        }
+        match ($tab) {
+            'progress' => $q->whereIn('status', ['analysis', 'waiting_part', 'in_service']),
+            'finalized' => $q->where('status', 'completed'),
+            'interrupted' => $q->where('status', 'interrupted'),
+            default => null,
+        };
+        if ($requestedStatus !== '' && in_array($requestedStatus, ['analysis', 'waiting_part', 'in_service', 'interrupted'], true)) {
+            $q->where('status', $requestedStatus);
         }
         if ($search = trim((string) $r->query('q'))) {
             $q->where(fn ($x) => $x->where('number', 'like', "%$search%")->orWhere('reported_problem', 'like', "%$search%")->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%$search%")->orWhere('phone', 'like', "%$search%")->orWhere('street', 'like', "%$search%")));
@@ -44,7 +53,9 @@ class ServiceOrderController extends Controller
             'completed_week' => ServiceOrder::where('status', 'completed')->where('completed_at', '>=', now()->startOfWeek())->count(),
         ];
 
-        return response()->json([...$q->paginate(20)->toArray(), 'summary' => $summary]);
+        $perPage = max(1, min(100, (int) $r->integer('per_page', 50)));
+
+        return response()->json([...$q->paginate($perPage)->toArray(), 'summary' => $summary]);
     }
 
     public function desk(PostSaleService $postSales): JsonResponse
@@ -52,7 +63,7 @@ class ServiceOrderController extends Controller
         $postSales->catchUp(true);
         $orders = ServiceOrder::query()
             ->with('client:id,name,phone,street,number,district,city,state')
-            ->whereIn('status', ['analysis', 'waiting_part', 'in_service'])
+            ->where('status', '!=', 'completed')
             ->oldest('received_at')
             ->get();
 
@@ -228,7 +239,20 @@ class ServiceOrderController extends Controller
                 'from_status' => $before,
                 'to_status' => $data['status'],
                 'user_id' => $r->user()->id,
+                'reason' => $reason,
             ]);
+            if ($data['status'] === 'interrupted') {
+                DB::table('audit_logs')->insert([
+                    'user_id' => $r->user()->id,
+                    'action' => 'service_order.interrupted',
+                    'subject_type' => 'service_order',
+                    'subject_id' => $order->id,
+                    'before' => json_encode(['status' => $before]),
+                    'after' => json_encode(['status' => 'interrupted', 'reason' => $reason]),
+                    'ip_address' => $r->ip(),
+                    'created_at' => now(),
+                ]);
+            }
         });
 
         $fresh = $order->fresh();

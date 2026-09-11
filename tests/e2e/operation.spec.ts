@@ -137,7 +137,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await statusSelect.selectOption('in_service');
     await expect(statusHistory.getByText(/Em Serviço ·/)).toBeVisible();
     await statusSelect.selectOption('waiting_part');
-    await expect(statusHistory.getByText(/Aguardando ·/)).toBeVisible();
+    await expect(statusHistory.getByText(/Aguardando Peça ·/)).toBeVisible();
     await statusSelect.selectOption('analysis');
     await expect(statusHistory.getByText(/Em Análise ·/)).toBeVisible();
     await statusSelect.selectOption('completed');

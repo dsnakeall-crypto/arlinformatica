@@ -23,7 +23,7 @@ type MobileOrder = {
 
 const statusLabels: Record<string, string> = {
   analysis: 'Em Análise',
-  waiting_part: 'Aguardando Peça/Cliente',
+  waiting_part: 'Aguardando Peça',
   in_service: 'Em Serviço',
 };
 
