@@ -137,3 +137,10 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] O cabeçalho reutiliza os ícones Lucide do menu lateral, apresenta ícone em vermelho claro, sobretítulo discreto, ações na linha do título e filete em degradê ARL.
 - [OK] A contagem de clientes é exibida como etiqueta junto ao título e os títulos/descrições existentes são preservados.
 - [OK] A composição possui regras responsivas próprias e cobertura E2E de headings, conteúdo, alinhamento e contenção em Mobile/Tablet.
+
+## Bloco 7 — Financeiro repaginado, despesas e estornos
+- [OK] Visão Geral destaca o recebido no mês e apresenta cartões com ícone, valor e percentual para Dinheiro, Pix, Cartão de crédito e Cartão de débito.
+- [OK] Origem das entradas separa Serviços/OS de Entrada Rápida; totais de entradas, saídas e movimentado abrem seus lançamentos filtrados.
+- [OK] Despesas podem ser editadas por Master/Administrador com valores anterior/novo em `audit_logs` e recálculo do período correto.
+- [OK] OS finalizada aceita estorno parcial/total até o saldo efetivamente pago; preserva o valor original e registra saída na data, auditoria e histórico da OS.
+- [OK] Relatórios mostram Receita, Despesas, Lucro Líquido, Margem e comparação anterior, Receita vs Despesas por dia e total de estornos, sem categorias artificiais.

@@ -196,11 +196,63 @@ class FinanceController extends Controller
         return response()->json(['message' => 'Despesa excluída com registro de auditoria.']);
     }
 
+    public function updateExpense(Request $request, int $expense): JsonResponse
+    {
+        $data = $request->validate([
+            'spent_on' => ['required', 'date_format:Y-m-d'],
+            'description' => ['required', 'string', 'max:160'],
+            'amount_cents' => ['required', 'integer', 'min:1'],
+        ]);
+        $row = DB::table('financial_expenses')->whereNull('deleted_at')->find($expense);
+        abort_unless($row, 404);
+        $before = ['spent_on' => $row->spent_on, 'description' => $row->description, 'amount_cents' => (int) $row->amount_cents];
+        DB::table('financial_expenses')->where('id', $expense)->update([...$data, 'updated_at' => now()]);
+        $this->audit($request, 'finance.expense_updated', 'financial_expense', $expense, $before, $data);
+
+        return response()->json(DB::table('financial_expenses')->find($expense));
+    }
+
+    public function refund(Request $request, ServiceOrder $order): JsonResponse
+    {
+        abort_unless($order->status === 'completed', 422, 'Somente uma OS finalizada pode receber estorno.');
+        $data = $request->validate([
+            'amount_cents' => ['required', 'integer', 'min:1'],
+            'reason' => ['required', 'string', 'min:3', 'max:1000'],
+            'method' => ['required', Rule::in(['pix', 'cash', 'debit', 'credit', 'transfer', 'other'])],
+        ]);
+        $refund = DB::transaction(function () use ($request, $order, $data) {
+            $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $paid = $this->paidCentsForOrder($locked);
+            $refunded = (int) DB::table('service_order_refunds')->where('service_order_id', $locked->id)->sum('amount_cents');
+            if ((int) $data['amount_cents'] > $paid - $refunded) {
+                throw ValidationException::withMessages(['amount_cents' => 'O estorno não pode superar o valor efetivamente pago ainda não devolvido.']);
+            }
+            $now = CarbonImmutable::now('UTC');
+            $transactionId = DB::table('financial_transactions')->insertGetId([
+                'origin' => 'adjustment', 'description' => "Estorno da OS {$locked->number}",
+                'amount_cents' => $data['amount_cents'], 'occurred_at' => $now, 'user_id' => $request->user()->id,
+                'created_at' => $now, 'updated_at' => $now,
+            ]);
+            $id = DB::table('service_order_refunds')->insertGetId([
+                'service_order_id' => $locked->id, 'financial_transaction_id' => $transactionId,
+                'amount_cents' => $data['amount_cents'], 'reason' => $data['reason'], 'method' => $data['method'],
+                'refunded_at' => $now, 'created_by' => $request->user()->id, 'created_at' => $now, 'updated_at' => $now,
+            ]);
+            $after = [...$data, 'refund_id' => $id, 'transaction_id' => $transactionId, 'original_order_total_cents' => (int) $locked->total_cents, 'paid_cents' => $paid];
+            $this->audit($request, 'service_order.refund_created', 'service_order', $locked->id, null, $after);
+
+            return DB::table('service_order_refunds')->find($id);
+        });
+
+        return response()->json($refund, 201);
+    }
+
     public function overview(Request $request): JsonResponse
     {
         [$start, $end] = $this->dayBounds($request->input('date'));
         $monthStart = $start->startOfMonth();
-        $rows = $this->effective()->whereBetween('occurred_at', [$monthStart->utc(), $end->utc()])->get();
+        $rows = $this->effective()->whereIn('origin', ['service_order', 'quick_entry'])
+            ->whereBetween('occurred_at', [$monthStart->utc(), $end->utc()])->get();
         $daily = $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))
             ->map(fn ($day) => $day->sum('effective_cents'))->sortKeys();
         $today = (int) ($daily[$start->format('Y-m-d')] ?? 0);
@@ -258,9 +310,16 @@ class FinanceController extends Controller
         $expenses = DB::table('financial_expenses')->whereNull('deleted_at')
             ->whereBetween('spent_on', [$start->format('Y-m-d'), $end->format('Y-m-d')])
             ->orderBy('spent_on')->get();
+        $refunds = DB::table('service_order_refunds as refunds')
+            ->join('service_orders', 'service_orders.id', '=', 'refunds.service_order_id')
+            ->join('users', 'users.id', '=', 'refunds.created_by')
+            ->whereBetween('refunds.refunded_at', $utcBounds)
+            ->orderBy('refunds.refunded_at')
+            ->get(['refunds.*', 'service_orders.number as order_number', 'users.name as user_name']);
 
         $rows = $this->effective()
             ->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')
+            ->whereIn('financial_transactions.origin', ['service_order', 'quick_entry'])
             ->whereBetween('financial_transactions.occurred_at', $utcBounds)
             ->addSelect('payments.method', 'payments.service_order_id')
             ->orderBy('financial_transactions.occurred_at')
@@ -327,6 +386,10 @@ class FinanceController extends Controller
         $daily = $rows->groupBy(fn ($row) => CarbonImmutable::parse($row->occurred_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))
             ->map(fn ($day) => (int) $day->sum('effective_cents'))->sortKeys();
         $dailyExpenses = $expenses->groupBy('spent_on')->map(fn ($day) => (int) $day->sum('amount_cents'))->sortKeys();
+        $dailyRefunds = $refunds->groupBy(fn ($row) => CarbonImmutable::parse($row->refunded_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))
+            ->map(fn ($day) => (int) $day->sum('amount_cents'))->sortKeys();
+        $allDates = $dailyExpenses->keys()->merge($dailyRefunds->keys())->unique();
+        $dailyOutflows = $allDates->mapWithKeys(fn ($date) => [$date => (int) ($dailyExpenses->get($date, 0) + $dailyRefunds->get($date, 0))])->sortKeys();
         $methods = $orders->filter(fn ($row) => $row->method)->groupBy('method')
             ->map(fn ($method) => ['quantity' => $method->count(), 'total_cents' => (int) $method->sum('effective_cents')]);
 
@@ -336,13 +399,16 @@ class FinanceController extends Controller
             'service_orders_cents' => (int) $orders->sum('effective_cents'),
             'quick_entries_cents' => (int) $rows->where('origin', 'quick_entry')->sum('effective_cents'),
             'expense_cents' => (int) $expenses->sum('amount_cents'),
+            'refund_cents' => (int) $refunds->sum('amount_cents'),
+            'outflow_cents' => (int) $expenses->sum('amount_cents') + (int) $refunds->sum('amount_cents'),
             'paid_orders' => $paidOrderCount,
             'average_ticket_cents' => $paidOrderCount ? intdiv((int) $orders->sum('effective_cents'), $paidOrderCount) : 0,
             'discount_cents' => $discount,
             'allocation_note' => 'Itens e descontos são rateados proporcionalmente ao recebimento acumulado de cada OS; o cálculo cumulativo atribui eventuais centavos residuais à parcela final.',
             'daily' => $daily,
-            'daily_expenses' => $dailyExpenses,
+            'daily_expenses' => $dailyOutflows,
             'expenses' => $expenses->values(),
+            'refunds' => $refunds->values(),
             'methods' => $methods,
             'transactions' => $rows->values(),
             'items' => $items,
@@ -367,6 +433,10 @@ class FinanceController extends Controller
                 $otherPaid = $this->paidCentsForOrder($order, $transaction);
                 if ($total > 0 && (int) $data['new_cents'] > max(0, $total - $otherPaid)) {
                     throw ValidationException::withMessages(['new_cents' => 'A correção não pode fazer o total recebido superar o valor da OS.']);
+                }
+                $refunded = (int) DB::table('service_order_refunds')->where('service_order_id', $order->id)->sum('amount_cents');
+                if ($otherPaid + (int) $data['new_cents'] < $refunded) {
+                    throw ValidationException::withMessages(['new_cents' => 'A correção não pode reduzir o total pago abaixo do valor já estornado.']);
                 }
             }
         }
@@ -434,6 +504,11 @@ class FinanceController extends Controller
         $paid = (int) $payments->sum('effective_cents');
         $balance = max(0, $total - $paid);
         $status = $paid <= 0 ? 'unpaid' : ($balance > 0 ? 'partial' : 'paid');
+        $refunds = DB::table('service_order_refunds')
+            ->leftJoin('users', 'users.id', '=', 'service_order_refunds.created_by')
+            ->where('service_order_id', $order->id)
+            ->orderByDesc('refunded_at')
+            ->get(['service_order_refunds.*', 'users.name as user_name']);
 
         return [
             'total_cents' => $total,
@@ -441,6 +516,9 @@ class FinanceController extends Controller
             'balance_cents' => $balance,
             'status' => $status,
             'payments' => $payments,
+            'refunded_cents' => (int) $refunds->sum('amount_cents'),
+            'refundable_cents' => max(0, $paid - (int) $refunds->sum('amount_cents')),
+            'refunds' => $refunds,
         ];
     }
 
