@@ -8,7 +8,7 @@ type StatusCase = {
 
 const statuses: StatusCase[] = [
   { code: 'analysis', label: 'Em Análise' },
-  { code: 'waiting_part', label: 'Aguardando' },
+  { code: 'waiting_part', label: 'Aguardando Peça' },
   { code: 'in_service', label: 'Em Serviço' },
   { code: 'interrupted', label: 'Interrompido' },
   { code: 'completed', label: 'Finalizado' },
@@ -120,7 +120,7 @@ for (const [index, status] of statuses.entries()) {
 
     if (status.code !== 'completed') {
       await expect(picker.locator('option[value="analysis"]')).toHaveText('Em Análise');
-      await expect(picker.locator('option[value="waiting_part"]')).toHaveText('Aguardando');
+      await expect(picker.locator('option[value="waiting_part"]')).toHaveText('Aguardando Peça');
       await expect(picker.locator('option[value="in_service"]'), 'Detalhe React perdeu Em Serviço como opção selecionável').toHaveText('Em Serviço');
       await expect(picker.locator('option[value="interrupted"]')).toHaveText('Interrompido');
       await expect(picker.locator('option[value="completed"]')).toHaveText('Finalizado');

@@ -70,7 +70,7 @@ A listagem de Clientes também passou a ter regressão geométrica mobile: açõ
 ## Etapa 10 — implementado na PR #11
 
 ### Painel e Mesa
-O Painel usa listagem paginada e resumo operacional. A Mesa usa `/api/orders/desk`, sem paginação, para todas as OS abertas nos status `analysis`, `waiting_part` e `in_service`.
+O Painel e a Mesa usam `/api/orders/desk`, sem paginação; a Lista de OS usa `/api/orders` com abas e paginação server-side de 50 itens.
 
 ### Orçamento e finalização
 A aprovação do orçamento altera apenas status. Na finalização, quando `approved_budget_id` é escolhido, o backend valida o orçamento e reconstrói itens/preço/quantidade/garantia a partir do banco, ignorando valores manipuláveis do navegador.

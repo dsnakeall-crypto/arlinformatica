@@ -4,7 +4,12 @@ import { api, login } from './helpers';
 test('painel mantém a consulta operacional e o menu exibe Mesa de Chamados', async ({ page }) => {
   await login(page);
   await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
-  await expect(page.getByText('OS abertas')).toBeVisible();
+  const counters = page.locator('.status-cards');
+  await expect(counters.getByText('Em Análise', { exact: true })).toBeVisible();
+  await expect(counters.getByText('Aguardando Peça', { exact: true })).toBeVisible();
+  await expect(counters.getByText('Em Serviço', { exact: true })).toBeVisible();
+  await expect(counters.getByText('Concluídos', { exact: true })).toBeVisible();
+  await expect(counters.locator('strong')).toHaveCount(4);
   await expect(page.getByRole('main').getByRole('button', { name: 'Nova OS' })).toBeVisible();
 
   const nav = page.locator('aside nav');
