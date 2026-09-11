@@ -87,26 +87,44 @@ for (const [index, status] of statuses.entries()) {
       expect(desk.body.some((row: any) => row.id === order.id), 'OS Em Serviço desapareceu da Mesa de Chamados').toBe(true);
     }
 
-    await page.getByRole('button', { name: 'Painel' }).click();
-    const filter = page.getByLabel('Filtrar status');
-    await expect(filter.locator('option[value="analysis"]')).toHaveText('Em Análise');
-    await expect(filter.locator('option[value="waiting_part"]')).toHaveText('Aguardando');
-    await expect(filter.locator('option[value="in_service"]'), 'Filtro do Painel perdeu a opção Em Serviço').toHaveText('Em Serviço');
-    await expect(filter.locator('option[value="interrupted"]')).toHaveText('Interrompido');
-    await expect(filter.locator('option[value="completed"]')).toHaveText('Finalizado');
+    await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+    const list = page.locator('.orders-panel');
+    await expect(list.getByRole('tab', { name: 'Todas' })).toBeVisible();
+    await expect(list.getByRole('tab', { name: 'Em Andamento' })).toBeVisible();
+    await expect(list.getByRole('tab', { name: 'Finalizadas' })).toBeVisible();
+    await expect(list.getByRole('tab', { name: 'Interrompidas' })).toBeVisible();
 
-    const search = page.getByPlaceholder('OS, cliente ou problema…');
-    const dashboardResponse = page.waitForResponse((response) => {
+    const expectedTab = status.code === 'completed' ? 'Finalizadas' : status.code === 'interrupted' ? 'Interrompidas' : 'Em Andamento';
+    const tabResponse = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      const expectedValue = status.code === 'completed' ? 'finalized' : status.code === 'interrupted' ? 'interrupted' : 'progress';
+      return url.pathname === '/api/orders' && url.searchParams.get('tab') === expectedValue && response.request().method() === 'GET';
+    });
+    await list.getByRole('tab', { name: expectedTab }).click();
+    expect((await tabResponse).status(), `Aba ${expectedTab} não carregou para a OS em ${status.label}`).toBe(200);
+    await expect(list.getByRole('tab', { name: expectedTab })).toHaveAttribute('aria-selected', 'true');
+
+    const search = list.getByPlaceholder('Número da OS ou nome do cliente…');
+    const listResponse = page.waitForResponse((response) => {
       const url = new URL(response.url());
       return url.pathname === '/api/orders' && url.searchParams.get('q') === clientName && response.request().method() === 'GET';
     });
     await search.fill(clientName);
-    expect((await dashboardResponse).status(), `Painel não concluiu a busca da OS em ${status.label}`).toBe(200);
+    expect((await listResponse).status(), `Lista não concluiu a busca da OS em ${status.label}`).toBe(200);
 
-    const dashboardRow = page.locator('.dashboard-table .dashboard-row:not(.head)').filter({ hasText: clientName });
-    await expect(dashboardRow, `Painel não exibiu a OS em ${status.label} após filtrar pelo cliente`).toBeVisible();
-    await expect(dashboardRow.locator('.badge'), `Painel mentiu sobre o estado ${status.code}`).toHaveText(status.label);
-    await dashboardRow.getByRole('button', { name: 'Ver OS' }).click();
+    const rowPicker = list.getByLabel(`Status da OS ${order.number}`);
+    await expect(rowPicker, `A aba ${expectedTab} não exibiu a OS em ${status.label}`).toBeVisible();
+    await expect(rowPicker, `Seletor da linha não persistiu ${status.code}`).toHaveValue(status.code);
+    if (status.code === 'completed') {
+      await expect(rowPicker.locator('option:checked')).toHaveText('Concluído');
+    } else {
+      await expect(rowPicker.locator('option[value="analysis"]')).toHaveText('Em Análise');
+      await expect(rowPicker.locator('option[value="waiting_part"]')).toHaveText('Aguardando Peça');
+      await expect(rowPicker.locator('option[value="in_service"]'), 'Seletor da linha perdeu Em Serviço').toHaveText('Em Serviço');
+      await expect(rowPicker.locator('option[value="interrupted"]')).toHaveText('Interrompido');
+      await expect(rowPicker.locator('option[value="completed"]'), 'Conclusão deve continuar restrita ao fluxo de finalização').toHaveCount(0);
+    }
+    await list.getByRole('button', { name: `Ver OS ${order.number}` }).click();
 
     const root = page.locator('[data-arl-order-detail-react="1"]');
     await expect(root, `Detalhe React não abriu para ${status.label}`).toHaveCount(1);
