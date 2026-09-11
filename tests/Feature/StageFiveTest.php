@@ -59,7 +59,7 @@ class StageFiveTest extends TestCase
     {
         foreach (['pix', 'cash', 'debit', 'credit', 'transfer', 'other'] as $index => $method) {
             $order = $index ? $this->newOrder($index) : $this->order;
-            $this->actingAs($this->employee)
+            $this->actingAs($this->master)
                 ->postJson("/api/orders/{$order->id}/payment", [
                     'amount_cents' => 12550,
                     'method' => $method,
@@ -76,7 +76,7 @@ class StageFiveTest extends TestCase
     {
         $this->order->update(['status' => 'completed', 'completed_at' => now()]);
 
-        $this->actingAs($this->employee)
+        $this->actingAs($this->master)
             ->postJson("/api/orders/{$this->order->id}/payment", [
                 'amount_cents' => 5000,
                 'method' => 'pix',

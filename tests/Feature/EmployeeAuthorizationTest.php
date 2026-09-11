@@ -15,6 +15,7 @@ class EmployeeAuthorizationTest extends TestCase
     use RefreshDatabase;
 
     private User $employee;
+
     private ServiceOrder $order;
 
     protected function setUp(): void
