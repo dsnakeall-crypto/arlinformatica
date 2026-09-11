@@ -152,12 +152,9 @@ function buildHome() {
   home.className = 'arl-mobile-home';
   home.setAttribute('aria-label', 'Início mobile com Ordens de Serviço abertas');
   home.innerHTML = `
-    <div class="arl-mobile-home-top">
-      <div>
-        <span class="arl-mobile-home-eyebrow">ATENDIMENTO RÁPIDO</span>
-        <h1>OS abertas</h1>
-        <small data-mobile-count>Carregando…</small>
-      </div>
+    <div class="arl-mobile-home-section-title">
+      <h2>OS abertas</h2>
+      <small data-mobile-count>Carregando…</small>
     </div>
     <div class="arl-mobile-order-list" data-mobile-orders></div>`;
 
