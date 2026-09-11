@@ -12,6 +12,7 @@ const UI_ORDER_NUMBER_KEY = 'arl:ui-created-order-number';
 const reactOrderDetailActive = () => Boolean(document.querySelector('[data-arl-order-detail-react="1"]'));
 
 function nativeSetSelect(select: HTMLSelectElement, value: string) {
+  if (select.value === value) return;
   const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
   if (setter) setter.call(select, value);
   else select.value = value;
@@ -76,19 +77,23 @@ function installManualField() {
     select.required = false;
   }
 
-  if (makerSelect && makerSelect.value) nativeSetSelect(makerSelect, '');
+  if (makerSelect) nativeSetSelect(makerSelect, '');
 
-  if (typeSelect && form.dataset.arlManualEquipmentInitialized !== '1') {
+  if (typeSelect) {
     const manualOption = Array.from(typeSelect.options).find(
       (option) => option.textContent?.trim() === INTERNAL_EQUIPMENT,
     );
     if (manualOption) {
-      if (!typeSelect.value) nativeSetSelect(typeSelect, manualOption.value);
+      nativeSetSelect(typeSelect, manualOption.value);
       form.dataset.arlManualEquipmentInitialized = '1';
     }
   }
 
   let field = section.querySelector<HTMLLabelElement>('.arl-manual-equipment-field');
+  const fieldIsReady = form.dataset.arlManualEquipmentInitialized === '1'
+    && field?.querySelector<HTMLInputElement>('[data-arl-equipment-description]')?.required === true;
+  if (fieldIsReady) return;
+
   if (!field) {
     field = document.createElement('label');
     field.className = 'field arl-manual-equipment-field';
@@ -208,22 +213,33 @@ function installFetch() {
 }
 
 let queued = false;
+const observer = new MutationObserver(scheduleSync);
+
+function observe() {
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+}
+
 function scheduleSync() {
   if (queued) return;
   queued = true;
   window.requestAnimationFrame(() => {
     queued = false;
-    installStyles();
-    installManualField();
-    removeAutomaticCatalogEditors();
-    normalizeChecklistLabels();
-    cleanupUnexpectedOpeningModal();
-    syncOrderDetailDescription();
+    observer.disconnect();
+    try {
+      installStyles();
+      installManualField();
+      removeAutomaticCatalogEditors();
+      normalizeChecklistLabels();
+      cleanupUnexpectedOpeningModal();
+      syncOrderDetailDescription();
+    } finally {
+      observe();
+    }
   });
 }
 
 installFetch();
-new MutationObserver(scheduleSync).observe(document.documentElement, { childList: true, subtree: true });
+observe();
 document.addEventListener('DOMContentLoaded', scheduleSync);
 window.addEventListener('arl:order-detail', scheduleSync);
 scheduleSync();
