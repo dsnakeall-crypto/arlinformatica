@@ -43,13 +43,40 @@ test('Funcionário vê somente operação e o backend continua sendo a autoridad
   expect(me.body.role).toBe('Funcionário');
   const nav = page.locator('aside nav');
   await expect(nav.getByRole('button', { name: 'Nova OS' })).toBeVisible();
-  await expect(nav.getByRole('button', { name: 'Financeiro' })).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'Financeiro' })).toHaveCount(0);
   await expect(nav.getByRole('button', { name: 'Serviços' })).toHaveCount(0);
   await expect(nav.getByRole('button', { name: 'Usuários' })).toHaveCount(0);
   await expect(nav.getByRole('button', { name: 'Configurações' })).toHaveCount(0);
   expect((await api(page, '/settings')).status).toBe(403);
+  expect((await api(page, '/finance/overview')).status).toBe(403);
   expect((await api(page, '/users')).status).toBe(403);
   expect((await api(page, '/catalogs/services', 'POST', {})).status).toBe(403);
+
+  const clients = await api(page, '/clients', 'POST', {
+    name: 'Cliente Funcionário E2E', document: '11144477735', phone: '35999999999',
+    postal_code: '37160000', street: 'Rua Operacional', number: '6', district: 'Centro',
+    city: 'Cidade', state: 'MG',
+  });
+  expect(clients.status).toBe(201);
+  const equipment = await api(page, '/catalogs/equipment');
+  const order = await api(page, '/orders', 'POST', {
+    client_id: clients.body.id, equipment_type_id: equipment.body[0].id,
+    attendance_type: 'bench', reported_problem: 'Teste das permissões do funcionário.', checklist: [],
+  });
+  expect(order.status).toBe(201);
+  await page.goto(`/orders/${order.body.id}`);
+  await expect(page.getByRole('heading', { name: `OS #${order.body.number}` })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Registrar pagamento/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Finalizar' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Reabrir OS' })).toHaveCount(0);
+  const orderStatus = page.locator('.status-picker select');
+  await expect(orderStatus.locator('option', { hasText: 'Interrompido' })).toHaveCount(0);
+  await expect(orderStatus.locator('option', { hasText: 'Finalizado' })).toHaveCount(0);
+  expect((await api(page, `/orders/${order.body.id}`, 'DELETE')).status).toBe(403);
+  expect((await api(page, `/orders/${order.body.id}/finalize`, 'POST', {})).status).toBe(403);
+  expect((await api(page, `/orders/${order.body.id}/reopen`, 'POST', { note: 'retorno' })).status).toBe(403);
+  expect((await api(page, `/orders/${order.body.id}/status`, 'PATCH', { status: 'interrupted', interruption_reason: 'pausa' })).status).toBe(403);
+  expect((await api(page, `/orders/${order.body.id}/payment`, 'POST', { amount_cents: 100, method: 'pix' })).status).toBe(403);
 });
 
 test('Administrador acessa administração permitida sem funções exclusivas do Master', async ({ page }) => {
@@ -236,4 +263,22 @@ test('Configurações usa sanfona exclusiva e salva Garantia Geral', async ({ pa
   expect((await resetResponsePromise).status()).toBe(200);
   const reset = await api(page, '/settings');
   expect(reset.body.warranty_general_enabled).toBe('0');
+});
+
+test('logoff encerra a sessão no Web/PC e leva ao login', async ({ page }) => {
+  await login(page);
+  await page.locator('aside .profile').getByRole('button', { name: 'Sair' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole('heading', { name: 'Acesso restrito' })).toBeVisible();
+  expect((await api(page, '/me')).status).toBe(401);
+});
+
+test('logoff encerra a sessão pelo menu Mobile/Tablet', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.setItem('arl-layout-mode', 'mobile'));
+  await login(page);
+  await page.locator('.menu-toggle').click();
+  await page.locator('aside .profile').getByRole('button', { name: 'Sair' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole('heading', { name: 'Acesso restrito' })).toBeVisible();
 });

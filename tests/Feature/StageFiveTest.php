@@ -59,7 +59,7 @@ class StageFiveTest extends TestCase
     {
         foreach (['pix', 'cash', 'debit', 'credit', 'transfer', 'other'] as $index => $method) {
             $order = $index ? $this->newOrder($index) : $this->order;
-            $this->actingAs($this->employee)
+            $this->actingAs($this->master)
                 ->postJson("/api/orders/{$order->id}/payment", [
                     'amount_cents' => 12550,
                     'method' => $method,
@@ -76,7 +76,7 @@ class StageFiveTest extends TestCase
     {
         $this->order->update(['status' => 'completed', 'completed_at' => now()]);
 
-        $this->actingAs($this->employee)
+        $this->actingAs($this->master)
             ->postJson("/api/orders/{$this->order->id}/payment", [
                 'amount_cents' => 5000,
                 'method' => 'pix',
@@ -117,7 +117,7 @@ class StageFiveTest extends TestCase
 
     public function test_payment_cannot_exceed_remaining_balance(): void
     {
-        $this->actingAs($this->employee)->postJson("/api/orders/{$this->order->id}/payment", [
+        $this->actingAs($this->master)->postJson("/api/orders/{$this->order->id}/payment", [
             'amount_cents' => 5000,
             'method' => 'pix',
             'idempotency_key' => 'balance-first',
@@ -135,7 +135,7 @@ class StageFiveTest extends TestCase
     public function test_idempotency_key_does_not_duplicate_payment(): void
     {
         $payload = ['amount_cents' => 1000, 'method' => 'pix', 'idempotency_key' => 'same'];
-        $this->actingAs($this->employee)->postJson("/api/orders/{$this->order->id}/payment", $payload)->assertCreated();
+        $this->actingAs($this->master)->postJson("/api/orders/{$this->order->id}/payment", $payload)->assertCreated();
         $this->postJson("/api/orders/{$this->order->id}/payment", $payload)->assertOk()->assertJsonPath('amount_cents', 1000);
         $this->assertDatabaseCount('payments', 1);
         $this->assertDatabaseCount('financial_transactions', 1);
@@ -144,7 +144,7 @@ class StageFiveTest extends TestCase
     public function test_quick_entry_daily_cash_and_overview_use_sao_paulo_timezone(): void
     {
         Carbon::setTestNow('2026-09-02 02:30:00 UTC'); // 01/09 23:30 em São Paulo
-        $this->actingAs($this->employee)->postJson('/api/finance/quick-entry', ['amount_cents' => 7500])->assertCreated()->assertJsonPath('description', 'Serviço rápido não cadastrado');
+        $this->actingAs($this->master)->postJson('/api/finance/quick-entry', ['amount_cents' => 7500])->assertCreated()->assertJsonPath('description', 'Serviço rápido não cadastrado');
         $this->getJson('/api/finance/daily?date=2026-09-01')->assertOk()->assertJsonPath('timezone', 'America/Sao_Paulo')->assertJsonPath('total_cents', 7500);
         $this->getJson('/api/finance/daily?date=2026-09-02')->assertJsonPath('total_cents', 0);
         $this->getJson('/api/finance/overview?date=2026-09-01')->assertJsonPath('today_cents', 7500)->assertJsonPath('month_total_cents', 7500);
@@ -153,7 +153,7 @@ class StageFiveTest extends TestCase
     public function test_month_boundary_uses_sao_paulo_local_time(): void
     {
         Carbon::setTestNow('2026-09-01 02:30:00 UTC'); // 31/08 23:30 em São Paulo
-        $this->actingAs($this->employee)->postJson("/api/orders/{$this->order->id}/payment", [
+        $this->actingAs($this->master)->postJson("/api/orders/{$this->order->id}/payment", [
             'amount_cents' => 3000,
             'method' => 'pix',
             'idempotency_key' => 'month-boundary-august',
@@ -184,7 +184,7 @@ class StageFiveTest extends TestCase
         ]);
 
         Carbon::setTestNow('2026-08-20 15:00:00 UTC');
-        $this->actingAs($this->employee)->postJson("/api/orders/{$this->order->id}/payment", [
+        $this->actingAs($this->master)->postJson("/api/orders/{$this->order->id}/payment", [
             'amount_cents' => 4500,
             'method' => 'pix',
             'idempotency_key' => 'allocated-august',
@@ -212,7 +212,7 @@ class StageFiveTest extends TestCase
     public function test_month_counts_order_once_when_it_has_multiple_payments(): void
     {
         Carbon::setTestNow('2026-09-15 15:00:00 UTC');
-        $this->actingAs($this->employee)->postJson("/api/orders/{$this->order->id}/payment", [
+        $this->actingAs($this->master)->postJson("/api/orders/{$this->order->id}/payment", [
             'amount_cents' => 5000,
             'method' => 'pix',
             'idempotency_key' => 'month-part-1',
@@ -236,13 +236,13 @@ class StageFiveTest extends TestCase
     public function test_month_closing_adjustment_permissions_and_private_pdf_are_auditable(): void
     {
         Carbon::setTestNow('2026-09-15 15:00:00 UTC');
-        $this->actingAs($this->employee)->postJson("/api/orders/{$this->order->id}/payment", [
+        $this->actingAs($this->master)->postJson("/api/orders/{$this->order->id}/payment", [
             'amount_cents' => 12550,
             'method' => 'credit',
             'idempotency_key' => 'payment',
         ])->assertCreated();
         $quick = $this->postJson('/api/finance/quick-entry', ['amount_cents' => 2450])->assertCreated()->json();
-        $this->postJson("/api/finance/transactions/{$quick['id']}/adjust", ['new_cents' => 2000, 'reason' => 'Valor digitado incorretamente'])->assertForbidden();
+        $this->actingAs($this->employee)->postJson("/api/finance/transactions/{$quick['id']}/adjust", ['new_cents' => 2000, 'reason' => 'Valor digitado incorretamente'])->assertForbidden();
         $this->actingAs($this->master)->postJson("/api/finance/transactions/{$quick['id']}/adjust", ['new_cents' => 2000, 'reason' => 'Valor digitado incorretamente'])->assertCreated()->assertJsonPath('previous_cents', 2450);
         $this->getJson('/api/finance/month?period=2026-09')->assertOk()->assertJsonPath('total_cents', 14550)->assertJsonPath('service_orders_cents', 12550)->assertJsonPath('quick_entries_cents', 2000)->assertJsonPath('paid_orders', 1);
         $document = $this->postJson('/api/finance/reports', ['period' => '2026-09'])->assertCreated()->json();

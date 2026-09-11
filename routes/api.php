@@ -62,31 +62,31 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders', [ServiceOrderController::class, 'store']);
     Route::get('/orders/{order}', [ServiceOrderController::class, 'show']);
     Route::get('/orders/{order}/audit-history', [ServiceOrderAuditController::class, 'index']);
+    Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
     Route::middleware('role:Master,Administrador')->group(function () {
-        Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
         Route::delete('/orders/{order}', [ServiceOrderMaintenanceController::class, 'destroy']);
         Route::post('/orders/{order}/reopen', [ServiceOrderMaintenanceController::class, 'reopen']);
     });
     Route::post('/orders/{order}/photos', [ServiceOrderController::class, 'uploadPhoto']);
     Route::get('/orders/{order}/photos/{photo}', [ServiceOrderController::class, 'photo']);
     Route::patch('/orders/{order}/status', [ServiceOrderController::class, 'updateStatus']);
-    Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store']);
+    Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store'])->middleware('role:Master,Administrador');
     Route::get('/orders/{order}/final-share', [FinalShareController::class, 'show']);
-    Route::get('/orders/{order}/payment', [FinanceController::class, 'payment']);
-    Route::get('/orders/{order}/payments', [FinanceController::class, 'payments']);
-    Route::post('/orders/{order}/payment', [FinanceController::class, 'pay']);
-    Route::post('/finance/quick-entry', [FinanceController::class, 'quickEntry']);
-    Route::get('/finance/overview', [FinanceController::class, 'overview']);
-    Route::get('/finance/daily', [FinanceController::class, 'transactions']);
-    Route::get('/finance/receivables', [FinanceController::class, 'receivables']);
-    Route::get('/finance/month', [FinanceController::class, 'month']);
-    Route::post('/finance/transactions/{transaction}/adjust', [FinanceController::class, 'adjust'])->middleware('role:Master,Administrador');
     Route::middleware('role:Master,Administrador')->group(function () {
+        Route::get('/orders/{order}/payment', [FinanceController::class, 'payment']);
+        Route::get('/orders/{order}/payments', [FinanceController::class, 'payments']);
+        Route::post('/orders/{order}/payment', [FinanceController::class, 'pay']);
+        Route::post('/finance/quick-entry', [FinanceController::class, 'quickEntry']);
+        Route::get('/finance/overview', [FinanceController::class, 'overview']);
+        Route::get('/finance/daily', [FinanceController::class, 'transactions']);
+        Route::get('/finance/receivables', [FinanceController::class, 'receivables']);
+        Route::get('/finance/month', [FinanceController::class, 'month']);
+        Route::post('/finance/transactions/{transaction}/adjust', [FinanceController::class, 'adjust']);
         Route::post('/finance/expenses', [FinanceController::class, 'storeExpense']);
         Route::delete('/finance/expenses/{expense}', [FinanceController::class, 'destroyExpense']);
+        Route::post('/finance/reports', [FinanceController::class, 'issueReport']);
+        Route::get('/finance/reports/{document}/pdf', [FinanceController::class, 'report']);
     });
-    Route::post('/finance/reports', [FinanceController::class, 'issueReport']);
-    Route::get('/finance/reports/{document}/pdf', [FinanceController::class, 'report']);
     Route::middleware('role:Master,Administrador')->group(function () {
         Route::get('/settings', [SettingsController::class, 'show']);
         Route::put('/settings', [SettingsController::class, 'update']);
