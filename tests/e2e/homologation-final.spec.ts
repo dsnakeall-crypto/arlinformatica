@@ -37,7 +37,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await clientModal.getByRole('button', { name: 'Cancelar', exact: true }).click();
   await expect(clientModal).toHaveCount(0);
 
-  await nav.getByRole('button', { name: 'Nova OS' }).click();
+  await page.locator('aside').getByRole('button', { name: 'Nova OS' }).click();
   const form = page.locator('form.os-form');
   await expect(form.getByRole('heading', { name: 'Serviços / Itens da OS' })).toBeVisible();
   await form.locator('select').nth(0).selectOption(String(clientResponse.body.id));

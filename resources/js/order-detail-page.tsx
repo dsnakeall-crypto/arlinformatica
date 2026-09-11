@@ -58,7 +58,7 @@ export default function OrderDetailPage(props: Props) {
     if (!hasUnsavedChanges) return;
     const guardSidebarNavigation = (event: MouseEvent) => {
       const target = event.target;
-      if (!(target instanceof Element) || !target.closest('aside nav button')) return;
+      if (!(target instanceof Element) || !target.closest('aside button')) return;
       if (window.confirm(UNSAVED_MESSAGE)) return;
       event.preventDefault();
       event.stopPropagation();

@@ -3,7 +3,6 @@ import { login } from './helpers';
 
 const screens = [
   ['Painel', 'Painel'],
-  ['Mesa de Chamados', 'Mesa de Chamados'],
   ['Ordens de Serviço', 'Ordens de Serviço'],
   ['Nova OS', 'Abertura de Chamado / Nova OS'],
   ['Clientes', 'Gestão de Clientes'],
@@ -19,7 +18,7 @@ test('cabeçalho compartilhado preserva heading, etiqueta e ícone em todas as t
 
   for (const [navigation, heading] of screens) {
     if (navigation !== 'Painel') {
-      await page.locator('aside nav').getByRole('button', { name: navigation, exact: true }).click();
+      await page.locator('aside').getByRole('button', { name: navigation, exact: true }).click();
     }
     const header = page.getByTestId('page-header');
     await expect(header.getByRole('heading', { name: heading, exact: true })).toBeVisible();

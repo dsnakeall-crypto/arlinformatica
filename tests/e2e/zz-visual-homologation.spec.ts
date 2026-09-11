@@ -93,7 +93,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await clientModal.getByRole('button', { name: 'Cancelar' }).click();
   await expect(clientModal).toHaveCount(0);
 
-  await nav.getByRole('button', { name: 'Nova OS' }).click();
+  await page.locator('aside').getByRole('button', { name: 'Nova OS' }).click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
   const newOrderForm = page.locator('form.os-form');
   await newOrderForm.locator('select').nth(0).selectOption(String(clientResponse.body.id));

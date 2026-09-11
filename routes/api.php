@@ -10,6 +10,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FinalizationController;
 use App\Http\Controllers\FinalShareController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\NavigationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostSaleController;
 use App\Http\Controllers\PushSubscriptionController;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/navigation-summary', [NavigationController::class, 'summary']);
     Route::get('/clients', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::get('/clients/{client}', [ClientController::class, 'show']);
