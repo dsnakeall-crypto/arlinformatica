@@ -464,7 +464,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
       <PaymentBox order={order} role={role} openSignal={paymentSignal} onSummary={setPaymentSummary}/>
       <FinalizationBox order={order} reload={load} openSignal={finalSignal} finalReport={finalReport} setFinalReport={setFinalReport} onShare={setShare} persistPendingChanges={persistPendingChanges} onFinalReportDirty={setFinalReportDirty}/>
       <section className="wide arl-order-record"><div className="section-title"><div><span className="arl-eyebrow">REGISTRO</span><h2>Registro da OS</h2><p>Históricos e documentos preservados, recolhidos por padrão.</p></div></div>
-        <details className="arl-record-accordion"><summary>Histórico de status</summary><div className="arl-record-body">{order.histories.map((history: any, index: number) => <p key={history.id || index}>{statusLabel[history.to_status] || history.to_status} · {new Date(history.created_at).toLocaleString('pt-BR')} · {history.user?.name}</p>)}</div></details>
+        <details className="arl-record-accordion"><summary>Histórico de status</summary><div className="arl-record-body">{order.histories.map((history: any, index: number) => <p key={history.id || index}>{statusLabel[history.to_status] || history.to_status} · {new Date(history.created_at).toLocaleString('pt-BR')} · {history.user?.name}{history.reason ? ` · Motivo: ${history.reason}` : ''}</p>)}</div></details>
         <OrderAuditHistory orderId={order.id}/>
         <details className="arl-record-accordion"><summary>Documentos</summary><div className="arl-record-body"><DocumentsBox order={order} embedded/></div></details>
       </section>

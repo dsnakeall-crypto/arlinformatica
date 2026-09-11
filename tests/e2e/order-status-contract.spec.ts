@@ -87,15 +87,14 @@ for (const [index, status] of statuses.entries()) {
       expect(desk.body.some((row: any) => row.id === order.id), 'OS Em Serviço desapareceu da Mesa de Chamados').toBe(true);
     }
 
-    await page.getByRole('button', { name: 'Painel' }).click();
-    const filter = page.getByLabel('Filtrar status');
-    await expect(filter.locator('option[value="analysis"]')).toHaveText('Em Análise');
-    await expect(filter.locator('option[value="waiting_part"]')).toHaveText('Aguardando');
-    await expect(filter.locator('option[value="in_service"]'), 'Filtro do Painel perdeu a opção Em Serviço').toHaveText('Em Serviço');
-    await expect(filter.locator('option[value="interrupted"]')).toHaveText('Interrompido');
-    await expect(filter.locator('option[value="completed"]')).toHaveText('Finalizado');
+    await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+    const tabs = page.getByRole('tablist', { name: 'Filtrar ordens' });
+    await expect(tabs.getByRole('button', { name: 'Todas', exact: true })).toBeVisible();
+    await expect(tabs.getByRole('button', { name: 'Em Andamento', exact: true })).toBeVisible();
+    await expect(tabs.getByRole('button', { name: 'Finalizadas', exact: true })).toBeVisible();
+    await expect(tabs.getByRole('button', { name: 'Interrompidas', exact: true })).toBeVisible();
 
-    const search = page.getByPlaceholder('OS, cliente ou problema…');
+    const search = page.getByPlaceholder('Número da OS ou nome do cliente…');
     const dashboardResponse = page.waitForResponse((response) => {
       const url = new URL(response.url());
       return url.pathname === '/api/orders' && url.searchParams.get('q') === clientName && response.request().method() === 'GET';
@@ -103,9 +102,14 @@ for (const [index, status] of statuses.entries()) {
     await search.fill(clientName);
     expect((await dashboardResponse).status(), `Painel não concluiu a busca da OS em ${status.label}`).toBe(200);
 
-    const dashboardRow = page.locator('.dashboard-table .dashboard-row:not(.head)').filter({ hasText: clientName });
+    const dashboardRow = page.locator('.order-row').filter({ hasText: clientName });
     await expect(dashboardRow, `Painel não exibiu a OS em ${status.label} após filtrar pelo cliente`).toBeVisible();
-    await expect(dashboardRow.locator('.badge'), `Painel mentiu sobre o estado ${status.code}`).toHaveText(status.label);
+    const rowStatus = dashboardRow.getByLabel(new RegExp(`Status da OS`));
+    await expect(rowStatus.locator('option:checked'), `Lista mentiu sobre o estado ${status.code}`).toHaveText(status.code === 'completed' ? 'Concluído' : status.code === 'waiting_part' ? 'Aguardando Peça' : status.label);
+    if (status.code !== 'completed') {
+      await expect(rowStatus.locator('option[value="completed"]')).toHaveCount(0);
+      await expect(rowStatus.locator('option[value="paid"]')).toHaveCount(0);
+    }
     await dashboardRow.getByRole('button', { name: 'Ver OS' }).click();
 
     const root = page.locator('[data-arl-order-detail-react="1"]');
