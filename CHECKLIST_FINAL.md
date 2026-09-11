@@ -129,3 +129,9 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] Após reabertura e refinalização, o E2E confere no Histórico de alterações a reabertura, seu motivo, os valores anterior/novo e o ajuste de cobrança registrado no financeiro.
 - [OK] Histórico do cliente mantém uma única linha por OS e exibe somente os itens e o PDF da finalização vigente após reabertura e refinalização; revisões anteriores continuam preservadas no histórico da OS.
 - [OK] Exclusão lógica é recusada no backend quando existe qualquer pagamento registrado; OS sem pagamento continua removível.
+
+## Bloco 5 — Cabeçalhos das telas (11/09/2026)
+- [OK] Painel, Mesa de Chamados, Ordens de Serviço, Nova OS, Clientes, Financeiro, Pós-Venda, Serviços, Usuários e Configurações usam um único componente de cabeçalho acessível.
+- [OK] O cabeçalho reutiliza os ícones Lucide do menu lateral, apresenta ícone em vermelho claro, sobretítulo discreto, ações na linha do título e filete em degradê ARL.
+- [OK] A contagem de clientes é exibida como etiqueta junto ao título e os títulos/descrições existentes são preservados.
+- [OK] A composição possui regras responsivas próprias e cobertura E2E de headings, conteúdo, alinhamento e contenção em Mobile/Tablet.
