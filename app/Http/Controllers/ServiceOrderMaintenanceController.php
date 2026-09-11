@@ -30,6 +30,19 @@ class ServiceOrderMaintenanceController extends Controller
 
         abort_if($data === [], 422, 'Informe ao menos uma alteração para a OS.');
 
+        if ($request->user()->hasRole('Funcionário')) {
+            abort_if(
+                $order->archived || in_array($order->status, ['completed', 'interrupted'], true),
+                403,
+                'Funcionário só pode editar uma OS ativa em que está trabalhando.'
+            );
+            abort_if(
+                array_intersect(array_keys($data), ['client_id']) !== [],
+                403,
+                'Funcionário não pode trocar o cliente vinculado à OS.'
+            );
+        }
+
         $protectedAfterCompletion = ['client_id', 'final_report', 'checklist', 'items'];
         $changesProtectedAfterCompletion = array_intersect_key($data, array_flip($protectedAfterCompletion)) !== [];
         abort_if(

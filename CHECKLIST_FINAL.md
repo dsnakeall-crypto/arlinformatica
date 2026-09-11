@@ -45,6 +45,8 @@ Legenda: **[OK]** implementado e verificável; **[PENDENTE]** exige continuaçã
 - [OK] Métricas/limpeza de fotos, Backup/restore ZIP com manifesto/checksums, proteção Zip Slip, staging, backup de segurança e autorização Master.
 - [OK] Configurações em cards funcionais; seletor Web/PC e Mobile/Tablet é preferência local por dispositivo, com Web/PC como padrão e migração do valor antigo `automatic`.
 - [OK] Menu/telas respeitam Master, Administrador e Funcionário; backend permanece autoridade de autorização.
+- [OK] Funcionário pode cadastrar clientes, abrir e editar OS ativas (equipamento, relato, checklist, fotos e laudo), sem exclusão, conclusão, reabertura, interrupção, pagamento ou acesso a Financeiro, Configurações e Usuários; interface e rotas aplicam a mesma matriz.
+- [OK] O card do usuário oferece **Sair** no Web/PC e no menu Mobile/Tablet; o logoff invalida a sessão e retorna ao login.
 - [OK] Backup manual/automático, retenção, heartbeat e guia de hospedagem/migração sem processo residente.
 
 ## Interface, qualidade e entrega

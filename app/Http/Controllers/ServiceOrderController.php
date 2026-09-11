@@ -186,6 +186,14 @@ class ServiceOrderController extends Controller
             'interruption_reason' => 'nullable|required_if:status,interrupted|string|max:10000',
         ]);
 
+        if ($r->user()->hasRole('Funcionário')) {
+            abort_if(
+                in_array($data['status'], ['completed', 'interrupted', 'paid'], true),
+                403,
+                'Funcionário não pode concluir, interromper ou registrar a retirada/pagamento de uma OS.'
+            );
+        }
+
         if ($data['status'] === 'completed') {
             abort(422, 'Use a finalização para concluir a OS.');
         }
