@@ -76,23 +76,19 @@ function installManualField() {
     select.required = false;
   }
 
-  if (makerSelect) nativeSetSelect(makerSelect, '');
+  if (makerSelect && makerSelect.value) nativeSetSelect(makerSelect, '');
 
-  if (typeSelect) {
+  if (typeSelect && form.dataset.arlManualEquipmentInitialized !== '1') {
     const manualOption = Array.from(typeSelect.options).find(
       (option) => option.textContent?.trim() === INTERNAL_EQUIPMENT,
     );
     if (manualOption) {
-      nativeSetSelect(typeSelect, manualOption.value);
+      if (!typeSelect.value) nativeSetSelect(typeSelect, manualOption.value);
       form.dataset.arlManualEquipmentInitialized = '1';
     }
   }
 
   let field = section.querySelector<HTMLLabelElement>('.arl-manual-equipment-field');
-  const fieldIsReady = form.dataset.arlManualEquipmentInitialized === '1'
-    && field?.querySelector<HTMLInputElement>('[data-arl-equipment-description]')?.required === true;
-  if (fieldIsReady) return;
-
   if (!field) {
     field = document.createElement('label');
     field.className = 'field arl-manual-equipment-field';
@@ -212,33 +208,22 @@ function installFetch() {
 }
 
 let queued = false;
-const observer = new MutationObserver(scheduleSync);
-
-function observe() {
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-}
-
 function scheduleSync() {
   if (queued) return;
   queued = true;
   window.requestAnimationFrame(() => {
     queued = false;
-    observer.disconnect();
-    try {
-      installStyles();
-      installManualField();
-      removeAutomaticCatalogEditors();
-      normalizeChecklistLabels();
-      cleanupUnexpectedOpeningModal();
-      syncOrderDetailDescription();
-    } finally {
-      observe();
-    }
+    installStyles();
+    installManualField();
+    removeAutomaticCatalogEditors();
+    normalizeChecklistLabels();
+    cleanupUnexpectedOpeningModal();
+    syncOrderDetailDescription();
   });
 }
 
 installFetch();
-observe();
+new MutationObserver(scheduleSync).observe(document.documentElement, { childList: true, subtree: true });
 document.addEventListener('DOMContentLoaded', scheduleSync);
 window.addEventListener('arl:order-detail', scheduleSync);
 scheduleSync();

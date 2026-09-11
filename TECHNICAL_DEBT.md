@@ -72,3 +72,7 @@ Não iniciar automaticamente após este documento:
 - qualquer mudança na ordem das próximas fases.
 
 A ordem das próximas fases deve ser definida pelo usuário antes de novos commits funcionais.
+
+### Campo de equipamento manual na Nova OS
+
+O enhancer legado `resources/js/manual-equipment.ts` disputa o DOM do formulário de Nova OS com o React. Manter seu `MutationObserver` ligado preserva a renderização do Checklist de Entrada, mas trava o botão de salvar no Mobile/Tablet; desconectá-lo durante a sincronização inverte os dois efeitos. A correção definitiva é renderizar o campo de equipamento manual pelo React. O teste que protege a barra fixa nos containers roláveis foi preservado em `docs/pendencias/teste-mobile-barra-fixa.md` e deve ser reintroduzido junto dessa migração.
