@@ -123,8 +123,7 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
   for (const fontSize of fontSizes) expect(fontSize).toBeGreaterThanOrEqual(16);
 
   await page.locator('.os-form section').filter({ hasText: 'Dados do cliente' }).locator('select').selectOption(String(client.body.id));
-  const equipmentSelect = page.locator('.os-form section').filter({ hasText: 'Dados do equipamento' }).locator('select').first();
-  await equipmentSelect.selectOption({ index: 1 });
+  await page.getByLabel('Equipamento / Modelo / Acessórios *').fill('Notebook para validação mobile');
   await page.getByLabel('Problema relatado *').fill('Validação do botão de salvar no mobile');
   const createOrder = page.getByRole('button', { name: 'Criar ordem de serviço' });
   await assertAboveBottomBar(createOrder);
