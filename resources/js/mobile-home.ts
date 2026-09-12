@@ -1,4 +1,5 @@
 import '../css/mobile-home.css';
+import { isReopenedOrder } from './order-reopened';
 
 export {};
 
@@ -35,6 +36,7 @@ function isEffectiveMobile() {
 }
 
 function isDashboardVisible() {
+  if (document.querySelector('[data-arl-dashboard-react="1"]')) return true;
   return Array.from(document.querySelectorAll<HTMLHeadingElement>('main h1')).some(
     (heading) => heading.textContent?.trim() === 'Painel',
   );
@@ -88,7 +90,8 @@ function renderOrders(list: HTMLElement, orders: MobileOrder[]) {
 
   orders.forEach((order) => {
     const card = document.createElement('article');
-    card.className = 'arl-mobile-order-card';
+    const reopened = isReopenedOrder(order);
+    card.className = `arl-mobile-order-card${reopened ? ' arl-mobile-order-reopened' : ''}`;
     card.dataset.orderId = String(order.id);
     card.tabIndex = 0;
     card.setAttribute('role', 'button');
@@ -107,6 +110,12 @@ function renderOrders(list: HTMLElement, orders: MobileOrder[]) {
     meta.textContent = `OS #${order.number} · ${statusLabels[order.status] || order.status}`;
 
     info.append(client, meta);
+    if (reopened) {
+      const marker = document.createElement('span');
+      marker.className = 'arl-reopened-marker';
+      marker.textContent = 'Reaberta';
+      info.append(marker);
+    }
 
     const actions = document.createElement('div');
     actions.className = 'arl-mobile-order-actions';

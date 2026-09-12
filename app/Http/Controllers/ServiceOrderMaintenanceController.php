@@ -241,7 +241,10 @@ class ServiceOrderMaintenanceController extends Controller
             ]);
         });
 
-        return response()->json($order->fresh()->load(['client', 'items', 'histories.user:id,name']));
+        $payload = $order->fresh()->load(['client', 'items', 'histories.user:id,name'])->toArray();
+        $payload['reopened'] = true;
+
+        return response()->json($payload);
     }
 
     private function resolveChecklist(ServiceOrder $order, array $requested): array

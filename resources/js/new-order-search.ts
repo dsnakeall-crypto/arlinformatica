@@ -1,3 +1,4 @@
+import { reactPageActive } from './react-ownership';
 import '../css/new-order-search.css';
 
 export {};
@@ -215,7 +216,7 @@ function installServiceSearch() {
   });
 }
 
-function installAll() {
+function installAll() { if (reactPageActive('new-order')) return;
   installEquipmentSearch();
   installServiceSearch();
 }

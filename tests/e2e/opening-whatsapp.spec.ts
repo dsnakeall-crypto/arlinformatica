@@ -1,3 +1,4 @@
+import { selectNewOrderClient } from './helpers';
 import { expect, test } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
@@ -22,7 +23,7 @@ test('abertura da OS mostra um único popup e prepara a mensagem fixa do WhatsAp
 
   await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
   await expect(page.locator('.os-form')).toBeVisible();
-  await page.locator('.os-form section').first().locator('select').selectOption(String(createdClient.body.id));
+  await selectNewOrderClient(page, createdClient.body.id);
   await page.getByLabel('Equipamento / Modelo / Acessórios *').fill('Notebook homologação WhatsApp');
   await page.getByLabel('Problema relatado *').fill('Teste da mensagem fixa de abertura');
   await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
@@ -85,7 +86,6 @@ test('Configurações não oferece mais edição da mensagem de abertura', async
   await expect(page.locator('.arl-opening-message-panel')).toBeHidden();
   await expect(page.locator('.arl-message-subnav')).toBeHidden();
   const postMessagePanels = page.locator('.arl-post-message-panel');
-  await expect(postMessagePanels).toHaveCount(2);
-  expect(await postMessagePanels.evaluateAll((panels) => panels.map((panel) => panel.hidden))).toEqual([true, true]);
+  await expect(postMessagePanels).toHaveCount(0);
   await expect(page.locator('.arl-opening-message-panel').getByText('Mensagem de abertura da OS', { exact: true })).toBeHidden();
 });

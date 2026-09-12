@@ -1,11 +1,12 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { Camera, Pencil, Plus, Wallet, X } from 'lucide-react';
+import { Camera, Pencil, Plus, RotateCcw, Wallet, X } from 'lucide-react';
 import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
 import OrderAuditHistory from './order-audit-history';
 import '../css/order-detail-layout.css';
 import { OrderPaymentFigures } from './finance-refund-summary';
+import { isReopenedOrder } from './order-reopened';
 
-type Props = { id: number; back: () => void; onEdit?: () => void; onDirtyChange?: (dirty: boolean) => void; onOpenClientHistory?: (clientId: number) => void };
+type Props = { reopenOnLoad?: boolean; id: number; back: () => void; onEdit?: () => void; onDirtyChange?: (dirty: boolean) => void; onOpenClientHistory?: (clientId: number) => void };
 type ApiError = Error & { errors?: Record<string, string[]> };
 type PaymentSummary = { total_cents: number; paid_cents: number; balance_cents: number; collectible_balance_cents: number; status: 'unpaid' | 'partial' | 'paid'; payments: any[]; refunded_cents: number; refundable_cents: number; refunds: any[] };
 
@@ -38,6 +39,11 @@ const masks = {
   },
   phone: (value: string) => digits(value).slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2'),
 };
+
+const OFFICIAL_ACTION_ICONS = {
+  whatsapp: '/arl-assets/icons/icon-whatsapp.png',
+  maps: '/arl-assets/icons/icon-maps.png',
+} as const;
 const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
 const statusLabel: Record<string, string> = {
   analysis: 'Em Análise',
@@ -53,7 +59,7 @@ function TextField({ label, value, onChange, required = false, type = 'text', na
   return <label className="field"><span>{label}{required ? ' *' : ''}</span><input name={name} type={type} value={value} onChange={onChange} required={required}/></label>;
 }
 
-function CameraModal({ onClose, onFile }: { onClose: () => void; onFile: (file: File) => void }) {
+export function CameraModal({ onClose, onFile }: { onClose: () => void; onFile: (file: File) => void }) {
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const [error, setError] = useState('');
@@ -363,7 +369,7 @@ function FinalShareCard({ order, share, onClose }: { order: any; share: FinalSha
   return <div className="arl-final-share-host"><section className="arl-final-share-card" role="status" aria-label="Compartilhar fechamento da OS"><h2>OS #{order.number} finalizada</h2><p>O PDF Final está pronto. O link abaixo expira em 48 horas; o PDF original continua preservado no histórico.</p><div className="arl-final-share-actions"><a target="_blank" rel="noreferrer" href={share.url}>Abrir PDF</a>{whatsapp && <a className="whatsapp" target="_blank" rel="noreferrer" href={whatsapp} onClick={(e) => { e.preventDefault(); if (window.confirm('Deseja abrir o WhatsApp para enviar a mensagem de finalização desta OS?')) window.open(whatsapp, '_blank', 'noopener'); }}>Enviar PDF pelo WhatsApp</a>}<button type="button" onClick={onClose}>Fechar</button></div></section></div>;
 }
 
-export default function OrderDetailPage({ id, back, readOnly = false, onEdit, onDirtyChange, onOpenClientHistory }: Props & { readOnly?: boolean }) {
+export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLoad = false, onEdit, onDirtyChange, onOpenClientHistory }: Props & { readOnly?: boolean }) {
   const [order, setOrder] = useState<any>(), [role, setRole] = useState<string | null>(null), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [reopenOpen, setReopenOpen] = useState(false), [reopenNote, setReopenNote] = useState(''), [interruptOpen, setInterruptOpen] = useState(false), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [servicesDirty, setServicesDirty] = useState(false), [finalReportDirty, setFinalReportDirty] = useState(false), [share, setShare] = useState<FinalShare | null>(null), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null), statusSelect = useRef<HTMLSelectElement>(null), pendingServicesSave = useRef<null | (() => Promise<any>)>(null);
   const load = async () => { try { const next = await api(`/orders/${id}`); setOrder(next); if (!finalReportDirty) setFinalReport(next.final_report || (next.status === 'completed' ? next.technical_report || '' : '')); setError(''); } catch (e: any) { setError(e.message); } };
@@ -376,8 +382,13 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
   }, [id]);
   useEffect(() => { onDirtyChange?.(servicesDirty || finalReportDirty); }, [servicesDirty, finalReportDirty, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [id, onDirtyChange]);
+  useEffect(() => {
+    if (reopenOnLoad && order?.status === 'completed' && ['Master', 'Administrador'].includes(role || '')) setReopenOpen(true);
+  }, [reopenOnLoad, order?.id, order?.status, role]);
+
   if (error) return <div className="state error">{error}</div>; if (!order || role === null) return <div className="state">Carregando OS…</div>;
   const immutable = Boolean(order.archived || order.status === 'completed');
+  const reopened = isReopenedOrder(order);
   const persistPendingChanges = async () => {
     let persistedOrder = order;
     if (finalReportDirty) {
@@ -434,7 +445,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
   const mapsAddress = [order.client?.street, order.client?.number, order.client?.district, order.client?.city, order.client?.state].filter(Boolean).join(', ');
   const mapsUrl = order.mobile_actions?.maps_url || (mapsAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsAddress)}` : '');
   if (readOnly) return <div data-arl-order-detail-react="1" data-mobile-read-only="1" className="arl-mobile-read-only">
-    <header className="arl-mobile-read-only-header"><button type="button" onClick={back} aria-label="Voltar para OS abertas">←</button><div><span>ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1></div></header>
+    <header className="arl-mobile-read-only-header"><button type="button" onClick={back} aria-label="Voltar para OS abertas">←</button><div><span>ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}</div></header>
     <div className="arl-read-only-banner">Somente leitura · edite pelo PC</div>
     <div className="arl-mobile-read-only-actions">{openingWhatsapp && <a href={openingWhatsapp} target="_blank" rel="noreferrer">WhatsApp</a>}{mapsUrl && <a href={mapsUrl} target="_blank" rel="noreferrer">Rota</a>}</div>
     <details className="arl-opening-call"><summary>PDF's e Reaberturas OS</summary><div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">Reabrir OS</span>)}</div></details>
@@ -453,20 +464,20 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
     <header className="arl-order-sticky-header">
       <div className="arl-order-header-main">
         <button type="button" className="arl-order-back" onClick={back}>← Voltar</button>
-        <div className="arl-order-header-identity"><span className="arl-eyebrow">ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1><div className="arl-order-header-meta"><span className="arl-order-client-link"><strong>{order.client.name}</strong>{onOpenClientHistory&&<button type="button" onClick={()=>onOpenClientHistory(order.client.id)}>Ver histórico do cliente</button>}</span><span>{order.equipment_description || 'Equipamento não informado'}</span><span>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</span></div></div>
+        <div className="arl-order-header-identity"><span className="arl-eyebrow">ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}<div className="arl-order-header-meta"><span className="arl-order-client-link"><strong>{order.client.name}</strong>{onOpenClientHistory&&<button type="button" onClick={()=>onOpenClientHistory(order.client.id)}>Ver histórico do cliente</button>}</span><span>{order.equipment_description || 'Equipamento não informado'}</span><span>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</span></div></div>
         <label className={`status-picker status-${shownStatus}`}><span>Status</span><select ref={statusSelect} value={shownStatus} disabled={order.archived} onChange={(e) => void changeStatus(e.target.value)}>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       </div>
       <div className="arl-order-quick-actions arl-order-header-actions">
-        <button type="button" className="arl-od-btn" onClick={editOrder}><Pencil/><span>Editar OS</span></button>
+        {order.status === 'completed' ? canAdminister && <button type="button" className="arl-od-btn" onClick={() => setReopenOpen(true)}><RotateCcw/><span>Reabrir OS</span></button> : !immutable && <button type="button" className="arl-od-btn" onClick={editOrder}><Pencil/><span>Editar OS</span></button>}
         {order.status !== 'completed' && <button type="button" data-quick="budget" onClick={() => setBudgetSignal((x) => x + 1)}><Plus/><span>Gerar orçamento</span></button>}
         {paymentEnabled && <button type="button" className="primary" data-quick="payment" onClick={() => setPaymentSignal((x) => x + 1)}><Wallet/><span>{paymentSummary?.paid_cents ? 'Registrar novo pagamento' : 'Registrar pagamento'}</span></button>}
         <details className="arl-opening-call"><summary>PDF's e Reaberturas OS</summary>{' '}<div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">Reabrir OS</span>)}</div></details>
       </div>
     </header>
     <ol className="arl-order-stage-rail" aria-label="Etapas da Ordem de Serviço">{stages.map((stage, index) => { const state = stageState(index); return <li key={stage} data-stage-state={state} className={`arl-order-stage ${state}`} aria-current={state === 'current' ? 'step' : undefined}><span>{index + 1}</span><b>{stage}</b></li>; })}</ol>
-    {order.attendance_type === 'external' && <div className="contact-links external-actions" aria-label="Atalhos do atendimento externo"><a href={order.mobile_actions?.whatsapp_url} target="_blank" rel="noreferrer" aria-label="WhatsApp">WhatsApp</a><a href={order.mobile_actions?.maps_url} target="_blank" rel="noreferrer" aria-label="Google Maps">Maps</a><button type="button" aria-label="Adicionar foto" onClick={() => setPhotoChoice(true)}>Foto</button><button type="button" aria-label="Status" onClick={() => statusSelect.current?.focus()}>Status</button>{canAdminister && <button type="button" data-arl-finalize="1" disabled={immutable} onClick={() => setFinalSignal((x) => x + 1)}>Finalizar</button>}</div>}
+    {order.attendance_type === 'external' && <div className="contact-links external-actions" aria-label="Atalhos do atendimento externo"><a href={order.mobile_actions?.whatsapp_url} target="_blank" rel="noreferrer" aria-label="WhatsApp" title="WhatsApp"><img className="arl-official-action-icon" src={OFFICIAL_ACTION_ICONS.whatsapp} alt="" aria-hidden="true"/></a><a href={order.mobile_actions?.maps_url} target="_blank" rel="noreferrer" aria-label="Google Maps" title="Google Maps"><img className="arl-official-action-icon" src={OFFICIAL_ACTION_ICONS.maps} alt="" aria-hidden="true"/></a></div>}
     <section className="panel arl-intake-card" aria-labelledby="arl-intake-title">
-      <div className="section-title arl-intake-title"><div><span className="arl-eyebrow">ENTRADA</span><h2 id="arl-intake-title">Ficha de entrada</h2></div><button type="button" className="arl-od-btn" onClick={editOrder}><Pencil/><span>Editar ficha</span></button></div>
+      <div className="section-title arl-intake-title"><div><span className="arl-eyebrow">ENTRADA</span><h2 id="arl-intake-title">Ficha de entrada</h2></div>{!immutable&&<button type="button" className="arl-od-btn" onClick={editOrder}><Pencil/><span>Editar ficha</span></button>}</div>
       <div className="arl-intake-row"><h3>Cliente</h3><div><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></div></div>
       <div className="arl-intake-row"><h3>Equipamento / Modelo / Acessórios</h3><div><p>Identificação exibida no cabeçalho fixo.</p></div></div>
       <div className="arl-intake-row"><h3>Problema relatado</h3><div><p>{order.reported_problem}</p></div></div>

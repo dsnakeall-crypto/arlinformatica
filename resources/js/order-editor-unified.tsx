@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ClipboardList, FileText, Save, X } from 'lucide-react';
 import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
 
 type Props = {
@@ -34,11 +35,9 @@ const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
 
 export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyChange }: Props) {
   const [order, setOrder] = useState<any>();
-  const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [catalog, setCatalog] = useState<ServiceProductCatalogItem[]>([]);
   const [termIssued, setTermIssued] = useState(false);
-  const [clientId, setClientId] = useState('');
   const [equipment, setEquipment] = useState('');
   const [attendance, setAttendance] = useState('bench');
   const [problem, setProblem] = useState('');
@@ -56,8 +55,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     void (async () => {
       try {
         const nextOrder = await api(`/orders/${orderId}`);
-        const [clientPayload, checklistRows, serviceRows, documents] = await Promise.all([
-          api('/clients?all=1'),
+        const [checklistRows, serviceRows, documents] = await Promise.all([
           api(`/catalogs/checklist?equipment_type_id=${nextOrder.equipment_type_id}`),
           api('/catalogs/services'),
           api(`/orders/${orderId}/documents`),
@@ -82,11 +80,9 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
           }));
 
         setOrder(nextOrder);
-        setClients(Array.isArray(clientPayload?.data) ? clientPayload.data : []);
         setTemplates(nextTemplates);
         setCatalog(Array.isArray(serviceRows) ? serviceRows.filter((row: any) => row.active !== false) : []);
         setTermIssued(Array.isArray(documents) && documents.some((row: any) => row.type === 'term'));
-        setClientId(String(nextOrder.client_id));
         setEquipment(nextOrder.equipment_description || '');
         setAttendance(nextOrder.attendance_type);
         setProblem(nextOrder.reported_problem || '');
@@ -104,8 +100,6 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     return <div className="modal"><section className="modal-card arl-od-card" role="dialog" aria-modal="true" aria-label="Editar OS"><h2>Editar OS</h2><p>{error || 'Carregando dados…'}</p><div className="arl-od-actions"><button type="button" onClick={onClose}>Fechar</button></div></section></div>;
   }
 
-  const administrativeOnly = Boolean(order.archived || order.status === 'completed');
-  const clientChanged = Number(clientId) !== Number(order.client_id);
   const equipmentChanged = equipment.trim() !== String(order.equipment_description || '').trim();
   const markDirty = () => setDirty(true);
 
@@ -143,13 +137,10 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
       };
       if (equipmentChanged) payload.equipment_description = equipment.trim();
 
-      if (!administrativeOnly) {
-        if (clientChanged) payload.client_id = Number(clientId);
-        payload.checklist = templates
-          .filter((row) => checks[Number(row.id)]?.selected)
-          .map((row) => ({ template_id: Number(row.id), note: checks[Number(row.id)]?.note.trim() || null }));
-        payload.items = items.map((row) => ({ catalog_id: row.catalog_id, quantity: row.quantity }));
-      }
+      payload.checklist = templates
+        .filter((row) => checks[Number(row.id)]?.selected)
+        .map((row) => ({ template_id: Number(row.id), note: checks[Number(row.id)]?.note.trim() || null }));
+      payload.items = items.map((row) => ({ catalog_id: row.catalog_id, quantity: row.quantity }));
 
       await api(`/orders/${orderId}`, { method: 'PATCH', body: JSON.stringify(payload) });
       setDirty(false);
@@ -162,44 +153,32 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     }
   };
 
-  const currentClientInList = clients.some((client) => Number(client.id) === Number(order.client_id));
   const subtotal = items.reduce((sum, row) => sum + row.quantity * row.unit_price_cents, 0);
 
-  return <div className="modal"><section className="modal-card arl-od-card" role="dialog" aria-modal="true" aria-label={`Editar OS #${order.number}`}>
-    <h2>Editar OS #{order.number}</h2>
-    <p>{administrativeOnly ? 'Correção administrativa: atendimento, problema relatado e equipamento podem ser corrigidos. Fechamento, valores, cliente, laudo final, checklist e serviços permanecem preservados.' : 'Cliente, equipamento, atendimento, relato, checklist e serviços são salvos juntos nesta OS.'}</p>
-
-    {!administrativeOnly && <>
-      <label>Cliente<select aria-label="Cliente da OS" value={clientId} onChange={(event) => { markDirty(); setClientId(event.target.value); }}>
-        {!currentClientInList && <option value={order.client_id}>{order.client?.name || `Cliente #${order.client_id}`}</option>}
-        {clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
-      </select></label>
-      {termIssued && clientChanged && <div className="notice" role="alert">Atenção: o Termo de Recebimento já emitido permanece com o cliente {order.client?.name}. A troca será registrada na OS e na auditoria, sem reescrever o documento assinado.</div>}
-    </>}
-
+  return <div className="modal"><section className="modal-card arl-od-card arl-unified-editor" role="dialog" aria-modal="true" aria-label={`Editar OS #${order.number}`}>
+    <header className="arl-unified-editor-header"><div className="arl-unified-editor-heading"><span className="arl-unified-editor-icon"><FileText/></span><div><h2>Editar OS #{order.number}</h2><p>Atualize os dados técnicos, o atendimento, o checklist e os serviços desta OS.</p></div></div><button type="button" className="arl-unified-editor-close" aria-label="Fechar" onClick={close}><X/></button></header>
+    <div className="arl-unified-editor-fields">
     <label>Equipamento / Modelo / Acessórios<textarea aria-label="Equipamento / Modelo / Acessórios" maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }}/></label>
     {termIssued && equipmentChanged && <div className="notice">O Termo de Recebimento já emitido mantém a descrição anterior do equipamento.</div>}
 
     <label>Atendimento<select aria-label="Atendimento" value={attendance} onChange={(event) => { markDirty(); setAttendance(event.target.value); }}><option value="bench">Bancada</option><option value="external">Externo</option></select></label>
-    <label>Problema relatado<textarea aria-label="Problema relatado" value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }}/></label>
+    <label>Problema relatado<textarea aria-label="Problema relatado" value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }}/></label></div>
 
-    {!administrativeOnly && <>
-      <h3>Checklist</h3>
-      <div className="arl-od-checks">{templates.length ? templates.map((row) => {
-        const state = checks[Number(row.id)] || { selected: false, note: '' };
-        return <div key={row.id}>
-          <label><input type="checkbox" aria-label={row.label} checked={state.selected} onChange={(event) => updateCheck(Number(row.id), { selected: event.target.checked })}/>{row.label}</label>
-          {state.selected && row.allows_note && <label>Observação de {row.label}<input aria-label={`Observação de ${row.label}`} value={state.note} onChange={(event) => updateCheck(Number(row.id), { note: event.target.value })}/></label>}
-        </div>;
-      }) : <span>Nenhuma opção para este equipamento.</span>}</div>
+    <div className="arl-unified-editor-section-title"><span className="arl-unified-editor-icon"><ClipboardList/></span><h3>Checklist</h3></div>
+    <div className="arl-od-checks">{templates.length ? templates.map((row) => {
+      const state = checks[Number(row.id)] || { selected: false, note: '' };
+      return <div key={row.id}>
+        <label><input type="checkbox" aria-label={row.label} checked={state.selected} onChange={(event) => updateCheck(Number(row.id), { selected: event.target.checked })}/>{row.label}</label>
+        {state.selected && row.allows_note && <label>Observação de {row.label}<input aria-label={`Observação de ${row.label}`} value={state.note} onChange={(event) => updateCheck(Number(row.id), { note: event.target.value })}/></label>}
+      </div>;
+    }) : <span>Nenhuma opção para este equipamento.</span>}</div>
 
-      <h3>Serviços / Produtos</h3>
-      <ServiceProductSearch items={catalog} ariaLabel="Pesquisar Serviço / Produto no editor" onSelect={addService}/>
-      <div className="arl-od-lines">{items.length ? items.map((row, index) => <div className="arl-od-line" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade no editor de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(event) => { markDirty(); setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: Math.max(1, Math.min(999, Number(event.target.value) || 1)) } : item)); }}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" aria-label={`Remover ${row.description} do editor`} onClick={() => { markDirty(); setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)); }}>×</button></div>) : <p>Nenhum serviço adicionado.</p>}</div>
-      <div className="arl-od-foot"><span/><strong>Subtotal: {money(subtotal)}</strong></div>
-    </>}
+    <div className="arl-unified-editor-section-title"><span className="arl-unified-editor-icon"><FileText/></span><h3>Serviços / Produtos</h3></div>
+    <ServiceProductSearch items={catalog} ariaLabel="Pesquisar Serviço / Produto no editor" onSelect={addService}/>
+    <div className="arl-od-lines">{items.length ? items.map((row, index) => <div className="arl-od-line" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade no editor de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(event) => { markDirty(); setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: Math.max(1, Math.min(999, Number(event.target.value) || 1)) } : item)); }}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" aria-label={`Remover ${row.description} do editor`} onClick={() => { markDirty(); setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)); }}>×</button></div>) : <p>Nenhum serviço adicionado.</p>}</div>
+    <div className="arl-od-foot"><span/><strong>Subtotal: {money(subtotal)}</strong></div>
 
     {error && <div className="alert">{error}</div>}
-    <div className="arl-od-actions"><button type="button" onClick={close}>Cancelar</button><button type="button" className="primary" disabled={busy} onClick={save}>{busy ? 'Salvando…' : 'Salvar alterações'}</button></div>
+    <div className="arl-od-actions"><button type="button" onClick={close}>Cancelar</button><button type="button" className="primary arl-od-save" disabled={busy} onClick={save}><Save/>{busy ? 'Salvando…' : 'Salvar alterações'}</button></div>
   </section></div>;
 }

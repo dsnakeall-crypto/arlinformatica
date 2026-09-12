@@ -1,9 +1,11 @@
+import { reactPageActive } from './react-ownership';
 export {};
 
 type OrderRow = {
   id: number;
   number: string;
   status: string;
+  archived?: boolean;
   attendance_type: 'bench' | 'external';
   reported_problem: string;
 };
@@ -99,7 +101,7 @@ let lastSignature = '';
 let role: string | null = null;
 
 async function syncOrders(force = false) {
-  if (syncRunning) return;
+  if (reactPageActive('orders') || syncRunning) return;
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Ordens de Serviço');
   const list = document.querySelector<HTMLElement>('.order-list');
   if (!heading || !list) { lastSignature = ''; return; }
@@ -116,6 +118,7 @@ async function syncOrders(force = false) {
     const page = await api(`/orders?q=${encodeURIComponent(search)}`);
     const orders = new Map<string, OrderRow>((page.data || []).map((order: OrderRow) => [String(order.number).replace(/\D/g, ''), order]));
 
+    if (reactPageActive('orders') || !list.isConnected) return;
     rows.forEach((row, index) => {
       const number = numbers[index];
       const order = orders.get(number);
@@ -127,6 +130,7 @@ async function syncOrders(force = false) {
       const view = Array.from(row.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent?.trim() === 'Ver OS');
       view?.classList.add('arl-order-view-button');
       if (!canMaintain) return;
+      if (order.status === 'completed' || order.archived) return;
 
       const actions = document.createElement('div');
       actions.className = 'arl-order-maintenance-actions';

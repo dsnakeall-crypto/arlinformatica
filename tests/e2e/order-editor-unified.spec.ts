@@ -21,11 +21,10 @@ async function hasUnsavedGuard(page: Page) {
 const formattedMoney = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
 const warrantyUnit = (unit: string | null) => unit === 'months' ? 'meses' : unit === 'years' ? 'anos' : 'dias';
 
-test('Editar OS usa um editor único para cliente, equipamento, atendimento, problema, checklist e serviços', async ({ page }) => {
+test('Editar OS usa um editor único e preserva o cliente enquanto corrige os demais dados', async ({ page }) => {
   await login(page);
   const suffix = Date.now();
   const originalName = `Cliente Editor ${suffix}`;
-  const replacementName = `Cliente Editor Novo ${suffix}`;
 
   const original = await api(page, '/clients', 'POST', {
     name: originalName,
@@ -38,19 +37,7 @@ test('Editar OS usa um editor único para cliente, equipamento, atendimento, pro
     city: 'Campos Gerais',
     state: 'MG',
   });
-  const replacement = await api(page, '/clients', 'POST', {
-    name: replacementName,
-    document: uniqueDocument(suffix + 1),
-    phone: '35999991002',
-    postal_code: '37160000',
-    street: 'Rua Editor',
-    number: '20',
-    district: 'Centro',
-    city: 'Campos Gerais',
-    state: 'MG',
-  });
   expect(original.status, JSON.stringify(original.body)).toBe(201);
-  expect(replacement.status, JSON.stringify(replacement.body)).toBe(201);
 
   const equipment = await api(page, '/catalogs/equipment');
   const services = await api(page, '/catalogs/services');
@@ -87,7 +74,7 @@ test('Editar OS usa um editor único para cliente, equipamento, atendimento, pro
 
   const dialog = page.getByRole('dialog', { name: `Editar OS #${created.body.number}` });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByLabel('Cliente da OS')).toBeVisible();
+  await expect(dialog.getByLabel('Cliente da OS')).toHaveCount(0);
   await expect(dialog.getByLabel('Equipamento / Modelo / Acessórios')).toBeVisible();
   await expect(dialog.getByLabel('Atendimento')).toBeVisible();
   await expect(dialog.getByLabel('Problema relatado')).toBeVisible();
@@ -107,9 +94,6 @@ test('Editar OS usa um editor único para cliente, equipamento, atendimento, pro
   await serviceResult.click();
   await expect(dialog.getByLabel(`Quantidade no editor de ${service.name}`), 'Contrato busca: selecionar item já presente deve incrementar a quantidade').toHaveValue('2');
 
-  await dialog.getByLabel('Cliente da OS').selectOption(String(replacement.body.id));
-  await expect(dialog.getByRole('alert')).toContainText(`Termo de Recebimento já emitido permanece com o cliente ${originalName}`);
-
   const changedEquipment = 'Notebook Dell Inspiron 15 + fonte + mochila';
   const changedProblem = 'Problema corrigido no editor unificado';
   await dialog.getByLabel('Equipamento / Modelo / Acessórios').fill(changedEquipment);
@@ -125,7 +109,7 @@ test('Editar OS usa um editor único para cliente, equipamento, atendimento, pro
     const request = response.request();
     if (new URL(response.url()).pathname !== `/api/orders/${created.body.id}` || request.method() !== 'PATCH') return false;
     const body = request.postDataJSON();
-    return Number(body?.client_id) === Number(replacement.body.id)
+    return !Object.prototype.hasOwnProperty.call(body || {}, 'client_id')
       && body?.equipment_description === changedEquipment
       && body?.attendance_type === 'external'
       && body?.reported_problem === changedProblem
@@ -142,8 +126,8 @@ test('Editar OS usa um editor único para cliente, equipamento, atendimento, pro
 
   const persisted = await api(page, `/orders/${created.body.id}`);
   expect(persisted.status).toBe(200);
-  expect(Number(persisted.body?.client_id)).toBe(Number(replacement.body.id));
-  expect(persisted.body?.client?.name).toBe(replacementName);
+  expect(Number(persisted.body?.client_id)).toBe(Number(original.body.id));
+  expect(persisted.body?.client?.name).toBe(originalName);
   expect(persisted.body?.equipment_description).toBe(changedEquipment);
   expect(persisted.body?.attendance_type).toBe('external');
   expect(persisted.body?.reported_problem).toBe(changedProblem);
@@ -151,7 +135,7 @@ test('Editar OS usa um editor único para cliente, equipamento, atendimento, pro
   const persistedItem = persisted.body?.items?.find((row: any) => !row.finalization_id && Number(row.catalog_id) === Number(service.id));
   expect(Number(persistedItem?.quantity)).toBe(3);
 
-  await expect(root.getByText(replacementName, { exact: true })).toBeVisible();
+  await expect(root.getByText(originalName, { exact: true })).toBeVisible();
   await expect(root.getByText(changedEquipment, { exact: true })).toBeVisible();
   await expect(root.getByText(changedProblem, { exact: true })).toBeVisible();
 });

@@ -21,7 +21,9 @@ class ServiceOrderController extends Controller
     public function index(Request $r, PostSaleService $postSales): JsonResponse
     {
         $postSales->catchUp(true);
-        $q = ServiceOrder::query()->with('client:id,name,phone,street,number,district,city,state');
+        $q = ServiceOrder::query()
+            ->with('client:id,name,phone,street,number,district,city,state')
+            ->withExists(['histories as reopened' => fn ($history) => $history->where('from_status', 'completed')->where('to_status', 'analysis')]);
         $requestedStatus = (string) $r->query('status', '');
         $tab = (string) $r->query('tab', 'all');
         if ($r->has('finalized')) {
@@ -63,6 +65,7 @@ class ServiceOrderController extends Controller
         $postSales->catchUp(true);
         $orders = ServiceOrder::query()
             ->with('client:id,name,phone,street,number,district,city,state')
+            ->withExists(['histories as reopened' => fn ($history) => $history->where('from_status', 'completed')->where('to_status', 'analysis')])
             ->where('status', '!=', 'completed')
             ->oldest('received_at')
             ->get();
@@ -151,6 +154,7 @@ class ServiceOrderController extends Controller
         $order->load(['client', 'checklists', 'items', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']);
         $payload = $order->toArray();
         $payload['display_status'] = $order->archived ? 'paid' : $order->status;
+        $payload['reopened'] = $order->histories->contains(fn ($history) => $history->from_status === 'completed' && $history->to_status === 'analysis');
         $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;
         if ($order->attendance_type === 'external') {
             $message = "Olá, {$order->client->name}. Aqui é a ARL Informática sobre a OS #{$order->number}.";

@@ -1,3 +1,4 @@
+import { reactPageActive, reactOwnedSelector } from './react-ownership';
 export {};
 
 type OrderScope = 'active' | 'finalized';
@@ -96,7 +97,7 @@ function installFetchWorkflow() {
     const method = (init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
     const reactDetail = reactOrderDetailActive();
 
-    if (url.origin === location.origin && url.pathname === '/api/orders' && method === 'GET') {
+    if (!reactPageActive('orders') && !reactPageActive('dashboard') && !reactOrderDetailActive() && url.origin === location.origin && url.pathname === '/api/orders' && method === 'GET' && !url.searchParams.has('tab')) {
       url.searchParams.set('finalized', scope() === 'finalized' ? '1' : '0');
       nextInput = input instanceof Request ? new Request(url.toString(), input) : url.toString();
     }
@@ -160,15 +161,17 @@ function forceOrdersReload() {
 function normalizeLabels() {
   const waitingLabel = 'Aguardando Peça';
   document.querySelectorAll<HTMLOptionElement>('option[value="waiting_part"]').forEach((option) => {
-    if (option.closest('[data-arl-order-detail-react="1"]')) return;
+    if (option.closest(reactOwnedSelector)) return;
     if (option.textContent?.trim() !== waitingLabel) option.textContent = waitingLabel;
   });
   document.querySelectorAll<HTMLElement>('.badge').forEach((badge) => {
+    if (badge.closest(reactOwnedSelector)) return;
     if (badge.textContent?.trim() === 'Aguardando Peça') badge.textContent = waitingLabel;
   });
 }
 
 function installFinalizedToggle() {
+  if (reactPageActive('orders')) return;
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Ordens de Serviço');
   if (!heading) return;
   const title = heading.closest<HTMLElement>('.title');
@@ -196,6 +199,7 @@ function installFinalizedToggle() {
 }
 
 function updateOrdersScopeUi() {
+  if (reactPageActive('orders')) return;
   const finalized = scope() === 'finalized';
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Ordens de Serviço');
   const title = heading?.closest<HTMLElement>('.title');

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import OrderDetailReact from './order-detail-react';
 import UnifiedOrderEditor from './order-editor-unified';
 
-type Props = { id: number; back: () => void; readOnly?: boolean; onDirtyChange?: (dirty: boolean) => void; onOpenClientHistory?: (clientId: number) => void };
+type Props = { initialAction?: 'edit' | 'reopen'; id: number; back: () => void; readOnly?: boolean; onDirtyChange?: (dirty: boolean) => void; onOpenClientHistory?: (clientId: number) => void };
 
 const UNSAVED_MESSAGE = 'Existem alterações não salvas. Deseja sair sem salvar?';
 const DETACHED_ORDER_ARTIFACTS = [
@@ -31,12 +31,12 @@ export default function OrderDetailPage(props: Props) {
   const hasUnsavedChanges = editorDirty || detailDirty;
 
   useEffect(() => {
-    setEditorOpen(false);
+    setEditorOpen(props.initialAction === 'edit' && !props.readOnly);
     setEditorDirty(false);
     setDetailDirty(false);
     cleanupDetachedOrderArtifacts();
     return cleanupDetachedOrderArtifacts;
-  }, [props.id]);
+  }, [props.id, props.initialAction, props.readOnly]);
 
   useEffect(() => {
     props.onDirtyChange?.(hasUnsavedChanges);
@@ -82,6 +82,7 @@ export default function OrderDetailPage(props: Props) {
     <OrderDetailReact
       key={`${props.id}-${detailRevision}`}
       id={props.id}
+      reopenOnLoad={props.initialAction === 'reopen'}
       back={guardBack}
       readOnly={props.readOnly}
       onEdit={openEditor}

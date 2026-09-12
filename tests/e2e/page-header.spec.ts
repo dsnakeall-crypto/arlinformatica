@@ -45,12 +45,29 @@ test('ações e contador integram a linha compacta do título', async ({ page })
 test('cabeçalho se adapta ao modo Mobile / Tablet sem overflow', async ({ page }) => {
   await login(page);
   await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
-  const header = page.getByTestId('page-header');
-  await expect(header.getByRole('heading', { name: 'Painel', exact: true })).toBeVisible();
-  const [headerBox, viewport] = await Promise.all([header.boundingBox(), page.evaluate(() => ({ width: document.documentElement.clientWidth }))]);
-  expect(headerBox).not.toBeNull();
-  expect((headerBox?.x ?? 0) + (headerBox?.width ?? 0)).toBeLessThanOrEqual(viewport.width);
+  const home = page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' });
+  for (const width of [390, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(page.getByTestId('page-header')).toHaveCount(0);
+    await expect(home).toBeVisible();
+    await expect(home.getByRole('heading', { name: 'OS abertas', exact: true })).toBeVisible();
+    const homeBox = await home.boundingBox();
+    expect(homeBox).not.toBeNull();
+    const viewport = await page.evaluate(() => document.documentElement.clientWidth);
+    expect(homeBox!.x).toBeGreaterThanOrEqual(0);
+    expect(homeBox!.x + homeBox!.width).toBeLessThanOrEqual(viewport);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport);
+  }
 
-  await page.getByRole('button', { name: 'Nova OS', exact: true }).last().click();
+  await page.locator('.arl-global-mobile-nav').getByRole('button', { name: 'Nova OS', exact: true }).click();
   await expect(page.getByTestId('page-header').getByRole('heading', { name: 'Abertura de Chamado / Nova OS', exact: true })).toBeVisible();
+  for (const width of [390, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    const headerBox = await page.getByTestId('page-header').boundingBox();
+    expect(headerBox).not.toBeNull();
+    const viewport = await page.evaluate(() => document.documentElement.clientWidth);
+    expect(headerBox!.x).toBeGreaterThanOrEqual(0);
+    expect(headerBox!.x + headerBox!.width).toBeLessThanOrEqual(viewport);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport);
+  }
 });

@@ -1,3 +1,4 @@
+import { selectNewOrderClient } from './helpers';
 import { expect, test } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
@@ -47,7 +48,7 @@ test.describe.serial('fluxo operacional principal', () => {
 
   test('abre OS externa com descrição manual, estado físico preenchido, foto e termo', async ({ page }) => {
     await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
-    await page.locator('.os-form section').first().locator('select').selectOption(String(clientId));
+    await selectNewOrderClient(page, clientId);
     const manualEquipment = 'Notebook Dell Inspiron 15 + carregador + mouse';
     await page.getByLabel('Equipamento / Modelo / Acessórios *').fill(manualEquipment);
     await page.getByRole('button', { name: 'ATENDIMENTO EXTERNO' }).click();

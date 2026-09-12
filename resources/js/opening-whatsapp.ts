@@ -1,3 +1,4 @@
+import { reactPageActive } from './react-ownership';
 export {};
 
 type OpeningClient = { name: string; phone: string };
@@ -130,7 +131,7 @@ function reveal(element: HTMLElement | null | undefined) {
   element.style.removeProperty('display');
 }
 
-function syncMessageSettings() {
+function syncMessageSettings() { if (reactPageActive('settings')) return;
   const settingsHeading = qa<HTMLHeadingElement>('main h1').find((item) => item.textContent?.trim() === 'Configurações');
   if (!settingsHeading) return;
 

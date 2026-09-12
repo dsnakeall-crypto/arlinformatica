@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { api, login, uniqueDocument } from './helpers';
+import { api, login, selectNewOrderClient, uniqueDocument } from './helpers';
 
 async function waitForOfficialIcons(page: Page, sources: string[]) {
   for (const src of sources) {
@@ -96,7 +96,9 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.locator('aside').getByRole('button', { name: 'Nova OS' }).click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
   const newOrderForm = page.locator('form.os-form');
-  await newOrderForm.locator('select').nth(0).selectOption(String(clientResponse.body.id));
+  await selectNewOrderClient(page, clientResponse.body.id);
+  await expect(newOrderForm.getByPlaceholder('Buscar por nome, telefone ou CPF/CNPJ')).toHaveValue(clientResponse.body.name);
+  await expect(newOrderForm.locator('.arl-client-results button')).toHaveCount(0);
   await newOrderForm.getByLabel('Equipamento / Modelo / Acessórios *').fill('Notebook Dell Inspiron 15 + carregador');
   await newOrderForm.getByLabel('Problema relatado *').fill('Notebook lento para referência da homologação visual.');
   await newOrderForm.locator('.opening-catalog button').first().click();

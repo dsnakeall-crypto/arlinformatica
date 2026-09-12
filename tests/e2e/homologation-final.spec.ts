@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { api, login, uniqueDocument } from './helpers';
+import { api, login, selectNewOrderClient, uniqueDocument } from './helpers';
 
 test('homologação final: itens da abertura, clientes desktop e fechamento real do menu mobile', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -40,7 +40,9 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await page.locator('aside').getByRole('button', { name: 'Nova OS' }).click();
   const form = page.locator('form.os-form');
   await expect(form.getByRole('heading', { name: 'Serviços / Itens da OS' })).toBeVisible();
-  await form.locator('select').nth(0).selectOption(String(clientResponse.body.id));
+  await selectNewOrderClient(page, clientResponse.body.id);
+  await expect(form.getByPlaceholder('Buscar por nome, telefone ou CPF/CNPJ')).toHaveValue(clientResponse.body.name);
+  await expect(form.locator('.arl-client-results button')).toHaveCount(0);
   await form.getByLabel('Equipamento / Modelo / Acessórios *').fill('Notebook Dell Inspiron 15 + carregador');
   await form.getByLabel('Problema relatado *').fill('Teste final de itens opcionais na abertura.');
   await form.locator('.opening-catalog button').filter({ hasText: service.name }).click();
@@ -51,6 +53,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   const orderResponse = await orderResponsePromise;
   expect(orderResponse.status()).toBe(201);
   const requestBody = orderResponse.request().postDataJSON();
+  expect(requestBody.client_id).toBe(clientResponse.body.id);
   expect(requestBody.items).toEqual([{ catalog_id: service.id, quantity: 1 }]);
   expect(requestBody.equipment_description).toBe('Notebook Dell Inspiron 15 + carregador');
   const created = await orderResponse.json();
@@ -58,6 +61,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await expect(page.getByRole('heading', { name: `OS #${created.number}`, exact: true })).toBeVisible();
   const detail = await api(page, `/orders/${created.id}`);
   expect(detail.status).toBe(200);
+  expect(detail.body.client.id).toBe(clientResponse.body.id);
   expect(detail.body.equipment_description).toBe('Notebook Dell Inspiron 15 + carregador');
   expect(detail.body.items).toHaveLength(1);
   expect(detail.body.items[0].description).toBe(service.name);

@@ -1,3 +1,4 @@
+import { reactOwnedSelector } from './react-ownership';
 import './order-detail-editor';
 export {};
 
@@ -67,6 +68,7 @@ function renderResults(results: HTMLElement, clients: ClientHit[], input: HTMLIn
 }
 
 function installStrongClientSearch(input: HTMLInputElement) {
+    if(input.closest(reactOwnedSelector)) return;
     if (input.dataset.arlStrongSearch === '1') return;
 
     const wrapper = input.closest<HTMLElement>('.arl-client-search');

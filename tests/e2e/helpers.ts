@@ -42,3 +42,11 @@ export function uniqueDocument(seed = Date.now()) {
   for (let i = 0; i < 10; i++) sum += Number(ten[i]) * (11 - i);
   return ten + (((sum * 10) % 11) % 10);
 }
+
+// Select through the React search rather than the retired hidden select.
+export async function selectNewOrderClient(page: Page, id: number) {
+  const client = await api(page, '/clients/' + id);
+  expect(client.status).toBe(200);
+  await page.locator('.arl-client-search input').fill(client.body.client.name);
+  await page.locator('.arl-client-results button[data-id="' + id + '"]').click();
+}

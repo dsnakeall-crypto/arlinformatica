@@ -1,3 +1,4 @@
+import { reactPageActive, reactOwnedSelector } from './react-ownership';
 export {};
 
 type FinalShare = { url: string; expires_at: string; revision: number };
@@ -48,13 +49,13 @@ function installStyles() {
 
 function normalizeStatuses() {
   qa<HTMLOptionElement>('.status-picker option, select[aria-label="Filtrar status"] option').forEach((option) => {
-    if (option.closest('[data-arl-order-detail-react="1"]')) return;
+    if (option.closest(reactOwnedSelector)) return;
     const label = STATUS_LABELS[option.value];
     if (label) option.textContent = label;
   });
 
   qa<HTMLElement>('.badge, .completion b, .completion strong, .completion span, .detail-grid section p').forEach((element) => {
-    if (element.closest('[data-arl-order-detail-react="1"]') || element.children.length) return;
+    if (element.closest(reactOwnedSelector) || element.children.length) return;
     const current = element.textContent?.trim() || '';
     if (LEGACY_LABELS[current]) {
       element.textContent = LEGACY_LABELS[current];
@@ -93,7 +94,7 @@ function setVisualIcon(action: HTMLElement, kind: keyof typeof ICONS) {
 
 function syncExactIcons() {
   qa<HTMLElement>('.client-list .contact-links a,.client-list .contact-links button,.dashboard-contact,.dashboard-address,.arl-order-mini-action,.dashboard-row:not(.head) button,.order-row:not(.head) button,.arl-client-delete,.arl-order-delete').forEach((action) => {
-    if (action.closest('[data-arl-clients-react="1"]') || action.closest('[data-arl-order-detail-react="1"]')) return;
+    if (action.closest(reactOwnedSelector) || action.closest('[data-arl-clients-react="1"]') || action.closest('[data-arl-order-detail-react="1"]')) return;
     const label = `${action.getAttribute('aria-label') || ''} ${action.getAttribute('title') || ''} ${action.textContent || ''}`;
     if (action.classList.contains('arl-client-delete') || action.classList.contains('arl-order-delete') || /Excluir/i.test(label)) return setVisualIcon(action, 'lixeira');
     if (action.classList.contains('dashboard-contact') || /WhatsApp/i.test(label)) return setVisualIcon(action, 'whatsapp');
@@ -103,7 +104,7 @@ function syncExactIcons() {
   });
 }
 
-function hideRetiredMessageEditors() {
+function hideRetiredMessageEditors() { if (reactPageActive('settings')) return;
   qa<HTMLTextAreaElement>('textarea[name="post_sale_follow_up"]').forEach((area) => {
     const field = area.closest<HTMLElement>('.field');
     if (field) field.remove();

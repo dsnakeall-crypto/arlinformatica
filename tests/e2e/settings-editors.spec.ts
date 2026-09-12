@@ -135,3 +135,62 @@ test('nova OS usa descrição manual e estado físico opcional independente do p
   await expect(page.getByLabel('Problema relatado *')).toHaveValue('');
   await expect(page.locator('.os-form').getByText('CHECKLIST DE ENTRADA')).toHaveCount(0);
 });
+
+// Provoke separate mutation/animation frames so a late enhancer cannot restore panels.
+async function assertNoLegacyPanelsAcrossObserverCycles(page: import('@playwright/test').Page) {
+  const violations = await page.evaluate(async () => {
+    const root = document.querySelector('[data-arl-settings-react="1"]')!;
+    const unexpected: string[] = [];
+    for (let cycle = 0; cycle < 12; cycle++) {
+      const probe = document.createElement('span');
+      root.append(probe);
+      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      if (root.querySelector('.arl-opening-message-panel, .arl-post-message-panel, .arl-message-subnav')) unexpected.push(`cycle ${cycle}`);
+      probe.remove();
+    }
+    return unexpected;
+  });
+  expect(violations).toEqual([]);
+}
+
+test('Empresa e Backup permanecem isolados após múltiplos ciclos dos observers', async ({ page }) => {
+  await login(page);
+  await page.locator('aside').getByRole('button', { name: 'Configurações', exact: true }).click();
+  await expect(page.getByLabel('Nome fantasia')).toBeVisible();
+  const root = page.locator('[data-arl-settings-react="1"]');
+  for (const section of ['company', 'backup', 'documents', 'company']) {
+    await page.locator(`.arl-settings-tab[data-section="${section}"]`).click();
+    if (section === 'company') {
+      await expect(root.locator('h2')).toHaveText(['Dados da Empresa']);
+      await root.getByText('Informações complementares', { exact: true }).click();
+      await expect(root.locator('input[name="instagram"]')).toBeVisible();
+      await expect(root.locator('input[name="google_review"]')).toBeVisible();
+      await expect(root.locator('textarea')).toHaveCount(0);
+    } else if (section === 'backup') {
+      await expect(root.getByRole('heading', { name: 'Backup e Restauração' })).toBeVisible();
+      await expect(root.getByLabel('Nome fantasia')).toHaveCount(0);
+    } else {
+      await expect(root.getByLabel('Texto do termo de recebimento')).toBeVisible();
+      await expect(root.getByRole('tab', { name: 'Mensagens ao cliente' })).toHaveCount(0);
+    }
+    await assertNoLegacyPanelsAcrossObserverCycles(page);
+    await expect(root.locator('.arl-opening-message-panel, .arl-post-message-panel, .arl-message-subnav')).toHaveCount(0);
+  }
+});
+
+test('Nova OS não cria seletor de equipamento nem fabricante após os observers', async ({ page }) => {
+  await login(page);
+  await page.locator('aside').getByRole('button', { name: 'Nova OS', exact: true }).click();
+  const root = page.locator('[data-arl-new-order-react="1"]');
+  const input = root.getByLabel('Equipamento / Modelo / Acessórios *');
+  await input.fill('Notebook + fonte + mouse');
+  await expect(root.getByRole('button', { name: 'Usar câmera', exact: false })).toBeVisible();
+  for (let cycle = 0; cycle < 4; cycle++) {
+    await input.fill(`Notebook + fonte + mouse ${cycle}`);
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect(root.getByLabel('Equipamento *', { exact: true })).toHaveCount(0);
+    await expect(root.getByLabel('Fabricante', { exact: true })).toHaveCount(0);
+    await expect(root.locator('.arl-deep-catalog-input')).toHaveCount(0);
+  }
+  await expect(input).toHaveValue('Notebook + fonte + mouse 3');
+});

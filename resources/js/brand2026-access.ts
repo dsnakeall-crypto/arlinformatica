@@ -1,3 +1,4 @@
+import { reactPageActive, reactOwnedSelector } from './react-ownership';
 import '../css/settings-editors.css';
 
 export {};
@@ -21,7 +22,7 @@ const documentSubtabs = [
   ['term', 'Termo de recebimento'],
 ] as const;
 
-function syncDocumentSubtabState() {
+function syncDocumentSubtabState() { if (reactPageActive('settings')) return;
   const active = document.documentElement.dataset.arlDocumentSubtab || 'term';
   document.querySelectorAll<HTMLButtonElement>('.arl-document-subtab').forEach((button) => {
     const selected = button.dataset.documentSubtab === active;
@@ -37,7 +38,7 @@ function autoSizeTextarea(area: HTMLTextAreaElement) {
   area.style.height = `${Math.max(220, area.scrollHeight + 2)}px`;
 }
 
-function syncSettingsEditorHeights() {
+function syncSettingsEditorHeights() { if (reactPageActive('settings')) return;
   document
     .querySelectorAll<HTMLTextAreaElement>(
       'textarea[data-arl-document-editor], .arl-opening-message-panel textarea, .report-settings textarea',
@@ -45,7 +46,7 @@ function syncSettingsEditorHeights() {
     .forEach(autoSizeTextarea);
 }
 
-function syncDocumentEditors() {
+function syncDocumentEditors() { if (reactPageActive('settings')) return;
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Configurações');
   if (!heading) return;
 
@@ -102,7 +103,7 @@ function syncDocumentEditors() {
   syncSettingsEditorHeights();
 }
 
-function removeChecklistSettingsEditor() {
+function removeChecklistSettingsEditor() { if (reactPageActive('settings')) return;
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Configurações');
   if (!heading) return;
 
@@ -143,7 +144,7 @@ function setNativeSelectValue(select: HTMLSelectElement, value: string) {
   select.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
-function syncNewOrderChecklist() {
+function syncNewOrderChecklist() { if (reactPageActive('new-order')) return;
   const details = Array.from(document.querySelectorAll<HTMLDetailsElement>('.os-form details')).find((item) =>
     item.querySelector('summary')?.textContent?.includes('CHECKLIST DE ENTRADA'),
   );
@@ -242,6 +243,8 @@ function syncSettingsAccess() {
   removeChecklistSettingsEditor();
   syncNewOrderChecklist();
 
+  if (reactPageActive('settings')) return;
+
   const heading = Array.from(document.querySelectorAll('h1')).find((item) => item.textContent?.trim() === 'Configurações');
   if (!heading) return;
 
@@ -295,6 +298,7 @@ document.addEventListener('click', (event) => {
 
 document.addEventListener('input', (event) => {
   const area = event.target instanceof HTMLTextAreaElement ? event.target : null;
+  if (area?.closest(reactOwnedSelector)) return;
   if (area?.matches('textarea[data-arl-document-editor], .arl-opening-message-panel textarea, .report-settings textarea')) {
     autoSizeTextarea(area);
   }

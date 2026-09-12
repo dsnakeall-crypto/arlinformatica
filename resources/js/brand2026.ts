@@ -1,3 +1,4 @@
+import { reactPageActive } from './react-ownership';
 export {};
 
 type ClientHit = {id:number;name:string;phone:string;document:string;city?:string;state?:string};
@@ -116,7 +117,7 @@ function titleEyebrow(title:HTMLElement, label:string){
   if(!q('.arl-eyebrow',group)){const e=document.createElement('span');e.className='arl-eyebrow';e.textContent=label;group.prepend(e)}
 }
 
-function enhanceDashboard(){
+function enhanceDashboard(){ if (reactPageActive('dashboard')) return;
   const h=q<HTMLHeadingElement>('h1'); if(text(h)!=='Painel' && text(h)!=='Mesa de Chamados') return;
   const title=h?.closest<HTMLElement>('.title'); if(title) titleEyebrow(title,text(h)==='Painel'?'BEM-VINDO À ARL':'OPERAÇÃO ARL');
   if(text(h)==='Mesa de Chamados'){q('.desk')?.classList.add('arl-vivid-desk');return}
@@ -152,7 +153,7 @@ function enhanceClients(){
   q('.clients-editor .form-card')?.classList.add('arl-client-form');
 }
 
-function enhanceNewOrder(){
+function enhanceNewOrder(){ if (reactPageActive('new-order')) return;
   const h=qa<HTMLHeadingElement>('h1').find(x=>text(x)==='Abertura de Chamado / Nova OS'); if(!h) return;
   const title=h.closest<HTMLElement>('.title'); if(title) titleEyebrow(title,'ATENDIMENTO ARL');
   const form=q<HTMLFormElement>('form.os-form'); if(!form) return; form.classList.add('arl-new-order');
@@ -252,7 +253,7 @@ const settingsSections=[
   ['company','Empresa'],['identity','Identidade'],['documents','Documentos'],['warranty','Garantia'],['notifications','Notificações'],['backup','Backup'],['system','Sistema'],['storage','Armazenamento']
 ] as const;
 
-function enhanceSettings(){
+function enhanceSettings(){ if (reactPageActive('settings')) return;
   const h=qa<HTMLHeadingElement>('h1').find(x=>text(x)==='Configurações'); if(!h)return;const title=h.closest<HTMLElement>('.title');if(title)titleEyebrow(title,'ADMINISTRAÇÃO');
   q('.setting-cards')?.classList.add('arl-hide-legacy-settings-cards');
   const form=q<HTMLFormElement>('form.settings-form'); if(!form)return;
@@ -271,8 +272,8 @@ function tagSettingsExtras(){
 }
 function createSettingsTabs(form:HTMLFormElement){const tabs=document.createElement('div');tabs.className='arl-settings-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Seções de Configurações');tabs.innerHTML=settingsSections.map(([id,label],i)=>`<button type="button" role="tab" aria-selected="${i===0}" class="arl-settings-tab ${i===0?'active':''}" data-section="${id}"><span aria-hidden="true">${iconForSettings(id)}</span><b>${label}</b></button>`).join('');form.before(tabs);qa<HTMLButtonElement>('.arl-settings-tab',tabs).forEach(btn=>btn.addEventListener('click',()=>{qa<HTMLButtonElement>('.arl-settings-tab',tabs).forEach(x=>{x.classList.remove('active');x.setAttribute('aria-selected','false')});btn.classList.add('active');btn.setAttribute('aria-selected','true');applySettingsSection(form,btn.dataset.section||'company')}))}
 function iconForSettings(id:string){return ({company:'▣',identity:'◆',orders:'▤',messages:'◉',documents:'▧',finance:'$',notifications:'♢',backup:'▦',system:'⌁',storage:'▥'} as Record<string,string>)[id]||'•'}
-function applySettingsSection(form:HTMLFormElement,id:string){tagSettingsForm(form);tagSettingsExtras();const sectionsWithGeneralSave=['company','identity','documents','warranty'];qa<HTMLElement>('[data-arl-settings-section]').forEach(el=>{const section=el.dataset.arlSettingsSection;el.hidden=section==='save-actions'||section==='save-feedback'?!sectionsWithGeneralSave.includes(id):section!==id})}
-async function createOpeningMessagePanel(form:HTMLFormElement){const panel=document.createElement('section');panel.className='arl-opening-message-panel';panel.hidden=true;panel.innerHTML='<h2>Mensagem de abertura da OS</h2><p>Use as variáveis <code>{{nome_cliente}}</code>, <code>{{numero_os}}</code> e <code>{{empresa}}</code>.</p><textarea></textarea><div class="arl-message-preview"></div><button type="button">Salvar mensagem</button><span></span>';form.before(panel);try{let settings=await api('/settings');const area=q<HTMLTextAreaElement>('textarea',panel)!;area.value=settings.order_opened_whatsapp||'';const preview=q<HTMLElement>('.arl-message-preview',panel)!;const render=()=>preview.textContent=template(area.value,{nome_cliente:'Cliente Exemplo',numero_os:'0000123',empresa:settings.trade_name||settings.company_name||'ARL Informática'});render();area.addEventListener('input',render);q<HTMLButtonElement>('button',panel)?.addEventListener('click',async()=>{const status=q<HTMLElement>('span:last-child',panel)!;status.textContent='Salvando…';try{settings={...settings,order_opened_whatsapp:area.value};await api('/settings',{method:'PUT',body:JSON.stringify(settings)});status.textContent='Mensagem salva.'}catch(e:any){status.textContent=e.message}})}catch{panel.innerHTML='<p>Não foi possível carregar a mensagem de abertura.</p>'}}
+function applySettingsSection(form:HTMLFormElement,id:string){ if (reactPageActive('settings')) return;tagSettingsForm(form);tagSettingsExtras();const sectionsWithGeneralSave=['company','identity','documents','warranty'];qa<HTMLElement>('[data-arl-settings-section]').forEach(el=>{const section=el.dataset.arlSettingsSection;el.hidden=section==='save-actions'||section==='save-feedback'?!sectionsWithGeneralSave.includes(id):section!==id})}
+async function createOpeningMessagePanel(form:HTMLFormElement){ if (reactPageActive('settings')) return;const panel=document.createElement('section');panel.className='arl-opening-message-panel';panel.hidden=true;panel.innerHTML='<h2>Mensagem de abertura da OS</h2><p>Use as variáveis <code>{{nome_cliente}}</code>, <code>{{numero_os}}</code> e <code>{{empresa}}</code>.</p><textarea></textarea><div class="arl-message-preview"></div><button type="button">Salvar mensagem</button><span></span>';form.before(panel);try{let settings=await api('/settings');const area=q<HTMLTextAreaElement>('textarea',panel)!;area.value=settings.order_opened_whatsapp||'';const preview=q<HTMLElement>('.arl-message-preview',panel)!;const render=()=>preview.textContent=template(area.value,{nome_cliente:'Cliente Exemplo',numero_os:'0000123',empresa:settings.trade_name||settings.company_name||'ARL Informática'});render();area.addEventListener('input',render);q<HTMLButtonElement>('button',panel)?.addEventListener('click',async()=>{const status=q<HTMLElement>('span:last-child',panel)!;status.textContent='Salvando…';try{settings={...settings,order_opened_whatsapp:area.value};await api('/settings',{method:'PUT',body:JSON.stringify(settings)});status.textContent='Mensagem salva.'}catch(e:any){status.textContent=e.message}})}catch{panel.innerHTML='<p>Não foi possível carregar a mensagem de abertura.</p>'}}
 
 function enhanceServicesSettingsBoundary(){
   if(text(q('h1'))==='Configurações') qa<HTMLElement>('.admin-list').forEach(x=>x.classList.add('arl-settings-admin-card'));

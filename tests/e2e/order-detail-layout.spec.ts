@@ -28,7 +28,7 @@ async function createOrder(page: Page) {
     equipment_type_id: equipmentType.id,
     manufacturer_id: null,
     equipment_description: equipmentDescription,
-    attendance_type: 'bench',
+    attendance_type: 'external',
     reported_problem: 'Problema usado para validar a ficha condensada',
     checklist: [],
   });
@@ -59,6 +59,14 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(header.getByRole('button', { name: 'Editar OS' })).toBeVisible();
   await expect(header.getByRole('button', { name: 'Gerar orçamento' })).toBeVisible();
   await expect(header.getByRole('button', { name: 'Registrar pagamento' })).toHaveCount(0);
+
+  const externalActions = root.locator('.external-actions');
+  await expect(externalActions.getByRole('link', { name: 'WhatsApp', exact: true })).toHaveAttribute('href', /wa\.me/);
+  await expect(externalActions.getByRole('link', { name: 'Google Maps', exact: true })).toHaveAttribute('href', /google/);
+  await expect(externalActions.locator('img.arl-official-action-icon')).toHaveCount(2);
+  await expect(externalActions.getByRole('button', { name: 'Adicionar foto' })).toHaveCount(0);
+  await expect(externalActions.getByRole('button', { name: 'Status', exact: true })).toHaveCount(0);
+  await expect(externalActions.getByRole('button', { name: 'Finalizar' })).toHaveCount(0);
 
   const opening = header.locator('.arl-opening-call');
   await expect(opening.getByText("PDF's e Reaberturas OS", { exact: true })).toBeVisible();

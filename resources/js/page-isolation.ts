@@ -1,3 +1,4 @@
+import { reactPageActive } from './react-ownership';
 export {};
 
 const q = <T extends Element = HTMLElement>(selector: string) => document.querySelector<T>(selector);
@@ -14,7 +15,7 @@ function remove(selector: string) {
 function closeDetachedOverlays() {
   // A nova tela Ver OS é dona do próprio ciclo de vida. Enquanto a raiz React
   // estiver ativa, o legado não remove overlays nem resíduos dela no capture.
-  if (q('[data-arl-order-detail-react="1"]')) return;
+  if (q('[data-arl-order-detail-react="1"]') || reactPageActive('new-order')) return;
   remove('.arl-od-modal, .arl-status-modal, .arl-photo-choice, .arl-camera-modal, .arl-order-opened-modal');
 }
 
@@ -27,7 +28,7 @@ function syncPageScopedArtifacts() {
     remove('.arl-od-sharebar, .arl-order-quick-actions');
   }
 
-  const settings = heading('Configurações');
+  const settings = reactPageActive('settings') || heading('Configurações');
   if (!settings) {
     remove('.arl-settings-tabs, .arl-opening-message-panel, .arl-finance-settings-note, .arl-message-subnav, .arl-post-message-panel, .arl-order-subtabs, .arl-document-subtabs');
   }
@@ -37,7 +38,7 @@ function syncPageScopedArtifacts() {
     remove('.arl-post-sale-editor, .arl-post-toolbar');
   }
 
-  const dashboard = heading('Painel');
+  const dashboard = reactPageActive('dashboard') || heading('Painel');
   if (!dashboard) {
     remove('.arl-mobile-home');
     delete main.dataset.arlMobileHome;

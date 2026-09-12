@@ -1,3 +1,4 @@
+import { selectNewOrderClient } from './helpers';
 import { expect, test } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
@@ -187,7 +188,7 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
   expect(fontSizes.length).toBeGreaterThan(0);
   for (const fontSize of fontSizes) expect(fontSize).toBeGreaterThanOrEqual(16);
 
-  await page.locator('.os-form section').filter({ hasText: 'Dados do cliente' }).locator('select').selectOption(String(client.body.id));
+  await selectNewOrderClient(page, client.body.id);
   const manualDescription = 'Notebook para validação mobile';
   await page.getByLabel('Equipamento / Modelo / Acessórios *').fill(manualDescription);
   await page.getByLabel('Problema relatado *').fill('Validação do botão de salvar no mobile');
