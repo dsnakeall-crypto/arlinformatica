@@ -86,9 +86,3 @@ Os painéis de edição eram decorativos: os controles criados pelos enhancers n
 Se os modelos precisarem tornar-se editáveis no futuro, será necessário aprovar e implementar conjuntamente backend, consumo no WhatsApp e alteração dos testes correspondentes. Mover ou reexibir os textareas não implementa essa funcionalidade.
 
 O Painel mobile continua usando a lista de `mobile-home.ts`; somente o cabeçalho desktop React deixa de ser renderizado nesse modo. O marcador de ownership identifica o Painel sem depender da presença do heading `Painel`. Não foi feita migração da lista mobile para React.
-
-### Pendências visuais e de integração identificadas no Bloco 12
-
-- Os botões WhatsApp e Maps no detalhe aparecem como quadrados coloridos sem a imagem do ícone.
-- O CSS do modal Editar OS está presente no bundle carregado, mas não é aplicado visualmente.
-- Regressão do Bloco 12: os botões WhatsApp e Maps não aparecem em OS reabertas, mas aparecem em OS novas e finalizadas.
