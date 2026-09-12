@@ -3,10 +3,11 @@ import { Camera, Pencil, Plus, Wallet, X } from 'lucide-react';
 import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
 import OrderAuditHistory from './order-audit-history';
 import '../css/order-detail-layout.css';
+import { OrderPaymentFigures } from './finance-refund-summary';
 
 type Props = { id: number; back: () => void; onEdit?: () => void; onDirtyChange?: (dirty: boolean) => void; onOpenClientHistory?: (clientId: number) => void };
 type ApiError = Error & { errors?: Record<string, string[]> };
-type PaymentSummary = { total_cents: number; paid_cents: number; balance_cents: number; status: 'unpaid' | 'partial' | 'paid'; payments: any[]; refunded_cents: number; refundable_cents: number; refunds: any[] };
+type PaymentSummary = { total_cents: number; paid_cents: number; balance_cents: number; collectible_balance_cents: number; status: 'unpaid' | 'partial' | 'paid'; payments: any[]; refunded_cents: number; refundable_cents: number; refunds: any[] };
 
 type FinalShare = { url: string; expires_at: string; revision: number };
 
@@ -282,11 +283,11 @@ function RefundModal({ order, maximum, onClose, onSaved }: any) {
 
 function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
   const [summary, setSummary] = useState<PaymentSummary | null>(null), [open, setOpen] = useState(false), [method, setMethod] = useState('pix'), [amount, setAmount] = useState('0,00'), [busy, setBusy] = useState(false), [error, setError] = useState(''), [correcting, setCorrecting] = useState<any>(), [refunding, setRefunding] = useState(false);
-  const load = async () => { const next = await api(`/orders/${order.id}/payments`) as PaymentSummary; setSummary(next); setAmount(((next.balance_cents || 0) / 100).toFixed(2).replace('.', ',')); onSummary?.(next); };
+  const load = async () => { const next = await api(`/orders/${order.id}/payments`) as PaymentSummary; setSummary(next); setAmount(((next.collectible_balance_cents || 0) / 100).toFixed(2).replace('.', ',')); onSummary?.(next); };
   useEffect(() => { void load(); }, [order.id, order.total_cents]);
-  useEffect(() => { if (openSignal && summary && summary.balance_cents > 0 && summary.total_cents > 0) { setAmount((summary.balance_cents / 100).toFixed(2).replace('.', ',')); setError(''); setOpen(true); } }, [openSignal]);
+  useEffect(() => { if (openSignal && summary && summary.collectible_balance_cents > 0 && summary.total_cents > 0) { setAmount((summary.collectible_balance_cents / 100).toFixed(2).replace('.', ',')); setError(''); setOpen(true); } }, [openSignal]);
   if (!summary) return <section className="wide"><h2>Pagamento</h2><p>Carregando situação do pagamento…</p></section>;
-  const { total_cents: total, paid_cents: paid, balance_cents: balance } = summary;
+  const { total_cents: total, paid_cents: paid, collectible_balance_cents: balance } = summary;
   const entered = Math.round(Number(amount.replace(',', '.')) * 100), remainingAfter = Number.isFinite(entered) ? Math.max(0, balance - entered) : balance;
   const save = async () => {
     const cents = Math.round(Number(amount.replace(',', '.')) * 100); if (!Number.isFinite(cents) || cents <= 0) { setError('Informe um valor recebido válido.'); return; }
@@ -294,8 +295,7 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
   };
   const compact = summary.status !== 'unpaid' || summary.payments.length > 0;
   return <section className={`wide ${compact ? 'arl-payment-compact' : 'arl-payment-empty'}`}><div className="section-title"><div><h2>Pagamento</h2><p>Registro financeiro independente do status operacional.</p></div><div className="actions">{order.status === 'completed' && summary.refundable_cents > 0 && <button type="button" onClick={() => setRefunding(true)}>Registrar estorno</button>}{balance > 0 && total > 0 && <button className="primary" data-arl-quick-source="payment" onClick={() => { setAmount((balance / 100).toFixed(2).replace('.', ',')); setError(''); setOpen(true); }}><Wallet/>{paid > 0 ? 'Registrar novo pagamento' : 'Registrar pagamento'}</button>}</div></div>
-    <div className="finance-cards"><article><small>Total da OS</small><strong>{money(total)}</strong></article><article><small>Total pago</small><strong>{money(paid)}</strong></article><article><small>Falta pagar</small><strong>{money(balance)}</strong></article></div>
-    {summary.status === 'paid' ? <div className="payment-ok"><b>Pago integralmente</b><span>Saldo zerado.</span></div> : summary.status === 'partial' ? <div className="notice"><b>Pagamento parcial</b> · ainda faltam {money(balance)}.</div> : <p>Pagamento ainda não registrado.</p>}
+    <OrderPaymentFigures summary={summary}/>
     {summary.payments.map((payment) => <article className="transaction" key={payment.id}><div><b>{money(payment.effective_cents)}</b><small>{paymentMethodLabel(payment.method)} · {new Date(payment.paid_at).toLocaleString('pt-BR')} · {payment.user_name}</small></div>{['Master', 'Administrador'].includes(role) && <button type="button" className="arl-pay-edit" title="Corrigir valor pago" aria-label="Corrigir valor pago" onClick={() => setCorrecting(payment)}><Pencil/></button>}</article>)}
     {summary.refunds?.map((refund) => <article className="transaction arl-refund" key={`refund-${refund.id}`}><div><b>Estorno − {money(refund.amount_cents)}</b><small>{paymentMethodLabel(refund.method)} · {new Date(refund.refunded_at).toLocaleString('pt-BR')} · {refund.user_name}</small><small>Motivo: {refund.reason}</small></div></article>)}
     {open && <div className="modal"><div className="modal-card" role="dialog" aria-modal="true" aria-label={`Pagamento da OS #${order.number}`}><button className="modal-close" onClick={() => setOpen(false)}><X/></button><h1>Pagamento da OS #{order.number}</h1><div className="finance-cards"><article><small>Total</small><strong>{money(total)}</strong></article><article><small>Já pago</small><strong>{money(paid)}</strong></article><article><small>Saldo</small><strong>{money(balance)}</strong></article></div><button type="button" onClick={() => setAmount((balance / 100).toFixed(2).replace('.', ','))}>Pagar valor total ({money(balance)})</button><TextField label="Valor recebido (R$)" value={amount} onChange={(e: any) => setAmount(e.target.value)} required/><label className="field"><span>Forma de pagamento *</span><select value={method} onChange={(e) => setMethod(e.target.value)}>{[['pix', 'Pix'], ['cash', 'Dinheiro'], ['debit', 'Débito'], ['credit', 'Crédito'], ['transfer', 'Transferência'], ['other', 'Outro']].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>{Number.isFinite(entered) && entered > 0 && entered < balance && <div className="notice">Pagamento parcial: após confirmar, ainda ficarão <b>{money(remainingAfter)}</b> em A Receber.</div>}{error && <div className="alert">{error}</div>}<div className="actions"><button onClick={() => setOpen(false)}>Cancelar</button><button className="primary" disabled={busy} onClick={save}>{busy ? 'Salvando…' : 'Confirmar pagamento'}</button></div></div></div>}
@@ -448,7 +448,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
   const stages = ['Entrada', 'Orçamento', 'Execução', 'Finalização', 'Pagamento'];
   const currentStage = order.archived ? -1 : order.status === 'completed' ? 4 : ['in_service', 'waiting_part', 'interrupted'].includes(order.status) ? 2 : order.status === 'analysis' ? 1 : 0;
   const stageState = (index: number) => order.archived ? 'completed' : index < currentStage ? 'completed' : index === currentStage ? 'current' : 'future';
-  const paymentEnabled = Boolean(canAdminister && paymentSummary && paymentSummary.balance_cents > 0 && paymentSummary.total_cents > 0);
+  const paymentEnabled = Boolean(canAdminister && paymentSummary && paymentSummary.collectible_balance_cents > 0 && paymentSummary.total_cents > 0);
   return <div data-arl-order-detail-react="1" className="arl-order-detail-page">
     <header className="arl-order-sticky-header">
       <div className="arl-order-header-main">

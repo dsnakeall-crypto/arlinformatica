@@ -41,7 +41,8 @@ class FinanceController extends Controller
                 throw ValidationException::withMessages(['amount_cents' => 'A OS ainda não possui valor definido para receber.']);
             }
 
-            $paid = $this->paidCentsForOrder($lockedOrder);
+            // Devoluções reduzem o recebido líquido, mas não autorizam uma nova cobrança.
+            $paid = $this->grossPaidCentsForOrder($lockedOrder);
             $balance = max(0, $total - $paid);
             abort_if($balance === 0, 409, 'Esta OS já está totalmente paga.');
             if ((int) $data['amount_cents'] > $balance) {
@@ -110,9 +111,14 @@ class FinanceController extends Controller
             ->groupBy('p.service_order_id')
             ->select('p.service_order_id', DB::raw('SUM(COALESCE(adjustment.new_cents, ft.amount_cents)) as paid_cents'));
 
+        $refunds = DB::table('service_order_refunds')
+            ->groupBy('service_order_id')
+            ->select('service_order_id', DB::raw('SUM(amount_cents) as refunded_cents'));
+
         $rows = DB::table('service_orders')
             ->join('clients', 'clients.id', '=', 'service_orders.client_id')
             ->leftJoinSub($paid, 'paid', 'paid.service_order_id', '=', 'service_orders.id')
+            ->leftJoinSub($refunds, 'refunds', 'refunds.service_order_id', '=', 'service_orders.id')
             ->where('service_orders.status', 'completed')
             ->where('service_orders.total_cents', '>', 0)
             ->whereRaw('COALESCE(paid.paid_cents, 0) < service_orders.total_cents')
@@ -123,14 +129,18 @@ class FinanceController extends Controller
                 'service_orders.total_cents',
                 'clients.id as client_id',
                 'clients.name as client_name',
-                DB::raw('COALESCE(paid.paid_cents, 0) as paid_cents')
+                DB::raw('COALESCE(paid.paid_cents, 0) as gross_paid_cents'),
+                DB::raw('COALESCE(refunds.refunded_cents, 0) as refunded_cents')
             )
             ->orderByDesc('service_orders.completed_at')
             ->get()
             ->map(function ($row) {
                 $row->total_cents = (int) $row->total_cents;
-                $row->paid_cents = (int) $row->paid_cents;
-                $row->balance_cents = max(0, $row->total_cents - $row->paid_cents);
+                $row->gross_paid_cents = (int) $row->gross_paid_cents;
+                $row->refunded_cents = (int) $row->refunded_cents;
+                $row->paid_cents = max(0, $row->gross_paid_cents - $row->refunded_cents);
+                // A Receber contém apenas dívida original, sem recolocar o estorno na cobrança.
+                $row->balance_cents = max(0, $row->total_cents - $row->gross_paid_cents);
                 $row->payment_status = $row->paid_cents > 0 ? 'partial' : 'unpaid';
 
                 return $row;
@@ -222,7 +232,7 @@ class FinanceController extends Controller
         ]);
         $refund = DB::transaction(function () use ($request, $order, $data) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
-            $paid = $this->paidCentsForOrder($locked);
+            $paid = $this->grossPaidCentsForOrder($locked);
             $refunded = (int) DB::table('service_order_refunds')->where('service_order_id', $locked->id)->sum('amount_cents');
             if ((int) $data['amount_cents'] > $paid - $refunded) {
                 throw ValidationException::withMessages(['amount_cents' => 'O estorno não pode superar o valor efetivamente pago ainda não devolvido.']);
@@ -287,11 +297,20 @@ class FinanceController extends Controller
     {
         [$start, $end] = $this->dayBounds($request->input('date'));
         $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')
+            ->leftJoin('service_order_refunds as refund', 'refund.financial_transaction_id', '=', 'financial_transactions.id')
             ->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')
             ->leftJoin('users', 'users.id', '=', 'financial_transactions.user_id')
             ->whereBetween('occurred_at', [$start->utc(), $end->utc()])
-            ->addSelect('payments.method', 'service_orders.number as order_number', 'users.name as user_name')
-            ->orderByDesc('occurred_at')->get();
+            ->addSelect(DB::raw('COALESCE(refund.method, payments.method) as method'), 'service_orders.number as order_number', 'users.name as user_name', 'refund.amount_cents as refund_cents')
+            ->orderByDesc('occurred_at')->get()
+            ->map(function ($row) {
+                // O vínculo identifica estorno; outros ajustes não são automaticamente saídas.
+                $row->effective_cents = $row->refund_cents === null
+                    ? (int) $row->effective_cents
+                    : -(int) $row->refund_cents;
+
+                return $row;
+            });
 
         return response()->json([
             'date' => $start->format('Y-m-d'),
@@ -430,7 +449,7 @@ class FinanceController extends Controller
             $order = $payment ? ServiceOrder::find($payment->service_order_id) : null;
             if ($order) {
                 $total = $this->orderTotalCents($order);
-                $otherPaid = $this->paidCentsForOrder($order, $transaction);
+                $otherPaid = $this->grossPaidCentsForOrder($order, $transaction);
                 if ($total > 0 && (int) $data['new_cents'] > max(0, $total - $otherPaid)) {
                     throw ValidationException::withMessages(['new_cents' => 'A correção não pode fazer o total recebido superar o valor da OS.']);
                 }
@@ -501,23 +520,28 @@ class FinanceController extends Controller
     {
         $total = $this->orderTotalCents($order);
         $payments = $this->paymentRowsForOrder($order)->values();
-        $paid = (int) $payments->sum('effective_cents');
-        $balance = max(0, $total - $paid);
-        $status = $paid <= 0 ? 'unpaid' : ($balance > 0 ? 'partial' : 'paid');
+        $grossPaid = (int) $payments->sum('effective_cents');
         $refunds = DB::table('service_order_refunds')
             ->leftJoin('users', 'users.id', '=', 'service_order_refunds.created_by')
             ->where('service_order_id', $order->id)
             ->orderByDesc('refunded_at')
             ->get(['service_order_refunds.*', 'users.name as user_name']);
 
+        $refunded = (int) $refunds->sum('amount_cents');
+        $paid = max(0, $grossPaid - $refunded);
+        $balance = max(0, $total - $paid);
+        $status = $paid <= 0 ? 'unpaid' : ($balance > 0 ? 'partial' : 'paid');
+
         return [
             'total_cents' => $total,
+            'gross_paid_cents' => $grossPaid,
             'paid_cents' => $paid,
             'balance_cents' => $balance,
+            'collectible_balance_cents' => max(0, $total - $grossPaid),
             'status' => $status,
             'payments' => $payments,
-            'refunded_cents' => (int) $refunds->sum('amount_cents'),
-            'refundable_cents' => max(0, $paid - (int) $refunds->sum('amount_cents')),
+            'refunded_cents' => $refunded,
+            'refundable_cents' => $paid,
             'refunds' => $refunds,
         ];
     }
@@ -570,7 +594,7 @@ class FinanceController extends Controller
         return (int) DB::table('service_order_items')->where('service_order_id', $order->id)->sum('subtotal_cents');
     }
 
-    private function paidCentsForOrder(ServiceOrder $order, ?int $excludeTransactionId = null): int
+    private function grossPaidCentsForOrder(ServiceOrder $order, ?int $excludeTransactionId = null): int
     {
         $latest = DB::table('financial_adjustments')
             ->select('transaction_id', DB::raw('MAX(id) as adjustment_id'))
