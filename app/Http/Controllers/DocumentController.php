@@ -18,8 +18,8 @@ class DocumentController extends Controller
     {
         $existing = DB::table('generated_documents')->where(['service_order_id' => $order->id, 'type' => 'term', 'revision' => 1])->exists();
         if (! $existing) {
-            $order->load(['snapshot', 'checklists']);
-            $documents->issue($order, 'term', ['order' => $order->toArray(), 'snapshot' => $order->snapshot->toArray(), 'checklist' => $order->checklists->map(fn ($item) => $item->label.($item->note ? ': '.$item->note : ''))->all()], $request->user()->id);
+            $order->load('snapshot');
+            $documents->issue($order, 'term', ['order' => $order->toArray(), 'snapshot' => $order->snapshot->toArray()], $request->user()->id);
         }
 
         return $documents->response($order, 'term');

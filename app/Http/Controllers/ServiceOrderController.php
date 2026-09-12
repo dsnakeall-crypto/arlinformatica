@@ -76,8 +76,10 @@ class ServiceOrderController extends Controller
             'client_id' => 'required|exists:clients,id',
             'equipment_type_id' => 'required|exists:equipment_types,id',
             'manufacturer_id' => 'nullable|exists:manufacturers,id',
+            'equipment_description' => 'nullable|string|max:500',
             'attendance_type' => 'required|in:bench,external',
             'reported_problem' => 'required|string|max:10000',
+            'intake_condition' => 'nullable|string|max:10000',
             'checklist' => 'array',
             'checklist.*.template_id' => 'nullable|integer',
             'checklist.*.label' => 'nullable|string|max:255',
@@ -86,6 +88,12 @@ class ServiceOrderController extends Controller
             'items.*.catalog_id' => 'required|integer|exists:service_catalog,id',
             'items.*.quantity' => 'required|integer|min:1|max:999',
         ]);
+        $data['equipment_description'] = trim((string) ($data['equipment_description'] ?? '')) ?: null;
+        $manualEquipment = DB::table('equipment_types')->whereKey($data['equipment_type_id'])->value('name') === 'Informado manualmente';
+        if ($manualEquipment && blank($data['equipment_description'])) {
+            abort(422, 'Descreva o equipamento informado manualmente.');
+        }
+        $data['intake_condition'] = trim((string) ($data['intake_condition'] ?? '')) ?: null;
         $requested = collect($data['checklist'] ?? []);
         $templates = DB::table('checklist_templates')->where('equipment_type_id', $data['equipment_type_id'])->where('active', true)
             ->where(fn ($q) => $q->whereIn('id', $requested->pluck('template_id')->filter())->orWhereIn('label', $requested->pluck('label')->filter()))->get();
@@ -145,10 +153,9 @@ class ServiceOrderController extends Controller
         $payload['display_status'] = $order->archived ? 'paid' : $order->status;
         $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;
         if ($order->attendance_type === 'external') {
-            $damages = $order->checklists->map(fn ($check) => '• '.$check->label.($check->note ? ': '.$check->note : ''));
             $message = "Olá, {$order->client->name}. Aqui é a ARL Informática sobre a OS #{$order->number}.";
-            if ($damages->isNotEmpty()) {
-                $message .= "\n\nAvarias registradas na abertura:\n".$damages->implode("\n");
+            if (filled($order->intake_condition)) {
+                $message .= "\n\nEstado físico registrado na abertura:\n{$order->intake_condition}";
             }
             $message .= "\n\nEstamos em atendimento externo e podemos continuar o contato por aqui.";
             $payload['mobile_actions'] = [

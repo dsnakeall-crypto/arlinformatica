@@ -34,3 +34,9 @@
 .revenue-chart{width:100%;max-width:100%;min-width:0;box-sizing:border-box}.revenue-chart>*{min-width:0}.revenue-plot{max-width:100%;box-sizing:border-box}.revenue-column{overflow:visible}
 .payment-method-grid,.finance-total-cards,.report-summary{min-width:0;max-width:100%}.payment-method-grid>*,.finance-total-cards>*,.report-summary>*{min-width:0;overflow:hidden}.payment-method-grid strong,.finance-total-cards strong,.report-summary strong{overflow-wrap:anywhere}
 @media(max-width:800px){.finance-chart-subhead{align-items:stretch;flex-direction:column}.finance-chart-subhead .primary{align-self:flex-start}.revenue-panel{padding-left:12px;padding-right:12px}}
+
+.os-form textarea[aria-label="Estado físico do equipamento na entrada"] {
+  min-height: 112px;
+  font-size: 16px;
+  resize: vertical;
+}

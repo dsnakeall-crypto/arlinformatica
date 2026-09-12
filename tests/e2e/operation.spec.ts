@@ -45,17 +45,17 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(duplicate.status).toBe(422);
   });
 
-  test('abre OS externa com descrição manual, avaria, foto e termo', async ({ page }) => {
+  test('abre OS externa com descrição manual, estado físico preenchido, foto e termo', async ({ page }) => {
     await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
     await page.locator('.os-form section').first().locator('select').selectOption(String(clientId));
     const manualEquipment = 'Notebook Dell Inspiron 15 + carregador + mouse';
     await page.getByLabel('Equipamento / Modelo / Acessórios *').fill(manualEquipment);
     await page.getByRole('button', { name: 'ATENDIMENTO EXTERNO' }).click();
     await page.getByLabel('Problema relatado *').fill('Notebook não liga durante homologação');
-    const checklist = page.locator('.os-form details').filter({ hasText: 'CHECKLIST DE ENTRADA' });
-    await checklist.locator('summary').click();
-    await checklist.getByRole('button', { name: 'Notebooks', exact: true }).click();
-    await checklist.getByRole('checkbox', { name: 'Carcaça Trincada', exact: true }).check();
+    const intakeCondition = 'Carcaça trincada no canto esquerdo e marcas de queda';
+    const intakeField = page.getByLabel('Estado físico do equipamento na entrada');
+    await expect(intakeField).toHaveAttribute('spellcheck', 'true');
+    await intakeField.fill(intakeCondition);
     await page.locator('input[type=file]').setInputFiles({ name: 'equipamento.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
     await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
     await expect(page.getByText('Notebook não liga durante homologação')).toBeVisible();
@@ -66,6 +66,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const detail = await api(page, `/orders/${orderId}`);
     expect(detail.body.attendance_type).toBe('external');
     expect(detail.body.equipment_description).toBe(manualEquipment);
+    expect(detail.body.intake_condition).toBe(intakeCondition);
     expect(detail.body.photos[0].bytes).toBeLessThanOrEqual(102400);
     expect((await page.request.get(`/api/orders/${orderId}/term`)).status()).toBe(200);
   });

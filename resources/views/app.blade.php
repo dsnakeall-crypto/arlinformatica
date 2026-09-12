@@ -15,7 +15,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="./arl-assets/icons/icon-180.png">
     <title>ARL Informática</title>
     @auth
-        @vite(['resources/js/brand2026.ts','resources/js/brand2026-access.ts','resources/js/client-search.ts','resources/js/order-maintenance.ts','resources/js/order-workflow.ts','resources/js/new-order-search.ts','resources/js/opening-whatsapp.ts','resources/js/completion-polish.ts','resources/js/record-management.ts','resources/js/ui-final-polish.ts','resources/js/ui-regression-guard.ts','resources/js/manual-equipment.ts','resources/js/main.tsx','resources/js/mobile-home.ts','resources/js/page-isolation.ts','resources/js/official-icons.ts','resources/css/brand2026.css'])
+        @vite(['resources/js/brand2026.ts','resources/js/brand2026-access.ts','resources/js/client-search.ts','resources/js/order-maintenance.ts','resources/js/order-workflow.ts','resources/js/new-order-search.ts','resources/js/opening-whatsapp.ts','resources/js/completion-polish.ts','resources/js/record-management.ts','resources/js/ui-final-polish.ts','resources/js/ui-regression-guard.ts','resources/js/main.tsx','resources/js/mobile-home.ts','resources/js/page-isolation.ts','resources/js/official-icons.ts','resources/css/brand2026.css'])
         <style>
             .post-sale .post-action:not([href]){pointer-events:none;cursor:not-allowed;background:#e3e6e4;color:#66716b;opacity:.72}
             .post-sale article:has(.post-action:not([href]))>div::after{content:'Disponível após 24 horas';display:block;margin-top:4px;color:#8a6426;font-size:12px;font-weight:700}

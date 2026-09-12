@@ -14,4 +14,5 @@ Route::get('/share/orders/{order}/final/{revision}/{token}', [FinalShareControll
     ->name('orders.final.public');
 Route::redirect('/orders/{order}/reports', '/orders/{order}');
 Route::redirect('/desk', '/');
+Route::redirect('/settings/checklist', '/settings');
 Route::view('/{path?}', 'app')->where('path', '^(?!api|up|share).*$');

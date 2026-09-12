@@ -155,3 +155,11 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] Menu Web/PC recolhível entre 206 px e 58 px, com preferência persistida, nomes no hover e marcador compacto de contador.
 - [OK] Card do usuário e Sair preservados; slogan removido apenas do menu, sem alteração de documentos.
 - [OK] Mesa de Chamados oculta em navegação e atalhos; `/desk` redireciona ao Painel, mantendo implementação e endpoint operacional reativáveis.
+
+
+## Bloco 10 — entrada e equipamento manual
+
+- [OK] Estado físico opcional em texto livre na Nova OS, Ver OS e documentos, com frase padrão sem avarias.
+- [OK] Equipamento “Informado manualmente” e `equipment_description` controlados e enviados pelo React.
+- [OK] Cadastro legado de Checklist preservado no código e ocultado da interface/rota.
+- [OK] Contratos E2E atualizados, incluindo persistência do equipamento manual e barra fixa mobile.
