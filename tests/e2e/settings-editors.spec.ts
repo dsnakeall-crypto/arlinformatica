@@ -119,33 +119,19 @@ test('configurações exibe somente as oito abas permitidas em uma linha', async
   await expect(page.getByLabel('Mostrar garantia geral no PDF final')).toBeVisible();
 });
 
-test('nova OS usa descrição manual e checklist opcional em quatro categorias fixas', async ({ page }) => {
+test('nova OS usa descrição manual e estado físico opcional independente do problema', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
   const manual = page.getByLabel('Equipamento / Modelo / Acessórios *');
   await expect(manual).toBeVisible();
   await manual.fill('Impressora Epson L3250 + cabo USB + fonte');
-  await expect(page.getByPlaceholder('Pesquisar equipamento…')).toBeHidden();
-  await expect(page.getByPlaceholder('Pesquisar fabricante…')).toBeHidden();
 
-  const checklist = page.locator('.os-form details').filter({ hasText: 'CHECKLIST DE ENTRADA' });
-  await checklist.locator('summary').click();
-
-  const categories = checklist.locator('.arl-checklist-category');
-  await expect(categories).toHaveCount(4);
-  await expect(categories).toHaveText(['Notebooks', 'Computadores', 'Tablets & iPads', 'Impressoras']);
-  await expect(checklist.getByText('Checklist opcional:', { exact: false })).toBeVisible();
-
-  await checklist.getByRole('button', { name: 'Impressoras', exact: true }).click();
-  await expect(manual).toHaveValue('Impressora Epson L3250 + cabo USB + fonte');
-  const printerDamage = checklist.getByRole('checkbox', { name: 'Carcaça Trincada / Quebrada', exact: true });
-  await expect(printerDamage).toBeVisible();
-  await printerDamage.check();
-  await expect(checklist.getByRole('button', { name: 'Impressoras (1)', exact: true })).toBeVisible();
-
-  await checklist.getByRole('button', { name: 'Notebooks', exact: true }).click();
-  await expect(manual).toHaveValue('Impressora Epson L3250 + cabo USB + fonte');
-  await expect(checklist.getByRole('checkbox', { name: 'Carcaça Trincada', exact: true })).toBeVisible();
-  await expect(checklist.getByRole('checkbox', { name: 'Carcaça Trincada / Quebrada', exact: true })).toHaveCount(0);
+  const condition = page.getByLabel('Estado físico do equipamento na entrada');
+  await expect(condition).toBeVisible();
+  await expect(condition).toHaveAttribute('spellcheck', 'true');
+  await expect(condition).toHaveValue('');
+  await condition.fill('Tampa riscada e bandeja com marca de queda');
+  await expect(page.getByLabel('Problema relatado *')).toHaveValue('');
+  await expect(page.locator('.os-form').getByText('CHECKLIST DE ENTRADA')).toHaveCount(0);
 });

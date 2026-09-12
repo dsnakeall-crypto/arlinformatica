@@ -60,6 +60,22 @@ function installFetchObserver(){
   window.__arlBrandFetchInstalled=true;
   const nativeFetch=window.fetch.bind(window);
   window.fetch=async(input:RequestInfo|URL, init?:RequestInit)=>{
+    let openingClient:ClientHit|null=null;
+    let openingIntakeCondition='';
+    try{
+      const raw=typeof input==='string'?input:input instanceof URL?input.toString():input.url;
+      const url=new URL(raw,location.origin);
+      const method=(init?.method || (input instanceof Request?input.method:'GET')).toUpperCase();
+      if(url.pathname==='/api/orders' && method==='POST'){
+        const clientId=Number(q<HTMLSelectElement>('form.os-form select')?.value||0);
+        openingClient=window.__arlSelectedClient||null;
+        if(!openingClient && clientId) openingClient=await loadClient(clientId).catch(()=>null);
+        if(typeof init?.body==='string'){
+          const payload=JSON.parse(init.body||'{}');
+          openingIntakeCondition=String(payload?.intake_condition||'').trim();
+        }
+      }
+    }catch{}
     const response=await nativeFetch(input,init);
     try{
       const raw=typeof input==='string'?input:input instanceof URL?input.toString():input.url;
@@ -69,7 +85,7 @@ function installFetchObserver(){
       if(orderMatch && method==='GET' && response.ok) window.__arlCurrentOrderId=Number(orderMatch[1]);
       if(url.pathname==='/api/orders' && method==='POST' && response.ok){
         const created=await response.clone().json().catch(()=>null);
-        if(created?.id) setTimeout(()=>void showOrderOpened(created),80);
+        if(created?.id) setTimeout(()=>void showOrderOpened(created,openingClient,openingIntakeCondition),80);
       }
     }catch{}
     return response;
@@ -197,13 +213,14 @@ function installOrderPhotoTools(section:HTMLElement){
 }
 async function uploadOrderPhoto(file:File|undefined,section:HTMLElement){if(!file||!window.__arlCurrentOrderId)return;const fd=new FormData();fd.append('photo',file);const photo=await api(`/orders/${window.__arlCurrentOrderId}/photos`,{method:'POST',body:fd});const photos=q<HTMLElement>('.photos',section);if(photos){qa('p',photos).forEach(x=>x.remove());const img=document.createElement('img');img.src=`/api/orders/${window.__arlCurrentOrderId}/photos/${photo.id}`;photos.append(img)}}
 
-async function showOrderOpened(created:any){
-  const clientId=Number(q<HTMLSelectElement>('form.os-form select')?.value||0);let client=window.__arlSelectedClient;
+async function showOrderOpened(created:any, capturedClient:ClientHit|null=null, intakeCondition=''){
+  const clientId=Number(q<HTMLSelectElement>('form.os-form select')?.value||0);let client=capturedClient||window.__arlSelectedClient;
   if(!client && clientId) try{client=await loadClient(clientId)}catch{}
   if(!client)return;
   let settings:any={};try{settings=await api('/operational-settings')}catch{}
   const source=settings.order_opened_whatsapp||'Olá {{nome_cliente}}, seu chamado foi aberto com o número {{numero_os}}. Logo avaliaremos seu item e notificaremos novas atualizações do andamento do serviço.';
-  const message=template(source,{nome_cliente:client.name,numero_os:created.number,empresa:settings.company_name||'ARL Informática'});
+  const baseMessage=template(source,{nome_cliente:client.name,numero_os:created.number,empresa:settings.company_name||'ARL Informática'});
+  const message=intakeCondition?`${baseMessage}\n\nEstado físico registrado na abertura:\n${intakeCondition}`:baseMessage;
   q('.arl-order-opened-modal')?.remove();const modal=document.createElement('div');modal.className='arl-order-opened-modal';modal.innerHTML=`<div><span class="arl-success-icon">✓</span><h2>OS #${escapeHtml(created.number)} aberta com sucesso</h2><p>O chamado foi registrado. Você pode avisar o cliente pelo WhatsApp agora.</p><blockquote>${escapeHtml(message)}</blockquote><small>O texto padrão pode ser alterado em Configurações → Mensagens e WhatsApp.</small><section><button type="button">Continuar na OS</button><a target="_blank" rel="noreferrer">NOTIFICAR PELO WHATSAPP</a></section></div>`;document.body.append(modal);q<HTMLButtonElement>('button',modal)?.addEventListener('click',()=>modal.remove());const link=q<HTMLAnchorElement>('a',modal)!;link.href=whatsapp(client.phone,message);link.addEventListener('click',()=>setTimeout(()=>modal.remove(),250));
 }
 

@@ -89,9 +89,7 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
   const equipment = await api(page, '/catalogs/equipment');
   const notebook = equipment.body.find((item: { name: string }) => item.name === 'Notebook');
   expect(notebook).toBeTruthy();
-  const checklist = await api(page, `/catalogs/checklist?equipment_type_id=${notebook.id}`);
-  const damage = checklist.body.find((item: { label: string }) => item.label === 'Carcaça Trincada');
-  expect(damage).toBeTruthy();
+  const intakeCondition = 'Carcaça trincada no lado esquerdo';
 
   const order = await api(page, '/orders', 'POST', {
     client_id: client.body.id,
@@ -99,7 +97,8 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
     manufacturer_id: null,
     attendance_type: 'external',
     reported_problem: 'Atendimento externo criado pelo teste mobile',
-    checklist: [{ template_id: damage.id }],
+    intake_condition: intakeCondition,
+    checklist: [],
   });
   expect(order.status).toBe(201);
 
@@ -119,7 +118,9 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
   expect(whatsappHref).toContain('wa.me');
   const decoded = decodeURIComponent(whatsappHref ?? '');
   expect(decoded).toContain(`Ordem de Serviço nº ${order.body.number}`);
-  await expect(detail.getByText('Carcaça Trincada', { exact: false })).toBeVisible();
+  await expect(detail.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
+  await expect(detail.getByText(intakeCondition, { exact: true })).toBeVisible();
+  expect(decoded).toContain(intakeCondition);
   await expect(detail.getByRole('button', { name: 'Adicionar foto' })).toHaveCount(0);
   await expect(detail.getByRole('button', { name: 'Status', exact: true })).toHaveCount(0);
   await expect(detail.getByRole('button', { name: 'Finalizar' })).toHaveCount(0);
@@ -140,4 +141,93 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
   await popup.close();
   expect(apiWrites).toEqual([]);
 
+});
+
+test('shell mobile mantém cabeçalho, formulários, listas e modais livres da barra fixa', async ({ page }) => {
+  await login(page);
+
+  const viewport = await page.locator('meta[name="viewport"]').getAttribute('content');
+  expect(viewport).toBe('width=device-width, initial-scale=1, viewport-fit=cover');
+  await expect(page.locator('.app-head .mobile-logo img')).toHaveCount(0);
+  await expect(page.locator('.app-head .mobile-logo')).toBeHidden();
+
+  const layout = page.getByLabel('Layout neste dispositivo');
+  const bell = page.getByRole('button', { name: 'Notificações', exact: true });
+  const [layoutBox, bellBox] = await Promise.all([layout.boundingBox(), bell.boundingBox()]);
+  expect(layoutBox).not.toBeNull();
+  expect(bellBox).not.toBeNull();
+  expect(layoutBox!.x + layoutBox!.width).toBeLessThanOrEqual(bellBox!.x);
+
+  const bottom = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
+  const assertAboveBottomBar = async (locator: ReturnType<typeof page.locator>) => {
+    await locator.scrollIntoViewIfNeeded();
+    const [targetBox, bottomBox] = await Promise.all([locator.boundingBox(), bottom.boundingBox()]);
+    expect(targetBox).not.toBeNull();
+    expect(bottomBox).not.toBeNull();
+    expect(targetBox!.y + targetBox!.height).toBeLessThanOrEqual(bottomBox!.y);
+    const hit = await locator.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === element
+        || element.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+    });
+    expect(hit).toBe(true);
+  };
+
+  const suffix = Date.now();
+  const clientName = `Cliente Bloco Mobile ${suffix}`;
+  const client = await api(page, '/clients', 'POST', {
+    name: clientName, document: uniqueDocument(suffix), phone: '34999995555', postal_code: '38400000',
+    street: 'Rua Mobile', number: '91', district: 'Centro', city: 'Uberlândia', state: 'MG',
+  });
+  expect(client.status).toBe(201);
+
+  await bottom.getByRole('button', { name: 'Nova OS', exact: true }).click();
+  const fields = page.locator('.os-form input:not([type="hidden"]), .os-form select, .os-form textarea');
+  const fontSizes = await fields.evaluateAll((elements) => elements.map((element) => parseFloat(getComputedStyle(element).fontSize)));
+  expect(fontSizes.length).toBeGreaterThan(0);
+  for (const fontSize of fontSizes) expect(fontSize).toBeGreaterThanOrEqual(16);
+
+  await page.locator('.os-form section').filter({ hasText: 'Dados do cliente' }).locator('select').selectOption(String(client.body.id));
+  const manualDescription = 'Notebook para validação mobile';
+  await page.getByLabel('Equipamento / Modelo / Acessórios *').fill(manualDescription);
+  await page.getByLabel('Problema relatado *').fill('Validação do botão de salvar no mobile');
+  const createOrder = page.getByRole('button', { name: 'Criar ordem de serviço' });
+  await assertAboveBottomBar(createOrder);
+  const createdResponse = page.waitForResponse((response) => response.url().endsWith('/api/orders') && response.request().method() === 'POST');
+  await createOrder.click();
+  const created = await createdResponse;
+  expect(created.status()).toBe(201);
+  const createdOrder = await created.json();
+  const persisted = await api(page, `/orders/${createdOrder.id}`);
+  expect(persisted.status).toBe(200);
+  expect(persisted.body.equipment_description).toBe(manualDescription);
+
+  const openedModal = page.locator('.arl-order-opened-modal');
+  await expect(openedModal).toBeVisible();
+  await openedModal.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(openedModal).toHaveCount(0);
+
+  await bottom.getByRole('button', { name: 'Clientes', exact: true }).click();
+  await page.getByRole('button', { name: 'Novo cliente' }).click();
+  const modal = page.getByRole('dialog', { name: 'Novo cliente' });
+  const modalFields = modal.locator('input, select, textarea');
+  const modalFontSizes = await modalFields.evaluateAll((elements) => elements.map((element) => parseFloat(getComputedStyle(element).fontSize)));
+  for (const fontSize of modalFontSizes) expect(fontSize).toBeGreaterThanOrEqual(16);
+  await assertAboveBottomBar(modal.getByRole('button', { name: 'Salvar cliente' }));
+  await modal.getByRole('button', { name: 'Fechar' }).click();
+
+  const longListNames: string[] = [];
+  for (let index = 0; index < 12; index += 1) {
+    const name = `ZZ Lista Mobile ${suffix}-${String(index).padStart(2, '0')}`;
+    longListNames.push(name);
+    const response = await api(page, '/clients', 'POST', {
+      name, document: uniqueDocument(suffix + index + 1), phone: '34999994444', postal_code: '38400000',
+      street: 'Rua Lista', number: String(index + 1), district: 'Centro', city: 'Uberlândia', state: 'MG',
+    });
+    expect(response.status).toBe(201);
+  }
+  await page.reload();
+  const lastItem = page.locator('.clients-list-panel .client-list article').filter({ hasText: longListNames.at(-1)! });
+  await expect(lastItem).toBeVisible();
+  await assertAboveBottomBar(lastItem);
 });

@@ -416,11 +416,12 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
   };
   const openingPhone = digits(order.client?.phone || '');
   const openingFullPhone = openingPhone ? (openingPhone.startsWith('55') ? openingPhone : `55${openingPhone}`) : '';
+  const openingCondition = String(order.intake_condition || '').trim();
   const openingMessage = [
     `Olá, ${order.client?.name || 'cliente'}`,
     '',
     `Informamos que a sua *Ordem de Serviço nº ${order.number}* foi aberta com sucesso na *ARL Informática*.`,
-    '',
+    ...(openingCondition ? ['', 'Estado físico registrado na abertura:', openingCondition, ''] : ['']),
     'Nosso departamento técnico já iniciou os procedimentos necessários. Em breve, entraremos em contato para atualizar o status do serviço e apresentar os detalhes da verificação do seu equipamento.',
     '',
     'Permanecemos à disposição para qualquer dúvida.',
@@ -440,7 +441,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
     <section><h2>Cliente</h2><strong>{order.client.name}</strong><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></section>
     <section><h2>Equipamento</h2><p>{order.equipment_description || 'Equipamento não informado'}</p><p>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</p></section>
     <section><h2>Problema relatado</h2><p>{order.reported_problem}</p></section>
-    <section><h2>Checklist</h2>{order.checklists?.length ? order.checklists.map((row: any) => <p key={row.id}>• {row.label}{row.note ? `: ${row.note}` : ''}</p>) : <p className="ok">CHECKLIST DE ENTRADA: 100% OK</p>}</section>
+    <section><h2>Estado físico na entrada</h2><p>{order.intake_condition || 'Equipamento aparentemente 100% sem avarias'}</p></section>
     <section><h2>Serviços</h2>{order.items?.length ? order.items.map((item: any) => <p key={item.id}>{item.quantity} × {item.description}</p>) : <p>Nenhum serviço registrado.</p>}</section>
     {reopenOpen && <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Reabrir OS #${order.number}`}><h2>Reabrir OS #{order.number}</h2><p>A mesma OS voltará para Em Análise. A finalização e o PDF atuais permanecerão no histórico.</p><label>Motivo da reabertura<textarea value={reopenNote} onChange={(event) => setReopenNote(event.target.value)}/></label><div className="arl-od-actions"><button type="button" onClick={() => setReopenOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={async () => { if (!reopenNote.trim()) return; await api(`/orders/${order.id}/reopen`, { method: 'POST', body: JSON.stringify({ note: reopenNote.trim() }) }); setReopenOpen(false); await load(); }}>Confirmar reabertura</button></div></section></div>}
   </div>;
@@ -469,7 +470,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
       <div className="arl-intake-row"><h3>Cliente</h3><div><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></div></div>
       <div className="arl-intake-row"><h3>Equipamento / Modelo / Acessórios</h3><div><p>Identificação exibida no cabeçalho fixo.</p></div></div>
       <div className="arl-intake-row"><h3>Problema relatado</h3><div><p>{order.reported_problem}</p></div></div>
-      <div className={`arl-intake-row ${!order.checklists?.length ? 'arl-checklist-ok' : ''}`}><h3>Checklist</h3><div>{order.checklists?.length ? order.checklists.map((row: any) => <p key={row.id}>• {row.label}{row.note ? `: ${row.note}` : ''}</p>) : <p className="ok">CHECKLIST DE ENTRADA: 100% OK</p>}</div></div>
+      <div className={`arl-intake-row ${!order.intake_condition ? 'arl-checklist-ok' : ''}`}><h3>Estado físico na entrada</h3><div><p className={!order.intake_condition ? 'ok' : undefined}>{order.intake_condition || 'Equipamento aparentemente 100% sem avarias'}</p></div></div>
       <div className="arl-intake-row arl-intake-photos"><h3>Fotos</h3><div><div className="arl-order-photo-tools"><label>↑ Enviar foto<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={(e) => void uploadFile(e.target.files?.[0])}/></label><button type="button" className="arl-camera-button" onClick={() => setCamera(true)}>◉ Usar câmera</button></div><div className="photos">{order.photos?.length ? order.photos.map((photo: any) => <img key={photo.id} src={`/api/orders/${order.id}/photos/${photo.id}`} alt={`Foto ${photo.id} da OS`}/>) : <p>Nenhuma foto anexada.</p>}</div></div></div>
     </section>
     <div className="detail-grid arl-order-detail arl-order-workflow">

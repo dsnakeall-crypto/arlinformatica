@@ -18,7 +18,6 @@ export default defineConfig({
                 'resources/js/record-management.ts',
                 'resources/js/ui-final-polish.ts',
                 'resources/js/ui-regression-guard.ts',
-                'resources/js/manual-equipment.ts',
                 'resources/js/mobile-home.ts',
                 'resources/js/page-isolation.ts',
                 'resources/js/official-icons.ts',

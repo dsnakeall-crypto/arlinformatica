@@ -1,7 +1,7 @@
 export {};
 
 type OpeningClient = { name: string; phone: string };
-type OpeningContext = { number: string; clientName: string; phone: string };
+type OpeningContext = { number: string; clientName: string; phone: string; intakeCondition: string };
 
 let pendingOpening: OpeningContext | null = null;
 
@@ -32,11 +32,13 @@ function selectedClientName() {
   return label && !/selecione/i.test(label) ? label : '';
 }
 
-function fixedOpeningMessage(clientName: string, orderNumber: string) {
+function fixedOpeningMessage(clientName: string, orderNumber: string, intakeCondition: string) {
+  const condition = intakeCondition ? ['', 'Estado físico registrado na abertura:', intakeCondition] : [];
   return [
     `Olá, ${clientName}`,
     '',
     `Informamos que a sua *Ordem de Serviço nº ${orderNumber}* foi aberta com sucesso na *ARL Informática*.`,
+    ...condition,
     '',
     'Nosso departamento técnico já iniciou os procedimentos necessários. Em breve, entraremos em contato para atualizar o status do serviço e apresentar os detalhes da verificação do seu equipamento.',
     '',
@@ -89,7 +91,7 @@ function rewriteOpeningModal(modal: HTMLElement) {
 
   if (!number || !clientName || !phone) return;
 
-  const message = fixedOpeningMessage(clientName, number);
+  const message = fixedOpeningMessage(clientName, number, pendingOpening?.intakeCondition || '');
   modal.dataset.arlFixedOpening = '1';
   modal.innerHTML = `<div role="dialog" aria-modal="true" aria-labelledby="arl-opening-whatsapp-title">
     <h2 id="arl-opening-whatsapp-title">Enviar mensagem da Abertura da OS via Whatsapp</h2>
@@ -179,6 +181,11 @@ function captureOrderCreation() {
     const isOrderCreation = url.origin === location.origin && url.pathname === '/api/orders' && method === 'POST';
     const client = isOrderCreation ? selectedClient() : null;
     const clientName = isOrderCreation ? (client?.name || selectedClientName()) : '';
+    let intakeCondition = '';
+    if (isOrderCreation && typeof init?.body === 'string') {
+      const payload = JSON.parse(init.body || '{}');
+      intakeCondition = String(payload.intake_condition || '').trim();
+    }
 
     const response = await nativeFetch(input, init);
 
@@ -189,6 +196,7 @@ function captureOrderCreation() {
           number: String(created.number),
           clientName,
           phone: client?.phone || '',
+          intakeCondition,
         };
         sessionStorage.removeItem('arl:new-order-id');
       }
