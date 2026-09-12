@@ -19,6 +19,7 @@ class ServiceOrderMaintenanceController extends Controller
             'equipment_description' => ['sometimes', 'required', 'string', 'max:500'],
             'attendance_type' => ['sometimes', 'required', 'in:bench,external'],
             'reported_problem' => ['sometimes', 'required', 'string', 'max:10000'],
+            'intake_condition' => ['sometimes', 'nullable', 'string', 'max:10000'],
             'final_report' => ['sometimes', 'nullable', 'string', 'max:20000'],
             'checklist' => ['sometimes', 'array', 'max:100'],
             'checklist.*.template_id' => ['required', 'integer'],
@@ -77,7 +78,7 @@ class ServiceOrderMaintenanceController extends Controller
 
         DB::transaction(function () use ($request, $order, $data, $before, $newClient, $checklist, $items, $termIssued) {
             $scalar = [];
-            foreach (['client_id', 'equipment_description', 'attendance_type', 'reported_problem', 'final_report'] as $field) {
+            foreach (['client_id', 'equipment_description', 'attendance_type', 'reported_problem', 'intake_condition', 'final_report'] as $field) {
                 if (! array_key_exists($field, $data)) {
                     continue;
                 }

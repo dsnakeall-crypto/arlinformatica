@@ -46,16 +46,13 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   expect(equipmentType).toBeTruthy();
   expect(service).toBeTruthy();
 
-  const checklist = await api(page, `/catalogs/checklist?equipment_type_id=${equipmentType.id}`);
-  const checklistOption = checklist.body?.[0];
-  expect(checklistOption).toBeTruthy();
-
   const created = await api(page, '/orders', 'POST', {
     client_id: original.body.id,
     equipment_type_id: equipmentType.id,
     manufacturer_id: null,
     attendance_type: 'bench',
     reported_problem: 'Relato original do editor único',
+    intake_condition: 'Risco superficial na tampa',
     checklist: [],
     items: [{ catalog_id: service.id, quantity: 1 }],
   });
@@ -75,10 +72,13 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   const dialog = page.getByRole('dialog', { name: `Editar OS #${created.body.number}` });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel('Cliente da OS')).toHaveCount(0);
+  await expect(dialog).not.toContainText('Cliente, equipamento, atendimento, relato, checklist e serviços são salvos juntos nesta OS');
   await expect(dialog.getByLabel('Equipamento / Modelo / Acessórios')).toBeVisible();
   await expect(dialog.getByLabel('Atendimento')).toBeVisible();
   await expect(dialog.getByLabel('Problema relatado')).toBeVisible();
-  await expect(dialog.getByText('Checklist', { exact: true })).toBeVisible();
+  await expect(dialog.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
+  await expect(dialog.getByLabel('Estado físico na entrada')).toHaveValue('Risco superficial na tampa');
+  await expect(dialog.getByText('Checklist', { exact: true })).toHaveCount(0);
   await expect(dialog.getByText('Serviços / Produtos', { exact: true })).toBeVisible();
 
   const serviceSearch = dialog.getByLabel('Pesquisar Serviço / Produto no editor');
@@ -96,13 +96,11 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
 
   const changedEquipment = 'Notebook Dell Inspiron 15 + fonte + mochila';
   const changedProblem = 'Problema corrigido no editor unificado';
+  const changedIntakeCondition = 'Tampa com risco e dobradiça com pequena folga';
   await dialog.getByLabel('Equipamento / Modelo / Acessórios').fill(changedEquipment);
   await dialog.getByLabel('Atendimento').selectOption('external');
   await dialog.getByLabel('Problema relatado').fill(changedProblem);
-  await dialog.getByLabel(checklistOption.label).check();
-  if (checklistOption.allows_note) {
-    await dialog.getByLabel(`Observação de ${checklistOption.label}`).fill('Avaria registrada no editor único');
-  }
+  await dialog.getByLabel('Estado físico na entrada').fill(changedIntakeCondition);
   await dialog.getByLabel(`Quantidade no editor de ${service.name}`).fill('3');
 
   const saveResponse = page.waitForResponse((response) => {
@@ -113,8 +111,8 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
       && body?.equipment_description === changedEquipment
       && body?.attendance_type === 'external'
       && body?.reported_problem === changedProblem
-      && Array.isArray(body?.checklist)
-      && body.checklist.some((row: any) => Number(row.template_id) === Number(checklistOption.id))
+      && body?.intake_condition === changedIntakeCondition
+      && !Object.prototype.hasOwnProperty.call(body || {}, 'checklist')
       && Array.isArray(body?.items)
       && body.items.some((row: any) => Number(row.catalog_id) === Number(service.id) && Number(row.quantity) === 3);
   });
@@ -131,13 +129,25 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   expect(persisted.body?.equipment_description).toBe(changedEquipment);
   expect(persisted.body?.attendance_type).toBe('external');
   expect(persisted.body?.reported_problem).toBe(changedProblem);
-  expect(persisted.body?.checklists?.some((row: any) => row.label === checklistOption.label)).toBe(true);
+  expect(persisted.body?.intake_condition).toBe(changedIntakeCondition);
   const persistedItem = persisted.body?.items?.find((row: any) => !row.finalization_id && Number(row.catalog_id) === Number(service.id));
   expect(Number(persistedItem?.quantity)).toBe(3);
 
   await expect(root.getByText(originalName, { exact: true })).toBeVisible();
   await expect(root.getByText(changedEquipment, { exact: true })).toBeVisible();
   await expect(root.getByText(changedProblem, { exact: true })).toBeVisible();
+
+  await root.getByRole('button', { name: 'Editar OS', exact: true }).click();
+  const clearDialog = page.getByRole('dialog', { name: `Editar OS #${created.body.number}` });
+  await clearDialog.getByLabel('Estado físico na entrada').fill('');
+  const clearResponse = page.waitForResponse((response) => new URL(response.url()).pathname === `/api/orders/${created.body.id}`
+    && response.request().method() === 'PATCH'
+    && response.request().postDataJSON()?.intake_condition === '');
+  await clearDialog.getByRole('button', { name: 'Salvar alterações' }).click();
+  expect((await clearResponse).status()).toBe(200);
+  const cleared = await api(page, `/orders/${created.body.id}`);
+  expect(cleared.body?.intake_condition).toBeNull();
+  await expect(root.getByText('Equipamento aparentemente 100% sem avarias', { exact: true })).toBeVisible();
 });
 
 test('rascunhos avisam saída e o Laudo Final é persistido antes da finalização', async ({ page }) => {
@@ -163,10 +173,6 @@ test('rascunhos avisam saída e o Laudo Final é persistido antes da finalizaç�
   const service = services.body?.find((row: any) => row.name === 'Formatação E2E') ?? services.body?.[0];
   expect(equipmentType).toBeTruthy();
   expect(service).toBeTruthy();
-
-  const checklist = await api(page, `/catalogs/checklist?equipment_type_id=${equipmentType.id}`);
-  const checklistOption = checklist.body?.[0];
-  expect(checklistOption).toBeTruthy();
 
   const created = await api(page, '/orders', 'POST', {
     client_id: client.body.id,
@@ -237,11 +243,8 @@ test('rascunhos avisam saída e o Laudo Final é persistido antes da finalizaç�
   await expect(editor).toBeVisible();
   await editor.getByLabel('Atendimento').selectOption('external');
   await editor.getByLabel('Problema relatado').fill('Problema ainda não salvo no editor');
-  await editor.getByLabel(checklistOption.label).check();
-  if (checklistOption.allows_note) {
-    await editor.getByLabel(`Observação de ${checklistOption.label}`).fill('Observação ainda não salva');
-  }
-  expect(await hasUnsavedGuard(page), 'Contrato rascunho: atendimento/problema/checklist pendentes devem proteger recarga e fechamento').toBe(true);
+  await editor.getByLabel('Estado físico na entrada').fill('Risco ainda não salvo');
+  expect(await hasUnsavedGuard(page), 'Contrato rascunho: atendimento/problema/estado físico pendentes devem proteger recarga e fechamento').toBe(true);
 
   let cancelMessage = '';
   page.once('dialog', async (dialog) => {

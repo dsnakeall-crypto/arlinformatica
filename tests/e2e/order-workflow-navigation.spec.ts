@@ -11,7 +11,7 @@ async function fixture(page: Page) {
   const equipment = await api(page, '/catalogs/equipment');
   const orders = [];
   for (const state of ['analysis', 'completed', 'interrupted']) {
-    const order = await api(page, '/orders', 'POST', { client_id: client.body.id, equipment_type_id: equipment.body[0].id, attendance_type: 'bench', reported_problem: `Teste ${state}`, items: [], checklist: [] });
+    const order = await api(page, '/orders', 'POST', { client_id: client.body.id, equipment_type_id: equipment.body[0].id, attendance_type: state === 'completed' ? 'external' : 'bench', reported_problem: `Teste ${state}`, items: [], checklist: [] });
     expect(order.status).toBe(201);
     if (state === 'completed') {
       expect((await api(page, `/orders/${order.body.id}/finalize`, 'POST', { result: 'no_fault', technical_report: 'Sem defeito constatado nos testes.', items: [], discount_cents: 0, photo_ids: [] })).status).toBe(201);
@@ -57,6 +57,9 @@ test('lápis da lista abre edição completa ou o fluxo existente de reabertura'
   await page.locator('.order-row').filter({ hasText: `#${orders[0].number}` }).getByRole('button', { name: 'Editar OS', exact: true }).click();
   const editor = page.getByRole('dialog', { name: `Editar OS #${orders[0].number}` });
   await expect(editor.getByLabel('Cliente da OS')).toHaveCount(0);
+  await expect(editor).not.toContainText('Cliente, equipamento, atendimento, relato, checklist e serviços são salvos juntos nesta OS');
+  await expect(editor.locator('.arl-unified-editor-close')).toHaveCSS('border-radius', '50%');
+  await expect(editor.locator('.arl-unified-editor-fields textarea').first()).toHaveCSS('background-color', 'rgb(250, 250, 251)');
   await expect(editor.getByLabel('Equipamento / Modelo / Acessórios')).toBeVisible();
   await expect(editor.getByText('Serviços / Produtos', { exact: true })).toBeVisible();
   await expect(page.locator('.arl-maintenance-modal')).toHaveCount(0);
@@ -95,10 +98,12 @@ test('lápis da lista abre edição completa ou o fluxo existente de reabertura'
   await reopenedRow.getByRole('button', { name: 'Ver OS' }).click();
   const reopenedRoot = page.locator('[data-arl-order-detail-react="1"]');
   await expect(reopenedRoot.getByText('Reaberta', { exact: true }), 'Contrato visual: a OS reaberta deve ser identificável no detalhe').toBeVisible();
+  await expect(reopenedRoot.locator('.contact-links.external-actions')).toHaveCount(0);
   await reopenedRoot.getByRole('button', { name: 'Editar OS', exact: true }).click();
   const reopenedEditor = page.getByRole('dialog', { name: `Editar OS #${orders[1].number}` });
   await expect(reopenedEditor.getByLabel('Cliente da OS')).toHaveCount(0);
-  await expect(reopenedEditor.getByRole('heading', { name: 'Checklist', exact: true })).toBeVisible();
+  await expect(reopenedEditor.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
+  await expect(reopenedEditor.getByLabel('Estado físico na entrada')).toBeVisible();
   await expect(reopenedEditor.getByLabel('Pesquisar Serviço / Produto no editor')).toBeVisible();
   await reopenedEditor.getByLabel('Equipamento / Modelo / Acessórios').fill('Equipamento corrigido após reabertura');
   await reopenedEditor.getByRole('button', { name: 'Salvar alterações' }).click();
