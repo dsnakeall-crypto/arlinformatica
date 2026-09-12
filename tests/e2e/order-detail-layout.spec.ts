@@ -60,13 +60,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(header.getByRole('button', { name: 'Gerar orçamento' })).toBeVisible();
   await expect(header.getByRole('button', { name: 'Registrar pagamento' })).toHaveCount(0);
 
-  const externalActions = root.locator('.external-actions');
-  await expect(externalActions.getByRole('link', { name: 'WhatsApp', exact: true })).toHaveAttribute('href', /wa\.me/);
-  await expect(externalActions.getByRole('link', { name: 'Google Maps', exact: true })).toHaveAttribute('href', /google/);
-  await expect(externalActions.locator('img.arl-official-action-icon')).toHaveCount(2);
-  await expect(externalActions.getByRole('button', { name: 'Adicionar foto' })).toHaveCount(0);
-  await expect(externalActions.getByRole('button', { name: 'Status', exact: true })).toHaveCount(0);
-  await expect(externalActions.getByRole('button', { name: 'Finalizar' })).toHaveCount(0);
+  await expect(root.locator('.contact-links.external-actions')).toHaveCount(0);
 
   const opening = header.locator('.arl-opening-call');
   await expect(opening.getByText("PDF's e Reaberturas OS", { exact: true })).toBeVisible();
@@ -146,4 +140,25 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(header).toBeVisible();
   const fitsTablet = await root.evaluate((node) => node.scrollWidth <= node.clientWidth + 1);
   expect(fitsTablet, 'Ver OS não deve provocar overflow horizontal da página em tablet').toBe(true);
+});
+
+test('OS externa reaberta não recria atalhos removidos do detalhe', async ({ page }) => {
+  const { clientName, order } = await createOrder(page);
+  const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
+    result: 'no_fault',
+    technical_report: 'Finalização usada para validar os atalhos após reabertura.',
+    items: [],
+    discount_cents: 0,
+    photo_ids: [],
+  });
+  expect([200, 201], JSON.stringify(finalized.body)).toContain(finalized.status);
+
+  const root = await openOrder(page, clientName, order.number);
+  await root.getByRole('button', { name: 'Reabrir OS', exact: true }).click();
+  const modal = page.getByRole('dialog', { name: `Reabrir OS #${order.number}` });
+  await modal.getByLabel('Motivo da reabertura').fill('Retorno externo em garantia.');
+  await modal.getByRole('button', { name: 'Confirmar reabertura' }).click();
+
+  await expect(root.getByText('Reaberta', { exact: true })).toBeVisible();
+  await expect(root.locator('.contact-links.external-actions')).toHaveCount(0);
 });

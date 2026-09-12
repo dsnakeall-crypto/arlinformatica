@@ -40,10 +40,6 @@ const masks = {
   phone: (value: string) => digits(value).slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2'),
 };
 
-const OFFICIAL_ACTION_ICONS = {
-  whatsapp: '/arl-assets/icons/icon-whatsapp.png',
-  maps: '/arl-assets/icons/icon-maps.png',
-} as const;
 const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
 const statusLabel: Record<string, string> = {
   analysis: 'Em Análise',
@@ -475,7 +471,6 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
       </div>
     </header>
     <ol className="arl-order-stage-rail" aria-label="Etapas da Ordem de Serviço">{stages.map((stage, index) => { const state = stageState(index); return <li key={stage} data-stage-state={state} className={`arl-order-stage ${state}`} aria-current={state === 'current' ? 'step' : undefined}><span>{index + 1}</span><b>{stage}</b></li>; })}</ol>
-    {order.attendance_type === 'external' && <div className="contact-links external-actions" aria-label="Atalhos do atendimento externo"><a href={order.mobile_actions?.whatsapp_url} target="_blank" rel="noreferrer" aria-label="WhatsApp" title="WhatsApp"><img className="arl-official-action-icon" src={OFFICIAL_ACTION_ICONS.whatsapp} alt="" aria-hidden="true"/></a><a href={order.mobile_actions?.maps_url} target="_blank" rel="noreferrer" aria-label="Google Maps" title="Google Maps"><img className="arl-official-action-icon" src={OFFICIAL_ACTION_ICONS.maps} alt="" aria-hidden="true"/></a></div>}
     <section className="panel arl-intake-card" aria-labelledby="arl-intake-title">
       <div className="section-title arl-intake-title"><div><span className="arl-eyebrow">ENTRADA</span><h2 id="arl-intake-title">Ficha de entrada</h2></div>{!immutable&&<button type="button" className="arl-od-btn" onClick={editOrder}><Pencil/><span>Editar ficha</span></button>}</div>
       <div className="arl-intake-row"><h3>Cliente</h3><div><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></div></div>
