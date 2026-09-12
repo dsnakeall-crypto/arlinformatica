@@ -50,7 +50,10 @@ function installCatalogCombobox(label: HTMLLabelElement, kind: CatalogKind) {
 
   const existing = label.querySelector<HTMLInputElement>('.arl-deep-catalog-input');
   if (existing) {
-    if (document.activeElement !== existing && select.value) existing.value = selectedLabel(select);
+    if (document.activeElement !== existing && select.value) {
+      existing.value = selectedLabel(select);
+      existing.setCustomValidity('');
+    }
     return;
   }
 

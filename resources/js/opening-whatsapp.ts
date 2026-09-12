@@ -38,7 +38,6 @@ function fixedOpeningMessage(clientName: string, orderNumber: string, intakeCond
     `Olá, ${clientName}`,
     '',
     `Informamos que a sua *Ordem de Serviço nº ${orderNumber}* foi aberta com sucesso na *ARL Informática*.`,
-    '',
     ...condition,
     '',
     'Nosso departamento técnico já iniciou os procedimentos necessários. Em breve, entraremos em contato para atualizar o status do serviço e apresentar os detalhes da verificação do seu equipamento.',

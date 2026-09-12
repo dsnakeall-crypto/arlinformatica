@@ -416,11 +416,12 @@ export default function OrderDetailPage({ id, back, readOnly = false, onEdit, on
   };
   const openingPhone = digits(order.client?.phone || '');
   const openingFullPhone = openingPhone ? (openingPhone.startsWith('55') ? openingPhone : `55${openingPhone}`) : '';
+  const openingCondition = String(order.intake_condition || '').trim();
   const openingMessage = [
     `Olá, ${order.client?.name || 'cliente'}`,
     '',
     `Informamos que a sua *Ordem de Serviço nº ${order.number}* foi aberta com sucesso na *ARL Informática*.`,
-    '',
+    ...(openingCondition ? ['', 'Estado físico registrado na abertura:', openingCondition, ''] : ['']),
     'Nosso departamento técnico já iniciou os procedimentos necessários. Em breve, entraremos em contato para atualizar o status do serviço e apresentar os detalhes da verificação do seu equipamento.',
     '',
     'Permanecemos à disposição para qualquer dúvida.',
