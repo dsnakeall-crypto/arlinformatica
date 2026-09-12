@@ -202,6 +202,11 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
   expect(persisted.status).toBe(200);
   expect(persisted.body.equipment_description).toBe(manualDescription);
 
+  const openedModal = page.locator('.arl-order-opened-modal');
+  await expect(openedModal).toBeVisible();
+  await openedModal.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(openedModal).toHaveCount(0);
+
   await bottom.getByRole('button', { name: 'Clientes', exact: true }).click();
   await page.getByRole('button', { name: 'Novo cliente' }).click();
   const modal = page.getByRole('dialog', { name: 'Novo cliente' });
