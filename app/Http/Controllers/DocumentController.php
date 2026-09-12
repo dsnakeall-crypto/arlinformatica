@@ -19,7 +19,9 @@ class DocumentController extends Controller
         $existing = DB::table('generated_documents')->where(['service_order_id' => $order->id, 'type' => 'term', 'revision' => 1])->exists();
         if (! $existing) {
             $order->load('snapshot');
-            $documents->issue($order, 'term', ['order' => $order->toArray(), 'snapshot' => $order->snapshot->toArray()], $request->user()->id);
+            $orderData = $order->toArray();
+            $orderData['intake_condition'] = $order->intake_condition;
+            $documents->issue($order, 'term', ['order' => $orderData, 'snapshot' => $order->snapshot->toArray()], $request->user()->id);
         }
 
         return $documents->response($order, 'term');

@@ -89,7 +89,7 @@ class ServiceOrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1|max:999',
         ]);
         $data['equipment_description'] = trim((string) ($data['equipment_description'] ?? '')) ?: null;
-        $manualEquipment = DB::table('equipment_types')->whereKey($data['equipment_type_id'])->value('name') === 'Informado manualmente';
+        $manualEquipment = DB::table('equipment_types')->where('id', $data['equipment_type_id'])->value('name') === 'Informado manualmente';
         if ($manualEquipment && blank($data['equipment_description'])) {
             abort(422, 'Descreva o equipamento informado manualmente.');
         }
@@ -154,8 +154,14 @@ class ServiceOrderController extends Controller
         $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;
         if ($order->attendance_type === 'external') {
             $message = "Olá, {$order->client->name}. Aqui é a ARL Informática sobre a OS #{$order->number}.";
-            if (filled($order->intake_condition)) {
-                $message .= "\n\nEstado físico registrado na abertura:\n{$order->intake_condition}";
+            $intakeCondition = trim((string) $order->intake_condition);
+            if ($intakeCondition === '' && $order->checklists->isNotEmpty()) {
+                $intakeCondition = $order->checklists
+                    ->map(fn ($check) => $check->label.($check->note ? ': '.$check->note : ''))
+                    ->implode("\n");
+            }
+            if ($intakeCondition !== '') {
+                $message .= "\n\nEstado físico registrado na abertura:\n{$intakeCondition}";
             }
             $message .= "\n\nEstamos em atendimento externo e podemos continuar o contato por aqui.";
             $payload['mobile_actions'] = [

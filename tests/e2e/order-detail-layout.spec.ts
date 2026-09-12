@@ -83,7 +83,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
 
   const intake = root.locator('.arl-intake-card');
   await expect(intake.getByRole('heading', { name: 'Ficha de entrada', exact: true })).toBeVisible();
-  for (const label of ['Cliente', 'Equipamento / Modelo / Acessórios', 'Problema relatado', 'Checklist', 'Fotos']) {
+  for (const label of ['Cliente', 'Equipamento / Modelo / Acessórios', 'Problema relatado', 'Estado físico na entrada', 'Fotos']) {
     await expect(intake.getByRole('heading', { name: label, exact: true })).toBeVisible();
   }
   await expect(intake.getByRole('button', { name: 'Editar ficha' })).toBeVisible();

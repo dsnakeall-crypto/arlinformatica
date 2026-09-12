@@ -89,9 +89,7 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
   const equipment = await api(page, '/catalogs/equipment');
   const notebook = equipment.body.find((item: { name: string }) => item.name === 'Notebook');
   expect(notebook).toBeTruthy();
-  const checklist = await api(page, `/catalogs/checklist?equipment_type_id=${notebook.id}`);
-  const damage = checklist.body.find((item: { label: string }) => item.label === 'Carcaça Trincada');
-  expect(damage).toBeTruthy();
+  const intakeCondition = 'Carcaça trincada no lado esquerdo';
 
   const order = await api(page, '/orders', 'POST', {
     client_id: client.body.id,
@@ -99,7 +97,8 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
     manufacturer_id: null,
     attendance_type: 'external',
     reported_problem: 'Atendimento externo criado pelo teste mobile',
-    checklist: [{ template_id: damage.id }],
+    intake_condition: intakeCondition,
+    checklist: [],
   });
   expect(order.status).toBe(201);
 
@@ -119,7 +118,9 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
   expect(whatsappHref).toContain('wa.me');
   const decoded = decodeURIComponent(whatsappHref ?? '');
   expect(decoded).toContain(`Ordem de Serviço nº ${order.body.number}`);
-  await expect(detail.getByText('Carcaça Trincada', { exact: false })).toBeVisible();
+  await expect(detail.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
+  await expect(detail.getByText(intakeCondition, { exact: true })).toBeVisible();
+  expect(decoded).toContain(intakeCondition);
   await expect(detail.getByRole('button', { name: 'Adicionar foto' })).toHaveCount(0);
   await expect(detail.getByRole('button', { name: 'Status', exact: true })).toHaveCount(0);
   await expect(detail.getByRole('button', { name: 'Finalizar' })).toHaveCount(0);

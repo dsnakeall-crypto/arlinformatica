@@ -92,7 +92,10 @@ class FinalizationController extends Controller
             return DB::table('service_order_finalizations')->find($id);
         });
         $items = DB::table('service_order_items')->where('finalization_id', $finalization->id)->get()->map(fn ($item) => (array) $item)->all();
-        $documents->issue($order->fresh(), 'final', ['company' => $company, 'order' => $order->fresh()->load(['client', 'snapshot', 'checklists'])->toArray(), 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos], $request->user()->id, (int) $finalization->revision);
+        $documentOrder = $order->fresh()->load(['client', 'snapshot', 'checklists']);
+        $documentOrderData = $documentOrder->toArray();
+        $documentOrderData['intake_condition'] = $documentOrder->intake_condition;
+        $documents->issue($documentOrder, 'final', ['company' => $company, 'order' => $documentOrderData, 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos], $request->user()->id, (int) $finalization->revision);
 
         return response()->json(['order' => $order->fresh(), 'finalization' => $finalization], 201);
     }
