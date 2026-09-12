@@ -76,3 +76,19 @@ A ordem das próximas fases deve ser definida pelo usuário antes de novos commi
 ### Campo de equipamento manual na Nova OS — resolvido
 
 O campo e o envio de `equipment_description` agora pertencem ao formulário React. O enhancer legado foi removido do bundle, e o contrato mobile da barra fixa voltou à suíte E2E.
+
+## Bloco 12 — ownership React e mensagens fixas (decisão de 12/09/2026)
+
+Os modelos de abertura da OS, Avaliação Google e Instagram são fixos no código por decisão do backend. `Brand2026SettingsTest` garante que os campos legados de mensagem sejam descartados por `/api/settings`, que o template de abertura não seja exposto no endpoint operacional e que a edição de Pós-Venda seja recusada. Esses contratos permanecem intactos.
+
+Os painéis de edição eram decorativos: os controles criados pelos enhancers não persistiam as mudanças. Foram removidos da tela React de Configurações impedindo sua criação, sem criar uma subseção de mensagens em Documentos. Os links Instagram/Avaliação Google da empresa continuam em Informações complementares. A preparação das mensagens e os links do WhatsApp de abertura e Pós-Venda permanecem independentes desses editores.
+
+Se os modelos precisarem tornar-se editáveis no futuro, será necessário aprovar e implementar conjuntamente backend, consumo no WhatsApp e alteração dos testes correspondentes. Mover ou reexibir os textareas não implementa essa funcionalidade.
+
+O Painel mobile continua usando a lista de `mobile-home.ts`; somente o cabeçalho desktop React deixa de ser renderizado nesse modo. O marcador de ownership identifica o Painel sem depender da presença do heading `Painel`. Não foi feita migração da lista mobile para React.
+
+### Pendências visuais e de integração identificadas no Bloco 12
+
+- Os botões WhatsApp e Maps no detalhe aparecem como quadrados coloridos sem a imagem do ícone.
+- O CSS do modal Editar OS está presente no bundle carregado, mas não é aplicado visualmente.
+- Regressão do Bloco 12: os botões WhatsApp e Maps não aparecem em OS reabertas, mas aparecem em OS novas e finalizadas.

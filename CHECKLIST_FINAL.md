@@ -163,3 +163,13 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [OK] Equipamento “Informado manualmente” e `equipment_description` controlados e enviados pelo React.
 - [OK] Cadastro legado de Checklist preservado no código e ocultado da interface/rota.
 - [OK] Contratos E2E atualizados, incluindo persistência do equipamento manual e barra fixa mobile.
+
+## Bloco 12 — isolamento dos enhancers (escopo aprovado em 12/09/2026)
+
+- [OK] Testes PHP: 119 aprovados, 861 asserções; contratos de mensagens fixas preservados.
+- [OK] Modelos de mensagem e endpoints do backend não foram alterados.
+- [PENDENTE] Verificar em E2E a ausência de botão/filtro legado, edição completa e reabertura pela lista de OS.
+- [PENDENTE] Verificar em E2E a Nova OS sem equipamento/fabricante e com descrição persistida, busca e mensagem de abertura preservadas.
+- [PENDENTE] Verificar em E2E a estabilidade das abas de Configurações sem painéis de mensagem criados pelos observers.
+- [PENDENTE] Verificar em E2E o Painel mobile sem cabeçalho desktop, mantendo a lista legada.
+- [PENDENTE] Conferência visual pelo proprietário antes de qualquer commit.
