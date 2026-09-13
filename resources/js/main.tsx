@@ -3760,8 +3760,13 @@ function PostSalePage() {
     const colors = ["rose", "violet", "blue", "amber", "teal", "pink"];
     return colors[[...name].reduce((total, char) => total + char.charCodeAt(0), 0) % colors.length];
   };
+  const stateLabel = (row: any) => {
+    if (row.available) return "Em análise humana";
+    const remainingHours = Math.max(1, Math.ceil((new Date(row.eligible_at).getTime() - Date.now()) / 3_600_000));
+    return `Disponível após ${remainingHours} ${remainingHours === 1 ? "hora" : "horas"}`;
+  };
   const action = (row: any, type: string, label: string, Icon: any, modifier: string) => row.actions[type]?.confirmed_at ? (
-    <button className={`post-sale-action post-sale-action-${modifier} sent`} disabled><CheckCircle2 /> <span>Enviado</span></button>
+    <button className={`post-sale-action post-sale-action-${modifier} sent`} aria-label={`${label} — enviado`} disabled><CheckCircle2 /> <span className="sr-only">Enviado</span></button>
   ) : (
     <a
       className={`post-sale-action post-sale-action-${modifier}`}
@@ -3773,7 +3778,8 @@ function PostSalePage() {
         if (!row.available) { event.preventDefault(); return; }
         setPending({ cycle: row.id, type, label });
       }}
-    ><Icon /> <span>{label}</span></a>
+    aria-label={label}
+    ><Icon /> <span className="sr-only">{label}</span></a>
   );
   if (loading) return <div className="state">Verificando pós-venda…</div>;
   return (
@@ -3807,7 +3813,7 @@ function PostSalePage() {
               <header>
                 <span className={`post-sale-avatar post-sale-avatar-${avatarTone(row.name)}`}>{row.name.trim().slice(0, 1).toUpperCase()}</span>
                 <div className="post-sale-card-title">
-                  <small>OS {row.number}</small>
+                  <b>OS {row.number}</b>
                   <strong>{row.name}</strong>
                 </div>
                 <details className="post-sale-menu">
@@ -3817,7 +3823,7 @@ function PostSalePage() {
               </header>
               <div className={`post-sale-state ${row.available ? "post-sale-state-ready" : "post-sale-state-waiting"}`}>
                 <Clock3 />
-                <span>{row.available ? "Disponível para análise humana" : "Janela de espera: disponível após 24 horas"}</span>
+                <span>{stateLabel(row)}</span>
               </div>
               <footer>
                 {action(row, "google", "Avaliação Google", Star, "google")}

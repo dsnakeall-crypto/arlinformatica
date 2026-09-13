@@ -293,7 +293,9 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.getByRole('heading', { name: 'Pós-Venda & Reputação' })).toBeVisible();
     const lockedRow = page.locator('.post-sale-card').filter({ hasText: `OS ${orderNumber}` });
     await expect(lockedRow).toBeVisible();
-    await expect(lockedRow.locator('.post-sale-state-waiting')).toContainText('disponível após 24 horas');
+    await expect(lockedRow).toHaveCSS('width', '200px');
+    await expect(page.locator('.post-sale-grid')).toHaveCSS('justify-content', 'start');
+    await expect(lockedRow.locator('.post-sale-state-waiting')).toContainText('Disponível após 24 horas');
     const lockedActions = lockedRow.locator('.post-sale-action[aria-disabled="true"]');
     await expect(lockedActions).toHaveCount(2);
     for (let i = 0; i < 2; i += 1) {
