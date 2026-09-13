@@ -31,6 +31,16 @@ test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa os ci
   expect(zulu.status).toBe(201);
   expect(alpha.status).toBe(201);
   expect(zulu.body.id).toBeLessThan(alpha.body.id);
+  for (let index = 1; index <= 13; index += 1) {
+    const paginated = await api(page, '/clients', 'POST', {
+      name: `Pagina E2E ${String(index).padStart(2, '0')}`,
+      document: uniqueDocument(26090800 + index),
+      phone: `3598877${String(8200 + index)}`,
+      postal_code: '37160000', street: 'Rua Paginação', number: String(index),
+      district: 'Centro', city: 'Campos Gerais', state: 'MG', complement: '',
+    });
+    expect(paginated.status).toBe(201);
+  }
 
   const clientGets: string[] = [];
   page.on('request', request => {
@@ -40,7 +50,6 @@ test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa os ci
 
   await page.getByRole('button', { name: 'Clientes', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
-  await expect(page.getByText('Ordena E2E Alpha', { exact: true })).toBeVisible();
   await expect.poll(() => clientGets.filter(value => value.includes('all=1')).length).toBe(1);
 
   const search = page.getByLabel('Buscar clientes');
@@ -72,4 +81,21 @@ test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa os ci
     '/arl-assets/icons/icon-editar.png',
     '/arl-assets/icons/icon-lixeira.png',
   ]);
+
+  await search.fill('Pagina E2E');
+  await expect(rows).toHaveCount(12);
+  await expect(page.getByText('Página 1 de 2', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Próxima página' }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('Pagina E2E 13');
+
+  await page.getByLabel('Clientes por página').selectOption('30');
+  await expect(rows).toHaveCount(13);
+  await expect(page.getByText('Página 1 de 1', { exact: true })).toBeVisible();
+
+  await search.fill('Pagina E2E 07');
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('Pagina E2E 07');
+  await expect(page.getByText('Página 1 de 1', { exact: true })).toBeVisible();
+  expect(clientGets).toEqual(['?all=1']);
 });
