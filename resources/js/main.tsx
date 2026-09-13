@@ -408,17 +408,19 @@ function OrderTable({
   onDelete,
   onEdit,
   role,
+  dashboard = false,
 }: any) {
   return (
     <div
-      className={`order-list shared-order-list ${showValue ? "with-value" : ""}`}
+      className={`order-list shared-order-list ${dashboard ? "dashboard-order-list" : ""} ${showValue ? "with-value" : ""}`}
     >
       <div className="order-row head">
         <span># OS</span>
-        <span>CLIENTE / DISPOSITIVO</span>
+        <span>{dashboard ? "CLIENTE" : "CLIENTE / DISPOSITIVO"}</span>
+        {dashboard && <span>DISPOSITIVO</span>}
         <span>STATUS</span>
         {showValue && <span>VALOR</span>}
-        <span>RELATO CLIENTE</span>
+        <span>{dashboard ? "RELATO" : "RELATO CLIENTE"}</span>
         <span>AÇÕES</span>
       </div>
       {items.map((o: Order) => {
@@ -431,13 +433,14 @@ function OrderTable({
             <b>#{o.number}</b>
             <span className="order-customer">
               <strong>{o.client.name}</strong>
-              <small><Box aria-hidden="true" />{o.equipment_description || "Equipamento não informado"}</small>
+              {!dashboard && <small title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || "Equipamento não informado"}</small>}
               {reopened && (
                 <span className="arl-reopened-marker" aria-label="OS reaberta">
                   Reaberta
                 </span>
               )}
             </span>
+            {dashboard && <span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span>}
             <label className={`row-status status-${o.status}`}>
               <span className="sr-only">Alterar status da OS {o.number}</span>
               <CircleDot className="row-status-icon" aria-hidden="true" />
@@ -2743,6 +2746,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
           <OrderTable
             items={items}
             open={go}
+            dashboard
             onStatus={changeStatus}
             onDelete={remove}
             role={role}

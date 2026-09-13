@@ -17,6 +17,39 @@ test('painel mantém a consulta operacional e o menu oculta Mesa de Chamados', a
   await expect(nav.getByRole('button', { name: 'Ordens', exact: true })).toBeVisible();
 });
 
+test('Painel alinha cabeçalho e linha nas seis colunas operacionais', async ({ page }) => {
+  await login(page);
+  const client = await api(page, '/clients', 'POST', {
+    name: 'Allan Rabelo Luttembarck', document: '52998224725', phone: '35999999999',
+    postal_code: '37160000', street: 'Rua do Painel', number: '10', district: 'Centro', city: 'Campos Gerais', state: 'MG',
+  });
+  expect(client.status).toBe(201);
+  const equipment = await api(page, '/catalogs/equipment');
+  const order = await api(page, '/orders', 'POST', {
+    client_id: client.body.id, equipment_type_id: equipment.body[0].id, attendance_type: 'bench',
+    equipment_description: 'Notebook com descrição extensa para validar contenção',
+    reported_problem: 'Relato longo do cliente para validar duas linhas e contenção dentro da coluna própria.', checklist: [],
+  });
+  expect(order.status).toBe(201);
+  await page.goto('/');
+  const table = page.locator('.dashboard-order-list');
+  await expect(table).toBeVisible();
+  await expect(table.locator('.order-row.head > span')).toHaveText(['# OS', 'CLIENTE', 'DISPOSITIVO', 'STATUS', 'RELATO', 'AÇÕES']);
+  const row = table.locator('.order-row:not(.head)').filter({ hasText: `#${order.body.number}` });
+  await expect(row).toBeVisible();
+  const alignment = await row.evaluate((element) => {
+    const header = element.parentElement?.querySelector('.order-row.head');
+    const starts = (node: Element) => Array.from(node.children).map((child) => Math.round(child.getBoundingClientRect().left));
+    return { header: header ? starts(header) : [], row: starts(element) };
+  });
+  expect(alignment.header).toHaveLength(6);
+  expect(alignment.row).toHaveLength(6);
+  alignment.row.forEach((start, index) => expect(Math.abs(start - alignment.header[index])).toBeLessThanOrEqual(1));
+  await expect(row.locator('.order-customer strong')).toContainText('Allan Rabelo Luttembarck');
+  await expect(row.locator('.order-device')).toHaveAttribute('title', 'Notebook com descrição extensa para validar contenção');
+  await expect(row.locator('.order-client-report')).toHaveAttribute('title', /Relato longo do cliente/);
+});
+
 test('layout oferece dois modos, usa Web/PC por padrão e persiste por dispositivo', async ({ page }) => {
   await login(page);
   const selector = page.getByLabel('Layout neste dispositivo');
