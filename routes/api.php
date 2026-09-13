@@ -5,6 +5,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientImportController;
 use App\Http\Controllers\DiagnosticController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FinalizationController;
@@ -42,6 +43,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/storage/statistics', [StorageController::class, 'statistics']);
     });
     Route::middleware('role:Master')->group(function () {
+        Route::post('/settings/clients/import', [ClientImportController::class, 'store']);
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
         Route::put('/users/{user}', [UserController::class, 'update']);

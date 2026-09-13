@@ -1,4 +1,5 @@
 import NewOrderClientPicker from "./new-order-client-picker";
+import ClientImport from "./client-import";
 import TermTextEditor from "./term-text-editor";
 import { isReopenedOrder } from "./order-reopened";
 import { CameraModal } from "./order-detail-react";
@@ -3421,6 +3422,7 @@ function SettingsPage({ role }: any) {
           ))}
         </div>
       )}
+      {role === "Master" && section === "system" && <ClientImport />}
       {generalSave && (
         <form className="form-card settings-form" onSubmit={save}>
           {section === "company" && (
