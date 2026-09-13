@@ -30,7 +30,43 @@ npm run build
 npm run test:e2e
 ```
 
-O E2E usa SQLite descartável, migrations/seeds e servidor Laravel local. Instale Chromium com `npx playwright install chromium`. Playwright permanece com `retries: 0`: falha deve ser investigada e corrigida, não mascarada por repetição automática. No GitHub Actions, o PHP do servidor embutido E2E é configurado sem Zend OPcache devido ao crash intermitente isolado no runner; isso é restrito ao teste e não desativa OPcache em produção.
+### E2E local, passo a passo
+
+1. Instale as dependências PHP e JavaScript:
+
+   ```bash
+   composer install
+   npm ci
+   ```
+
+2. Compile os arquivos da interface:
+
+   ```bash
+   npm run build
+   ```
+
+3. Instale o Chromium do Playwright. Isso só é necessário na primeira execução ou após atualizar o Playwright:
+
+   ```bash
+   npx playwright install chromium
+   ```
+
+4. Rode a suíte E2E completa:
+
+   ```bash
+   npm run test:e2e
+   ```
+
+O Playwright inicia sozinho um servidor de testes em `http://127.0.0.1:8011`, recria o banco descartável `database/e2e.sqlite` e encerra o servidor ao final. Na CI e em Linux/macOS, o PHP é localizado pelo `PATH`. No Windows, o launcher também procura instalações do Laragon, XAMPP e `C:\php`.
+
+Se o PHP estiver em outro local, informe o executável explicitamente antes de rodar os testes:
+
+```powershell
+$env:PHP_BINARY = 'C:\caminho\para\php.exe'
+npm run test:e2e
+```
+
+Playwright permanece com `retries: 0`: falha deve ser investigada e corrigida, não mascarada por repetição automática. O servidor embutido E2E é iniciado sem Zend OPcache devido ao crash intermitente isolado em testes; isso não desativa OPcache em produção.
 
 O workflow manual **Preparar release** executa as auditorias/testes/build/E2E novamente e gera o pacote de produção sem secrets nem dados privados, acompanhado de `.sha256`.
 

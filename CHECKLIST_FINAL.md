@@ -173,3 +173,10 @@ Não interpretar “Able to merge” como autorização. Antes de liberar merge/
 - [PENDENTE] Verificar em E2E a estabilidade das abas de Configurações sem painéis de mensagem criados pelos observers.
 - [PENDENTE] Verificar em E2E o Painel mobile sem cabeçalho desktop, mantendo a lista legada.
 - [PENDENTE] Conferência visual pelo proprietário antes de qualquer commit.
+
+## Infraestrutura E2E local
+
+- [OK] Servidor descartável iniciado pela configuração principal sem depender de Bash.
+- [OK] PHP localizado pelo PATH, por `PHP_BINARY` ou por instalações conhecidas no Windows.
+- [OK] Configuração principal cobre os projetos desktop e mobile, sem configurações `-temp`.
+- [OK] Suíte E2E completa executada localmente: 81 aprovados e 0 reprovados.
