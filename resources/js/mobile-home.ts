@@ -36,7 +36,9 @@ function isEffectiveMobile() {
 }
 
 function isDashboardVisible() {
-  if (document.querySelector('[data-arl-dashboard-react="1"]')) return true;
+  // O Painel React controla integralmente seu DOM; este enhancer só serve
+  // para a antiga tela não-React e não pode substituir a lista nova.
+  if (document.querySelector('[data-arl-dashboard-react="1"]')) return false;
   return Array.from(document.querySelectorAll<HTMLHeadingElement>('main h1')).some(
     (heading) => heading.textContent?.trim() === 'Painel',
   );
