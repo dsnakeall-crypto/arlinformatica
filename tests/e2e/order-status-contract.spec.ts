@@ -87,7 +87,7 @@ for (const [index, status] of statuses.entries()) {
       expect(desk.body.some((row: any) => row.id === order.id), 'OS Em Serviço desapareceu da Mesa de Chamados').toBe(true);
     }
 
-    await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+    await page.getByRole('button', { name: 'Ordens' }).click();
     const tabs = page.getByRole('tablist', { name: 'Filtrar ordens' });
     await expect(tabs.getByRole('button', { name: 'Todas', exact: true })).toBeVisible();
     await expect(tabs.getByRole('button', { name: 'Em Andamento', exact: true })).toBeVisible();

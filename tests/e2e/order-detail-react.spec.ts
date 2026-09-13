@@ -34,7 +34,7 @@ async function createActiveOrder(page: Page, suffix: number, attendance: 'bench'
 }
 
 async function openOrder(page: Page, clientName: string, orderNumber: string) {
-  await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+  await page.getByRole('button', { name: 'Ordens' }).click();
   const row = page.locator('.order-row').filter({ hasText: clientName });
   await expect(row, `Contrato navegação: linha da OS de ${clientName} não apareceu na lista`).toBeVisible();
   await row.getByRole('button', { name: 'Ver OS' }).click();

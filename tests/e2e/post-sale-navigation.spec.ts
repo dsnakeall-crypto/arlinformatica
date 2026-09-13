@@ -8,7 +8,7 @@ test('editor de pós-venda não permanece ao navegar para outra aba', async ({ p
   await expect(page.locator('.arl-post-sale-editor')).toBeHidden();
   await expect(page.locator('.arl-post-toolbar')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Ordens de Serviço', exact: true }).click();
+  await page.getByRole('button', { name: 'Ordens', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Ordens de Serviço', exact: true })).toBeVisible();
   await expect(page.locator('.arl-post-sale-editor')).toHaveCount(0);
   await expect(page.locator('.arl-post-toolbar')).toHaveCount(0);

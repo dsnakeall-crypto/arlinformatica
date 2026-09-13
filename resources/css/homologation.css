@@ -351,40 +351,51 @@
     }
 }
 
-/* Bloco 8 — navegação lateral agrupada e recolhível. */
-.layout-desktop aside { width: 206px; padding: 20px 12px 14px; transition: width .18s ease; }
-.layout-desktop main { margin-left: 206px; width: calc(100% - 206px); transition: margin-left .18s ease,width .18s ease; }
-.sidebar-brand { display:flex; align-items:center; min-height:54px; margin-bottom:12px; }
-.sidebar-brand .logo { flex:1; margin:0; min-width:0; }
-.sidebar-brand .logo strong { font-size:32px; }
-.sidebar-collapse { flex:0 0 34px; width:34px; height:34px; padding:7px; border:0; border-radius:8px; background:rgba(255,255,255,.08); color:#dcece7; }
-.sidebar-collapse:hover,.sidebar-collapse:focus-visible { background:rgba(255,255,255,.16); color:#fff; }
-.sidebar-collapse svg { width:19px; }
-.new-order-shortcut { width:100%; min-height:43px; margin:0 0 13px; padding:10px 12px; display:flex; align-items:center; justify-content:center; gap:9px; border:0; border-radius:9px; background:#c92e35; color:#fff; font-weight:800; box-shadow:0 5px 14px rgba(120,10,18,.25); }
-.new-order-shortcut:hover,.new-order-shortcut:focus-visible,.new-order-shortcut.active { background:#e13b42; }
-aside nav { gap:0; overflow-y:auto; overflow-x:visible; }
-.nav-group { padding:10px 0; border-top:1px solid rgba(255,255,255,.1); }
+/* Bloco 13 — navegação lateral contida, com área útil recalculada no recolhimento. */
+.shell aside, .shell aside * { box-sizing:border-box; }
+.layout-desktop aside { width:240px; padding:20px 14px 14px; overflow:hidden; transition:none; }
+.layout-desktop > main { margin-left:240px; width:calc(100% - 240px); transition:none; }
+.sidebar-brand { display:block; min-height:80px; margin-bottom:12px; }
+.shell aside .sidebar-brand .logo { width:100%; min-width:0; height:82px; margin:0; padding:0; }
+.sidebar-brand .brand-logo { display:grid; justify-items:center; }
+.shell aside .sidebar-brand .brand-logo img { display:block; width:100%; max-width:none; height:74px; max-height:74px; object-fit:contain; filter:drop-shadow(0 5px 10px rgba(0,0,0,.22)); }
+.new-order-shortcut { width:calc(100% - 30px); min-height:32px; margin:0 auto 13px; padding:6px 10px; display:flex; align-items:center; justify-content:center; gap:7px; border:1px solid rgba(255,112,127,.42); border-radius:10px; background:linear-gradient(180deg,#de1738,#aa001c); color:#fff; font-size:11.5px; font-weight:800; box-shadow:0 5px 12px rgba(120,10,18,.20); }
+.new-order-shortcut:hover,.new-order-shortcut:focus-visible,.new-order-shortcut.active { background:linear-gradient(180deg,#e62443,#b30020); }
+.shell aside nav { width:100%; min-width:0; min-height:0; flex:1; align-content:start; gap:0; overflow-x:hidden; overflow-y:auto; scrollbar-width:none; }
+aside nav::-webkit-scrollbar { width:0; height:0; }
+.nav-group { width:100%; min-width:0; padding:10px 2px; border-top:1px solid rgba(255,255,255,.08); }
 .nav-group:first-child { border-top:0; padding-top:2px; }
-.nav-group h2 { margin:0 10px 5px; color:#82a69b; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
-.nav-group button { position:relative; width:100%; min-height:39px; padding:9px 10px; }
+.nav-group h2 { margin:0 10px 6px; color:#9a9297; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+.nav-group button { position:relative; box-sizing:border-box; width:100%; min-height:40px; margin:3px 0; padding:9px 10px; border:1px solid rgba(255,255,255,.10)!important; border-radius:11px!important; background:rgba(255,255,255,.035)!important; color:#e9e4e6!important; font-size:11.5px; gap:9px; }
+.nav-group button:hover { border-color:rgba(255,255,255,.19)!important; background:rgba(255,255,255,.075)!important; }
+.nav-group button.active { border-color:rgba(255,155,168,.40)!important; background:linear-gradient(105deg,#d20a2c,#a7001d 84%)!important; box-shadow:0 5px 13px rgba(201,0,28,.22)!important; color:#fff!important; }
 .nav-icon { position:relative; display:grid; place-items:center; flex:0 0 19px; }
-.nav-label { white-space:nowrap; }
-.nav-badge { margin-left:auto; min-width:22px; padding:2px 6px; border-radius:10px; background:rgba(255,255,255,.15); color:#fff; font-size:10px; font-style:normal; text-align:center; }
+.nav-label { min-width:0; white-space:nowrap; }
+.nav-badge { flex-shrink:0; margin-left:auto; min-width:22px; padding:2px 6px; border-radius:10px; background:rgba(255,255,255,.15); color:#fff; font-size:10px; font-style:normal; text-align:center; }
 .nav-count { display:none; }
-.layout-desktop.sidebar-collapsed aside { width:58px; padding-left:7px; padding-right:7px; overflow:visible; }
-.layout-desktop.sidebar-collapsed main { margin-left:58px; width:calc(100% - 58px); }
+.layout-desktop.sidebar-collapsed aside { width:58px; padding-left:7px; padding-right:7px; overflow:hidden; }
+.layout-desktop.sidebar-collapsed > main { margin-left:58px!important; width:calc(100% - 58px)!important; }
 .layout-desktop.sidebar-collapsed .sidebar-brand .logo,.layout-desktop.sidebar-collapsed .new-order-shortcut span,.layout-desktop.sidebar-collapsed .nav-group h2,.layout-desktop.sidebar-collapsed .nav-label,.layout-desktop.sidebar-collapsed .nav-badge,.layout-desktop.sidebar-collapsed .profile>i,.layout-desktop.sidebar-collapsed .profile>div,.layout-desktop.sidebar-collapsed .profile>button span { display:none; }
-.layout-desktop.sidebar-collapsed .sidebar-brand { justify-content:center; }
-.layout-desktop.sidebar-collapsed .sidebar-collapse { flex-basis:38px; width:38px; }
-.layout-desktop.sidebar-collapsed .new-order-shortcut { width:44px; padding:10px; }
+.layout-desktop.sidebar-collapsed .sidebar-brand { min-height:0; }
+.layout-desktop.sidebar-collapsed .new-order-shortcut { width:40px; min-height:36px; padding:8px; }
 .layout-desktop.sidebar-collapsed .nav-group { padding:8px 0; }
 .layout-desktop.sidebar-collapsed .nav-group button { justify-content:center; padding:10px; gap:0; }
-.layout-desktop.sidebar-collapsed .nav-count { display:block; position:absolute; right:-8px; top:-9px; width:8px; height:8px; min-width:8px; overflow:hidden; border:2px solid #063b2d; border-radius:50%; background:#f2b84b; color:transparent; }
+.layout-desktop.sidebar-collapsed .nav-count { display:block; position:absolute; right:2px; top:3px; width:8px; height:8px; min-width:8px; overflow:hidden; border:2px solid #241216; border-radius:50%; background:#e11d3c; color:transparent; }
 .layout-desktop.sidebar-collapsed .profile { padding:6px; justify-content:center; background:transparent; }
 .layout-desktop.sidebar-collapsed .profile>button { margin:0; padding:8px; }
-.layout-desktop.sidebar-collapsed .nav-group button:hover .nav-label,.layout-desktop.sidebar-collapsed .nav-group button:focus-visible .nav-label,.layout-desktop.sidebar-collapsed .new-order-shortcut:hover span,.layout-desktop.sidebar-collapsed .new-order-shortcut:focus-visible span { display:block; position:absolute; left:50px; z-index:20; width:max-content; padding:8px 10px; border-radius:7px; background:#102d25; color:#fff; box-shadow:0 5px 16px #001a; font-size:12px; }
 .layout-desktop.sidebar-collapsed .new-order-shortcut { position:relative; }
-.layout-mobile .sidebar-collapse { display:none; }
-.layout-mobile .sidebar-brand { padding-right:28px; }
 .layout-mobile .nav-count { display:none; }
 @media(max-width:800px){.layout-desktop.sidebar-collapsed aside{width:280px;padding:28px 16px}.layout-desktop.sidebar-collapsed main{margin:0;width:100%}.layout-desktop.sidebar-collapsed .sidebar-brand .logo,.layout-desktop.sidebar-collapsed .new-order-shortcut span,.layout-desktop.sidebar-collapsed .nav-group h2,.layout-desktop.sidebar-collapsed .nav-label,.layout-desktop.sidebar-collapsed .nav-badge,.layout-desktop.sidebar-collapsed .profile>i,.layout-desktop.sidebar-collapsed .profile>div,.layout-desktop.sidebar-collapsed .profile>button span{display:initial}.layout-desktop .sidebar-collapse{display:none}}
+
+/* The footer shares the same inner width and cannot push the exit button outside it. */
+.shell aside .profile { width:100%; min-width:0; gap:8px; padding:12px 2px 0; }
+.shell aside .profile>div { flex:1; min-width:0; overflow:hidden; }
+.shell aside .profile b,.shell aside .profile small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.shell aside .profile>button { flex-shrink:0; }
+@media(max-width:800px){.layout-desktop > main,.layout-desktop.sidebar-collapsed > main{margin-left:0!important;width:100%!important}}
+
+/* Legacy oversized decoration created scrollable overflow beyond the sidebar. */
+.shell aside::before,.shell aside::after { content:none; }
+
+/* Keep the sidebar footer above the fixed Mobile / Tablet navigation. */
+.layout-mobile aside { padding-bottom:calc(14px + var(--arl-mobile-nav-clearance)); }

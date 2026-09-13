@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
 async function openOrder(page: Page, clientName: string, orderNumber: string) {
-  await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+  await page.getByRole('button', { name: 'Ordens' }).click();
   const row = page.locator('.order-row').filter({ hasText: clientName });
   await expect(row).toBeVisible();
   await row.getByRole('button', { name: 'Ver OS' }).click();

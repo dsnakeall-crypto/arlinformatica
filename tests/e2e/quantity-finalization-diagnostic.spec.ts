@@ -39,7 +39,7 @@ async function createOrderWithOneItem(page: Page) {
 }
 
 async function openOrder(page: Page, clientName: string, orderNumber: string) {
-  await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+  await page.getByRole('button', { name: 'Ordens' }).click();
   const row = page.locator('.order-row').filter({ hasText: clientName });
   await expect(row).toBeVisible();
   await row.getByRole('button', { name: 'Ver OS' }).click();

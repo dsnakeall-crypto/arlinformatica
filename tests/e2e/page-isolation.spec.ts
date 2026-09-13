@@ -36,7 +36,7 @@ async function createIsolationOrder(page: Page, suffix: string) {
 
 async function openOrder(page: Page, orderNumber: string) {
   const sidebar = page.locator('aside');
-  await sidebar.getByRole('button', { name: 'Ordens de Serviço' }).click();
+  await sidebar.getByRole('button', { name: 'Ordens' }).click();
   await expect(page.getByRole('heading', { name: 'Ordens de Serviço' })).toBeVisible();
   const row = page.locator('.order-row').filter({ hasText: `#${orderNumber}` });
   await expect(row).toBeVisible();

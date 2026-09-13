@@ -108,7 +108,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await expect(page.getByRole('button', { name: /Usar câmera/ })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/03-nova-os-desktop.png', fullPage: true });
 
-  await nav.getByRole('button', { name: 'Ordens de Serviço' }).click();
+  await nav.getByRole('button', { name: 'Ordens' }).click();
   const row = page.locator('.order-row').filter({ hasText: `#${orderResponse.body.number}` });
   await expect(row).toBeVisible();
   await waitForOfficialIcons(page, ['/arl-assets/icons/icon-visualizar.png']);

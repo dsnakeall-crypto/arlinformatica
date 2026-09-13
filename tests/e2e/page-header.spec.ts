@@ -3,7 +3,7 @@ import { login } from './helpers';
 
 const screens = [
   ['Painel', 'Painel'],
-  ['Ordens de Serviço', 'Ordens de Serviço'],
+  ['Ordens', 'Ordens de Serviço'],
   ['Nova OS', 'Abertura de Chamado / Nova OS'],
   ['Clientes', 'Gestão de Clientes'],
   ['Financeiro', 'Financeiro'],

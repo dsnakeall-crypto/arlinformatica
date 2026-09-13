@@ -73,7 +73,7 @@ test.describe.serial('fluxo operacional principal', () => {
   });
 
   test('gera e aprova orçamento da OS', async ({ page }) => {
-    await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+    await page.getByRole('button', { name: 'Ordens' }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
@@ -128,7 +128,7 @@ test.describe.serial('fluxo operacional principal', () => {
   });
 
   test('finaliza OS usando o orçamento aprovado', async ({ page }) => {
-    await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+    await page.getByRole('button', { name: 'Ordens' }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
@@ -187,7 +187,7 @@ test.describe.serial('fluxo operacional principal', () => {
   });
 
   test('registra pagamento parcial e valida A Receber', async ({ page }) => {
-    await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+    await page.getByRole('button', { name: 'Ordens' }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();

@@ -4,7 +4,7 @@ import { api, login, uniqueDocument } from './helpers';
 const money = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
 
 async function openOrder(page: Page, orderNumber: string) {
-  await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+  await page.getByRole('button', { name: 'Ordens' }).click();
   const row = page.locator('.order-row').filter({ hasText: orderNumber });
   await expect(row, `A OS #${orderNumber} deve aparecer na listagem`).toBeVisible();
   await row.getByRole('button', { name: 'Ver OS' }).click();

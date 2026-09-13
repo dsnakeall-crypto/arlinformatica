@@ -32,7 +32,7 @@ test('Mesa redireciona e as quatro abas React são a única fonte do filtro de O
   await expect(page.getByRole('heading', { name: 'Painel', exact: true })).toBeVisible();
   const requests: URL[] = [];
   page.on('request', request => { const url = new URL(request.url()); if (url.pathname === '/api/orders') requests.push(url); });
-  await page.locator('aside').getByRole('button', { name: 'Ordens de Serviço' }).click();
+  await page.locator('aside').getByRole('button', { name: 'Ordens' }).click();
   await page.getByPlaceholder('Número da OS ou nome do cliente…').fill(client.name);
   const tabs = page.getByRole('tablist', { name: 'Filtrar ordens' });
   await expect(tabs.getByRole('button')).toHaveText(['Todas', 'Em Andamento', 'Finalizadas', 'Interrompidas']);

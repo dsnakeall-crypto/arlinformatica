@@ -52,7 +52,7 @@ test('Histórico de alterações exibe auditoria em linguagem legível', async (
   });
   expect(edited.status, JSON.stringify(edited.body)).toBe(200);
 
-  await page.getByRole('button', { name: 'Ordens de Serviço' }).click();
+  await page.getByRole('button', { name: 'Ordens' }).click();
   const row = page.locator('.order-row').filter({ hasText: replacementName });
   await expect(row).toBeVisible();
   await row.getByRole('button', { name: 'Ver OS' }).click();

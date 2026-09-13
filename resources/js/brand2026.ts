@@ -100,14 +100,7 @@ function brandImage():HTMLImageElement{
 }
 
 function enhanceShell(){
-  const aside=q('aside'); if(!aside) return;
-  const logo=q<HTMLElement>('.logo',aside);
-  if(once(logo,'arlBrand')){logo!.innerHTML='';logo!.classList.add('brand-logo');logo!.append(brandImage());mark(logo,'arlBrand')}
-  qa<HTMLButtonElement>('nav button',aside).forEach(btn=>{
-    if(!q('.arl-nav-arrow',btn)){const arrow=document.createElement('span');arrow.className='arl-nav-arrow';arrow.textContent='›';btn.append(arrow)}
-  });
-  const profile=q<HTMLElement>('.profile',aside); if(profile && !q('.arl-profile-arrow',profile)){const arrow=document.createElement('span');arrow.className='arl-profile-arrow';arrow.textContent='›';profile.append(arrow)}
-  if(!q('.arl-sidebar-slogan',aside)){const slogan=document.createElement('small');slogan.className='arl-sidebar-slogan';slogan.textContent='TECNOLOGIA QUE FAZ MAIS POR VOCÊ';aside.append(slogan)}
+  // React owns the entire sidebar: never mutate its logo, labels, counters or decoration.
   const layout=q<HTMLElement>('.device-layout'); if(layout) layout.classList.add('arl-device-layout');
 }
 

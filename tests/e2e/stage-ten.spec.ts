@@ -14,7 +14,7 @@ test('painel mantém a consulta operacional e o menu oculta Mesa de Chamados', a
 
   const nav = page.locator('aside nav');
   await expect(nav.getByRole('button', { name: 'Mesa de Chamados', exact: true })).toHaveCount(0);
-  await expect(nav.getByRole('button', { name: 'Ordens de Serviço', exact: true })).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'Ordens', exact: true })).toBeVisible();
 });
 
 test('layout oferece dois modos, usa Web/PC por padrão e persiste por dispositivo', async ({ page }) => {

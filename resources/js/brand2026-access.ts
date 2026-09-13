@@ -3,12 +3,6 @@ import '../css/settings-editors.css';
 
 export {};
 
-function syncDecorativeAccessibility() {
-  document.querySelectorAll<HTMLElement>('.arl-nav-arrow, .arl-profile-arrow').forEach((item) => {
-    item.setAttribute('aria-hidden', 'true');
-  });
-}
-
 function syncPostSaleScope() {
   const postSalePanel = document.querySelector('.post-sale');
   if (postSalePanel) return;
@@ -238,7 +232,6 @@ function syncNewOrderChecklist() { if (reactPageActive('new-order')) return;
 }
 
 function syncSettingsAccess() {
-  syncDecorativeAccessibility();
   syncPostSaleScope();
   removeChecklistSettingsEditor();
   syncNewOrderChecklist();
