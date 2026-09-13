@@ -36,16 +36,27 @@ test('Mesa redireciona e as quatro abas React são a única fonte do filtro de O
   await page.getByPlaceholder('Número da OS ou nome do cliente…').fill(client.name);
   const tabs = page.getByRole('tablist', { name: 'Filtrar ordens' });
   await expect(tabs.getByRole('button')).toHaveText(['Todas', 'Em Andamento', 'Finalizadas', 'Interrompidas']);
-  await expect(page.locator('.order-row.head')).toContainText('# OS');
-  await expect(page.locator('.order-row.head')).toContainText('CLIENTE / DISPOSITIVO');
-  await expect(page.locator('.order-row.head')).toContainText('STATUS');
-  await expect(page.locator('.order-row.head')).toContainText('RELATO CLIENTE');
-  await expect(page.locator('.order-row.head')).toContainText('AÇÕES');
+  const orderTable = page.locator('.orders-order-list');
+  await expect(orderTable.locator('thead th')).toHaveText(['# OS', 'CLIENTE', 'DISPOSITIVO', 'STATUS', 'RELATO', 'VALOR', 'AÇÕES']);
   const analysisRow = page.locator('.order-row').filter({ hasText: `#${orders[0].number}` });
   await expect(analysisRow.locator('.order-client-report')).toHaveText('Teste analysis');
   await expect(analysisRow.locator('.order-client-report')).toHaveAttribute('title', 'Teste analysis');
+  await expect(analysisRow.locator('.order-value-pending')).toHaveText('A orçar');
   await expect(analysisRow.getByRole('button', { name: 'Ver OS' })).toBeVisible();
-  const rows = page.locator('.order-row:not(.head)');
+  const completedRow = page.locator('.order-row').filter({ hasText: `#${orders[1].number}` });
+  await expect(completedRow.locator('.order-value strong')).toHaveText('R$ 0,00');
+  await expect(completedRow.locator('.order-value small')).not.toBeEmpty();
+  const alignment = await orderTable.evaluate((element) => {
+    const centers = (selector: string) => Array.from(element.querySelectorAll(selector)).map((cell) => {
+      const rect = cell.getBoundingClientRect();
+      return rect.left + rect.width / 2;
+    });
+    return { header: centers('thead th'), row: centers('tbody tr:first-child td') };
+  });
+  expect(alignment.header).toHaveLength(7);
+  expect(alignment.row).toHaveLength(7);
+  alignment.row.forEach((center, index) => expect(Math.abs(center - alignment.header[index])).toBe(0));
+  const rows = page.locator('.orders-order-list tbody .order-row');
   for (const [label, tab, indices] of [
     ['Todas', 'all', [0, 1, 2]], ['Em Andamento', 'progress', [0]], ['Finalizadas', 'finalized', [1]], ['Interrompidas', 'interrupted', [2]], ['Todas', 'all', [0, 1, 2]],
   ] as const) {

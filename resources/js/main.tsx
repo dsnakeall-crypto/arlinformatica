@@ -81,6 +81,7 @@ type Order = {
   equipment_type_id: number;
   equipment_description?: string;
   total_cents?: number;
+  completed_at?: string | null;
   reopened?: boolean | number;
 };
 type Catalog = {
@@ -403,7 +404,6 @@ const status: any = {
 function OrderTable({
   items,
   open,
-  showValue = false,
   onStatus,
   onDelete,
   onEdit,
@@ -483,119 +483,34 @@ function OrderTable({
     );
   }
   return (
-    <div
-      className={`order-list shared-order-list ${dashboard ? "dashboard-order-list" : ""} ${showValue ? "with-value" : ""}`}
-    >
-      <div className="order-row head">
-        <span># OS</span>
-        <span>CLIENTE / DISPOSITIVO</span>
-        <span>STATUS</span>
-        {showValue && <span>VALOR</span>}
-        <span>RELATO CLIENTE</span>
-        <span>AÇÕES</span>
-      </div>
-      {items.map((o: Order) => {
-        const reopened = isReopenedOrder(o);
-        return (
-          <div
-            className={`order-row${reopened ? " order-row-reopened" : ""}`}
-            key={o.id}
-          >
-            <b>#{o.number}</b>
-            <span className="order-customer">
-              <strong>{o.client.name}</strong>
-              <small title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || "Equipamento não informado"}</small>
-              {reopened && (
-                <span className="arl-reopened-marker" aria-label="OS reaberta">
-                  Reaberta
-                </span>
-              )}
-            </span>
-            <label className={`row-status status-${o.status}`}>
-              <span className="sr-only">Alterar status da OS {o.number}</span>
-              <CircleDot className="row-status-icon" aria-hidden="true" />
-              <select
-                aria-label={`Status da OS ${o.number}`}
-                value={o.status}
-                disabled={o.status === "completed"}
-                onChange={(e) => onStatus(o, e.target.value)}
-              >
-                <option value="analysis">Em Análise</option>
-                <option value="waiting_part">Aguardando Peça</option>
-                <option value="in_service">Em Serviço</option>
-                {role !== "Funcionário" && (
-                  <option value="interrupted">Interrompido</option>
-                )}
-                {o.status === "completed" && (
-                  <option value="completed">Concluído</option>
-                )}
-              </select>
-            </label>
-            {showValue && (
-              <strong className="order-value">
-                {money(o.total_cents || 0)}
-              </strong>
-            )}
-            <span className="order-client-report" title={o.reported_problem || undefined}>
-              {o.reported_problem || ""}
-            </span>
-            <span className="order-actions">
-              <a
-                className="order-whatsapp"
-                href={o.client.whatsapp_url}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`WhatsApp da OS ${o.number}`}
-              >
-                <img src="/arl-assets/icons/icon-whatsapp.png" alt="" />
-              </a>
-              <a className="order-maps" href={o.client.maps_url} target="_blank" rel="noreferrer" aria-label={`Abrir endereço da OS ${o.number} no Google Maps`}>
-                <img src="/arl-assets/icons/icon-maps.png" alt="" />
-              </a>
-              <button
-                className="order-view"
-                type="button"
-                aria-label="Ver OS"
-                title="Ver OS"
-                onClick={() => open("orders", o.id)}
-              >
-                <Eye aria-hidden="true" />
-                <span className="sr-only">Ver OS</span>
-              </button>
-              {onEdit && ["Master", "Administrador"].includes(role) && (
-                <button
-                  className={o.status === "completed" ? "order-reopen" : "order-edit"}
-                  type="button"
-                  aria-label={
-                    o.status === "completed"
-                      ? "Reabrir como garantia"
-                      : "Editar OS"
-                  }
-                  title={
-                    o.status === "completed"
-                      ? "Reabrir como garantia"
-                      : "Editar OS"
-                  }
-                  onClick={() => onEdit(o)}
-                >
-                  {o.status === "completed" ? <RotateCcw /> : <Pencil />}
-                </button>
-              )}
-              {["Master", "Administrador"].includes(role) && (
-                <button
-                  type="button"
-                  className="arl-order-delete"
-                  aria-label={`Excluir OS ${o.number}`}
-                  title="Excluir OS"
-                  onClick={() => onDelete(o)}
-                >
-                  <Trash2 />
-                </button>
-              )}
-            </span>
-          </div>
-        );
-      })}
+    <div className="order-list shared-order-list orders-order-list">
+      <table>
+        <colgroup>
+          <col style={{ width: "9%" }} />
+          <col style={{ width: "17%" }} />
+          <col style={{ width: "14%" }} />
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "17%" }} />
+          <col style={{ width: "10%" }} />
+          <col style={{ width: "18%" }} />
+        </colgroup>
+        <thead><tr><th># OS</th><th>CLIENTE</th><th>DISPOSITIVO</th><th>STATUS</th><th>RELATO</th><th>VALOR</th><th>AÇÕES</th></tr></thead>
+        <tbody>{items.map((o: Order) => {
+          const reopened = isReopenedOrder(o);
+          const closed = Boolean(o.completed_at);
+          return (
+            <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
+              <td><b>#{o.number}</b></td>
+              <td><span className="order-customer"><strong>{o.client.name}</strong>{reopened && <span className="arl-reopened-marker" aria-label="OS reaberta">Reaberta</span>}</span></td>
+              <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
+              <td><label className={`row-status status-${o.status}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={o.status} disabled={o.status === "completed"} onChange={(e) => onStatus(o, e.target.value)}><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{role !== "Funcionário" && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</select></label></td>
+              <td><span className="order-client-report" title={o.reported_problem || undefined}>{o.reported_problem || ""}</span></td>
+              <td>{closed ? <span className="order-value"><strong>{money(o.total_cents || 0)}</strong><small>{new Date(o.completed_at!).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</small></span> : <em className="order-value-pending">A orçar</em>}</td>
+              <td><span className="order-actions"><a className="order-whatsapp" href={o.client.whatsapp_url} target="_blank" rel="noreferrer" aria-label={`WhatsApp da OS ${o.number}`}><img src="/arl-assets/icons/icon-whatsapp.png" alt="" /></a><a className="order-maps" href={o.client.maps_url} target="_blank" rel="noreferrer" aria-label={`Abrir endereço da OS ${o.number} no Google Maps`}><img src="/arl-assets/icons/icon-maps.png" alt="" /></a><button className="order-view" type="button" aria-label="Ver OS" title="Ver OS" onClick={() => open("orders", o.id)}><Eye aria-hidden="true" /><span className="sr-only">Ver OS</span></button>{onEdit && ["Master", "Administrador"].includes(role) && <button className={o.status === "completed" ? "order-reopen" : "order-edit"} type="button" aria-label={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} title={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} onClick={() => onEdit(o)}>{o.status === "completed" ? <RotateCcw /> : <Pencil />}</button>}{["Master", "Administrador"].includes(role) && <button type="button" className="arl-order-delete" aria-label={`Excluir OS ${o.number}`} title="Excluir OS" onClick={() => onDelete(o)}><Trash2 /></button>}</span></td>
+            </tr>
+          );
+        })}</tbody>
+      </table>
     </div>
   );
 }
@@ -787,7 +702,6 @@ function Orders({ open, role }: any) {
           <OrderTable
             items={items}
             open={open}
-            showValue={tab === "finalized"}
             onEdit={(o: Order) =>
               open("orders", o.id, o.status === "completed" ? "reopen" : "edit")
             }
