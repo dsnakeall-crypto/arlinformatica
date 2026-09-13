@@ -25,7 +25,7 @@ async function waitForOfficialViewIcon(scope: ReturnType<Page['locator']>) {
   await expect(button).toBeVisible();
   const eye = button.locator('svg.lucide-eye');
   await expect(eye).toBeVisible();
-  await expect(eye.locator('path')).toHaveCount(2);
+  await expect(eye.locator('path')).toHaveCount(1);
   const box = await eye.boundingBox();
   expect(box).not.toBeNull();
   expect(box!.width).toBeGreaterThan(0);
