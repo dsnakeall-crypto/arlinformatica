@@ -35,7 +35,7 @@ class ServiceOrderController extends Controller
         }
         match ($tab) {
             'progress' => $q->whereIn('status', ['analysis', 'waiting_part', 'in_service']),
-            'finalized' => $q->where('status', 'completed'),
+            'finalized' => $q->whereIn('status', ['completed', 'interrupted']),
             'interrupted' => $q->where('status', 'interrupted'),
             default => null,
         };
@@ -53,7 +53,7 @@ class ServiceOrderController extends Controller
 
         $summary = [
             'open' => ServiceOrder::whereNotIn('status', ['completed', 'interrupted'])->count(),
-            'completed_week' => ServiceOrder::where('status', 'completed')->where('completed_at', '>=', now()->startOfWeek())->count(),
+            'completed_week' => ServiceOrder::whereIn('status', ['completed', 'interrupted'])->where('completed_at', '>=', now()->startOfWeek())->count(),
         ];
 
         $perPage = max(1, min(100, (int) $r->integer('per_page', 50)));
@@ -68,7 +68,7 @@ class ServiceOrderController extends Controller
             ->select('service_orders.*')
             ->with('client:id,name,phone,street,number,district,city,state')
             ->withExists(['histories as reopened' => fn ($history) => $history->where('from_status', 'completed')->where('to_status', 'analysis')])
-            ->where('status', '!=', 'completed')
+            ->whereNotIn('status', ['completed', 'interrupted'])
             ->oldest('received_at')
             ->get();
 
@@ -160,6 +160,7 @@ class ServiceOrderController extends Controller
         $payload['display_status'] = $order->archived ? 'paid' : $order->status;
         $payload['reopened'] = $order->histories->contains(fn ($history) => $history->from_status === 'completed' && $history->to_status === 'analysis');
         $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;
+        $payload['interruption_work_done'] = $order->status === 'interrupted' ? $order->interruption_work_done : null;
         if ($order->attendance_type === 'external') {
             $message = "Olá, {$order->client->name}. Aqui é a ARL Informática sobre a OS #{$order->number}.";
             $intakeCondition = trim((string) $order->intake_condition);
@@ -205,7 +206,12 @@ class ServiceOrderController extends Controller
         $data = $r->validate([
             'status' => 'required|in:analysis,waiting_part,in_service,completed,interrupted,paid',
             'interruption_reason' => 'nullable|required_if:status,interrupted|string|max:10000',
+            'interruption_work_done' => 'nullable|required_if:status,interrupted|string|max:10000',
         ]);
+        if ($data['status'] === 'interrupted') {
+            abort_if(blank(trim((string) $data['interruption_reason'])), 422, 'Informe o motivo da interrupção.');
+            abort_if(blank(trim((string) $data['interruption_work_done'])), 422, 'Informe o que já foi feito no equipamento, mesmo que a resposta seja “Nada”.');
+        }
 
         if ($r->user()->hasRole('Funcionário')) {
             abort_if(
@@ -254,40 +260,97 @@ class ServiceOrderController extends Controller
         }
 
         abort_if($order->archived, 422, 'Uma OS paga e retirada só pode voltar ao fluxo pela opção Reabrir OS.');
-        abort_if($order->status === 'completed', 422, 'Uma OS concluída só pode ser marcada como PAGO ou reaberta como retorno/garantia.');
+        abort_if(in_array($order->status, ['completed', 'interrupted'], true), 422, 'Uma OS fechada não pode voltar ao fluxo por alteração de status.');
+
+        if ($data['status'] === 'interrupted') {
+            DB::transaction(function () use ($order, $data, $r) {
+                $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+                abort_if(in_array($locked->status, ['completed', 'interrupted'], true) || $locked->archived, 409, 'Esta OS já está fechada.');
+                abort_if(
+                    DB::table('payments')->where('service_order_id', $locked->id)->exists(),
+                    409,
+                    'Esta OS possui pagamento registrado e não pode ser interrompida. Preserve este atendimento e use o fluxo normal de finalização.'
+                );
+
+                $reason = trim((string) $data['interruption_reason']);
+                $workDone = trim((string) $data['interruption_work_done']);
+                $before = [
+                    'status' => $locked->status,
+                    'subtotal_cents' => (int) $locked->subtotal_cents,
+                    'discount_cents' => (int) $locked->discount_cents,
+                    'total_cents' => (int) $locked->total_cents,
+                    'items_count' => DB::table('service_order_items')->where('service_order_id', $locked->id)->whereNull('finalization_id')->count(),
+                ];
+
+                DB::table('service_order_items')->where('service_order_id', $locked->id)->whereNull('finalization_id')->delete();
+                $locked->forceFill([
+                    'status' => 'interrupted',
+                    'completed_at' => now(),
+                    'result' => null,
+                    'technical_report' => $reason,
+                    'interruption_work_done' => $workDone,
+                    'subtotal_cents' => 0,
+                    'discount_cents' => 0,
+                    'total_cents' => 0,
+                ])->save();
+                StatusHistory::create([
+                    'service_order_id' => $locked->id,
+                    'from_status' => $before['status'],
+                    'to_status' => 'interrupted',
+                    'user_id' => $r->user()->id,
+                    'reason' => $reason,
+                ]);
+                DB::table('audit_logs')->insert([
+                    'user_id' => $r->user()->id,
+                    'action' => 'service_order.interrupted',
+                    'subject_type' => 'service_order',
+                    'subject_id' => $locked->id,
+                    'before' => json_encode($before),
+                    'after' => json_encode([
+                        'status' => 'interrupted',
+                        'reason' => $reason,
+                        'work_done' => $workDone,
+                        'completed_at' => $locked->completed_at?->toISOString(),
+                        'subtotal_cents' => 0,
+                        'discount_cents' => 0,
+                        'total_cents' => 0,
+                        'items_count' => 0,
+                    ]),
+                    'ip_address' => $r->ip(),
+                    'created_at' => now(),
+                ]);
+            });
+
+            $fresh = $order->fresh();
+            $payload = $fresh->toArray();
+            $payload['display_status'] = 'interrupted';
+            $payload['interruption_reason'] = $fresh->technical_report;
+            $payload['interruption_work_done'] = $fresh->interruption_work_done;
+
+            return response()->json($payload);
+        }
 
         DB::transaction(function () use ($order, $data, $r) {
             $before = $order->status;
-            $reason = $data['status'] === 'interrupted' ? trim((string) $data['interruption_reason']) : null;
             $order->forceFill([
                 'status' => $data['status'],
-                'technical_report' => $reason,
+                'technical_report' => null,
+                'interruption_work_done' => null,
             ])->save();
             StatusHistory::create([
                 'service_order_id' => $order->id,
                 'from_status' => $before,
                 'to_status' => $data['status'],
                 'user_id' => $r->user()->id,
-                'reason' => $reason,
+                'reason' => null,
             ]);
-            if ($data['status'] === 'interrupted') {
-                DB::table('audit_logs')->insert([
-                    'user_id' => $r->user()->id,
-                    'action' => 'service_order.interrupted',
-                    'subject_type' => 'service_order',
-                    'subject_id' => $order->id,
-                    'before' => json_encode(['status' => $before]),
-                    'after' => json_encode(['status' => 'interrupted', 'reason' => $reason]),
-                    'ip_address' => $r->ip(),
-                    'created_at' => now(),
-                ]);
-            }
         });
 
         $fresh = $order->fresh();
         $payload = $fresh->toArray();
         $payload['display_status'] = $fresh->archived ? 'paid' : $fresh->status;
         $payload['interruption_reason'] = $fresh->status === 'interrupted' ? $fresh->technical_report : null;
+        $payload['interruption_work_done'] = $fresh->status === 'interrupted' ? $fresh->interruption_work_done : null;
 
         return response()->json($payload);
     }

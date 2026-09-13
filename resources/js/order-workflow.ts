@@ -9,6 +9,7 @@ type WorkflowOrder = {
   archived?: boolean;
   technical_report?: string | null;
   interruption_reason?: string | null;
+  interruption_work_done?: string | null;
   histories?: Array<{ to_status?: string }>;
 };
 
@@ -48,25 +49,28 @@ function installStyles() {
   document.head.append(style);
 }
 
-function interruptionReason(current = ''): Promise<string | null> {
+function interruptionDetails(currentReason = '', currentWorkDone = ''): Promise<{ reason: string; workDone: string } | null> {
   return new Promise((resolve) => {
     document.querySelector('.arl-status-modal')?.remove();
     const overlay = document.createElement('div');
     overlay.className = 'arl-status-modal';
     overlay.innerHTML = `<section class="arl-status-modal-card" role="dialog" aria-modal="true" aria-label="Interromper OS">
       <h2>Interromper OS</h2>
-      <p class="arl-status-modal-note">Descreva por que o atendimento foi interrompido. O motivo ficará salvo enquanto a OS estiver interrompida e será apagado automaticamente quando ela voltar para outro status.</p>
+      <p class="arl-status-modal-note">A OS será fechada sem lançamento financeiro. Os serviços serão removidos e o total ficará zerado.</p>
       <label>Motivo da interrupção<textarea data-reason placeholder="Ex.: cliente pediu pausa, aguardando decisão, atendimento suspenso..."></textarea></label>
+      <label>O que já foi feito no equipamento? *<textarea data-work-done placeholder='Se nada foi feito, escreva "Nada".'></textarea></label>
       <div class="arl-status-modal-error" data-error></div>
       <div class="arl-status-modal-actions"><button type="button" data-cancel>Cancelar</button><button type="button" class="primary" data-save>Salvar interrupção</button></div>
     </section>`;
     document.body.append(overlay);
     const area = overlay.querySelector<HTMLTextAreaElement>('[data-reason]')!;
+    const workDoneArea = overlay.querySelector<HTMLTextAreaElement>('[data-work-done]')!;
     const error = overlay.querySelector<HTMLElement>('[data-error]')!;
-    area.value = current;
+    area.value = currentReason;
+    workDoneArea.value = currentWorkDone;
     area.focus();
     let finished = false;
-    const finish = (value: string | null) => {
+    const finish = (value: { reason: string; workDone: string } | null) => {
       if (finished) return;
       finished = true;
       overlay.remove();
@@ -78,7 +82,9 @@ function interruptionReason(current = ''): Promise<string | null> {
     overlay.querySelector('[data-save]')?.addEventListener('click', () => {
       const value = area.value.trim();
       if (!value) { error.textContent = 'Informe o motivo da interrupção.'; area.focus(); return; }
-      finish(value);
+      const workDone = workDoneArea.value.trim();
+      if (!workDone) { error.textContent = 'Informe o que já foi feito. Se nada foi feito, escreva "Nada".'; workDoneArea.focus(); return; }
+      finish({ reason: value, workDone });
     });
   });
 }
@@ -105,16 +111,19 @@ function installFetchWorkflow() {
     const statusMatch = url.origin === location.origin ? url.pathname.match(/^\/api\/orders\/(\d+)\/status$/) : null;
     if (!reactDetail && statusMatch && method === 'PATCH' && typeof init?.body === 'string') {
       const payload = JSON.parse(init.body || '{}');
-      if (payload.status === 'interrupted' && !payload.interruption_reason) {
-        const current = window.__arlWorkflowOrder?.status === 'interrupted'
+      if (payload.status === 'interrupted' && (!payload.interruption_reason || !payload.interruption_work_done)) {
+        const currentReason = window.__arlWorkflowOrder?.status === 'interrupted'
           ? (window.__arlWorkflowOrder.interruption_reason || window.__arlWorkflowOrder.technical_report || '')
           : '';
-        const reason = await interruptionReason(current);
-        if (!reason) {
+        const currentWorkDone = window.__arlWorkflowOrder?.status === 'interrupted'
+          ? (window.__arlWorkflowOrder.interruption_work_done || '')
+          : '';
+        const details = await interruptionDetails(currentReason, currentWorkDone);
+        if (!details) {
           const currentOrder = window.__arlWorkflowOrder ?? {};
           return new Response(JSON.stringify(currentOrder), { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
-        nextInit = { ...init, body: JSON.stringify({ ...payload, interruption_reason: reason }) };
+        nextInit = { ...init, body: JSON.stringify({ ...payload, interruption_reason: details.reason, interruption_work_done: details.workDone }) };
       }
     }
 

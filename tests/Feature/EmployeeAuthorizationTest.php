@@ -56,7 +56,11 @@ class EmployeeAuthorizationTest extends TestCase
         $this->deleteJson("/api/orders/{$id}")->assertForbidden();
         $this->postJson("/api/orders/{$id}/finalize", [])->assertForbidden();
         $this->postJson("/api/orders/{$id}/reopen", ['note' => 'retorno'])->assertForbidden();
-        $this->patchJson("/api/orders/{$id}/status", ['status' => 'interrupted', 'interruption_reason' => 'pausa'])->assertForbidden()
+        $this->patchJson("/api/orders/{$id}/status", [
+            'status' => 'interrupted',
+            'interruption_reason' => 'pausa',
+            'interruption_work_done' => 'nada',
+        ])->assertForbidden()
             ->assertJsonPath('message', 'Funcionário não pode concluir, interromper ou registrar a retirada/pagamento de uma OS.');
         $this->postJson("/api/orders/{$id}/payment", ['amount_cents' => 100, 'method' => 'pix'])->assertForbidden();
         $this->getJson('/api/finance/overview')->assertForbidden();

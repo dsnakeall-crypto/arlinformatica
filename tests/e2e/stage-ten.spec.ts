@@ -110,7 +110,11 @@ test('Funcionário vê somente operação e o backend continua sendo a autoridad
   expect((await api(page, `/orders/${order.body.id}`, 'DELETE')).status).toBe(403);
   expect((await api(page, `/orders/${order.body.id}/finalize`, 'POST', {})).status).toBe(403);
   expect((await api(page, `/orders/${order.body.id}/reopen`, 'POST', { note: 'retorno' })).status).toBe(403);
-  expect((await api(page, `/orders/${order.body.id}/status`, 'PATCH', { status: 'interrupted', interruption_reason: 'pausa' })).status).toBe(403);
+  expect((await api(page, `/orders/${order.body.id}/status`, 'PATCH', {
+    status: 'interrupted',
+    interruption_reason: 'pausa',
+    interruption_work_done: 'nada',
+  })).status).toBe(403);
   expect((await api(page, `/orders/${order.body.id}/payment`, 'POST', { amount_cents: 100, method: 'pix' })).status).toBe(403);
 });
 

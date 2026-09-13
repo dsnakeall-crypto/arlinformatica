@@ -144,26 +144,30 @@ function EditOrderModal({ order, onClose, onSaved }: any) {
 }
 
 function ImmutableModal({ order, onClose }: any) {
+  const preservedState = order.archived ? 'paga e arquivada' : order.status === 'interrupted' ? 'interrompida e fechada' : 'finalizada';
   return <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Editar OS #${order.number}`}>
     <h2>OS #{order.number} preservada</h2>
-    <p>Esta OS está {order.archived ? 'paga e arquivada' : 'finalizada'} e o conteúdo histórico não pode ser alterado. Uma futura etapa tratará o fluxo de reabertura/retorno sem modificar esta OS original.</p>
+    <p>Esta OS está {preservedState} e o conteúdo histórico não pode ser alterado. {order.status === 'interrupted' ? 'Uma OS interrompida não pode ser reaberta; um novo atendimento exige uma nova OS.' : 'A reabertura preserva o histórico da finalização anterior.'}</p>
     <div className="arl-od-actions"><button type="button" className="primary" onClick={onClose}>Fechar</button></div>
   </section></div>;
 }
 
 function InterruptionModal({ order, onClose, onSaved }: any) {
   const [reason, setReason] = useState(order.status === 'interrupted' ? (order.interruption_reason || order.technical_report || '') : '');
+  const [workDone, setWorkDone] = useState(order.status === 'interrupted' ? (order.interruption_work_done || '') : '');
   const [error, setError] = useState('');
   const save = async () => {
     if (!reason.trim()) { setError('Informe o motivo da interrupção.'); return; }
+    if (!workDone.trim()) { setError('Informe o que já foi feito no equipamento. Se nada foi feito, escreva "Nada".'); return; }
     try {
-      await api(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'interrupted', interruption_reason: reason.trim() }) });
+      await api(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'interrupted', interruption_reason: reason.trim(), interruption_work_done: workDone.trim() }) });
       onSaved();
     } catch (e: any) { setError(e.message); }
   };
   return <div className="arl-status-modal"><section className="arl-status-modal-card" role="dialog" aria-modal="true" aria-label="Interromper OS">
-    <h2>Interromper OS</h2><p className="arl-status-modal-note">Descreva por que o atendimento foi interrompido. O motivo ficará salvo enquanto a OS estiver interrompida.</p>
+    <h2>Interromper OS</h2><p className="arl-status-modal-note">A OS será fechada sem lançamento financeiro. Os serviços serão removidos e o total ficará zerado.</p>
     <label>Motivo da interrupção<textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ex.: cliente pediu pausa, aguardando decisão, atendimento suspenso..."/></label>
+    <label>O que já foi feito no equipamento? *<textarea aria-label="O que já foi feito no equipamento" value={workDone} onChange={(e) => setWorkDone(e.target.value)} placeholder='Se nada foi feito, escreva "Nada".'/></label>
     <div className="arl-status-modal-error">{error}</div>
     <div className="arl-status-modal-actions"><button type="button" onClick={onClose}>Cancelar</button><button type="button" className="primary" onClick={save}>Salvar interrupção</button></div>
   </section></div>;
@@ -182,7 +186,7 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
     onDirtyChange?.(false);
   }, [order.items]);
   useEffect(() => () => { pendingSaveRef.current = null; onDirtyChange?.(false); }, [order.id, pendingSaveRef]);
-  if (order.archived || order.status === 'completed') return null;
+  if (order.archived || ['completed', 'interrupted'].includes(order.status)) return null;
   const changeItems = (updater: (current: any[]) => any[]) => {
     setMessage('');
     setItems(updater);
@@ -223,7 +227,7 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
 
 function FinalReportPanel({ order, value, setValue, reload, onDirtyChange }: any) {
   const [message, setMessage] = useState('');
-  const readOnly = Boolean(order.archived || order.status === 'completed');
+  const readOnly = Boolean(order.archived || ['completed', 'interrupted'].includes(order.status));
   const save = async () => {
     setMessage('');
     try { await api(`/orders/${order.id}`, { method: 'PATCH', body: JSON.stringify({ final_report: value.trim() || null }) }); onDirtyChange?.(false); setMessage('Salvo.'); await reload(); }
@@ -236,7 +240,7 @@ function FinalReportPanel({ order, value, setValue, reload, onDirtyChange }: any
 }
 
 function BudgetBox({ order, role, openSignal = 0 }: any) {
-  const isFinalized = order.status === 'completed';
+  const isFinalized = ['completed', 'interrupted'].includes(order.status);
   const [list, setList] = useState<any[]>([]), [open, setOpen] = useState(false), [validity, setValidity] = useState(7), [catalog, setCatalog] = useState<ServiceProductCatalogItem[]>([]), [items, setItems] = useState<any[]>([]), [error, setError] = useState('');
   const [diagnosis, setDiagnosis] = useState(''), [proposal, setProposal] = useState(''), [observation, setObservation] = useState('');
   const load = () => api(`/orders/${order.id}/budgets`).then(setList);
@@ -288,6 +292,7 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
   const load = async () => { const next = await api(`/orders/${order.id}/payments`) as PaymentSummary; setSummary(next); setAmount(((next.collectible_balance_cents || 0) / 100).toFixed(2).replace('.', ',')); onSummary?.(next); };
   useEffect(() => { void load(); }, [order.id, order.total_cents]);
   useEffect(() => { if (openSignal && summary && summary.collectible_balance_cents > 0 && summary.total_cents > 0) { setAmount((summary.collectible_balance_cents / 100).toFixed(2).replace('.', ',')); setError(''); setOpen(true); } }, [openSignal]);
+  if (order.status === 'interrupted') return <section className="wide arl-payment-empty"><h2>Pagamento</h2><p>OS interrompida não gera pagamento, A Receber ou lançamento no Caixa.</p></section>;
   if (!summary) return <section className="wide"><h2>Pagamento</h2><p>Carregando situação do pagamento…</p></section>;
   const { total_cents: total, paid_cents: paid, collectible_balance_cents: balance } = summary;
   const entered = Math.round(Number(amount.replace(',', '.')) * 100), remainingAfter = Number.isFinite(entered) ? Math.max(0, balance - entered) : balance;
@@ -323,6 +328,7 @@ function FinalizationBox({ order, reload, openSignal = 0, finalReport, setFinalR
   };
   useEffect(() => { void loadLists(); }, [order.id]); useEffect(() => { setItems(seeded()); }, [order.items]); useEffect(() => { if (openSignal) void openFinalization(); }, [openSignal]);
   if (order.status === 'completed') return <section className="wide completion"><h2>Finalização da OS</h2><b>Finalizado</b><p>{order.technical_report}</p><strong>Total: {money(order.total_cents)}</strong></section>;
+  if (order.status === 'interrupted') return null;
   const approved = budgets.find((row) => row.status === 'approved');
   const budgetItems = approved ? approved.items.map((row: any) => { let warranty = row.warranty_snapshot; if (typeof warranty === 'string') try { warranty = JSON.parse(warranty); } catch { warranty = null; } return { catalog_id: row.catalog_id, description: row.description, quantity: row.quantity, unit_price_cents: row.unit_price_cents, warranty_enabled: !!warranty, warranty_term: warranty?.term, warranty_unit: warranty?.unit }; }) : [];
   const shownItems = sourceBudgetId ? budgetItems : items, subtotal = shownItems.reduce((sum: number, row: any) => sum + row.quantity * row.unit_price_cents, 0), disc = Math.round(Number(discount.replace(',', '.')) * 100), total = Math.max(0, subtotal - disc);
@@ -391,7 +397,8 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
   }, [reopenOnLoad, order?.id, order?.status, role]);
 
   if (error) return <div className="state error">{error}</div>; if (!order || role === null) return <div className="state">Carregando OS…</div>;
-  const immutable = Boolean(order.archived || order.status === 'completed');
+  const immutable = Boolean(order.archived || ['completed', 'interrupted'].includes(order.status));
+  const interrupted = order.status === 'interrupted';
   const reopened = isReopenedOrder(order);
   const persistPendingChanges = async () => {
     let persistedOrder = order;
@@ -415,7 +422,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
   const canAdminister = ['Master', 'Administrador'].includes(role);
   const statusOptions = role === 'Funcionário'
     ? activeStatusOptions.filter(([value]) => !['completed', 'interrupted'].includes(value))
-    : order.archived ? [['paid', 'Pago']] : order.status === 'completed' ? [['completed', 'Finalizado'], ['paid', 'Pago']] : activeStatusOptions;
+    : order.archived ? [['paid', 'Pago']] : order.status === 'completed' ? [['completed', 'Finalizado'], ['paid', 'Pago']] : interrupted ? [['interrupted', 'Interrompido']] : activeStatusOptions;
   const editOrder = () => onEdit ? onEdit() : setEditOpen(true);
   const finalMessage = [`Olá, ${order.client?.name || 'cliente'} 👋`, `Seu Equipamento está pronto da OS ${order.number}! 🎉`, '📋 Detalhes do Serviço:', `- Valor: ${money(order.total_cents || 0)}`, '💳 Formas de Pagamento:', '- PIX (Chave): 35988285777', '- Cartão: (Com taxas inclusas)', '- Dinheiro: (Favor trazer trocado)', '⚠️ A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.', 'Agradecemos pela preferência! 😊'].join('\n');
   const shareFinalReport = async () => {
@@ -449,33 +456,34 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
   const mapsAddress = [order.client?.street, order.client?.number, order.client?.district, order.client?.city, order.client?.state].filter(Boolean).join(', ');
   const mapsUrl = order.mobile_actions?.maps_url || (mapsAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsAddress)}` : '');
   if (readOnly) return <div data-arl-order-detail-react="1" data-mobile-read-only="1" className="arl-mobile-read-only">
-    <header className="arl-mobile-read-only-header"><button type="button" onClick={back} aria-label="Voltar para OS abertas">←</button><div><span>ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}</div></header>
+    <header className="arl-mobile-read-only-header"><button type="button" onClick={back} aria-label="Voltar para OS abertas">←</button><div><span>ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}{interrupted&&<span className="arl-reopened-marker arl-interrupted-marker arl-order-reopened-marker">Interrompida</span>}</div></header>
     <div className="arl-read-only-banner">Somente leitura · edite pelo PC</div>
     <div className="arl-mobile-read-only-actions">{openingWhatsapp && <a href={openingWhatsapp} target="_blank" rel="noreferrer">WhatsApp</a>}{mapsUrl && <a href={mapsUrl} target="_blank" rel="noreferrer">Rota</a>}</div>
-    <details className="arl-opening-call"><summary>PDF's e Reaberturas OS</summary><div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">Reabrir OS</span>)}</div></details>
+    <details className="arl-opening-call"><summary>PDF's e Reaberturas OS</summary><div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div></details>
     <section><h2>Cliente</h2><strong>{order.client.name}</strong><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></section>
     <section><h2>Equipamento</h2><p>{order.equipment_description || 'Equipamento não informado'}</p>{order.equipment_details && <p><strong>Fabricante / Modelo / Acessórios:</strong> {order.equipment_details}</p>}<p>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</p></section>
     <section><h2>Problema relatado</h2><p>{order.reported_problem}</p></section>
     <section><h2>Estado físico na entrada</h2><p>{order.intake_condition || 'Equipamento aparentemente 100% sem avarias'}</p></section>
     <section><h2>Serviços</h2>{order.items?.length ? order.items.map((item: any) => <p key={item.id}>{item.quantity} × {item.description}</p>) : <p>Nenhum serviço registrado.</p>}</section>
+    {interrupted && <section className="arl-interruption-note"><h2>Interrupção</h2><p><strong>Motivo:</strong> {order.interruption_reason || order.technical_report}</p><p><strong>O que já foi feito:</strong> {order.interruption_work_done}</p></section>}
     {reopenOpen && <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Reabrir OS #${order.number}`}><h2>Reabrir OS #{order.number}</h2><p>A mesma OS voltará para Em Análise. A finalização e o PDF atuais permanecerão no histórico.</p><label>Motivo da reabertura<textarea value={reopenNote} onChange={(event) => setReopenNote(event.target.value)}/></label><div className="arl-od-actions"><button type="button" onClick={() => setReopenOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={async () => { if (!reopenNote.trim()) return; await api(`/orders/${order.id}/reopen`, { method: 'POST', body: JSON.stringify({ note: reopenNote.trim() }) }); setReopenOpen(false); await load(); }}>Confirmar reabertura</button></div></section></div>}
   </div>;
   const stages = ['Entrada', 'Orçamento', 'Execução', 'Finalização', 'Pagamento'];
-  const currentStage = order.archived ? -1 : order.status === 'completed' ? 4 : ['in_service', 'waiting_part', 'interrupted'].includes(order.status) ? 2 : order.status === 'analysis' ? 1 : 0;
+  const currentStage = order.archived ? -1 : ['completed', 'interrupted'].includes(order.status) ? 4 : ['in_service', 'waiting_part'].includes(order.status) ? 2 : order.status === 'analysis' ? 1 : 0;
   const stageState = (index: number) => order.archived ? 'completed' : index < currentStage ? 'completed' : index === currentStage ? 'current' : 'future';
   const paymentEnabled = Boolean(canAdminister && paymentSummary && paymentSummary.collectible_balance_cents > 0 && paymentSummary.total_cents > 0);
   return <div data-arl-order-detail-react="1" className="arl-order-detail-page">
     <header className="arl-order-sticky-header">
       <div className="arl-order-header-main">
         <button type="button" className="arl-order-back" onClick={back}>← Voltar</button>
-        <div className="arl-order-header-identity"><span className="arl-eyebrow">ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}<div className="arl-order-header-meta"><span className="arl-order-client-link"><strong>{order.client.name}</strong>{onOpenClientHistory&&<button type="button" onClick={()=>onOpenClientHistory(order.client.id)}>Ver histórico do cliente</button>}</span><span>{order.equipment_description || 'Equipamento não informado'}</span><span>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</span></div></div>
-        <label className={`status-picker status-${shownStatus}`}><span>Status</span><select ref={statusSelect} value={shownStatus} disabled={order.archived} onChange={(e) => void changeStatus(e.target.value)}>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <div className="arl-order-header-identity"><span className="arl-eyebrow">ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}{interrupted&&<span className="arl-reopened-marker arl-interrupted-marker arl-order-reopened-marker">Interrompida</span>}<div className="arl-order-header-meta"><span className="arl-order-client-link"><strong>{order.client.name}</strong>{onOpenClientHistory&&<button type="button" onClick={()=>onOpenClientHistory(order.client.id)}>Ver histórico do cliente</button>}</span><span>{order.equipment_description || 'Equipamento não informado'}</span><span>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</span></div></div>
+        <label className={`status-picker status-${shownStatus}`}><span>Status</span><select ref={statusSelect} value={shownStatus} disabled={order.archived || interrupted} onChange={(e) => void changeStatus(e.target.value)}>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       </div>
       <div className="arl-order-quick-actions arl-order-header-actions">
         {order.status === 'completed' ? canAdminister && <button type="button" className="arl-od-btn" onClick={() => setReopenOpen(true)}><RotateCcw/><span>Reabrir OS</span></button> : !immutable && <button type="button" className="arl-od-btn" onClick={editOrder}><Pencil/><span>Editar OS</span></button>}
-        {order.status !== 'completed' && <button type="button" data-quick="budget" onClick={() => setBudgetSignal((x) => x + 1)}><Plus/><span>Gerar orçamento</span></button>}
+        {!immutable && <button type="button" data-quick="budget" onClick={() => setBudgetSignal((x) => x + 1)}><Plus/><span>Gerar orçamento</span></button>}
         {paymentEnabled && <button type="button" className="primary" data-quick="payment" onClick={() => setPaymentSignal((x) => x + 1)}><Wallet/><span>{paymentSummary?.paid_cents ? 'Registrar novo pagamento' : 'Registrar pagamento'}</span></button>}
-        <details className="arl-opening-call"><summary>PDF's e Reaberturas OS</summary>{' '}<div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">Reabrir OS</span>)}</div></details>
+        <details className="arl-opening-call"><summary>PDF's e Reaberturas OS</summary>{' '}<div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div></details>
         {canAdminister && !immutable && order.status !== 'completed' && <button id="finalization-action" type="button" className="primary arl-finalization-action" onClick={() => setFinalSignal((x) => x + 1)}><Check/><span>Concluir OS</span></button>}
       </div>
     </header>
@@ -493,7 +501,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
       {immutable && order.items?.length > 0 && <section className="wide order-items-summary"><h2>Serviços / Produtos da OS</h2>{order.items.map((item: any) => <div className="order-item-line" key={item.id}><div><b>{item.description}</b><small>{item.quantity} × {money(item.unit_price_cents)}</small></div><strong>{money(item.subtotal_cents)}</strong></div>)}</section>}
       {!immutable && <ServicesPanel order={order} reload={load} pendingSaveRef={pendingServicesSave} onDirtyChange={setServicesDirty}/>}
       <FinalReportPanel order={order} value={finalReport} setValue={setFinalReport} reload={load} onDirtyChange={setFinalReportDirty}/>
-      {order.status === 'interrupted' && (order.interruption_reason || order.technical_report) && <section className="wide arl-interruption-note"><h2>Motivo da interrupção</h2><p>{order.interruption_reason || order.technical_report}</p></section>}
+      {interrupted && <section className="wide arl-interruption-note"><h2>Interrupção</h2><p><strong>Motivo:</strong> {order.interruption_reason || order.technical_report}</p><p><strong>O que já foi feito:</strong> {order.interruption_work_done}</p></section>}
       <BudgetBox order={order} role={role} openSignal={budgetSignal}/>
       {canAdminister && <PaymentBox order={order} role={role} openSignal={paymentSignal} onSummary={setPaymentSummary}/>}
       {canAdminister && <FinalizationBox order={order} reload={load} openSignal={finalSignal} finalReport={finalReport} setFinalReport={setFinalReport} onShare={setShare} persistPendingChanges={persistPendingChanges} onFinalReportDirty={setFinalReportDirty}/>}

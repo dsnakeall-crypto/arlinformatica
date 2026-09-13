@@ -66,7 +66,10 @@ async function moveToStatus(page: Page, order: any, status: StatusCase) {
   }
 
   const payload: Record<string, unknown> = { status: status.code };
-  if (status.code === 'interrupted') payload.interruption_reason = 'Contrato E2E: atendimento interrompido.';
+  if (status.code === 'interrupted') {
+    payload.interruption_reason = 'Contrato E2E: atendimento interrompido.';
+    payload.interruption_work_done = 'Contrato E2E: nenhum reparo foi realizado.';
+  }
   const changed = await api(page, `/orders/${order.id}/status`, 'PATCH', payload);
   expect(changed.status, `Transição para ${status.label}: ${JSON.stringify(changed.body)}`).toBe(200);
   expect(changed.body.status, `Resposta da transição deveria permanecer em ${status.code}`).toBe(status.code);
@@ -80,6 +83,16 @@ for (const [index, status] of statuses.entries()) {
     const persisted = await api(page, `/orders/${order.id}`);
     expect(persisted.status, `Persistência de ${status.label}: GET da OS falhou`).toBe(200);
     expect(persisted.body.status, `Persistência de ${status.label}: backend devolveu outro estado`).toBe(status.code);
+
+    if (status.code === 'interrupted') {
+      expect(persisted.body.completed_at, 'Interrupção deve preencher a data de fechamento').toBeTruthy();
+      expect(persisted.body.total_cents, 'Interrupção deve zerar o total').toBe(0);
+      expect(persisted.body.items, 'Interrupção deve remover os serviços da OS').toEqual([]);
+      const finalized = await api(page, `/orders?tab=finalized&q=${encodeURIComponent(clientName)}`);
+      expect(finalized.body.data.some((row: any) => row.id === order.id), 'OS interrompida deve ficar junto das finalizadas').toBe(true);
+      const reopened = await api(page, `/orders/${order.id}/reopen`, 'POST', { note: 'Tentativa proibida pelo contrato E2E.' });
+      expect(reopened.status, 'Backend deve recusar reabertura de OS interrompida').toBe(422);
+    }
 
     if (status.code === 'in_service') {
       const desk = await api(page, '/orders/desk');
@@ -104,9 +117,12 @@ for (const [index, status] of statuses.entries()) {
 
     const dashboardRow = page.locator('.order-row').filter({ hasText: clientName });
     await expect(dashboardRow, `Painel não exibiu a OS em ${status.label} após filtrar pelo cliente`).toBeVisible();
+    if (status.code === 'interrupted') {
+      await expect(dashboardRow.getByText('Interrompida', { exact: true })).toBeVisible();
+    }
     const rowStatus = dashboardRow.getByLabel(new RegExp(`Status da OS`));
     await expect(rowStatus.locator('option:checked'), `Lista mentiu sobre o estado ${status.code}`).toHaveText(status.code === 'completed' ? 'Concluído' : status.code === 'waiting_part' ? 'Aguardando Peça' : status.label);
-    if (status.code !== 'completed') {
+    if (!['completed', 'interrupted'].includes(status.code)) {
       await expect(rowStatus.locator('option[value="completed"]')).toHaveCount(0);
       await expect(rowStatus.locator('option[value="paid"]')).toHaveCount(0);
     }
@@ -117,8 +133,13 @@ for (const [index, status] of statuses.entries()) {
     const picker = root.locator('.status-picker select');
     await expect(picker, `Seletor do detalhe não persistiu ${status.code}`).toHaveValue(status.code);
     await expect(picker.locator('option:checked'), `Seletor do detalhe exibiu rótulo errado para ${status.code}`).toHaveText(status.label);
+    if (status.code === 'interrupted') {
+      await expect(picker).toBeDisabled();
+      await expect(root.getByText('Interrompida', { exact: true })).toBeVisible();
+      await expect(root.getByRole('button', { name: 'Reabrir OS', exact: true })).toHaveCount(0);
+    }
 
-    if (status.code !== 'completed') {
+    if (!['completed', 'interrupted'].includes(status.code)) {
       await expect(picker.locator('option[value="analysis"]')).toHaveText('Em Análise');
       await expect(picker.locator('option[value="waiting_part"]')).toHaveText('Aguardando Peça');
       await expect(picker.locator('option[value="in_service"]'), 'Detalhe React perdeu Em Serviço como opção selecionável').toHaveText('Em Serviço');
@@ -129,5 +150,13 @@ for (const [index, status] of statuses.entries()) {
     const history = root.locator('details.arl-record-accordion').filter({ hasText: 'Histórico de status' });
     await history.locator('summary').click();
     await expect(history.getByText(new RegExp(`^${status.label} ·`)), `Histórico exibiu rótulo errado para ${status.code}`).toBeVisible();
+
+    if (status.code === 'interrupted') {
+      await page.getByRole('button', { name: 'Painel', exact: true }).click();
+      const interruptedPanel = page.locator('.dashboard-interrupted-orders');
+      const interruptedRow = interruptedPanel.locator('.order-row').filter({ hasText: clientName });
+      await expect(interruptedPanel.getByRole('heading', { name: 'Interrompidas recentemente' })).toBeVisible();
+      await expect(interruptedRow.getByText('Interrompida', { exact: true })).toBeVisible();
+    }
   });
 }

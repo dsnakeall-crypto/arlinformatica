@@ -7,6 +7,7 @@ use App\Models\ServiceOrder;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ServiceOrderWorkflowTest extends TestCase
@@ -52,7 +53,7 @@ class ServiceOrderWorkflowTest extends TestCase
         return ServiceOrder::findOrFail($created['id']);
     }
 
-    public function test_interruption_reason_is_required_and_cleared_when_status_changes(): void
+    public function test_interruption_requires_reason_and_work_done(): void
     {
         $user = $this->master();
         $order = $this->order($user);
@@ -63,19 +64,19 @@ class ServiceOrderWorkflowTest extends TestCase
         $this->patchJson("/api/orders/{$order->id}/status", [
             'status' => 'interrupted',
             'interruption_reason' => 'Cliente pediu pausa enquanto aguarda decisão do orçamento.',
+        ])->assertStatus(422);
+
+        $this->patchJson("/api/orders/{$order->id}/status", [
+            'status' => 'interrupted',
+            'interruption_reason' => 'Cliente pediu pausa enquanto aguarda decisão do orçamento.',
+            'interruption_work_done' => 'Somente diagnóstico visual, sem reparo.',
         ])->assertOk()
             ->assertJsonPath('status', 'interrupted')
-            ->assertJsonPath('interruption_reason', 'Cliente pediu pausa enquanto aguarda decisão do orçamento.');
-        $this->assertDatabaseHas('service_orders', ['id' => $order->id, 'technical_report' => 'Cliente pediu pausa enquanto aguarda decisão do orçamento.']);
-
-        $this->patchJson("/api/orders/{$order->id}/status", ['status' => 'analysis'])
-            ->assertOk()
-            ->assertJsonPath('status', 'analysis')
-            ->assertJsonPath('interruption_reason', null);
-        $this->assertDatabaseHas('service_orders', ['id' => $order->id, 'technical_report' => null]);
+            ->assertJsonPath('interruption_reason', 'Cliente pediu pausa enquanto aguarda decisão do orçamento.')
+            ->assertJsonPath('interruption_work_done', 'Somente diagnóstico visual, sem reparo.');
     }
 
-    public function test_in_service_is_accepted_and_interrupted_order_cannot_be_finalized(): void
+    public function test_in_service_is_accepted_and_interruption_closes_without_finance_and_cannot_be_reopened(): void
     {
         $user = $this->master();
         $order = $this->order($user);
@@ -92,12 +93,103 @@ class ServiceOrderWorkflowTest extends TestCase
             ->assertOk()
             ->assertJsonFragment(['id' => $order->id, 'status' => 'in_service']);
 
+        DB::table('service_order_items')->insert([
+            'service_order_id' => $order->id,
+            'description' => 'Diagnóstico de bancada',
+            'quantity' => 1,
+            'unit_price_cents' => 8500,
+            'subtotal_cents' => 8500,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $order->forceFill(['subtotal_cents' => 8500, 'discount_cents' => 500, 'total_cents' => 8000])->save();
+
         $this->patchJson("/api/orders/{$order->id}/status", [
             'status' => 'interrupted',
             'interruption_reason' => 'Cliente pediu a interrupção do atendimento.',
-        ])->assertOk();
+            'interruption_work_done' => 'Diagnóstico inicial realizado; nenhuma peça foi substituída.',
+        ])->assertOk()
+            ->assertJsonPath('status', 'interrupted')
+            ->assertJsonPath('total_cents', 0);
+
+        $closed = ServiceOrder::findOrFail($order->id);
+        $this->assertNotNull($closed->completed_at);
+        $this->assertSame(0, (int) $closed->subtotal_cents);
+        $this->assertSame(0, (int) $closed->discount_cents);
+        $this->assertSame(0, (int) $closed->total_cents);
+        $this->assertSame('Diagnóstico inicial realizado; nenhuma peça foi substituída.', $closed->interruption_work_done);
+        $this->assertDatabaseMissing('service_order_items', ['service_order_id' => $order->id]);
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertDatabaseCount('financial_transactions', 0);
+        $date = now('America/Sao_Paulo')->format('Y-m-d');
+        $period = now('America/Sao_Paulo')->format('Y-m');
+        $this->getJson('/api/finance/receivables')
+            ->assertOk()
+            ->assertJsonPath('count', 0)
+            ->assertJsonPath('total_balance_cents', 0);
+        $this->getJson("/api/finance/daily?date={$date}")
+            ->assertOk()
+            ->assertJsonPath('total_cents', 0)
+            ->assertJsonPath('transactions', []);
+        $this->getJson("/api/finance/month?period={$period}")
+            ->assertOk()
+            ->assertJsonPath('total_cents', 0)
+            ->assertJsonPath('service_orders_cents', 0)
+            ->assertJsonPath('paid_orders', 0);
+
+        $this->getJson('/api/orders/desk')->assertOk()->assertJsonMissing(['id' => $order->id]);
+        $this->getJson('/api/orders?tab=finalized')
+            ->assertOk()
+            ->assertJsonFragment(['id' => $order->id, 'status' => 'interrupted'])
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('summary.completed_week', 1);
 
         $this->postJson("/api/orders/{$order->id}/finalize", [])->assertStatus(409);
+        $this->postJson("/api/orders/{$order->id}/reopen", ['note' => 'Tentativa proibida.'])
+            ->assertStatus(422);
+        $this->patchJson("/api/orders/{$order->id}/status", ['status' => 'analysis'])
+            ->assertStatus(422);
+        $this->postJson("/api/orders/{$order->id}/payment", [
+            'amount_cents' => 100,
+            'method' => 'pix',
+            'idempotency_key' => 'interrupted-payment-prohibited',
+        ])->assertStatus(422);
+    }
+
+    public function test_order_with_payment_cannot_be_interrupted_and_is_left_unchanged(): void
+    {
+        $user = $this->master();
+        $order = $this->order($user);
+        DB::table('service_order_items')->insert([
+            'service_order_id' => $order->id,
+            'description' => 'Serviço já pago',
+            'quantity' => 1,
+            'unit_price_cents' => 10000,
+            'subtotal_cents' => 10000,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $order->forceFill(['subtotal_cents' => 10000, 'total_cents' => 10000])->save();
+        $this->postJson("/api/orders/{$order->id}/payment", [
+            'amount_cents' => 5000,
+            'method' => 'pix',
+            'idempotency_key' => 'paid-before-interruption',
+        ])->assertCreated();
+
+        $this->patchJson("/api/orders/{$order->id}/status", [
+            'status' => 'interrupted',
+            'interruption_reason' => 'Cliente pediu para encerrar.',
+            'interruption_work_done' => 'Diagnóstico realizado.',
+        ])->assertStatus(409)
+            ->assertJsonFragment(['message' => 'Esta OS possui pagamento registrado e não pode ser interrompida. Preserve este atendimento e use o fluxo normal de finalização.']);
+
+        $this->assertDatabaseHas('service_orders', [
+            'id' => $order->id,
+            'status' => 'analysis',
+            'total_cents' => 10000,
+        ]);
+        $this->assertDatabaseHas('service_order_items', ['service_order_id' => $order->id, 'description' => 'Serviço já pago']);
+        $this->assertDatabaseHas('payments', ['service_order_id' => $order->id, 'amount_cents' => 5000]);
     }
 
     public function test_paid_archives_only_completed_order_with_no_balance_and_finalized_list_returns_it(): void

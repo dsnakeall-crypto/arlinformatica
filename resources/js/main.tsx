@@ -89,6 +89,8 @@ type Order = {
   total_cents?: number;
   completed_at?: string | null;
   reopened?: boolean | number;
+  interruption_reason?: string | null;
+  interruption_work_done?: string | null;
 };
 type Catalog = {
   id: number;
@@ -441,6 +443,8 @@ function OrderTable({
           <tbody>
             {items.map((o: Order) => {
               const reopened = isReopenedOrder(o);
+              const interrupted = o.status === "interrupted";
+              const closed = o.status === "completed" || interrupted;
               return (
                 <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
                   <td><b>#{o.number}</b></td>
@@ -448,6 +452,7 @@ function OrderTable({
                     <span className="order-customer">
                       <strong>{o.client.name}</strong>
                       {reopened && <span className="arl-reopened-marker" aria-label="OS reaberta">Reaberta</span>}
+                      {interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}
                     </span>
                   </td>
                   <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
@@ -455,11 +460,11 @@ function OrderTable({
                     <label className={`row-status status-${o.status}`}>
                       <span className="sr-only">Alterar status da OS {o.number}</span>
                       <CircleDot className="row-status-icon" aria-hidden="true" />
-                      <select aria-label={`Status da OS ${o.number}`} value={o.status} disabled={o.status === "completed"} onChange={(e) => onStatus(o, e.target.value)}>
+                      <select aria-label={`Status da OS ${o.number}`} value={o.status} disabled={closed} onChange={(e) => onStatus(o, e.target.value)}>
                         <option value="analysis">Em Análise</option>
                         <option value="waiting_part">Aguardando Peça</option>
                         <option value="in_service">Em Serviço</option>
-                        {role !== "Funcionário" && <option value="interrupted">Interrompido</option>}
+                        {(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}
                         {o.status === "completed" && <option value="completed">Concluído</option>}
                       </select>
                     </label>
@@ -470,7 +475,7 @@ function OrderTable({
                       <a className="order-whatsapp" href={o.client.whatsapp_url} target="_blank" rel="noreferrer" aria-label={`WhatsApp da OS ${o.number}`}><img src="/arl-assets/icons/icon-whatsapp.png" alt="" /></a>
                       <a className="order-maps" href={o.client.maps_url} target="_blank" rel="noreferrer" aria-label={`Abrir endereço da OS ${o.number} no Google Maps`}><img src="/arl-assets/icons/icon-maps.png" alt="" /></a>
                       <button className="order-view" type="button" aria-label="Ver OS" title="Ver OS" onClick={() => open("orders", o.id)}><Eye aria-hidden="true" /><span className="sr-only">Ver OS</span></button>
-                      {onEdit && ["Master", "Administrador"].includes(role) && (
+                      {onEdit && ["Master", "Administrador"].includes(role) && !interrupted && (
                         <button className={o.status === "completed" ? "order-reopen" : "order-edit"} type="button" aria-label={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} title={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} onClick={() => onEdit(o)}>
                           {o.status === "completed" ? <RotateCcw /> : <Pencil />}
                         </button>
@@ -503,16 +508,17 @@ function OrderTable({
         <thead><tr><th># OS</th><th>CLIENTE</th><th>DISPOSITIVO</th><th>STATUS</th><th>RELATO</th><th>VALOR</th><th>AÇÕES</th></tr></thead>
         <tbody>{items.map((o: Order) => {
           const reopened = isReopenedOrder(o);
-          const closed = Boolean(o.completed_at);
+          const interrupted = o.status === "interrupted";
+          const closed = Boolean(o.completed_at) || interrupted;
           return (
             <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
               <td><b>#{o.number}</b></td>
-              <td><span className="order-customer"><strong>{o.client.name}</strong>{reopened && <span className="arl-reopened-marker" aria-label="OS reaberta">Reaberta</span>}</span></td>
+              <td><span className="order-customer"><strong>{o.client.name}</strong>{reopened && <span className="arl-reopened-marker" aria-label="OS reaberta">Reaberta</span>}{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
               <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
-              <td><label className={`row-status status-${o.status}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={o.status} disabled={o.status === "completed"} onChange={(e) => onStatus(o, e.target.value)}><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{role !== "Funcionário" && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</select></label></td>
+              <td><label className={`row-status status-${o.status}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={o.status} disabled={closed} onChange={(e) => onStatus(o, e.target.value)}><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</select></label></td>
               <td><span className="order-client-report" title={o.reported_problem || undefined}>{o.reported_problem || ""}</span></td>
               <td>{closed ? <span className="order-value"><strong>{money(o.total_cents || 0)}</strong><small>{new Date(o.completed_at!).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</small></span> : <em className="order-value-pending">A orçar</em>}</td>
-              <td><span className="order-actions"><a className="order-whatsapp" href={o.client.whatsapp_url} target="_blank" rel="noreferrer" aria-label={`WhatsApp da OS ${o.number}`}><img src="/arl-assets/icons/icon-whatsapp.png" alt="" /></a><a className="order-maps" href={o.client.maps_url} target="_blank" rel="noreferrer" aria-label={`Abrir endereço da OS ${o.number} no Google Maps`}><img src="/arl-assets/icons/icon-maps.png" alt="" /></a><button className="order-view" type="button" aria-label="Ver OS" title="Ver OS" onClick={() => open("orders", o.id)}><Eye aria-hidden="true" /><span className="sr-only">Ver OS</span></button>{onEdit && ["Master", "Administrador"].includes(role) && <button className={o.status === "completed" ? "order-reopen" : "order-edit"} type="button" aria-label={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} title={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} onClick={() => onEdit(o)}>{o.status === "completed" ? <RotateCcw /> : <Pencil />}</button>}{["Master", "Administrador"].includes(role) && <button type="button" className="arl-order-delete" aria-label={`Excluir OS ${o.number}`} title="Excluir OS" onClick={() => onDelete(o)}><Trash2 /></button>}</span></td>
+              <td><span className="order-actions"><a className="order-whatsapp" href={o.client.whatsapp_url} target="_blank" rel="noreferrer" aria-label={`WhatsApp da OS ${o.number}`}><img src="/arl-assets/icons/icon-whatsapp.png" alt="" /></a><a className="order-maps" href={o.client.maps_url} target="_blank" rel="noreferrer" aria-label={`Abrir endereço da OS ${o.number} no Google Maps`}><img src="/arl-assets/icons/icon-maps.png" alt="" /></a><button className="order-view" type="button" aria-label="Ver OS" title="Ver OS" onClick={() => open("orders", o.id)}><Eye aria-hidden="true" /><span className="sr-only">Ver OS</span></button>{onEdit && ["Master", "Administrador"].includes(role) && !interrupted && <button className={o.status === "completed" ? "order-reopen" : "order-edit"} type="button" aria-label={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} title={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} onClick={() => onEdit(o)}>{o.status === "completed" ? <RotateCcw /> : <Pencil />}</button>}{["Master", "Administrador"].includes(role) && <button type="button" className="arl-order-delete" aria-label={`Excluir OS ${o.number}`} title="Excluir OS" onClick={() => onDelete(o)}><Trash2 /></button>}</span></td>
             </tr>
           );
         })}</tbody>
@@ -522,12 +528,17 @@ function OrderTable({
 }
 function InterruptionModal({ order, onClose, onSaved }: any) {
   const [reason, setReason] = useState(""),
+    [workDone, setWorkDone] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!reason.trim()) {
       setError("Informe o motivo da interrupção.");
+      return;
+    }
+    if (!workDone.trim()) {
+      setError('Informe o que já foi feito no equipamento. Se nada foi feito, escreva "Nada".');
       return;
     }
     setBusy(true);
@@ -537,6 +548,7 @@ function InterruptionModal({ order, onClose, onSaved }: any) {
         body: JSON.stringify({
           status: "interrupted",
           interruption_reason: reason.trim(),
+          interruption_work_done: workDone.trim(),
         }),
       });
       onSaved();
@@ -555,7 +567,7 @@ function InterruptionModal({ order, onClose, onSaved }: any) {
     >
       <form onSubmit={submit}>
         <h2 id="interrupt-title">Interromper OS #{order.number}</h2>
-        <p>O motivo ficará registrado no histórico e na auditoria.</p>
+        <p>A OS será fechada sem lançamento financeiro. Os serviços serão removidos e o total ficará zerado.</p>
         <label className="field">
           <span>Motivo *</span>
           <textarea
@@ -563,6 +575,15 @@ function InterruptionModal({ order, onClose, onSaved }: any) {
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             autoFocus
+          />
+        </label>
+        <label className="field">
+          <span>O que já foi feito no equipamento? *</span>
+          <textarea
+            aria-label="O que já foi feito no equipamento"
+            value={workDone}
+            onChange={(e) => setWorkDone(e.target.value)}
+            placeholder='Se nada foi feito, escreva "Nada".'
           />
         </label>
         {error && <div className="alert">{error}</div>}
@@ -2612,6 +2633,7 @@ function FinancePage({ role, openOrder }: any) {
 }
 function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
   const [items, setItems] = useState<Order[]>([]),
+    [interruptedItems, setInterruptedItems] = useState<Order[]>([]),
     [completed, setCompleted] = useState(0),
     [quick, setQuick] = useState(false),
     [loading, setLoading] = useState(true),
@@ -2621,6 +2643,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
     api("/orders/desk")
       .then(setItems)
       .finally(() => setLoading(false));
+    api("/orders?tab=interrupted&per_page=5").then((x) => setInterruptedItems(x.data));
     api("/orders?tab=finalized&per_page=1").then((x) => setCompleted(x.total));
   };
   useEffect(load, []);
@@ -2757,6 +2780,25 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
           />
         )}
       </section>
+      {interruptedItems.length > 0 && (
+        <section className="panel dashboard-orders dashboard-interrupted-orders">
+          <div className="dashboard-list-head">
+            <div>
+              <h2>Interrompidas recentemente</h2>
+              <p>OS fechadas sem lançamento financeiro.</p>
+            </div>
+            <button onClick={() => go("orders")}>Ver finalizadas</button>
+          </div>
+          <OrderTable
+            items={interruptedItems}
+            open={go}
+            dashboard
+            onStatus={changeStatus}
+            onDelete={remove}
+            role={role}
+          />
+        </section>
+      )}
       <QuickEntry open={quick} onClose={() => setQuick(false)} />
       {interrupt && (
         <InterruptionModal
@@ -2811,7 +2853,7 @@ function OrderView({ id, back }: any) {
             <span>Status</span>
             <select
               value={o.status}
-              disabled={o.status === "completed"}
+              disabled={["completed", "interrupted"].includes(o.status)}
               onChange={async (e) => {
                 if (e.target.value === "completed") {
                   document.getElementById("finalization-action")?.click();
@@ -2867,7 +2909,7 @@ function OrderView({ id, back }: any) {
             Status
           </button>
           <button
-            disabled={o.status === "completed"}
+            disabled={["completed", "interrupted"].includes(o.status)}
             onClick={() =>
               document.getElementById("finalization-action")?.click()
             }

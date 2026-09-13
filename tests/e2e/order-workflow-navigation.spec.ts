@@ -16,7 +16,11 @@ async function fixture(page: Page) {
     if (state === 'completed') {
       expect((await api(page, `/orders/${order.body.id}/finalize`, 'POST', { result: 'no_fault', technical_report: 'Sem defeito constatado nos testes.', items: [], discount_cents: 0, photo_ids: [] })).status).toBe(201);
     } else if (state === 'interrupted') {
-      expect((await api(page, `/orders/${order.body.id}/status`, 'PATCH', { status: state, interruption_reason: 'Interrompida para o teste de abas.' })).status).toBe(200);
+      expect((await api(page, `/orders/${order.body.id}/status`, 'PATCH', {
+        status: state,
+        interruption_reason: 'Interrompida para o teste de abas.',
+        interruption_work_done: 'Nenhum reparo foi realizado.',
+      })).status).toBe(200);
     }
     orders.push(order.body);
   }
@@ -58,7 +62,7 @@ test('Mesa redireciona e as quatro abas React são a única fonte do filtro de O
   alignment.row.forEach((center, index) => expect(Math.abs(center - alignment.header[index])).toBe(0));
   const rows = page.locator('.orders-order-list tbody .order-row');
   for (const [label, tab, indices] of [
-    ['Todas', 'all', [0, 1, 2]], ['Em Andamento', 'progress', [0]], ['Finalizadas', 'finalized', [1]], ['Interrompidas', 'interrupted', [2]], ['Todas', 'all', [0, 1, 2]],
+    ['Todas', 'all', [0, 1, 2]], ['Em Andamento', 'progress', [0]], ['Finalizadas', 'finalized', [1, 2]], ['Interrompidas', 'interrupted', [2]], ['Todas', 'all', [0, 1, 2]],
   ] as const) {
     await tabs.getByRole('button', { name: label, exact: true }).click();
     await expect(rows).toHaveCount(indices.length);

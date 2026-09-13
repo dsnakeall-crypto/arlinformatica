@@ -48,7 +48,7 @@ class ServiceOrderMaintenanceController extends Controller
         $protectedAfterCompletion = ['client_id', 'final_report', 'checklist', 'items'];
         $changesProtectedAfterCompletion = array_intersect_key($data, array_flip($protectedAfterCompletion)) !== [];
         abort_if(
-            ($order->archived || $order->status === 'completed') && $changesProtectedAfterCompletion,
+            ($order->archived || in_array($order->status, ['completed', 'interrupted'], true)) && $changesProtectedAfterCompletion,
             422,
             'Em OS finalizada ou paga, apenas atendimento, problema relatado e equipamento podem ser corrigidos administrativamente.'
         );
@@ -214,12 +214,14 @@ class ServiceOrderMaintenanceController extends Controller
         Request $request,
         ServiceOrder $order,
     ): JsonResponse {
+        abort_if($order->status === 'interrupted', 422, 'Uma OS interrompida é fechada definitivamente e não pode ser reaberta. Abra uma nova OS para um novo atendimento.');
         abort_unless($order->status === 'completed', 422, 'Somente uma OS concluída pode ser reaberta.');
 
         $data = $request->validate(['note' => ['required', 'string', 'max:5000']]);
 
         DB::transaction(function () use ($request, $order, $data) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            abort_if($locked->status === 'interrupted', 409, 'Uma OS interrompida não pode ser reaberta.');
             abort_unless($locked->status === 'completed', 409, 'Esta OS já foi reaberta.');
             $items = DB::table('service_order_items')->where('service_order_id', $locked->id)->whereNotNull('finalization_id')->orderBy('id')->get();
             foreach ($items as $item) {

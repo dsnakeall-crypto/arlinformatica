@@ -23,7 +23,7 @@ class BudgetController extends Controller
 
     public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents): JsonResponse
     {
-        abort_if($order->status === 'completed', 409, 'Não é possível criar orçamento para uma OS finalizada.');
+        abort_if(in_array($order->status, ['completed', 'interrupted'], true), 409, 'Não é possível criar orçamento para uma OS fechada.');
         $data = $request->validate(['diagnosis' => 'required|string|max:5000', 'proposal' => 'required|string|max:5000', 'observation' => 'nullable|string|max:2000', 'validity_days' => 'required|integer|min:1|max:365', 'items' => 'required|array|min:1', 'items.*.catalog_id' => 'nullable|exists:service_catalog,id', 'items.*.description' => 'required|string|max:255', 'items.*.quantity' => 'required|integer|min:1|max:999', 'items.*.unit_price_cents' => 'required|integer|min:0|max:999999999', 'items.*.warranty_enabled' => 'boolean', 'items.*.warranty_term' => 'nullable|required_if:items.*.warranty_enabled,true|integer|min:1|max:999', 'items.*.warranty_unit' => 'nullable|required_if:items.*.warranty_enabled,true|in:days,months,years']);
         $budget = DB::transaction(function () use ($data, $order, $request, $settings) {
             $revision = ((int) DB::table('budgets')->where('service_order_id', $order->id)->max('revision')) + 1;
@@ -51,7 +51,7 @@ class BudgetController extends Controller
 
     public function status(Request $request, ServiceOrder $order, int $revision): JsonResponse
     {
-        abort_if($order->status === 'completed', 409, 'Não é possível alterar orçamento de uma OS finalizada.');
+        abort_if(in_array($order->status, ['completed', 'interrupted'], true), 409, 'Não é possível alterar orçamento de uma OS fechada.');
         $data = $request->validate(['status' => 'required|in:sent,approved,refused', 'note' => 'nullable|string|max:1000']);
         $budget = DB::table('budgets')->where(['service_order_id' => $order->id, 'revision' => $revision])->whereNull('deleted_at')->first();
         abort_unless($budget, 404);
@@ -63,7 +63,7 @@ class BudgetController extends Controller
 
     public function destroy(Request $request, ServiceOrder $order, int $revision): JsonResponse
     {
-        abort_if($order->status === 'completed', 409, 'Não é possível excluir orçamento de uma OS finalizada.');
+        abort_if(in_array($order->status, ['completed', 'interrupted'], true), 409, 'Não é possível excluir orçamento de uma OS fechada.');
         $budget = DB::table('budgets')->where(['service_order_id' => $order->id, 'revision' => $revision])->whereNull('deleted_at')->first();
         abort_unless($budget, 404);
         abort_if(

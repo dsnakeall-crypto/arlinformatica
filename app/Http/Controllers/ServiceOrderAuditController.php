@@ -63,6 +63,7 @@ class ServiceOrderAuditController extends Controller
             'service_order.finalized' => 'Finalização da OS',
             'service_order.marked_paid_and_retrieved' => 'Pagamento e retirada',
             'service_order.reopened' => 'Reabertura da OS',
+            'service_order.interrupted' => 'Interrupção e fechamento da OS',
             'service_order.deleted' => 'Remoção da OS',
             'service_order.refund_created' => 'Estorno da OS',
             default => 'Registro da OS',
@@ -76,6 +77,11 @@ class ServiceOrderAuditController extends Controller
             'service_order.finalized' => $this->finalizationChanges($after),
             'service_order.marked_paid_and_retrieved' => ['OS marcada como paga e retirada.'],
             'service_order.reopened' => $this->reopenChanges($after),
+            'service_order.interrupted' => [
+                'Motivo: '.$this->text($after['reason'] ?? null),
+                'O que já foi feito: '.$this->text($after['work_done'] ?? null),
+                'OS fechada sem lançamento financeiro; serviços removidos e total zerado.',
+            ],
             'service_order.deleted' => ['OS removida da operação; histórico financeiro, auditoria e documentos foram preservados.'],
             'service_order.refund_created' => [
                 'Estorno de '.$this->money((int) ($after['amount_cents'] ?? 0)).' via '.$this->refundMethod($after['method'] ?? null).'.',

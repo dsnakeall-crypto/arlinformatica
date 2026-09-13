@@ -20,6 +20,8 @@ class FinanceController extends Controller
 
     public function pay(Request $request, ServiceOrder $order): JsonResponse
     {
+        abort_if($order->status === 'interrupted', 422, 'Uma OS interrompida é fechada com valor zero e não pode receber pagamentos.');
+
         $data = $request->validate([
             'amount_cents' => ['required', 'integer', 'min:1'],
             'method' => ['required', Rule::in(['pix', 'cash', 'debit', 'credit', 'transfer', 'other'])],
@@ -36,6 +38,7 @@ class FinanceController extends Controller
         $now = CarbonImmutable::now('UTC');
         $payment = DB::transaction(function () use ($data, $order, $request, $now) {
             $lockedOrder = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            abort_if($lockedOrder->status === 'interrupted', 409, 'Uma OS interrompida é fechada com valor zero e não pode receber pagamentos.');
             $total = $this->orderTotalCents($lockedOrder);
             if ($total <= 0) {
                 throw ValidationException::withMessages(['amount_cents' => 'A OS ainda não possui valor definido para receber.']);

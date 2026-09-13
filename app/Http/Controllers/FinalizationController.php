@@ -18,7 +18,7 @@ class FinalizationController extends Controller
     public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents): JsonResponse
     {
         abort_if($order->status === 'completed', 409, 'A OS já possui uma finalização imutável.');
-        abort_if($order->status === 'interrupted', 409, 'Uma OS interrompida deve voltar ao fluxo antes de ser finalizada.');
+        abort_if($order->status === 'interrupted', 409, 'Uma OS interrompida já está fechada e não pode ser finalizada nem reaberta.');
         $data = $request->validate([
             'result' => 'required|in:'.implode(',', self::RESULTS), 'result_other' => 'nullable|required_if:result,other|string|max:255',
             'technical_report' => 'nullable|string|max:20000', 'discount_cents' => 'required|integer|min:0|max:999999999',
@@ -74,7 +74,7 @@ class FinalizationController extends Controller
         $snapshot = ['company' => $company, 'order' => $order->toArray(), 'result_label' => $resultLabel, 'photos' => $photos];
         $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
-            abort_if($locked->status === 'completed', 409, 'A OS já foi finalizada novamente.');
+            abort_if(in_array($locked->status, ['completed', 'interrupted'], true), 409, 'A OS já foi fechada e não pode ser finalizada.');
             $previous = DB::table('service_order_finalizations')->where('service_order_id', $order->id)->orderByDesc('revision')->first();
             $revision = ((int) ($previous->revision ?? 0)) + 1;
             $id = DB::table('service_order_finalizations')->insertGetId(['service_order_id' => $order->id, 'revision' => $revision, 'result' => $data['result'], 'result_other' => $data['result_other'] ?? null, 'technical_report' => $data['technical_report'] ?? null, 'subtotal_cents' => $subtotal, 'discount_cents' => $data['discount_cents'], 'total_cents' => $total, 'snapshot' => json_encode($snapshot), 'completed_by' => $request->user()->id, 'completed_at' => now(), 'created_at' => now(), 'updated_at' => now()]);

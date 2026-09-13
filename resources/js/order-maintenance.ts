@@ -130,7 +130,7 @@ async function syncOrders(force = false) {
       const view = Array.from(row.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent?.trim() === 'Ver OS');
       view?.classList.add('arl-order-view-button');
       if (!canMaintain) return;
-      if (order.status === 'completed' || order.archived) return;
+      if (['completed', 'interrupted'].includes(order.status) || order.archived) return;
 
       const actions = document.createElement('div');
       actions.className = 'arl-order-maintenance-actions';
