@@ -22,12 +22,12 @@ export default function ClientImport() {
       setError(failure instanceof Error ? failure.message : 'Falha ao importar.');
     } finally { setBusy(false); }
   }
-  return <section className="form-card" style={{ border: '1px solid var(--arl-border)', minWidth: 0 }} aria-labelledby="client-import-title">
+  return <section className="form-card" style={{ border: '1px solid var(--arl-border)', width: '100%', maxWidth: '100%', minWidth: 0, overflowWrap: 'anywhere' }} aria-labelledby="client-import-title">
     <h2 id="client-import-title">Importar clientes por CSV</h2>
     <p>Importe clientes do IntegraOS. CSV UTF-8, separado por ponto e vírgula, até 2 MB. Nome, CPF/CNPJ e Celular são obrigatórios. Endereço é opcional. Documentos já cadastrados serão ignorados.</p>
-    <form onSubmit={submit} aria-busy={busy}>
-      <label className="field"><span>Arquivo CSV de clientes</span><input style={{ maxWidth: '100%' }} type="file" name="file" accept=".csv" required disabled={busy} /></label>
-      <button className="primary" disabled={busy}>{busy ? 'Importando…' : 'Importar clientes'}</button>
+    <form style={{ display: 'grid', gap: 16, minWidth: 0 }} onSubmit={submit} aria-busy={busy}>
+      <label className="field" style={{ minWidth: 0 }}><span>Arquivo CSV de clientes</span><input style={{ display: 'block', width: '100%', maxWidth: '100%', minWidth: 0 }} type="file" name="file" accept=".csv" required disabled={busy} /></label>
+      <button className="primary" style={{ maxWidth: '100%', justifySelf: 'start', whiteSpace: 'normal' }} disabled={busy}>{busy ? 'Importando…' : 'Importar clientes'}</button>
     </form>
     {error && <p role="alert" style={{ overflowWrap: 'anywhere' }}>{error}</p>}
     {result && <div role="status">
