@@ -154,6 +154,7 @@ function syncMessageSettings() { if (reactPageActive('settings')) return;
 }
 
 function syncPostSale() {
+  if (reactPageActive('post-sale')) return;
   const heading = qa<HTMLHeadingElement>('main h1').find((item) => item.textContent?.trim().startsWith('Pós-Venda'));
   if (!heading) return;
 

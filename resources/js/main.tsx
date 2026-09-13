@@ -31,6 +31,11 @@ import {
   Eye,
   Landmark,
   RotateCcw,
+  Clock3,
+  EllipsisVertical,
+  MessageCircle,
+  Star,
+  Instagram,
 } from "lucide-react";
 import "../css/app.css";
 import "../css/homologation.css";
@@ -3733,7 +3738,8 @@ function BudgetBox({ order }: any) {
 function PostSalePage() {
   const [rows, setRows] = useState<any[]>([]),
     [loading, setLoading] = useState(true),
-    [pending, setPending] = useState<any>();
+    [pending, setPending] = useState<any>(),
+    [search, setSearch] = useState("");
   const load = () =>
     api("/post-sales")
       .then(setRows)
@@ -3749,20 +3755,45 @@ function PostSalePage() {
     setPending(null);
     load();
   };
+  const visibleRows = rows.filter((row) => `${row.number} ${row.name}`.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")));
+  const avatarTone = (name: string) => {
+    const colors = ["rose", "violet", "blue", "amber", "teal", "pink"];
+    return colors[[...name].reduce((total, char) => total + char.charCodeAt(0), 0) % colors.length];
+  };
+  const action = (row: any, type: string, label: string, Icon: any, modifier: string) => row.actions[type]?.confirmed_at ? (
+    <button className={`post-sale-action post-sale-action-${modifier} sent`} disabled><CheckCircle2 /> <span>Enviado</span></button>
+  ) : (
+    <a
+      className={`post-sale-action post-sale-action-${modifier}`}
+      href={row.whatsapp[type] || undefined}
+      target="_blank"
+      rel="noreferrer"
+      aria-disabled={!row.available}
+      onClick={(event) => {
+        if (!row.available) { event.preventDefault(); return; }
+        setPending({ cycle: row.id, type, label });
+      }}
+    ><Icon /> <span>{label}</span></a>
+  );
   if (loading) return <div className="state">Verificando pós-venda…</div>;
   return (
     <>
       <PageHeader
         eyebrow="RELACIONAMENTO ARL"
-        title="Pós-Venda"
-        description="Acompanhamento manual com confirmação humana antes de registrar cada mensagem."
+        title="Pós-Venda & Reputação"
+        description="Acompanhe cada atendimento e convide clientes a compartilhar a experiência com a ARL."
         icon={Phone}
       />
-      <section className="panel post-sale">
-        {!rows.length ? (
+      <section className="post-sale-workspace" data-arl-post-sale-react="1">
+        <label className="post-sale-search">
+          <Search aria-hidden="true" />
+          <span className="sr-only">Buscar por cliente ou OS</span>
+          <input value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Buscar por cliente ou número da OS…" />
+        </label>
+        {!visibleRows.length ? (
           <div className="post-sale-empty">
             <Phone />
-            <b>Nenhum pós-venda pendente</b>
+            <b>{rows.length ? "Nenhum resultado encontrado" : "Nenhum pós-venda pendente"}</b>
             <p>
               Quando uma OS entrar no período de acompanhamento, as ações de
               WhatsApp, avaliação e Instagram aparecerão aqui. Abrir uma
@@ -3770,35 +3801,31 @@ function PostSalePage() {
             </p>
           </div>
         ) : (
-          rows.map((row) => (
-            <article key={row.id}>
-              <div>
-                <b>OS {row.number}</b>
-                <strong>{row.name}</strong>
+          <div className="post-sale-grid">
+          {visibleRows.map((row) => (
+            <article className="post-sale-card" key={row.id}>
+              <header>
+                <span className={`post-sale-avatar post-sale-avatar-${avatarTone(row.name)}`}>{row.name.trim().slice(0, 1).toUpperCase()}</span>
+                <div className="post-sale-card-title">
+                  <small>OS {row.number}</small>
+                  <strong>{row.name}</strong>
+                </div>
+                <details className="post-sale-menu">
+                  <summary aria-label={`Ações da OS ${row.number}`}><EllipsisVertical /></summary>
+                  <div>{action(row, "follow_up", "Confirmar se está tudo certo", MessageCircle, "follow-up")}</div>
+                </details>
+              </header>
+              <div className={`post-sale-state ${row.available ? "post-sale-state-ready" : "post-sale-state-waiting"}`}>
+                <Clock3 />
+                <span>{row.available ? "Disponível para análise humana" : "Janela de espera: disponível após 24 horas"}</span>
               </div>
-              {[
-                ["follow_up", "CONFIRMAR SE ESTÁ TUDO CERTO"],
-                ["google", "PEDIR AVALIAÇÃO"],
-                ["instagram", "CONVIDAR PARA SEGUIR"],
-              ].map(([type, label]) =>
-                row.actions[type]?.confirmed_at ? (
-                  <button className="sent" disabled>
-                    ✓ ENVIADO
-                  </button>
-                ) : (
-                  <a
-                    className="post-action"
-                    href={row.whatsapp[type]}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={() => setPending({ cycle: row.id, type, label })}
-                  >
-                    {label}
-                  </a>
-                ),
-              )}
+              <footer>
+                {action(row, "google", "Avaliação Google", Star, "google")}
+                {action(row, "instagram", "Instagram", Instagram, "instagram")}
+              </footer>
             </article>
-          ))
+          ))}
+          </div>
         )}
       </section>
       {pending && (

@@ -290,17 +290,16 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(historicalOrder.items.filter((item: { description: string }) => item.description === 'Formatação E2E')).toHaveLength(1);
     expect(historicalOrder.items[0].unit_price_cents).toBe(14000);
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
-    await expect(page.getByRole('heading', { name: 'Pós-Venda' })).toBeVisible();
-    const lockedRow = page.locator('.post-sale article').filter({ hasText: `OS ${orderNumber}` });
+    await expect(page.getByRole('heading', { name: 'Pós-Venda & Reputação' })).toBeVisible();
+    const lockedRow = page.locator('.post-sale-card').filter({ hasText: `OS ${orderNumber}` });
     await expect(lockedRow).toBeVisible();
-    const lockedActions = lockedRow.locator('.post-action');
+    await expect(lockedRow.locator('.post-sale-state-waiting')).toContainText('disponível após 24 horas');
+    const lockedActions = lockedRow.locator('.post-sale-action[aria-disabled="true"]');
     await expect(lockedActions).toHaveCount(2);
     for (let i = 0; i < 2; i += 1) {
       await expect(lockedActions.nth(i)).not.toHaveAttribute('href');
       await expect(lockedActions.nth(i)).toHaveCSS('pointer-events', 'none');
     }
-    const lockLabel = await lockedRow.locator('div').first().evaluate((element) => getComputedStyle(element, '::after').content);
-    expect(lockLabel).toContain('Disponível após 24 horas');
     const postSale = await api(page, '/post-sales');
     expect(postSale.status).toBe(200);
     const cycle = postSale.body.find((row: { number: string }) => row.number === orderNumber);

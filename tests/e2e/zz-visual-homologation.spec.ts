@@ -171,7 +171,8 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
 
   await nav.getByRole('button', { name: 'Pós-Venda' }).click();
   await expect(page.getByRole('heading', { name: 'Pós-Venda & Reputação' })).toBeVisible();
-  await expect(page.locator('.arl-post-toolbar')).toBeVisible();
+  await expect(page.locator('.post-sale-search')).toBeVisible();
+  await expect(page.locator('.arl-post-toolbar')).toHaveCount(0);
   await page.screenshot({ path: 'visual-artifacts/06-pos-venda-desktop.png', fullPage: true });
 
   await nav.getByRole('button', { name: 'Serviços' }).click();

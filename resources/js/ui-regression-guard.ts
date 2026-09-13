@@ -18,7 +18,6 @@ function installRegressionStyles() {
   const style = document.createElement('style');
   style.id = 'arl-ui-regression-guard-style';
   style.textContent = `
-    main:has(.post-sale) .arl-post-sale-editor{display:grid!important}
     .arl-restored-external-status svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
     .detail-grid .arl-payment-empty > p{display:block!important}
     @media(max-width:760px){
@@ -32,6 +31,7 @@ function installRegressionStyles() {
 }
 
 function syncPostSaleAccessibility() {
+  if (reactPageActive('post-sale')) return;
   if (!document.querySelector('.post-sale')) return;
   document.querySelector<HTMLElement>('.arl-post-sale-editor')?.removeAttribute('aria-hidden');
 }

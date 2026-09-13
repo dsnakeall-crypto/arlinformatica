@@ -224,6 +224,7 @@ function enhanceServices(){
 }
 
 function enhancePostSale(){
+  if (reactPageActive('post-sale')) return;
   const h=qa<HTMLHeadingElement>('h1').find(x=>text(x)==='Pós-Venda'); if(!h) return;h.textContent='Pós-Venda & Reputação';const title=h.closest<HTMLElement>('.title');if(title) titleEyebrow(title,'RELACIONAMENTO ARL');
   const panel=q<HTMLElement>('.post-sale'); if(!panel)return;panel.classList.add('arl-post-sale-panel');
   if(!q('.arl-post-sale-editor')) void createPostSaleEditor(panel);
