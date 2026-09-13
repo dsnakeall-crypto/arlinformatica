@@ -36,9 +36,10 @@ function isEffectiveMobile() {
 }
 
 function isDashboardVisible() {
-  // O Painel React controla integralmente seu DOM; este enhancer só serve
-  // para a antiga tela não-React e não pode substituir a lista nova.
-  if (document.querySelector('[data-arl-dashboard-react="1"]')) return false;
+  // No mobile, o React mantém a raiz do Painel, enquanto este enhancer só
+  // acrescenta a home própria (lista de OS abertas). O marcador é a fonte de
+  // verdade porque o PageHeader/heading não é montado nesse modo.
+  if (document.querySelector('[data-arl-dashboard-react="1"]')) return true;
   return Array.from(document.querySelectorAll<HTMLHeadingElement>('main h1')).some(
     (heading) => heading.textContent?.trim() === 'Painel',
   );

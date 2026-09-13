@@ -20,6 +20,18 @@ async function waitForOfficialIcons(page: Page, sources: string[]) {
   }
 }
 
+async function waitForOfficialViewIcon(scope: ReturnType<Page['locator']>) {
+  const button = scope.getByRole('button', { name: 'Ver OS' }).first();
+  await expect(button).toBeVisible();
+  const eye = button.locator('svg.lucide-eye');
+  await expect(eye).toBeVisible();
+  await expect(eye.locator('path')).toHaveCount(2);
+  const box = await eye.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.width).toBeGreaterThan(0);
+  expect(box!.height).toBeGreaterThan(0);
+}
+
 test('gera evidências para homologação visual desktop, mobile e PDF', async ({ page }) => {
   await mkdir('visual-artifacts', { recursive: true });
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -66,8 +78,8 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await waitForOfficialIcons(page, [
     '/arl-assets/icons/icon-whatsapp.png',
     '/arl-assets/icons/icon-maps.png',
-    '/arl-assets/icons/icon-visualizar.png',
   ]);
+  await waitForOfficialViewIcon(page.locator('[data-arl-dashboard-react="1"]'));
   await page.screenshot({ path: 'visual-artifacts/01-painel-desktop.png', fullPage: true });
 
   const nav = page.locator('aside nav');
@@ -111,7 +123,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await nav.getByRole('button', { name: 'Ordens' }).click();
   const row = page.locator('.order-row').filter({ hasText: `#${orderResponse.body.number}` });
   await expect(row).toBeVisible();
-  await waitForOfficialIcons(page, ['/arl-assets/icons/icon-visualizar.png']);
+  await waitForOfficialViewIcon(row);
   await page.screenshot({ path: 'visual-artifacts/04-ordens-lista-desktop.png', fullPage: true });
   await row.getByRole('button', { name: 'Ver OS' }).click();
   await expect(page.getByRole('heading', { name: `OS #${orderResponse.body.number}`, exact: true })).toBeVisible();
