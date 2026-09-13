@@ -32,8 +32,9 @@ test('Painel alinha cabeçalho e linha nas seis colunas operacionais', async ({ 
   });
   expect(order.status).toBe(201);
   await page.goto('/');
-  const operationalPanel = page.locator('section.dashboard-orders:not(.dashboard-closed-orders)');
-  await expect(operationalPanel.getByRole('heading', { name: 'Ordens em andamento', exact: true })).toBeVisible();
+  const operationalPanel = page.locator('section.dashboard-orders').filter({ hasText: 'Ordens em andamento' });
+  await expect(operationalPanel).toHaveCount(1);
+  await expect(operationalPanel.locator('.dashboard-list-head h2')).toHaveText('Ordens em andamento');
   const table = operationalPanel.locator('.dashboard-order-list');
   await expect(table).toHaveCount(1);
   await expect(table).toBeVisible();

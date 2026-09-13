@@ -155,7 +155,7 @@ for (const [index, status] of statuses.entries()) {
       await page.getByRole('button', { name: 'Painel', exact: true }).click();
       const closedPanel = page.locator('.dashboard-closed-orders');
       const closedRow = closedPanel.locator('.order-row').filter({ hasText: clientName });
-      await expect(closedPanel.getByRole('heading', { name: 'Fechadas recentemente' })).toBeVisible();
+      await expect(closedPanel.locator('.dashboard-list-head h2')).toHaveText('Fechadas recentemente');
       await expect(closedPanel.getByText('OS concluídas e interrompidas desta semana.', { exact: true })).toBeVisible();
       await expect(closedRow).toBeVisible();
       if (status.code === 'interrupted') {
