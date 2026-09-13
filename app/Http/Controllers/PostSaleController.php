@@ -7,6 +7,7 @@ use App\Services\NotificationService;
 use App\Services\PostSaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class PostSaleController extends Controller
@@ -35,7 +36,11 @@ class PostSaleController extends Controller
         $actions = DB::table('post_sale_actions')->whereIn('cycle_id', $rows->pluck('id'))->whereIn('type', PostSaleService::ACTIONS)->get()->groupBy('cycle_id');
 
         return response()->json($rows->map(function ($row) use ($actions) {
-            $row->available = now()->greaterThanOrEqualTo($row->eligible_at);
+            $eligibleAt = Carbon::parse($row->eligible_at, config('app.timezone'));
+            $row->available = now()->greaterThanOrEqualTo($eligibleAt);
+            // SQL datetime values have no timezone. Include the offset so browsers
+            // calculate the remaining 24 hours from the same instant as Laravel.
+            $row->eligible_at = $eligibleAt->toIso8601String();
             $row->actions = $actions->get($row->id, collect())->mapWithKeys(fn ($action) => [$action->type => ['id' => $action->id, 'confirmed_at' => $action->confirmed_at]])->all();
             $row->messages = collect(PostSaleService::ACTIONS)->mapWithKeys(fn ($type) => [$type => $this->message($type)])->all();
             $links = collect($row->messages)->map(fn ($message) => ContactLinks::whatsapp($row->phone, $message));

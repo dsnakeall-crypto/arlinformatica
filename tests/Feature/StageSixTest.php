@@ -48,7 +48,8 @@ class StageSixTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1)
             ->assertJsonPath('0.number', '0000300')
-            ->assertJsonPath('0.available', false);
+            ->assertJsonPath('0.available', false)
+            ->assertJsonPath('0.eligible_at', $completedAt->copy()->addHours(24)->toIso8601String());
 
         $this->postJson("/api/post-sales/{$cycle->id}/google/confirm")
             ->assertConflict()

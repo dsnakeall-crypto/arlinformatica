@@ -11,6 +11,8 @@ class ClientCsvImport
 {
     public const HEADER = ['Nome', 'CPF/CNPJ', 'Endereço', 'Número', 'Bairro', 'Cidade', 'UF', 'CEP', 'Celular'];
 
+    private const BATCH_SIZE = 50;
+
     public function run(Request $request): array
     {
         $stream = fopen($request->file('file')->getRealPath(), 'rb');
@@ -67,7 +69,7 @@ class ClientCsvImport
                         continue;
                     }
                     $batch[] = $data + ['created_at' => now(), 'updated_at' => now()];
-                    if (count($batch) === 50) {
+                    if (count($batch) === self::BATCH_SIZE) {
                         $this->flush($batch, $result);
                         $batch = [];
                     }

@@ -399,3 +399,17 @@ aside nav::-webkit-scrollbar { width:0; height:0; }
 
 /* Keep the sidebar footer above the fixed Mobile / Tablet navigation. */
 .layout-mobile aside { padding-bottom:calc(14px + var(--arl-mobile-nav-clearance)); }
+.layout-mobile aside.open > .close {
+    display:grid;
+    place-items:center;
+    position:absolute;
+    top:max(10px, env(safe-area-inset-top));
+    right:10px;
+    z-index:2;
+    width:40px;
+    height:40px;
+    padding:0;
+    border:0;
+    background:transparent;
+    color:#fff;
+}

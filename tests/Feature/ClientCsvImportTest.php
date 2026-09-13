@@ -99,7 +99,11 @@ class ClientCsvImportTest extends TestCase
             ->assertOk()->assertJsonPath('read', 600)->assertJsonPath('created', 600)->assertJsonPath('ignored', 0);
         $queries = array_filter(DB::getQueryLog(), fn ($query) => str_contains($query['query'], 'select') && str_contains($query['query'], 'clients'));
         $this->assertCount(12, $queries);
-        $inserts = array_filter(DB::getQueryLog(), fn ($query) => str_contains($query['query'], 'insert into "clients"'));
+        $inserts = array_filter(DB::getQueryLog(), function ($query) {
+            $sql = strtolower(ltrim($query['query']));
+
+            return str_starts_with($sql, 'insert into') && str_contains($sql, 'clients');
+        });
         $this->assertCount(12, $inserts);
         DB::disableQueryLog();
     }

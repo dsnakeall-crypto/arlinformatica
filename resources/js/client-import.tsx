@@ -29,7 +29,7 @@ export default function ClientImport() {
       <label className="field"><span>Arquivo CSV de clientes</span><input style={{ maxWidth: '100%' }} type="file" name="file" accept=".csv" required disabled={busy} /></label>
       <button className="primary" disabled={busy}>{busy ? 'Importando…' : 'Importar clientes'}</button>
     </form>
-    {error && <p role="alert">{error}</p>}
+    {error && <p role="alert" style={{ overflowWrap: 'anywhere' }}>{error}</p>}
     {result && <div role="status">
       <p>Linhas lidas: {result.read} · Clientes criados: {result.created} · Ignorados por duplicidade: {result.ignored} · Erros: {result.failed}</p>
       {result.errors.length > 0 && <ul>{result.errors.map(item => <li key={item.line}>Linha {item.line}: {item.reason}</li>)}</ul>}

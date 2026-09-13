@@ -3807,7 +3807,7 @@ function PostSalePage() {
         description="Acompanhe cada atendimento e convide clientes a compartilhar a experiência com a ARL."
         icon={Phone}
       />
-      <section className="post-sale-workspace" data-arl-post-sale-react="1">
+      <section className="post-sale-workspace" data-arl-post-sale-workspace="1">
         <label className="post-sale-search">
           <Search aria-hidden="true" />
           <span className="sr-only">Buscar por cliente ou OS</span>
@@ -4906,6 +4906,9 @@ function App() {
         }
         data-arl-dashboard-react={
           !detail && page === "dashboard" ? "1" : undefined
+        }
+        data-arl-post-sale-react={
+          !detail && page === "post-sale" ? "1" : undefined
         }
       >
         <header className="app-head">
