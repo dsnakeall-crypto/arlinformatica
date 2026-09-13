@@ -151,12 +151,18 @@ for (const [index, status] of statuses.entries()) {
     await history.locator('summary').click();
     await expect(history.getByText(new RegExp(`^${status.label} ·`)), `Histórico exibiu rótulo errado para ${status.code}`).toBeVisible();
 
-    if (status.code === 'interrupted') {
+    if (['completed', 'interrupted'].includes(status.code)) {
       await page.getByRole('button', { name: 'Painel', exact: true }).click();
-      const interruptedPanel = page.locator('.dashboard-interrupted-orders');
-      const interruptedRow = interruptedPanel.locator('.order-row').filter({ hasText: clientName });
-      await expect(interruptedPanel.getByRole('heading', { name: 'Interrompidas recentemente' })).toBeVisible();
-      await expect(interruptedRow.getByText('Interrompida', { exact: true })).toBeVisible();
+      const closedPanel = page.locator('.dashboard-closed-orders');
+      const closedRow = closedPanel.locator('.order-row').filter({ hasText: clientName });
+      await expect(closedPanel.getByRole('heading', { name: 'Fechadas recentemente' })).toBeVisible();
+      await expect(closedPanel.getByText('OS concluídas e interrompidas desta semana.', { exact: true })).toBeVisible();
+      await expect(closedRow).toBeVisible();
+      if (status.code === 'interrupted') {
+        await expect(closedRow.getByText('Interrompida', { exact: true })).toBeVisible();
+      } else {
+        await expect(closedRow.getByText('Interrompida', { exact: true })).toHaveCount(0);
+      }
     }
   });
 }

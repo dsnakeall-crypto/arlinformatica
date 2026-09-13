@@ -2633,7 +2633,7 @@ function FinancePage({ role, openOrder }: any) {
 }
 function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
   const [items, setItems] = useState<Order[]>([]),
-    [interruptedItems, setInterruptedItems] = useState<Order[]>([]),
+    [closedItems, setClosedItems] = useState<Order[]>([]),
     [completed, setCompleted] = useState(0),
     [quick, setQuick] = useState(false),
     [loading, setLoading] = useState(true),
@@ -2643,7 +2643,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
     api("/orders/desk")
       .then(setItems)
       .finally(() => setLoading(false));
-    api("/orders?tab=interrupted&per_page=5").then((x) => setInterruptedItems(x.data));
+    api("/orders?tab=closed_week&per_page=100").then((x) => setClosedItems(x.data));
     api("/orders?tab=finalized&per_page=1").then((x) => setCompleted(x.total));
   };
   useEffect(load, []);
@@ -2780,17 +2780,17 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
           />
         )}
       </section>
-      {interruptedItems.length > 0 && (
-        <section className="panel dashboard-orders dashboard-interrupted-orders">
+      {closedItems.length > 0 && (
+        <section className="panel dashboard-orders dashboard-closed-orders">
           <div className="dashboard-list-head">
             <div>
-              <h2>Interrompidas recentemente</h2>
-              <p>OS fechadas sem lançamento financeiro.</p>
+              <h2>Fechadas recentemente</h2>
+              <p>OS concluídas e interrompidas desta semana.</p>
             </div>
             <button onClick={() => go("orders")}>Ver finalizadas</button>
           </div>
           <OrderTable
-            items={interruptedItems}
+            items={closedItems}
             open={go}
             dashboard
             onStatus={changeStatus}

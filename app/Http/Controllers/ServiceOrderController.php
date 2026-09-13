@@ -37,6 +37,9 @@ class ServiceOrderController extends Controller
             'progress' => $q->whereIn('status', ['analysis', 'waiting_part', 'in_service']),
             'finalized' => $q->whereIn('status', ['completed', 'interrupted']),
             'interrupted' => $q->where('status', 'interrupted'),
+            'closed_week' => $q
+                ->whereIn('status', ['completed', 'interrupted'])
+                ->where('completed_at', '>=', now('America/Sao_Paulo')->startOfWeek()),
             default => null,
         };
         if ($requestedStatus !== '' && in_array($requestedStatus, ['analysis', 'waiting_part', 'in_service', 'interrupted'], true)) {
@@ -48,12 +51,12 @@ class ServiceOrderController extends Controller
         match ((string) $r->query('sort', 'recent')) {
             'oldest' => $q->oldest('received_at'),
             'client' => $q->orderBy(Client::select('name')->whereColumn('clients.id', 'service_orders.client_id'))->latest('received_at'),
-            default => $q->latest('received_at'),
+            default => $tab === 'closed_week' ? $q->latest('completed_at') : $q->latest('received_at'),
         };
 
         $summary = [
             'open' => ServiceOrder::whereNotIn('status', ['completed', 'interrupted'])->count(),
-            'completed_week' => ServiceOrder::whereIn('status', ['completed', 'interrupted'])->where('completed_at', '>=', now()->startOfWeek())->count(),
+            'completed_week' => ServiceOrder::whereIn('status', ['completed', 'interrupted'])->where('completed_at', '>=', now('America/Sao_Paulo')->startOfWeek())->count(),
         ];
 
         $perPage = max(1, min(100, (int) $r->integer('per_page', 50)));
