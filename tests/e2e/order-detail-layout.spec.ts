@@ -94,9 +94,13 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(intake.getByText('Nenhuma foto anexada.', { exact: true })).toBeVisible();
 
   const workflow = root.locator('.arl-order-workflow');
+  const headerActions = root.locator('.arl-order-header-actions');
+  await expect(headerActions.getByRole('button', { name: 'Concluir OS', exact: true })).toBeVisible();
+  const actionLabels = await headerActions.locator(':scope > button, :scope > details > summary').allTextContents();
+  expect(actionLabels.indexOf('Concluir OS')).toBeLessThan(actionLabels.indexOf("PDF's e Reaberturas OS"));
   const headings = await workflow.locator(':scope > section h2').allTextContents();
   const position = (name: string) => headings.findIndex((value) => value.trim() === name);
-  const ordered = ['Serviços / Produtos', 'Laudo Final', 'Orçamentos', 'Pagamento', 'Finalização da OS'];
+  const ordered = ['Serviços / Produtos', 'Laudo Final', 'Orçamentos', 'Pagamento'];
   ordered.forEach((name) => expect(position(name), `Bloco ${name} não apareceu no fluxo`).toBeGreaterThanOrEqual(0));
   for (let index = 1; index < ordered.length; index += 1) {
     expect(position(ordered[index]), `Ordem do fluxo incorreta entre ${ordered[index - 1]} e ${ordered[index]}`).toBeGreaterThan(position(ordered[index - 1]));
@@ -104,6 +108,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(workflow.getByRole('heading', { name: 'Laudos técnicos', exact: true }), 'O fluxo reativável de laudos técnicos deve ficar oculto').toHaveCount(0);
   await expect(workflow.getByRole('button', { name: 'GERAR LAUDO TÉCNICO' })).toHaveCount(0);
   await expect(workflow.getByRole('heading', { name: 'Laudo Final', exact: true }), 'O texto livre usado no PDF final deve continuar disponível').toBeVisible();
+  await expect(workflow.getByRole('heading', { name: 'Finalização da OS', exact: true }), 'O bloco antigo de finalização não deve permanecer no fim do fluxo').toHaveCount(0);
 
   const paymentCard = workflow.locator('section').filter({ has: page.getByRole('heading', { name: 'Pagamento', exact: true }) }).first();
   await expect(paymentCard.getByText('Pagamento ainda não registrado.', { exact: true })).toBeVisible();
@@ -140,6 +145,14 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(header).toBeVisible();
   const fitsTablet = await root.evaluate((node) => node.scrollWidth <= node.clientWidth + 1);
   expect(fitsTablet, 'Ver OS não deve provocar overflow horizontal da página em tablet').toBe(true);
+
+  await headerActions.getByRole('button', { name: 'Concluir OS', exact: true }).click();
+  const finalization = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
+  await expect(finalization).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  const finalizationFitsMobile = await finalization.evaluate((node) => node.scrollWidth <= node.clientWidth + 1);
+  expect(finalizationFitsMobile, 'Modal de finalização não deve cortar nem provocar overflow em mobile').toBe(true);
+  await expect(finalization.getByRole('button', { name: 'Fechar finalização' })).toBeVisible();
 });
 
 test('OS externa reaberta não recria atalhos removidos do detalhe', async ({ page }) => {

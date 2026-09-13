@@ -63,7 +63,7 @@ test('Ver OS React possui uma única raiz e blocos funcionais sem duplicação l
     finalReport: 1,
     quickActions: 1,
     editButtons: 1,
-    finalizationSections: 1,
+    finalizationSections: 0,
   });
 });
 
@@ -106,6 +106,20 @@ test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PA
   await root.getByRole('button', { name: 'Concluir OS' }).click();
   let modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(modal.locator('textarea'), 'Contrato laudo painel→modal: cada abertura deve receber o rascunho atual do painel').toHaveValue('Rascunho A do painel');
+  const services = await api(page, '/catalogs/services');
+  const service = services.body?.[0];
+  expect(service, 'Contrato finalização: catálogo ativo precisa ter ao menos um Serviço / Produto').toBeTruthy();
+  await modal.getByLabel('Pesquisar Serviço / Produto na finalização').fill(service.name);
+  await modal.getByRole('button', { name: `Adicionar ${service.name}` }).click();
+  const addedItem = modal.locator('[data-finalization-item="true"]');
+  await expect(addedItem).toHaveCount(1);
+  await expect(addedItem.getByLabel('Descrição do item 1')).toHaveValue(service.name);
+  await addedItem.getByLabel(`Quantidade de ${service.name}`).fill('3');
+  const itemTotal = `R$ ${(Number(service.price_cents) * 3 / 100).toFixed(2).replace('.', ',')}`;
+  await expect(modal.locator('.money')).toContainText(`Subtotal ${itemTotal}`);
+  await expect(modal.locator('.money')).toContainText(`Total ${itemTotal}`);
+  await addedItem.getByRole('button', { name: 'Remover' }).click();
+  await expect(modal.locator('[data-finalization-item="true"]')).toHaveCount(0);
   await modal.locator('.modal-close').click();
 
   await panel.fill('Rascunho B alterado depois de fechar');
