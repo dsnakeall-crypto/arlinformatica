@@ -34,17 +34,19 @@ test('Painel alinha cabeçalho e linha nas seis colunas operacionais', async ({ 
   await page.goto('/');
   const table = page.locator('.dashboard-order-list');
   await expect(table).toBeVisible();
-  await expect(table.locator('.order-row.head > span')).toHaveText(['# OS', 'CLIENTE', 'DISPOSITIVO', 'STATUS', 'RELATO', 'AÇÕES']);
-  const row = table.locator('.order-row:not(.head)').filter({ hasText: `#${order.body.number}` });
+  await expect(table.locator('thead th')).toHaveText(['# OS', 'CLIENTE', 'DISPOSITIVO', 'STATUS', 'RELATO', 'AÇÕES']);
+  const row = table.locator('tbody .order-row').filter({ hasText: `#${order.body.number}` });
   await expect(row).toBeVisible();
-  const alignment = await row.evaluate((element) => {
-    const header = element.parentElement?.querySelector('.order-row.head');
-    const starts = (node: Element) => Array.from(node.children).map((child) => Math.round(child.getBoundingClientRect().left));
-    return { header: header ? starts(header) : [], row: starts(element) };
+  const alignment = await table.evaluate((element) => {
+    const centers = (selector: string) => Array.from(element.querySelectorAll(selector)).map((cell) => {
+      const rect = cell.getBoundingClientRect();
+      return rect.left + rect.width / 2;
+    });
+    return { header: centers('thead th'), row: centers('tbody tr:first-child td') };
   });
   expect(alignment.header).toHaveLength(6);
   expect(alignment.row).toHaveLength(6);
-  alignment.row.forEach((start, index) => expect(Math.abs(start - alignment.header[index])).toBeLessThanOrEqual(1));
+  alignment.row.forEach((center, index) => expect(Math.abs(center - alignment.header[index])).toBe(0));
   await expect(row.locator('.order-customer strong')).toContainText('Allan Rabelo Luttembarck');
   await expect(row.locator('.order-device')).toHaveAttribute('title', 'Notebook com descrição extensa para validar contenção');
   await expect(row.locator('.order-client-report')).toHaveAttribute('title', /Relato longo do cliente/);
