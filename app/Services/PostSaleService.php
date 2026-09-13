@@ -3,12 +3,15 @@
 namespace App\Services;
 
 use App\Models\ServiceOrder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class PostSaleService
 {
     public const ACTIONS = ['google', 'instagram'];
+
+    public const MANUAL_EXCLUSION_REASON = 'Excluído manualmente do Pós-Venda';
 
     public function __construct(private readonly NotificationService $notifications) {}
 
@@ -51,6 +54,16 @@ class PostSaleService
     {
         DB::table('clients')->where('id', $order->client_id)->lockForUpdate()->first();
         if (DB::table('post_sale_cycles')->where('service_order_id', $order->id)->exists()) {
+            return false;
+        }
+        $recentManualExclusion = DB::table('post_sale_cycles')
+            ->where('client_id', $order->client_id)
+            ->where('archive_reason', self::MANUAL_EXCLUSION_REASON)
+            ->whereNotNull('archived_at')
+            ->orderByDesc('archived_at')
+            ->lockForUpdate()
+            ->first();
+        if ($recentManualExclusion && $order->created_at->lessThan(Carbon::parse($recentManualExclusion->archived_at)->addDays(30))) {
             return false;
         }
         $active = DB::table('post_sale_cycles')->where('client_id', $order->client_id)->where('active', true)->lockForUpdate()->first();

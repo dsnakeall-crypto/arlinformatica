@@ -116,6 +116,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/report-templates', [TechnicalReportTemplateController::class, 'index']);
     Route::get('/post-sales', [PostSaleController::class, 'index']);
     Route::post('/post-sales/{cycle}/{type}/confirm', [PostSaleController::class, 'confirm']);
+    Route::delete('/post-sales/{cycle}', [PostSaleController::class, 'destroy']);
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'read']);

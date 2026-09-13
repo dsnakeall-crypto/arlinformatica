@@ -80,6 +80,44 @@ class PostSaleController extends Controller
         return response()->json(['confirmed_at' => now()->toIso8601String()]);
     }
 
+    public function destroy(Request $request, int $cycle, NotificationService $notifications): JsonResponse
+    {
+        DB::transaction(function () use ($request, $cycle) {
+            $record = DB::table('post_sale_cycles')
+                ->where('id', $cycle)
+                ->where('active', true)
+                ->lockForUpdate()
+                ->first();
+            abort_unless($record, 404, 'Este card de Pós-Venda não está mais disponível.');
+
+            DB::table('post_sale_cycles')->where('id', $record->id)->update([
+                'active' => false,
+                'archived_at' => now(),
+                'archive_reason' => PostSaleService::MANUAL_EXCLUSION_REASON,
+                'updated_at' => now(),
+            ]);
+            DB::table('audit_logs')->insert([
+                'user_id' => $request->user()->id,
+                'action' => 'post_sale.card_deleted',
+                'subject_type' => 'post_sale_cycle',
+                'subject_id' => $record->id,
+                'before' => json_encode(['active' => true, 'service_order_id' => $record->service_order_id]),
+                'after' => json_encode([
+                    'active' => false,
+                    'archive_reason' => PostSaleService::MANUAL_EXCLUSION_REASON,
+                    'service_order_preserved' => true,
+                    'actions_preserved' => true,
+                ]),
+                'ip_address' => $request->ip(),
+                'created_at' => now(),
+            ]);
+        });
+
+        $notifications->resolve("post-sale:$cycle");
+
+        return response()->json(['deleted' => true, 'id' => $cycle]);
+    }
+
     private function message(string $type): string
     {
         abort_unless(array_key_exists($type, self::MESSAGES), 404);

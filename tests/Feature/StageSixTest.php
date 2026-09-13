@@ -97,6 +97,53 @@ class StageSixTest extends TestCase
         $this->actingAs($this->user)->getJson('/api/post-sales')->assertJsonCount(1)->assertJsonPath('0.number', '0000305');
     }
 
+    public function test_manual_post_sale_card_deletion_preserves_the_order_actions_and_blocks_the_same_order_and_client_for_thirty_days(): void
+    {
+        Carbon::setTestNow('2026-09-10 12:00:00');
+        $original = $this->order('0000306', now()->subDays(2), 'repair_completed');
+        app(PostSaleService::class)->catchUp();
+        $cycle = DB::table('post_sale_cycles')->where('service_order_id', $original->id)->first();
+        DB::table('post_sale_actions')->where('cycle_id', $cycle->id)->where('type', 'google')->update([
+            'confirmed_at' => now(),
+            'confirmed_by' => $this->user->id,
+        ]);
+
+        $this->actingAs($this->user)->deleteJson("/api/post-sales/{$cycle->id}")
+            ->assertOk()
+            ->assertJsonPath('deleted', true);
+
+        $this->assertDatabaseHas('service_orders', ['id' => $original->id, 'number' => '0000306']);
+        $this->assertDatabaseHas('post_sale_cycles', [
+            'id' => $cycle->id,
+            'active' => false,
+            'archive_reason' => PostSaleService::MANUAL_EXCLUSION_REASON,
+        ]);
+        $this->assertDatabaseHas('post_sale_actions', [
+            'cycle_id' => $cycle->id,
+            'type' => 'google',
+            'confirmed_by' => $this->user->id,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'post_sale.card_deleted',
+            'subject_id' => $cycle->id,
+            'user_id' => $this->user->id,
+        ]);
+
+        $original->update(['status' => 'analysis', 'completed_at' => null]);
+        $original->update(['status' => 'completed', 'completed_at' => now()]);
+        app(PostSaleService::class)->catchUp();
+        $this->assertDatabaseCount('post_sale_cycles', 1);
+
+        $blockedNewOrder = $this->order('0000307', now(), 'repair_completed');
+        app(PostSaleService::class)->catchUp();
+        $this->assertDatabaseMissing('post_sale_cycles', ['service_order_id' => $blockedNewOrder->id]);
+
+        Carbon::setTestNow(now()->addDays(30)->addSecond());
+        $allowedNewOrder = $this->order('0000308', now(), 'repair_completed');
+        app(PostSaleService::class)->catchUp();
+        $this->assertDatabaseHas('post_sale_cycles', ['service_order_id' => $allowedNewOrder->id, 'active' => true]);
+    }
+
     public function test_new_client_and_order_notifications_are_idempotent_and_authorized(): void
     {
         $payload = ['name' => 'Maria', 'document' => '11144477735', 'phone' => '35999990000', 'postal_code' => '37160000', 'street' => 'Rua B', 'number' => '1', 'district' => 'Centro', 'city' => 'Cidade', 'state' => 'MG'];

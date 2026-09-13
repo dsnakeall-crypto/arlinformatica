@@ -33,7 +33,6 @@ import {
   RotateCcw,
   Clock3,
   EllipsisVertical,
-  MessageCircle,
   Star,
   Instagram,
 } from "lucide-react";
@@ -3739,6 +3738,9 @@ function PostSalePage() {
   const [rows, setRows] = useState<any[]>([]),
     [loading, setLoading] = useState(true),
     [pending, setPending] = useState<any>(),
+    [removal, setRemoval] = useState<any>(),
+    [removing, setRemoving] = useState(false),
+    [removalError, setRemovalError] = useState(""),
     [search, setSearch] = useState("");
   const load = () =>
     api("/post-sales")
@@ -3754,6 +3756,19 @@ function PostSalePage() {
     });
     setPending(null);
     load();
+  };
+  const removeCard = async () => {
+    if (!removal || removing) return;
+    setRemoving(true);
+    try {
+      await api(`/post-sales/${removal.id}`, { method: "DELETE" });
+      setRows((current) => current.filter((row) => row.id !== removal.id));
+      setRemoval(null);
+    } catch (error) {
+      setRemovalError(error instanceof Error ? error.message : "Não foi possível excluir o card.");
+    } finally {
+      setRemoving(false);
+    }
   };
   const visibleRows = rows.filter((row) => `${row.number} ${row.name}`.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")));
   const avatarTone = (name: string) => {
@@ -3818,7 +3833,11 @@ function PostSalePage() {
                 </div>
                 <details className="post-sale-menu">
                   <summary aria-label={`Ações da OS ${row.number}`}><EllipsisVertical /></summary>
-                  <div>{action(row, "follow_up", "Confirmar se está tudo certo", MessageCircle, "follow-up")}</div>
+                  <div>
+                    <button className="post-sale-delete" type="button" onClick={() => { setRemovalError(""); setRemoval({ id: row.id, number: row.number, name: row.name }); }}>
+                      <Trash2 /> Excluir card
+                    </button>
+                  </div>
                 </details>
               </header>
               <div className={`post-sale-state ${row.available ? "post-sale-state-ready" : "post-sale-state-waiting"}`}>
@@ -3846,6 +3865,23 @@ function PostSalePage() {
               <button onClick={() => setPending(null)}>Ainda não enviei</button>
               <button className="primary" onClick={confirm}>
                 MENSAGEM ENVIADA
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {removal && (
+        <div className="modal">
+          <div className="modal-card confirm-send" role="dialog" aria-modal="true" aria-labelledby="post-sale-delete-title">
+            <h2 id="post-sale-delete-title">Excluir card de Pós-Venda?</h2>
+            <p>
+              A OS {removal.number} de {removal.name} deixará apenas esta lista de acompanhamento. A Ordem de Serviço, documentos e histórico de mensagens continuarão preservados.
+            </p>
+            {removalError && <p className="notice error">{removalError}</p>}
+            <div className="actions">
+              <button disabled={removing} onClick={() => { setRemovalError(""); setRemoval(null); }}>Cancelar</button>
+              <button className="primary" disabled={removing} onClick={removeCard}>
+                {removing ? "Excluindo…" : "Excluir card"}
               </button>
             </div>
           </div>
