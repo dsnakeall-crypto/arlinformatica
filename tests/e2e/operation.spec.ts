@@ -168,10 +168,10 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.getByRole('button', { name: 'Excluir orçamento' })).toHaveCount(0);
     const blockedDeletion = await api(page, `/orders/${orderId}/budgets/1`, 'DELETE');
     expect(blockedDeletion.status).toBe(409);
-    expect(blockedDeletion.body?.message).toBe('Não é possível excluir orçamento de uma OS finalizada.');
+    expect(blockedDeletion.body?.message).toBe('Não é possível excluir orçamento de uma OS fechada.');
     const blockedBudget = await api(page, `/orders/${orderId}/budgets`, 'POST', {});
     expect(blockedBudget.status).toBe(409);
-    expect(blockedBudget.body?.message).toBe('Não é possível criar orçamento para uma OS finalizada.');
+    expect(blockedBudget.body?.message).toBe('Não é possível criar orçamento para uma OS fechada.');
     const finalShareResponse = await finalShareResponsePromise;
     expect(finalShareResponse.status()).toBe(200);
     const finalShare = await finalShareResponse.json();

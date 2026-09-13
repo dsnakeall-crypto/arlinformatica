@@ -88,7 +88,7 @@ class BudgetDeletionTest extends TestCase
 
         $this->actingAs($this->master)->postJson("/api/orders/{$this->order->id}/budgets", [])
             ->assertConflict()
-            ->assertJsonPath('message', 'Não é possível criar orçamento para uma OS finalizada.');
+            ->assertJsonPath('message', 'Não é possível criar orçamento para uma OS fechada.');
 
         $this->assertDatabaseCount('budgets', 0);
     }
@@ -100,7 +100,7 @@ class BudgetDeletionTest extends TestCase
 
         $this->actingAs($this->master)->deleteJson("/api/orders/{$this->order->id}/budgets/1")
             ->assertConflict()
-            ->assertJsonPath('message', 'Não é possível excluir orçamento de uma OS finalizada.');
+            ->assertJsonPath('message', 'Não é possível excluir orçamento de uma OS fechada.');
 
         $this->assertNull(DB::table('budgets')->where('id', $budget)->value('deleted_at'));
         $this->assertDatabaseMissing('audit_logs', ['action' => 'budget.deleted', 'subject_id' => $budget]);
@@ -113,7 +113,7 @@ class BudgetDeletionTest extends TestCase
 
         $this->actingAs($this->master)->patchJson("/api/orders/{$this->order->id}/budgets/1/status", ['status' => 'approved'])
             ->assertConflict()
-            ->assertJsonPath('message', 'Não é possível alterar orçamento de uma OS finalizada.');
+            ->assertJsonPath('message', 'Não é possível alterar orçamento de uma OS fechada.');
 
         $this->assertSame('sent', DB::table('budgets')->where('id', $budget)->value('status'));
         $this->assertDatabaseMissing('audit_logs', ['action' => 'budget.status_changed', 'subject_id' => $budget]);
