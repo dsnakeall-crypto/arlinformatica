@@ -123,7 +123,7 @@ test('nova OS usa descrição manual e estado físico opcional independente do p
   await login(page);
 
   await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
-  const manual = page.getByLabel('Equipamento / Modelo / Acessórios *');
+  const manual = page.getByLabel('Equipamento *');
   await expect(manual).toBeVisible();
   await manual.fill('Impressora Epson L3250 + cabo USB + fonte');
 
@@ -182,15 +182,19 @@ test('Nova OS não cria seletor de equipamento nem fabricante após os observers
   await login(page);
   await page.locator('aside').getByRole('button', { name: 'Nova OS', exact: true }).click();
   const root = page.locator('[data-arl-new-order-react="1"]');
-  const input = root.getByLabel('Equipamento / Modelo / Acessórios *');
+  const input = root.getByLabel('Equipamento *');
+  const details = root.getByLabel('Fabricante / Modelo / Acessórios');
   await input.fill('Notebook + fonte + mouse');
+  await details.fill('Dell Inspiron + carregador');
   await expect(root.getByRole('button', { name: 'Usar câmera', exact: false })).toBeVisible();
   for (let cycle = 0; cycle < 4; cycle++) {
     await input.fill(`Notebook + fonte + mouse ${cycle}`);
     await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-    await expect(root.getByLabel('Equipamento *', { exact: true })).toHaveCount(0);
+    await expect(root.getByLabel('Equipamento *', { exact: true })).toHaveCount(1);
     await expect(root.getByLabel('Fabricante', { exact: true })).toHaveCount(0);
+    await expect(root.getByLabel('Fabricante / Modelo / Acessórios', { exact: true })).toHaveCount(1);
     await expect(root.locator('.arl-deep-catalog-input')).toHaveCount(0);
   }
   await expect(input).toHaveValue('Notebook + fonte + mouse 3');
+  await expect(details).toHaveValue('Dell Inspiron + carregador');
 });

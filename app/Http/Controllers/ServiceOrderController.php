@@ -82,6 +82,7 @@ class ServiceOrderController extends Controller
             'equipment_type_id' => 'required|exists:equipment_types,id',
             'manufacturer_id' => 'nullable|exists:manufacturers,id',
             'equipment_description' => 'nullable|string|max:500',
+            'equipment_details' => 'nullable|string|max:500',
             'attendance_type' => 'required|in:bench,external',
             'reported_problem' => 'required|string|max:10000',
             'intake_condition' => 'nullable|string|max:10000',
@@ -94,6 +95,7 @@ class ServiceOrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1|max:999',
         ]);
         $data['equipment_description'] = trim((string) ($data['equipment_description'] ?? '')) ?: null;
+        $data['equipment_details'] = trim((string) ($data['equipment_details'] ?? '')) ?: null;
         $manualEquipment = DB::table('equipment_types')->where('id', $data['equipment_type_id'])->value('name') === 'Informado manualmente';
         if ($manualEquipment && blank($data['equipment_description'])) {
             abort(422, 'Descreva o equipamento informado manualmente.');

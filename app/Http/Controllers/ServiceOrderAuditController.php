@@ -97,6 +97,7 @@ class ServiceOrderAuditController extends Controller
         }
 
         $this->appendScalarChange($changes, 'Equipamento', $before['equipment_description'] ?? null, $after['equipment_description'] ?? null);
+        $this->appendScalarChange($changes, 'Fabricante / Modelo / Acessórios', $before['equipment_details'] ?? null, $after['equipment_details'] ?? null);
 
         $beforeAttendance = $this->attendance($before['attendance_type'] ?? null);
         $afterAttendance = $this->attendance($after['attendance_type'] ?? null);

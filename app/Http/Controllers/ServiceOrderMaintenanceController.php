@@ -17,6 +17,7 @@ class ServiceOrderMaintenanceController extends Controller
         $data = $request->validate([
             'client_id' => ['sometimes', 'required', 'integer', 'exists:clients,id'],
             'equipment_description' => ['sometimes', 'required', 'string', 'max:500'],
+            'equipment_details' => ['sometimes', 'nullable', 'string', 'max:500'],
             'attendance_type' => ['sometimes', 'required', 'in:bench,external'],
             'reported_problem' => ['sometimes', 'required', 'string', 'max:10000'],
             'intake_condition' => ['sometimes', 'nullable', 'string', 'max:10000'],
@@ -78,7 +79,7 @@ class ServiceOrderMaintenanceController extends Controller
 
         DB::transaction(function () use ($request, $order, $data, $before, $newClient, $checklist, $items, $termIssued) {
             $scalar = [];
-            foreach (['client_id', 'equipment_description', 'attendance_type', 'reported_problem', 'intake_condition', 'final_report'] as $field) {
+            foreach (['client_id', 'equipment_description', 'equipment_details', 'attendance_type', 'reported_problem', 'intake_condition', 'final_report'] as $field) {
                 if (! array_key_exists($field, $data)) {
                     continue;
                 }
@@ -88,6 +89,8 @@ class ServiceOrderMaintenanceController extends Controller
                     $value = (int) $value;
                 } elseif ($field === 'equipment_description') {
                     $value = trim((string) $value);
+                } elseif ($field === 'equipment_details') {
+                    $value = trim((string) $value) ?: null;
                 } elseif ($field === 'final_report' && blank($value)) {
                     $value = null;
                 }
@@ -112,18 +115,19 @@ class ServiceOrderMaintenanceController extends Controller
                 ])->save();
             }
 
-            $identityChanged = array_key_exists('client_id', $data) || array_key_exists('equipment_description', $data);
+            $identityChanged = array_key_exists('client_id', $data) || array_key_exists('equipment_description', $data) || array_key_exists('equipment_details', $data);
             if ($identityChanged && ! $termIssued) {
                 $snapshot = $order->snapshot()->first();
                 if ($snapshot) {
                     $snapshotClient = $newClient ?? Client::withTrashed()->findOrFail($order->client_id);
                     $snapshotData = ['client' => $snapshotClient->toArray()];
-                    if (array_key_exists('equipment_description', $data)) {
+                    if (array_key_exists('equipment_description', $data) || array_key_exists('equipment_details', $data)) {
                         $equipment = is_array($snapshot->equipment) ? $snapshot->equipment : [];
                         $equipment['type_id'] = $order->equipment_type_id;
                         $equipment['manufacturer_id'] = $order->manufacturer_id;
                         $equipment['name'] = $order->equipment_description;
                         $equipment['description'] = $order->equipment_description;
+                        $equipment['details'] = $order->equipment_details;
                         $snapshotData['equipment'] = $equipment;
                     }
                     $snapshot->forceFill($snapshotData)->save();
@@ -323,6 +327,7 @@ class ServiceOrderMaintenanceController extends Controller
                 'name' => $order->client?->name,
             ],
             'equipment_description' => $order->equipment_description,
+            'equipment_details' => $order->equipment_details,
             'attendance_type' => $order->attendance_type,
             'reported_problem' => $order->reported_problem,
             'final_report' => $order->final_report,

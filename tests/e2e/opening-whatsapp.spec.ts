@@ -24,7 +24,7 @@ test('abertura da OS mostra um único popup e prepara a mensagem fixa do WhatsAp
   await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
   await expect(page.locator('.os-form')).toBeVisible();
   await selectNewOrderClient(page, createdClient.body.id);
-  await page.getByLabel('Equipamento / Modelo / Acessórios *').fill('Notebook homologação WhatsApp');
+  await page.getByLabel('Equipamento *').fill('Notebook homologação WhatsApp');
   await page.getByLabel('Problema relatado *').fill('Teste da mensagem fixa de abertura');
   await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
 

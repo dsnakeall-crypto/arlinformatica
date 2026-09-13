@@ -5,7 +5,8 @@ async function createOrder(page: Page) {
   await login(page);
   const stamp = Date.now();
   const clientName = `Cliente Layout OS ${stamp}`;
-  const equipmentDescription = `Notebook Layout ${stamp} + carregador`;
+  const equipmentDescription = `Notebook Layout ${stamp}`;
+  const equipmentDetails = 'Dell Inspiron + carregador exclusivo do teste';
   const client = await api(page, '/clients', 'POST', {
     name: clientName,
     document: uniqueDocument(stamp),
@@ -28,18 +29,21 @@ async function createOrder(page: Page) {
     equipment_type_id: equipmentType.id,
     manufacturer_id: null,
     equipment_description: equipmentDescription,
+    equipment_details: equipmentDetails,
     attendance_type: 'external',
     reported_problem: 'Problema usado para validar a ficha condensada',
     checklist: [],
   });
   expect(order.status, JSON.stringify(order.body)).toBe(201);
-  return { clientName, equipmentDescription, order: order.body };
+  return { clientName, equipmentDescription, equipmentDetails, order: order.body };
 }
 
-async function openOrder(page: Page, clientName: string, number: string) {
+async function openOrder(page: Page, clientName: string, number: string, equipmentDescription: string, equipmentDetails: string) {
   await page.getByRole('button', { name: 'Ordens' }).click();
   const row = page.locator('.order-row').filter({ hasText: clientName });
   await expect(row).toBeVisible();
+  await expect(row.locator('.order-device')).toHaveText(equipmentDescription);
+  await expect(row.locator('.order-device')).not.toContainText(equipmentDetails);
   await row.getByRole('button', { name: 'Ver OS' }).click();
   const root = page.locator('[data-arl-order-detail-react="1"]');
   await expect(root.getByRole('heading', { name: `OS #${number}`, exact: true })).toBeVisible();
@@ -47,14 +51,15 @@ async function openOrder(page: Page, clientName: string, number: string) {
 }
 
 test('Ver OS segue fluxo linear sem remover ações, dados ou registro histórico', async ({ page }) => {
-  const { clientName, equipmentDescription, order } = await createOrder(page);
-  const root = await openOrder(page, clientName, order.number);
+  const { clientName, equipmentDescription, equipmentDetails, order } = await createOrder(page);
+  const root = await openOrder(page, clientName, order.number, equipmentDescription, equipmentDetails);
 
   const header = root.locator('.arl-order-sticky-header');
   await expect(header).toBeVisible();
   expect(await header.evaluate((node) => getComputedStyle(node).position), 'Cabeçalho da OS deve permanecer sticky durante a rolagem').toBe('sticky');
   await expect(header.getByText(clientName, { exact: true })).toBeVisible();
   await expect(header.getByText(equipmentDescription, { exact: true })).toBeVisible();
+  await expect(header.getByText(equipmentDetails, { exact: true })).toHaveCount(0);
   await expect(header.locator('.status-picker')).toBeVisible();
   await expect(header.getByRole('button', { name: 'Editar OS' })).toBeVisible();
   await expect(header.getByRole('button', { name: 'Gerar orçamento' })).toBeVisible();
@@ -85,9 +90,11 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
 
   const intake = root.locator('.arl-intake-card');
   await expect(intake.getByRole('heading', { name: 'Ficha de entrada', exact: true })).toBeVisible();
-  for (const label of ['Cliente', 'Equipamento / Modelo / Acessórios', 'Problema relatado', 'Estado físico na entrada', 'Fotos']) {
+  for (const label of ['Cliente', 'Equipamento', 'Fabricante / Modelo / Acessórios', 'Problema relatado', 'Estado físico na entrada', 'Fotos']) {
     await expect(intake.getByRole('heading', { name: label, exact: true })).toBeVisible();
   }
+  await expect(intake.getByText(equipmentDescription, { exact: true })).toBeVisible();
+  await expect(intake.getByText(equipmentDetails, { exact: true })).toBeVisible();
   await expect(intake.getByRole('button', { name: 'Editar ficha' })).toBeVisible();
   await expect(intake.locator('.arl-order-photo-tools label')).toContainText('Enviar foto');
   await expect(intake.getByRole('button', { name: '◉ Usar câmera' })).toBeVisible();
@@ -97,7 +104,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   const headerActions = root.locator('.arl-order-header-actions');
   await expect(headerActions.getByRole('button', { name: 'Concluir OS', exact: true })).toBeVisible();
   const actionLabels = await headerActions.locator(':scope > button, :scope > details > summary').allTextContents();
-  expect(actionLabels.indexOf('Concluir OS')).toBeLessThan(actionLabels.indexOf("PDF's e Reaberturas OS"));
+  expect(actionLabels.indexOf('Concluir OS')).toBeGreaterThan(actionLabels.indexOf("PDF's e Reaberturas OS"));
   const headings = await workflow.locator(':scope > section h2').allTextContents();
   const position = (name: string) => headings.findIndex((value) => value.trim() === name);
   const ordered = ['Serviços / Produtos', 'Laudo Final', 'Orçamentos', 'Pagamento'];
@@ -156,7 +163,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
 });
 
 test('OS externa reaberta não recria atalhos removidos do detalhe', async ({ page }) => {
-  const { clientName, order } = await createOrder(page);
+  const { clientName, equipmentDescription, equipmentDetails, order } = await createOrder(page);
   const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
     result: 'no_fault',
     technical_report: 'Finalização usada para validar os atalhos após reabertura.',
@@ -166,7 +173,7 @@ test('OS externa reaberta não recria atalhos removidos do detalhe', async ({ pa
   });
   expect([200, 201], JSON.stringify(finalized.body)).toContain(finalized.status);
 
-  const root = await openOrder(page, clientName, order.number);
+  const root = await openOrder(page, clientName, order.number, equipmentDescription, equipmentDetails);
   await root.getByRole('button', { name: 'Reabrir OS', exact: true }).click();
   const modal = page.getByRole('dialog', { name: `Reabrir OS #${order.number}` });
   await modal.getByLabel('Motivo da reabertura').fill('Retorno externo em garantia.');

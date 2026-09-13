@@ -13,7 +13,7 @@ class ServiceOrder extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['number', 'client_id', 'equipment_type_id', 'manufacturer_id', 'equipment_description', 'attendance_type', 'status', 'reported_problem', 'intake_condition', 'received_at', 'completed_at', 'result', 'technical_report', 'final_report', 'subtotal_cents', 'discount_cents', 'total_cents', 'created_by'];
+    protected $fillable = ['number', 'client_id', 'equipment_type_id', 'manufacturer_id', 'equipment_description', 'equipment_details', 'attendance_type', 'status', 'reported_problem', 'intake_condition', 'received_at', 'completed_at', 'result', 'technical_report', 'final_report', 'subtotal_cents', 'discount_cents', 'total_cents', 'created_by'];
 
     protected function casts(): array
     {

@@ -60,7 +60,7 @@ test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado'
 
   await bottomNavigation.getByRole('button', { name: 'Nova OS', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
-  const manual = page.getByLabel('Equipamento / Modelo / Acessórios *');
+  const manual = page.getByLabel('Equipamento *');
   await expect(manual).toBeVisible();
   const manualFontSize = await manual.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
   expect(manualFontSize).toBeGreaterThanOrEqual(16);
@@ -190,7 +190,7 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
 
   await selectNewOrderClient(page, client.body.id);
   const manualDescription = 'Notebook para validação mobile';
-  await page.getByLabel('Equipamento / Modelo / Acessórios *').fill(manualDescription);
+  await page.getByLabel('Equipamento *').fill(manualDescription);
   await page.getByLabel('Problema relatado *').fill('Validação do botão de salvar no mobile');
   const createOrder = page.getByRole('button', { name: 'Criar ordem de serviço' });
   await assertAboveBottomBar(createOrder);

@@ -73,7 +73,8 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel('Cliente da OS')).toHaveCount(0);
   await expect(dialog).not.toContainText('Cliente, equipamento, atendimento, relato, checklist e serviços são salvos juntos nesta OS');
-  await expect(dialog.getByLabel('Equipamento / Modelo / Acessórios')).toBeVisible();
+  await expect(dialog.getByLabel('Equipamento')).toBeVisible();
+  await expect(dialog.getByLabel('Fabricante / Modelo / Acessórios')).toBeVisible();
   await expect(dialog.getByLabel('Atendimento')).toBeVisible();
   await expect(dialog.getByLabel('Problema relatado')).toBeVisible();
   await expect(dialog.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
@@ -97,7 +98,7 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   const changedEquipment = 'Notebook Dell Inspiron 15 + fonte + mochila';
   const changedProblem = 'Problema corrigido no editor unificado';
   const changedIntakeCondition = 'Tampa com risco e dobradiça com pequena folga';
-  await dialog.getByLabel('Equipamento / Modelo / Acessórios').fill(changedEquipment);
+  await dialog.getByLabel('Equipamento').fill(changedEquipment);
   await dialog.getByLabel('Atendimento').selectOption('external');
   await dialog.getByLabel('Problema relatado').fill(changedProblem);
   await dialog.getByLabel('Estado físico na entrada').fill(changedIntakeCondition);
@@ -134,7 +135,7 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   expect(Number(persistedItem?.quantity)).toBe(3);
 
   await expect(root.getByText(originalName, { exact: true })).toBeVisible();
-  await expect(root.getByText(changedEquipment, { exact: true })).toBeVisible();
+  await expect(root.locator('.arl-order-header-identity').getByText(changedEquipment, { exact: true })).toBeVisible();
   await expect(root.getByText(changedProblem, { exact: true })).toBeVisible();
 
   await root.getByRole('button', { name: 'Editar OS', exact: true }).click();

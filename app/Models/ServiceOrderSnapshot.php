@@ -24,6 +24,7 @@ class ServiceOrderSnapshot extends Model
             $equipment = is_array($snapshot->equipment) ? $snapshot->equipment : [];
             $equipment['name'] = $order->equipment_description;
             $equipment['description'] = $order->equipment_description;
+            $equipment['details'] = $order->equipment_details;
             $snapshot->equipment = $equipment;
         });
     }

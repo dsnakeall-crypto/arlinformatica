@@ -111,7 +111,8 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await selectNewOrderClient(page, clientResponse.body.id);
   await expect(newOrderForm.getByPlaceholder('Buscar por nome, telefone ou CPF/CNPJ')).toHaveValue(clientResponse.body.name);
   await expect(newOrderForm.locator('.arl-client-results button')).toHaveCount(0);
-  await newOrderForm.getByLabel('Equipamento / Modelo / Acessórios *').fill('Notebook Dell Inspiron 15 + carregador');
+  await newOrderForm.getByLabel('Equipamento *').fill('Notebook');
+  await newOrderForm.getByLabel('Fabricante / Modelo / Acessórios').fill('Dell Inspiron 15 + carregador');
   await newOrderForm.getByLabel('Problema relatado *').fill('Notebook lento para referência da homologação visual.');
   await newOrderForm.locator('.opening-catalog button').first().click();
   await expect(newOrderForm.locator('.opening-item')).toHaveCount(1);

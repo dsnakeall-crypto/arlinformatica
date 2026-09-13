@@ -85,6 +85,7 @@ type Order = {
   received_at: string;
   equipment_type_id: number;
   equipment_description?: string;
+  equipment_details?: string | null;
   total_cents?: number;
   completed_at?: string | null;
   reopened?: boolean | number;
@@ -768,6 +769,7 @@ function NewOrder({ done }: any) {
     [problem, setProblem] = useState(""),
     [intakeCondition, setIntakeCondition] = useState(""),
     [equipmentDescription, setEquipmentDescription] = useState(""),
+    [equipmentDetails, setEquipmentDetails] = useState(""),
     [photo, setPhoto] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -856,6 +858,7 @@ function NewOrder({ done }: any) {
           equipment_type_id: type,
           manufacturer_id: null,
           equipment_description: equipmentDescription.trim(),
+          equipment_details: equipmentDetails.trim() || null,
           attendance_type: attendance,
           reported_problem: problem,
           intake_condition: intakeCondition,
@@ -931,7 +934,7 @@ function NewOrder({ done }: any) {
                 Dados do equipamento
               </h2>
               <label className="field arl-manual-equipment-field">
-                <span>Equipamento / Modelo / Acessórios *</span>
+                <span>Equipamento *</span>
                 <input
                   type="text"
                   maxLength={500}
@@ -940,11 +943,23 @@ function NewOrder({ done }: any) {
                   spellCheck={true}
                   value={equipmentDescription}
                   onChange={(e) => setEquipmentDescription(e.target.value)}
-                  placeholder="Ex.: Notebook Dell Inspiron 15 + carregador"
+                  placeholder="Ex.: Notebook"
+                />
+              </label>
+              <label className="field arl-manual-equipment-details-field">
+                <span>Fabricante / Modelo / Acessórios</span>
+                <input
+                  type="text"
+                  maxLength={500}
+                  autoComplete="off"
+                  spellCheck={true}
+                  value={equipmentDetails}
+                  onChange={(e) => setEquipmentDetails(e.target.value)}
+                  placeholder="Ex.: Dell Inspiron 15 + carregador"
                 />
               </label>
               <p className="arl-manual-equipment-help">
-                Digite livremente tudo que está entrando.
+                Descreva o equipamento e, se necessário, complemente com fabricante, modelo e acessórios.
               </p>
               <div className="attendance">
                 <button

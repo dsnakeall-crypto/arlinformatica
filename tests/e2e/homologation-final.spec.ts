@@ -43,7 +43,8 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await selectNewOrderClient(page, clientResponse.body.id);
   await expect(form.getByPlaceholder('Buscar por nome, telefone ou CPF/CNPJ')).toHaveValue(clientResponse.body.name);
   await expect(form.locator('.arl-client-results button')).toHaveCount(0);
-  await form.getByLabel('Equipamento / Modelo / Acessórios *').fill('Notebook Dell Inspiron 15 + carregador');
+  await form.getByLabel('Equipamento *').fill('Notebook');
+  await form.getByLabel('Fabricante / Modelo / Acessórios').fill('Dell Inspiron 15 + carregador');
   await form.getByLabel('Problema relatado *').fill('Teste final de itens opcionais na abertura.');
   await form.locator('.opening-catalog button').filter({ hasText: service.name }).click();
   await expect(form.locator('.opening-item').filter({ hasText: service.name })).toBeVisible();
@@ -55,14 +56,16 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   const requestBody = orderResponse.request().postDataJSON();
   expect(requestBody.client_id).toBe(clientResponse.body.id);
   expect(requestBody.items).toEqual([{ catalog_id: service.id, quantity: 1 }]);
-  expect(requestBody.equipment_description).toBe('Notebook Dell Inspiron 15 + carregador');
+  expect(requestBody.equipment_description).toBe('Notebook');
+  expect(requestBody.equipment_details).toBe('Dell Inspiron 15 + carregador');
   const created = await orderResponse.json();
 
   await expect(page.getByRole('heading', { name: `OS #${created.number}`, exact: true })).toBeVisible();
   const detail = await api(page, `/orders/${created.id}`);
   expect(detail.status).toBe(200);
   expect(detail.body.client.id).toBe(clientResponse.body.id);
-  expect(detail.body.equipment_description).toBe('Notebook Dell Inspiron 15 + carregador');
+  expect(detail.body.equipment_description).toBe('Notebook');
+  expect(detail.body.equipment_details).toBe('Dell Inspiron 15 + carregador');
   expect(detail.body.items).toHaveLength(1);
   expect(detail.body.items[0].description).toBe(service.name);
   expect(detail.body.items[0].unit_price_cents).toBe(service.price_cents);

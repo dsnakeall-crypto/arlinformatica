@@ -80,10 +80,10 @@ test('lápis da lista abre edição completa ou o fluxo existente de reabertura'
   await expect(editor).not.toContainText('Cliente, equipamento, atendimento, relato, checklist e serviços são salvos juntos nesta OS');
   await expect(editor.locator('.arl-unified-editor-close')).toHaveCSS('border-radius', '50%');
   await expect(editor.locator('.arl-unified-editor-fields textarea').first()).toHaveCSS('background-color', 'rgb(250, 250, 251)');
-  await expect(editor.getByLabel('Equipamento / Modelo / Acessórios')).toBeVisible();
+  await expect(editor.getByLabel('Equipamento')).toBeVisible();
   await expect(editor.getByText('Serviços / Produtos', { exact: true })).toBeVisible();
   await expect(page.locator('.arl-maintenance-modal')).toHaveCount(0);
-  await editor.getByLabel('Equipamento / Modelo / Acessórios').fill('Equipamento corrigido pelo lápis da lista');
+  await editor.getByLabel('Equipamento').fill('Equipamento corrigido pelo lápis da lista');
   await editor.getByRole('button', { name: 'Salvar alterações' }).click();
   await expect(editor).toHaveCount(0);
   const editedOpenOrder = (await api(page, `/orders/${orders[0].id}`)).body;
@@ -125,7 +125,7 @@ test('lápis da lista abre edição completa ou o fluxo existente de reabertura'
   await expect(reopenedEditor.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
   await expect(reopenedEditor.getByLabel('Estado físico na entrada')).toBeVisible();
   await expect(reopenedEditor.getByLabel('Pesquisar Serviço / Produto no editor')).toBeVisible();
-  await reopenedEditor.getByLabel('Equipamento / Modelo / Acessórios').fill('Equipamento corrigido após reabertura');
+  await reopenedEditor.getByLabel('Equipamento').fill('Equipamento corrigido após reabertura');
   await reopenedEditor.getByRole('button', { name: 'Salvar alterações' }).click();
   await expect(reopenedEditor).toHaveCount(0);
   const editedReopenedOrder = (await api(page, `/orders/${orders[1].id}`)).body;

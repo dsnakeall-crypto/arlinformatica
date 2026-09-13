@@ -37,6 +37,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
   const [catalog, setCatalog] = useState<ServiceProductCatalogItem[]>([]);
   const [termIssued, setTermIssued] = useState(false);
   const [equipment, setEquipment] = useState('');
+  const [equipmentDetails, setEquipmentDetails] = useState('');
   const [attendance, setAttendance] = useState('bench');
   const [problem, setProblem] = useState('');
   const [intakeCondition, setIntakeCondition] = useState('');
@@ -72,6 +73,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
         setCatalog(Array.isArray(serviceRows) ? serviceRows.filter((row: any) => row.active !== false) : []);
         setTermIssued(Array.isArray(documents) && documents.some((row: any) => row.type === 'term'));
         setEquipment(nextOrder.equipment_description || '');
+        setEquipmentDetails(nextOrder.equipment_details || '');
         setAttendance(nextOrder.attendance_type);
         setProblem(nextOrder.reported_problem || '');
         setIntakeCondition(nextOrder.intake_condition || '');
@@ -89,6 +91,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
   }
 
   const equipmentChanged = equipment.trim() !== String(order.equipment_description || '').trim();
+  const equipmentDetailsChanged = equipmentDetails.trim() !== String(order.equipment_details || '').trim();
   const markDirty = () => setDirty(true);
 
   const addService = (entry: ServiceProductCatalogItem) => {
@@ -109,7 +112,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
 
   const save = async () => {
     if (!problem.trim()) { setError('Informe o problema relatado.'); return; }
-    if (equipmentChanged && !equipment.trim()) { setError('Informe Equipamento / Modelo / Acessórios.'); return; }
+    if (!equipment.trim()) { setError('Informe o Equipamento.'); return; }
 
     setBusy(true);
     setError('');
@@ -120,6 +123,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
         intake_condition: intakeCondition.trim(),
       };
       if (equipmentChanged) payload.equipment_description = equipment.trim();
+      if (equipmentDetailsChanged) payload.equipment_details = equipmentDetails.trim() || null;
       payload.items = items.map((row) => ({ catalog_id: row.catalog_id, quantity: row.quantity }));
 
       await api(`/orders/${orderId}`, { method: 'PATCH', body: JSON.stringify(payload) });
@@ -138,8 +142,9 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
   return <div className="modal"><section className="modal-card arl-od-card arl-unified-editor" role="dialog" aria-modal="true" aria-label={`Editar OS #${order.number}`}>
     <header className="arl-unified-editor-header"><div className="arl-unified-editor-heading"><span className="arl-unified-editor-icon"><FileText/></span><div><h2>Editar OS #{order.number}</h2><p>Atualize os dados técnicos, o atendimento, o estado físico e os serviços desta OS.</p></div></div><button type="button" className="arl-unified-editor-close" aria-label="Fechar" onClick={close}><X/></button></header>
     <div className="arl-unified-editor-fields">
-    <label>Equipamento / Modelo / Acessórios<textarea aria-label="Equipamento / Modelo / Acessórios" maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }}/></label>
-    {termIssued && equipmentChanged && <div className="notice">O Termo de Recebimento já emitido mantém a descrição anterior do equipamento.</div>}
+    <label>Equipamento<textarea aria-label="Equipamento" required maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }}/></label>
+    <label>Fabricante / Modelo / Acessórios<textarea aria-label="Fabricante / Modelo / Acessórios" maxLength={500} value={equipmentDetails} onChange={(event) => { markDirty(); setEquipmentDetails(event.target.value); }}/></label>
+    {termIssued && (equipmentChanged || equipmentDetailsChanged) && <div className="notice">O Termo de Recebimento já emitido mantém os dados anteriores do equipamento.</div>}
 
     <label>Atendimento<select aria-label="Atendimento" value={attendance} onChange={(event) => { markDirty(); setAttendance(event.target.value); }}><option value="bench">Bancada</option><option value="external">Externo</option></select></label>
     <label>Problema relatado<textarea aria-label="Problema relatado" value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }}/></label></div>

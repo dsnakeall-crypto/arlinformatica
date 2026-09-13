@@ -50,7 +50,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
     await selectNewOrderClient(page, clientId);
     const manualEquipment = 'Notebook Dell Inspiron 15 + carregador + mouse';
-    await page.getByLabel('Equipamento / Modelo / Acessórios *').fill(manualEquipment);
+    await page.getByLabel('Equipamento *').fill(manualEquipment);
     await page.getByRole('button', { name: 'ATENDIMENTO EXTERNO' }).click();
     await page.getByLabel('Problema relatado *').fill('Notebook não liga durante homologação');
     const intakeCondition = 'Carcaça trincada no canto esquerdo e marcas de queda';
@@ -60,7 +60,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.locator('input[type=file]').setInputFiles({ name: 'equipamento.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
     await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
     await expect(page.getByText('Notebook não liga durante homologação')).toBeVisible();
-    await expect(page.getByText(manualEquipment, { exact: true })).toBeVisible();
+    await expect(page.locator('.arl-order-header-identity').getByText(manualEquipment, { exact: true })).toBeVisible();
     const orders = await api(page, '/orders?q=Cliente%20E2E');
     orderId = orders.body.data[0].id;
     orderNumber = orders.body.data[0].number;

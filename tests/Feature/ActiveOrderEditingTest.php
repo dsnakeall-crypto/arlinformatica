@@ -152,16 +152,19 @@ class ActiveOrderEditingTest extends TestCase
 
         $this->patchJson("/api/orders/{$order['id']}", [
             'client_id' => $replacement->id,
-            'equipment_description' => 'Notebook Dell Inspiron 15 + carregador e mochila',
+            'equipment_description' => 'Notebook',
+            'equipment_details' => 'Dell Inspiron 15 + carregador e mochila',
         ])->assertOk()
             ->assertJsonPath('client.id', $replacement->id)
             ->assertJsonPath('client.name', 'Cliente Novo')
-            ->assertJsonPath('equipment_description', 'Notebook Dell Inspiron 15 + carregador e mochila');
+            ->assertJsonPath('equipment_description', 'Notebook')
+            ->assertJsonPath('equipment_details', 'Dell Inspiron 15 + carregador e mochila');
 
         $this->assertDatabaseHas('service_orders', [
             'id' => $order['id'],
             'client_id' => $replacement->id,
-            'equipment_description' => 'Notebook Dell Inspiron 15 + carregador e mochila',
+            'equipment_description' => 'Notebook',
+            'equipment_details' => 'Dell Inspiron 15 + carregador e mochila',
         ]);
 
         $snapshot = DB::table('service_order_snapshots')->where('service_order_id', $order['id'])->first();
@@ -169,7 +172,8 @@ class ActiveOrderEditingTest extends TestCase
         $snapshotEquipment = json_decode((string) $snapshot->equipment, true);
         $this->assertSame($replacement->id, $snapshotClient['id']);
         $this->assertSame('Cliente Novo', $snapshotClient['name']);
-        $this->assertSame('Notebook Dell Inspiron 15 + carregador e mochila', $snapshotEquipment['description']);
+        $this->assertSame('Notebook', $snapshotEquipment['description']);
+        $this->assertSame('Dell Inspiron 15 + carregador e mochila', $snapshotEquipment['details']);
 
         $audit = DB::table('audit_logs')
             ->where('subject_type', 'service_order')
@@ -182,9 +186,11 @@ class ActiveOrderEditingTest extends TestCase
         $this->assertSame($original->id, $before['client']['id']);
         $this->assertSame('Cliente Anterior', $before['client']['name']);
         $this->assertSame('Notebook Dell antigo + carregador', $before['equipment_description']);
+        $this->assertNull($before['equipment_details']);
         $this->assertSame($replacement->id, $after['client']['id']);
         $this->assertSame('Cliente Novo', $after['client']['name']);
-        $this->assertSame('Notebook Dell Inspiron 15 + carregador e mochila', $after['equipment_description']);
+        $this->assertSame('Notebook', $after['equipment_description']);
+        $this->assertSame('Dell Inspiron 15 + carregador e mochila', $after['equipment_details']);
     }
 
     public function test_client_change_after_term_issue_preserves_signed_snapshot(): void
