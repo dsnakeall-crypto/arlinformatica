@@ -23,11 +23,14 @@ import {
   Pencil,
   Wrench,
   CheckCircle2,
+  CircleDot,
   PackageSearch,
   LogOut,
   Banknote,
   CreditCard,
+  Eye,
   Landmark,
+  RotateCcw,
 } from "lucide-react";
 import "../css/app.css";
 import "../css/homologation.css";
@@ -415,6 +418,7 @@ function OrderTable({
         <span>CLIENTE / DISPOSITIVO</span>
         <span>STATUS</span>
         {showValue && <span>VALOR</span>}
+        <span>RELATO CLIENTE</span>
         <span>AÇÕES</span>
       </div>
       {items.map((o: Order) => {
@@ -436,6 +440,7 @@ function OrderTable({
             </span>
             <label className={`row-status status-${o.status}`}>
               <span className="sr-only">Alterar status da OS {o.number}</span>
+              <CircleDot className="row-status-icon" aria-hidden="true" />
               <select
                 aria-label={`Status da OS ${o.number}`}
                 value={o.status}
@@ -458,6 +463,9 @@ function OrderTable({
                 {money(o.total_cents || 0)}
               </strong>
             )}
+            <span className="order-client-report" title={o.reported_problem || undefined}>
+              {o.reported_problem || ""}
+            </span>
             <span className="order-actions">
               <a
                 className="order-whatsapp"
@@ -472,16 +480,18 @@ function OrderTable({
                 <img src="/arl-assets/icons/icon-maps.png" alt="" />
               </a>
               <button
+                className="order-view"
                 type="button"
                 aria-label="Ver OS"
                 title="Ver OS"
                 onClick={() => open("orders", o.id)}
               >
-                <img src="/arl-assets/icons/icon-visualizar.png" alt="" />
+                <Eye aria-hidden="true" />
                 <span className="sr-only">Ver OS</span>
               </button>
               {onEdit && ["Master", "Administrador"].includes(role) && (
                 <button
+                  className={o.status === "completed" ? "order-reopen" : "order-edit"}
                   type="button"
                   aria-label={
                     o.status === "completed"
@@ -495,7 +505,7 @@ function OrderTable({
                   }
                   onClick={() => onEdit(o)}
                 >
-                  <Pencil />
+                  {o.status === "completed" ? <RotateCcw /> : <Pencil />}
                 </button>
               )}
               {["Master", "Administrador"].includes(role) && (

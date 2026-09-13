@@ -22,6 +22,7 @@ class ServiceOrderController extends Controller
     {
         $postSales->catchUp(true);
         $q = ServiceOrder::query()
+            ->select('service_orders.*')
             ->with('client:id,name,phone,street,number,district,city,state')
             ->withExists(['histories as reopened' => fn ($history) => $history->where('from_status', 'completed')->where('to_status', 'analysis')]);
         $requestedStatus = (string) $r->query('status', '');
@@ -64,6 +65,7 @@ class ServiceOrderController extends Controller
     {
         $postSales->catchUp(true);
         $orders = ServiceOrder::query()
+            ->select('service_orders.*')
             ->with('client:id,name,phone,street,number,district,city,state')
             ->withExists(['histories as reopened' => fn ($history) => $history->where('from_status', 'completed')->where('to_status', 'analysis')])
             ->where('status', '!=', 'completed')
