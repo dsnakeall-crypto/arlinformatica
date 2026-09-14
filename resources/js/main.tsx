@@ -4960,31 +4960,33 @@ function App() {
             ) : null;
           })}
         </nav>
-        <button
-          type="button"
-          className={`sidebar-pin-toggle${sidebarPinned ? " active" : ""}`}
-          aria-label={sidebarPinned ? "Desfixar menu lateral" : "Fixar menu lateral"}
-          aria-pressed={sidebarPinned}
-          title={sidebarPinned ? "Desfixar menu lateral" : "Fixar menu lateral"}
-          onClick={() => void toggleSidebarPinned()}
-        >
-          <Pin aria-hidden="true" />
-          <span>{sidebarPinned ? "Menu fixado" : "Fixar menu"}</span>
-        </button>
-        <div className="profile">
-          <div>
-            <b>{me?.name || "ARL Informática"}</b>
-            <small>{me?.role || "Operação"}</small>
-          </div>
+        <div className="sidebar-footer">
           <button
             type="button"
-            aria-label="Sair"
-            title="Sair"
-            onClick={() => void logout()}
+            className={`sidebar-pin-toggle${sidebarPinned ? " active" : ""}`}
+            aria-label={sidebarPinned ? "Desfixar menu lateral" : "Fixar menu lateral"}
+            aria-pressed={sidebarPinned}
+            title={sidebarPinned ? "Desfixar menu lateral" : "Fixar menu lateral"}
+            onClick={() => void toggleSidebarPinned()}
           >
-            <LogOut />
-            <span>Sair</span>
+            <Pin aria-hidden="true" />
+            <span>{sidebarPinned ? "Menu fixado" : "Fixar menu"}</span>
           </button>
+          <div className="profile">
+            <div>
+              <b>{me?.name || "ARL Informática"}</b>
+              <small>{me?.role || "Operação"}</small>
+            </div>
+            <button
+              type="button"
+              aria-label="Sair"
+              title="Sair"
+              onClick={() => void logout()}
+            >
+              <LogOut />
+              <span>Sair</span>
+            </button>
+          </div>
         </div>
       </aside>
       <main

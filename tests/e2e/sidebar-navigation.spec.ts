@@ -64,13 +64,17 @@ test('menu recolhe, revela nomes no hover, libera largura e persiste após recar
 test('usuário fixa, desfixa e mantém a preferência do menu após recarregar', async ({ page }) => {
   await login(page);
   expect((await api(page, '/me/sidebar', 'PATCH', { sidebar_pinned: false })).status).toBe(200);
+  await page.reload();
 
   const shell = page.locator('.shell');
   const aside = page.locator('aside');
+  await expect(aside.getByRole('button', { name: 'Fixar menu lateral', exact: true })).toBeVisible();
+  await aside.hover();
   await page.getByRole('main').hover();
   await expect(shell).toHaveClass(/sidebar-collapsed/);
 
   const pin = aside.getByRole('button', { name: 'Fixar menu lateral', exact: true });
+  await expect(pin).toBeVisible();
   const pinnedResponse = page.waitForResponse(response => response.url().endsWith('/api/me/sidebar') && response.request().method() === 'PATCH');
   await pin.click();
   expect((await pinnedResponse).status()).toBe(200);

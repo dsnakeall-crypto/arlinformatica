@@ -29,7 +29,7 @@ class AuthController extends Controller
             'name' => $user->name,
             'login' => $user->login,
             'role' => $user->role->name,
-            'sidebar_pinned' => $user->sidebar_pinned,
+            'sidebar_pinned' => (bool) $user->sidebar_pinned,
         ]);
     }
 
@@ -38,7 +38,7 @@ class AuthController extends Controller
         $data = $request->validate(['sidebar_pinned' => ['required', 'boolean']]);
         $request->user()->update($data);
 
-        return response()->json(['sidebar_pinned' => $request->user()->sidebar_pinned]);
+        return response()->json(['sidebar_pinned' => (bool) $request->user()->sidebar_pinned]);
     }
 
     public function logout(Request $r)

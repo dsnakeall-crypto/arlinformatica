@@ -388,7 +388,8 @@ aside nav::-webkit-scrollbar { width:0; height:0; }
 @media(max-width:800px){.layout-desktop.sidebar-collapsed aside{width:280px;padding:28px 16px}.layout-desktop.sidebar-collapsed main{margin:0;width:100%}.layout-desktop.sidebar-collapsed .sidebar-brand .logo,.layout-desktop.sidebar-collapsed .new-order-shortcut span,.layout-desktop.sidebar-collapsed .nav-group h2,.layout-desktop.sidebar-collapsed .nav-label,.layout-desktop.sidebar-collapsed .nav-badge,.layout-desktop.sidebar-collapsed .profile>i,.layout-desktop.sidebar-collapsed .profile>div,.layout-desktop.sidebar-collapsed .profile>button span{display:initial}.layout-desktop .sidebar-collapse{display:none}}
 
 /* The footer shares the same inner width and cannot push the exit button outside it. */
-.shell aside .profile { width:100%; min-width:0; gap:8px; padding:12px 2px 0; }
+.shell aside .sidebar-footer { flex:0 0 auto; display:grid; width:100%; min-width:0; }
+.shell aside .profile { width:100%; min-width:0; margin-top:0; gap:8px; padding:12px 2px 0; }
 .shell aside .profile>div { flex:1; min-width:0; overflow:hidden; }
 .shell aside .profile b,.shell aside .profile small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .shell aside .profile>button { flex-shrink:0; }

@@ -66,6 +66,7 @@ class StageTenAuditTest extends TestCase
 
         $this->actingAs($user)->getJson('/api/me')->assertOk()->assertExactJson([
             'id' => $user->id, 'name' => $user->name, 'login' => $user->login, 'role' => 'Funcionário',
+            'sidebar_pinned' => false,
         ]);
         $detail = $this->getJson("/api/orders/{$order->id}")->assertOk()->json();
         $this->assertStringContainsString('wa.me', $detail['mobile_actions']['whatsapp_url']);
