@@ -50,6 +50,8 @@ class StageFourTest extends TestCase
         $catalog = DB::table('service_catalog')->insertGetId(['name' => 'Formatação', 'category' => 'service', 'price_cents' => 10000, 'warranty_enabled' => true, 'warranty_term' => 30, 'warranty_unit' => 'days', 'active' => true, 'created_at' => now(), 'updated_at' => now()]);
         $response = $this->finalize(['result' => 'repair_completed', 'technical_report' => 'Sistema reparado e testado.', 'discount_cents' => 1000, 'items' => [['catalog_id' => $catalog, 'description' => 'Formatação', 'quantity' => 2, 'unit_price_cents' => 10000, 'warranty_enabled' => true, 'warranty_term' => 30, 'warranty_unit' => 'days', 'warranty_description' => 'Garantia do serviço']]])->assertCreated();
         $response->assertJsonPath('finalization.subtotal_cents', 20000)->assertJsonPath('finalization.total_cents', 19000);
+        $this->assertDatabaseCount('payments', 0);
+        $this->getJson('/api/finance/receivables')->assertOk()->assertJsonFragment(['id' => $this->order->id, 'balance_cents' => 19000]);
         DB::table('service_catalog')->where('id', $catalog)->update(['name' => 'Novo nome', 'price_cents' => 99999, 'warranty_term' => 1]);
         $item = DB::table('service_order_items')->where('service_order_id', $this->order->id)->first();
         $this->assertSame('Formatação', $item->description);
@@ -64,6 +66,33 @@ class StageFourTest extends TestCase
     public function test_discount_cannot_make_total_negative(): void
     {
         $this->finalize(['result' => 'repair_completed', 'technical_report' => 'Reparo', 'discount_cents' => 101, 'items' => [['description' => 'Serviço', 'quantity' => 1, 'unit_price_cents' => 100, 'warranty_enabled' => false]]])->assertUnprocessable()->assertJsonValidationErrors('discount_cents');
+    }
+
+    public function test_finalization_can_register_full_payment_and_requires_one_of_the_supported_methods(): void
+    {
+        $payload = ['result' => 'repair_completed', 'technical_report' => 'Reparo concluído', 'discount_cents' => 1000, 'items' => [['description' => 'Reparo completo', 'quantity' => 2, 'unit_price_cents' => 10000, 'warranty_enabled' => false]], 'is_paid' => true];
+
+        $this->finalize($payload)->assertUnprocessable()->assertJsonValidationErrors('payment_method');
+        $this->finalize([...$payload, 'payment_method' => 'transfer'])->assertUnprocessable()->assertJsonValidationErrors('payment_method');
+        $this->assertDatabaseCount('service_order_finalizations', 0);
+        $this->assertDatabaseCount('payments', 0);
+
+        $response = $this->finalize([...$payload, 'payment_method' => 'credit'])
+            ->assertCreated()
+            ->assertJsonPath('order.status', 'completed')
+            ->assertJsonPath('order.archived', 1)
+            ->assertJsonPath('order.display_status', 'paid');
+
+        $this->assertDatabaseHas('payments', ['service_order_id' => $this->order->id, 'amount_cents' => 19000, 'method' => 'credit']);
+        $paymentId = (int) DB::table('payments')->where('service_order_id', $this->order->id)->value('id');
+        $this->assertDatabaseHas('financial_transactions', ['payment_id' => $paymentId, 'origin' => 'service_order', 'amount_cents' => 19000]);
+        $this->assertDatabaseHas('status_history', ['service_order_id' => $this->order->id, 'from_status' => 'completed', 'to_status' => 'paid']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'payment.created', 'subject_type' => 'payment', 'subject_id' => $paymentId]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'service_order.marked_paid_and_retrieved', 'subject_type' => 'service_order', 'subject_id' => $this->order->id]);
+        $this->getJson('/api/finance/receivables')->assertOk()->assertJsonPath('count', 0);
+
+        $snapshot = json_decode($response->json('finalization.snapshot'), true);
+        $this->assertSame(['is_paid' => true, 'method' => 'credit'], $snapshot['payment']);
     }
 
     public function test_approved_budget_is_server_source_and_cannot_be_used_for_another_order(): void
