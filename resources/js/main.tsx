@@ -835,9 +835,9 @@ function NewOrder({ done }: any) {
     () => () => photoPreviews.forEach(({ url }) => URL.revokeObjectURL(url)),
     [photoPreviews],
   );
-  const addPhotos = (files: FileList | File[] | null | undefined) => {
+  const addPhotos = (files: readonly File[] | null | undefined) => {
     if (!files?.length) return;
-    setPhotos((current) => [...current, ...Array.from(files)]);
+    setPhotos((current) => [...current, ...files]);
   };
   const addItem = (item: Catalog) =>
     setOrderItems((current) => {
@@ -1058,8 +1058,12 @@ function NewOrder({ done }: any) {
                   accept="image/jpeg,image/png,image/webp"
                   multiple
                   onChange={(e) => {
-                    addPhotos(e.target.files);
-                    e.target.value = "";
+                    // FileList pertence ao input e é esvaziada ao limpar o campo.
+                    // Preserve os arquivos antes disso para que seleções sucessivas
+                    // sejam sempre acumuladas no estado da ficha.
+                    const selectedPhotos = Array.from(e.currentTarget.files ?? []);
+                    e.currentTarget.value = "";
+                    addPhotos(selectedPhotos);
                   }}
                 />
               </label>
