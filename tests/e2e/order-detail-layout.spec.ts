@@ -137,15 +137,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(root.getByRole('button', { name: 'Salvar Laudo Final' })).toBeEnabled();
   await expect(root.getByRole('button', { name: 'Salvar Laudo Final' })).toHaveClass(/primary/);
 
-  const record = workflow.locator('.arl-order-record');
-  await expect(record.getByRole('heading', { name: 'Registro da OS', exact: true })).toBeVisible();
-  const accordions = record.locator(':scope > details');
-  await expect(accordions).toHaveCount(3);
-  expect(await accordions.locator('summary').allTextContents()).toEqual(['Histórico de status', 'Histórico de alterações', 'Documentos']);
-  for (let index = 0; index < 3; index += 1) await expect(accordions.nth(index)).not.toHaveAttribute('open', '');
-  await expect(record.locator('[role="tab"]')).toHaveCount(0);
-  await accordions.nth(2).locator('summary').click();
-  await expect(record.getByRole('link', { name: 'Termo de recebimento' })).toHaveCount(1);
+  await expect(workflow.locator('.arl-order-record'), 'Registro da OS deve permanecer oculto sem remover os dados históricos').toHaveCount(0);
 
   const layoutText = await page.locator('.device-layout').innerText();
   expect((layoutText.match(/Layout/g) ?? []).length, 'Cabeçalho global não pode renderizar "Layout Layout"').toBe(1);

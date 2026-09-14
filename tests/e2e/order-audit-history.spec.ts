@@ -52,16 +52,13 @@ test('Histórico de alterações exibe auditoria em linguagem legível', async (
   });
   expect(edited.status, JSON.stringify(edited.body)).toBe(200);
 
-  await page.getByRole('button', { name: 'Ordens' }).click();
-  const row = page.locator('.order-row').filter({ hasText: replacementName });
-  await expect(row).toBeVisible();
-  await row.getByRole('button', { name: 'Ver OS' }).click();
-
-  const root = page.locator('[data-arl-unified-order-editor-host="1"]');
-  await root.getByText('Histórico de alterações', { exact: true }).click();
-  await expect(root.getByText(`Cliente alterado de ${originalName} para ${replacementName}`, { exact: true })).toBeVisible();
-  await expect(root.getByText(`Equipamento alterado de ${equipmentType.name} para Notebook histórico + carregador`, { exact: true })).toBeVisible();
-  await expect(root.getByText('service_order.edited', { exact: true })).toHaveCount(0);
-  await expect(root.getByText('client_id', { exact: true })).toHaveCount(0);
-  await expect(root.getByText('equipment_description', { exact: true })).toHaveCount(0);
+  const history = await api(page, `/orders/${created.body.id}/audit-history`);
+  expect(history.status, JSON.stringify(history.body)).toBe(200);
+  const edit = history.body.find((entry: any) => entry.action === 'Alteração da OS');
+  expect(edit, 'O histórico preservado deve conter a edição da OS').toBeTruthy();
+  expect(edit.changes).toContain(`Cliente alterado de ${originalName} para ${replacementName}`);
+  expect(edit.changes).toContain(`Equipamento alterado de ${equipmentType.name} para Notebook histórico + carregador`);
+  expect(edit.changes).not.toContain('service_order.edited');
+  expect(edit.changes).not.toContain('client_id');
+  expect(edit.changes).not.toContain('equipment_description');
 });

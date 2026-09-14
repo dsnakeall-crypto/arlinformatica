@@ -11,6 +11,8 @@ type ApiError = Error & { errors?: Record<string, string[]> };
 type PaymentSummary = { total_cents: number; paid_cents: number; balance_cents: number; collectible_balance_cents: number; status: 'unpaid' | 'partial' | 'paid'; payments: any[]; refunded_cents: number; refundable_cents: number; refunds: any[] };
 
 type FinalShare = { url: string; expires_at: string; revision: number };
+// Registro preservado para futura reativação; a navegação de PDFs permanece no botão PDF's.
+const SHOW_ORDER_RECORD = false;
 
 const csrf = () => document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
 const api = async (url: string, options: RequestInit = {}) => {
@@ -516,11 +518,11 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
       <BudgetBox order={order} role={role} openSignal={budgetSignal}/>
       {canAdminister && <PaymentBox order={order} role={role} openSignal={paymentSignal} onSummary={setPaymentSummary}/>}
       {canAdminister && <FinalizationBox order={order} reload={load} openSignal={finalSignal} finalReport={finalReport} setFinalReport={setFinalReport} onShare={setShare} persistPendingChanges={persistPendingChanges} onFinalReportDirty={setFinalReportDirty}/>}
-      <section className="wide arl-order-record"><div className="section-title"><div><span className="arl-eyebrow">REGISTRO</span><h2>Registro da OS</h2><p>Históricos e documentos preservados, recolhidos por padrão.</p></div></div>
+      {SHOW_ORDER_RECORD && <section className="wide arl-order-record"><div className="section-title"><div><span className="arl-eyebrow">REGISTRO</span><h2>Registro da OS</h2><p>Históricos e documentos preservados, recolhidos por padrão.</p></div></div>
         <details className="arl-record-accordion"><summary>Histórico de status</summary><div className="arl-record-body">{order.histories.map((history: any, index: number) => <p key={history.id || index}>{statusLabel[history.to_status] || history.to_status} · {new Date(history.created_at).toLocaleString('pt-BR')} · {history.user?.name}{history.reason ? ` · Motivo: ${history.reason}` : ''}</p>)}</div></details>
         <OrderAuditHistory orderId={order.id}/>
         <details className="arl-record-accordion"><summary>Documentos</summary><div className="arl-record-body"><DocumentsBox order={order} embedded/></div></details>
-      </section>
+      </section>}
     </div>
     {editOpen && (immutable ? <ImmutableModal order={order} onClose={() => setEditOpen(false)}/> : <EditOrderModal order={order} onClose={() => setEditOpen(false)} onSaved={async () => { setEditOpen(false); await load(); }}/>) }
     {reopenOpen && <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Reabrir OS #${order.number}`}><h2>Reabrir OS #{order.number}</h2><p>A mesma OS voltará para Em Análise. A finalização e o PDF atuais permanecerão no histórico.</p><label>Motivo da reabertura<textarea value={reopenNote} onChange={(event) => setReopenNote(event.target.value)}/></label><div className="arl-od-actions"><button type="button" onClick={() => setReopenOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={async () => { if (!reopenNote.trim()) return; await api(`/orders/${order.id}/reopen`, { method: 'POST', body: JSON.stringify({ note: reopenNote.trim() }) }); setReopenOpen(false); await load(); }}>Confirmar reabertura</button></div></section></div>}

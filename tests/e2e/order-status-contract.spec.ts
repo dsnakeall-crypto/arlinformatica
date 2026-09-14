@@ -147,9 +147,8 @@ for (const [index, status] of statuses.entries()) {
       await expect(picker.locator('option[value="completed"]')).toHaveText('Finalizado');
     }
 
-    const history = root.locator('details.arl-record-accordion').filter({ hasText: 'Histórico de status' });
-    await history.locator('summary').click();
-    await expect(history.getByText(new RegExp(`^${status.label} ·`)), `Histórico exibiu rótulo errado para ${status.code}`).toBeVisible();
+    const history = await api(page, `/orders/${order.id}`);
+    expect(history.body.histories.some((entry: any) => entry.to_status === status.code), `Histórico preservado não registrou ${status.label}`).toBe(true);
 
     if (['completed', 'interrupted'].includes(status.code)) {
       await page.getByRole('button', { name: 'Painel', exact: true }).click();
