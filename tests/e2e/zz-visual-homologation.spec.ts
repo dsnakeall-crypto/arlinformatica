@@ -173,7 +173,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   const visualClient = page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' });
   await visualClient.getByRole('button', { name: 'Visualizar' }).click();
   await expect(page.getByText(service.name, { exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderResponse.body.id}/final/1/pdf`);
+  await expect(page.getByRole('link', { name: 'Baixar A4 final · Rev. 1', exact: true })).toHaveAttribute('href', `/api/orders/${orderResponse.body.id}/final/1/pdf`);
   await page.screenshot({ path: 'visual-artifacts/02-clientes-historico-desktop.png', fullPage: true });
 
   await nav.getByRole('button', { name: 'Pós-Venda' }).click();

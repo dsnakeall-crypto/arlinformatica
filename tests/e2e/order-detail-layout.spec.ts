@@ -96,7 +96,13 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   }
   await expect(intake.getByText(equipmentDescription, { exact: true })).toBeVisible();
   await expect(intake.getByText(equipmentDetails, { exact: true })).toBeVisible();
-  await expect(intake.getByRole('heading', { name: 'Fabricante / Modelo / Acessórios', exact: true })).toHaveCount(0);
+  const equipmentDetailsBlock = intake.locator('.arl-intake-equipment-details');
+  await expect(equipmentDetailsBlock.getByRole('heading', { name: 'Fabricante / Modelo / Acessórios', exact: true })).toBeVisible();
+  await expect(equipmentDetailsBlock.getByText(equipmentDetails, { exact: true })).toBeVisible();
+  const clearedEquipmentDetails = await api(page, `/orders/${order.id}`, 'PATCH', { equipment_details: null });
+  expect(clearedEquipmentDetails.status, JSON.stringify(clearedEquipmentDetails.body)).toBe(200);
+  await page.reload();
+  await expect(intake.locator('.arl-intake-equipment-details').getByText('Não informado', { exact: true })).toBeVisible();
   await expect(intake.getByRole('button', { name: 'Editar ficha' })).toBeVisible();
   await expect(intake.locator('.arl-order-photo-tools label')).toContainText('Enviar foto');
   await expect(intake.getByRole('button', { name: '◉ Usar câmera' })).toBeVisible();
