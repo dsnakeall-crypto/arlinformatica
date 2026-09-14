@@ -2317,7 +2317,7 @@ function FinancePage({ role, openOrder }: any) {
             </label>
             {canReport && (
               <button
-                className="finance-action"
+                className="primary finance-action"
                 onClick={() => setExpense(true)}
               >
                 <Plus />
@@ -2436,7 +2436,7 @@ function FinancePage({ role, openOrder }: any) {
         </>
       )}
       {tab === "daily" && (
-        <section className="panel">
+        <section className="panel finance-daily">
           <h2>Caixa Diário automático</h2>
           <strong>Total: {money(daily.total_cents)}</strong>
           {daily.transactions.length ? (
@@ -2510,7 +2510,7 @@ function FinancePage({ role, openOrder }: any) {
         </section>
       )}
       {tab === "receivables" && (
-        <section className="panel">
+        <section className="panel finance-receivables">
           <h2>A Receber</h2>
           <p>OS concluídas que ainda possuem saldo pendente.</p>
           {receivablesLoading ? (
@@ -2562,7 +2562,7 @@ function FinancePage({ role, openOrder }: any) {
         </section>
       )}
       {tab === "month" && (
-        <section className="panel">
+        <section className="panel finance-monthly">
           <div className="finance-cards">
             <article>
               <small>Faturamento</small>
@@ -2589,16 +2589,18 @@ function FinancePage({ role, openOrder }: any) {
               <strong>{money(month?.discount_cents)}</strong>
             </article>
           </div>
-          <h2>Serviços e produtos</h2>
-          {month?.items?.length ? (
-            month.items.map((i: any) => (
-              <p key={i.description}>
-                {i.description}: {i.quantity} · {money(i.total_cents)}
-              </p>
-            ))
-          ) : (
-            <p>Nenhum item vinculado.</p>
-          )}
+          <div className="finance-month-items">
+            <h2>Serviços e produtos</h2>
+            {month?.items?.length ? (
+              month.items.map((i: any) => (
+                <p key={i.description}>
+                  {i.description}: {i.quantity} · {money(i.total_cents)}
+                </p>
+              ))
+            ) : (
+              <p>Nenhum item vinculado.</p>
+            )}
+          </div>
         </section>
       )}
       {tab === "reports" && (

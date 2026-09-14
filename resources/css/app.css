@@ -43,3 +43,34 @@
 @media(max-width:800px){.upload{min-width:0}.upload input{width:100%;min-width:0}}
 .arl-reopened-marker{display:inline-flex;align-items:center;width:max-content;padding:3px 7px;border:1px solid #e7b7c0;border-radius:999px;background:#fff0f3;color:#a9001a;font-size:10px;font-weight:800;letter-spacing:.04em;line-height:1.2}.order-row-reopened> b,.order-row-reopened .order-customer strong{color:#a9001a}.arl-order-reopened-marker{margin-top:4px}
 .opening-photo-previews{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-top:12px}.opening-photo-previews figure{position:relative;min-width:0;margin:0}.opening-photo-previews .preview{display:block;width:100%;height:100px;margin:0}.opening-photo-previews button{position:absolute;top:6px;right:6px;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:#b4001d;color:#fff;font-size:20px;line-height:1;display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.22)}
+
+/* Acabamento do Financeiro: somente apresentação, sem alterar dados ou fluxos. */
+.finance-main-hero~.panel,.finance-main-hero~.refund-total{margin-bottom:18px;padding:22px;border:1px solid var(--arl-test-border);border-radius:16px}
+.finance-main-hero~.panel>h2:first-child{margin:0 0 8px}.finance-main-hero~.panel>p:first-of-type{margin-bottom:18px}
+.finance-main-hero~.payment-method-section,.finance-main-hero~.origin-section{padding:22px}
+.payment-method-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:16px}
+.payment-method-grid article{min-width:0;padding:17px;border:1px solid var(--arl-test-border);background:#fff}
+.origin-section article{gap:10px;margin-top:12px;padding:13px 14px;border:1px solid var(--arl-test-border);border-radius:12px;background:#fafafb}
+.origin-section article>div:first-child{min-width:0;gap:16px}.origin-section article span{text-align:right;white-space:nowrap}.origin-track{width:100%}
+.finance-total-cards{gap:16px;margin:0 0 18px}
+.finance-total-cards article,.report-summary article,.refund-total{border:1px solid var(--arl-test-border);border-radius:16px;padding:20px;box-shadow:var(--arl-shadow)}
+.finance-total-cards button,.refund-total button,.finance-movements .transaction button,.finance-receivables .transaction button{min-height:38px;width:max-content;max-width:100%;padding:8px 14px;border:1px solid #d62a43;border-radius:11px;background:linear-gradient(180deg,var(--arl-red-top),var(--arl-red-bottom));color:#fff;box-shadow:0 6px 13px rgba(169,0,25,.16);font-weight:800}
+.finance-daily>.transaction,.finance-movements>.transaction,.finance-receivables>.transaction{align-items:center;gap:16px;min-width:0;padding:14px 12px;border-bottom:1px solid var(--arl-test-border)}
+.finance-daily>.transaction:nth-of-type(even),.finance-movements>.transaction:nth-of-type(even),.finance-receivables>.transaction:nth-of-type(even){background:#fafafb}
+.finance-daily>.transaction>div,.finance-movements>.transaction>div,.finance-receivables>.transaction>div{flex:1;min-width:0;gap:4px}
+.finance-daily>.transaction>strong,.finance-movements>.transaction>strong,.finance-receivables>.transaction>strong{margin-left:auto;text-align:right;white-space:nowrap}
+.finance-daily>.state,.finance-movements>.state,.finance-receivables>.state{display:grid;place-items:center;min-height:170px;padding:30px 18px}
+.finance-movements .section-title{gap:18px;margin-bottom:12px}
+.finance-movements select{min-height:42px;padding:8px 36px 8px 13px;border:1px solid var(--arl-test-border);border-radius:11px;background:#fff}
+.finance-receivables .finance-cards,.finance-monthly .finance-cards{gap:16px;margin:16px 0 20px}
+.finance-receivables .finance-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-monthly .finance-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+.finance-receivables .finance-cards article,.finance-monthly .finance-cards article{min-width:0;padding:18px;border:1px solid var(--arl-test-border)}
+.finance-month-items{display:grid;gap:0;padding:18px;border:1px solid var(--arl-test-border);border-radius:14px;background:#fafafb}
+.finance-month-items h2{margin:0 0 10px}.finance-month-items p{padding:9px 0;border-top:1px solid var(--arl-test-border)}.finance-month-items h2+p{border-top:0}
+.report-summary{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:18px}
+.finance-chart-subhead{align-items:center;margin:0 0 16px}.finance-chart-subhead .primary{position:static;flex:0 0 auto;white-space:nowrap}
+.revenue-panel{padding-bottom:20px!important}.revenue-chart{padding:18px 20px 48px}.revenue-column strong{display:none}
+.revenue-column span{display:none;transform:none;font-size:9px;top:calc(100% + 9px)}.revenue-column:nth-of-type(5n+1) span,.revenue-column:last-of-type span{display:block}
+.refund-total{display:grid;gap:8px;background:#fff}
+@media(max-width:800px){.arl-page-header-actions .finance-action{flex:1;min-width:140px}.finance-main-hero~.panel,.finance-main-hero~.refund-total,.finance-main-hero~.payment-method-section,.finance-main-hero~.origin-section{padding:16px}.payment-method-grid,.report-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.finance-monthly .finance-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.finance-receivables .finance-cards{gap:12px}.finance-chart-subhead .primary{align-self:stretch;justify-content:center}.revenue-chart{padding-right:8px;padding-left:8px}.revenue-column:nth-of-type(5n+1) span{display:none}.revenue-column:nth-of-type(7n+1) span,.revenue-column:last-of-type span{display:block}}
+@media(max-width:520px){.payment-method-grid,.report-summary,.finance-receivables .finance-cards,.finance-monthly .finance-cards{grid-template-columns:1fr}.finance-daily>.transaction,.finance-movements>.transaction,.finance-receivables>.transaction{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}.finance-movements>.transaction button,.finance-receivables>.transaction button{grid-column:1/-1;width:100%;justify-content:center}.finance-movements .section-title{align-items:stretch;flex-direction:column}.finance-movements select{width:100%;font-size:16px}.origin-section article>div:first-child{align-items:flex-start;flex-direction:column;gap:3px}.origin-section article span{text-align:left;white-space:normal}}
