@@ -518,7 +518,7 @@ function OrderTable({
               <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
               <td><label className={`row-status status-${o.status}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={o.status} disabled={closed} onChange={(e) => onStatus(o, e.target.value)}><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</select></label></td>
               <td><span className="order-client-report" title={o.reported_problem || undefined}>{o.reported_problem || ""}</span></td>
-              <td>{closed ? <span className="order-value"><strong>{money(o.total_cents || 0)}</strong><small>{new Date(o.completed_at!).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</small></span> : <em className="order-value-pending">A orçar</em>}</td>
+              <td>{closed ? <span className="order-value"><strong>{money(o.total_cents || 0)}</strong><small>{formatOptionalDate(o.completed_at)}</small></span> : <em className="order-value-pending">A orçar</em>}</td>
               <td><span className="order-actions"><a className="order-whatsapp" href={o.client.whatsapp_url} target="_blank" rel="noreferrer" aria-label={`WhatsApp da OS ${o.number}`}><img src="/arl-assets/icons/icon-whatsapp.png" alt="" /></a><a className="order-maps" href={o.client.maps_url} target="_blank" rel="noreferrer" aria-label={`Abrir endereço da OS ${o.number} no Google Maps`}><img src="/arl-assets/icons/icon-maps.png" alt="" /></a><button className="order-view" type="button" aria-label="Ver OS" title="Ver OS" onClick={() => open("orders", o.id)}><Eye aria-hidden="true" /><span className="sr-only">Ver OS</span></button>{onEdit && ["Master", "Administrador"].includes(role) && !interrupted && <button className={o.status === "completed" ? "order-reopen" : "order-edit"} type="button" aria-label={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} title={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} onClick={() => onEdit(o)}>{o.status === "completed" ? <RotateCcw /> : <Pencil />}</button>}{["Master", "Administrador"].includes(role) && <button type="button" className="arl-order-delete" aria-label={`Excluir OS ${o.number}`} title="Excluir OS" onClick={() => onDelete(o)}><Trash2 /></button>}</span></td>
             </tr>
           );
@@ -2029,6 +2029,13 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
   );
 }
 const money = (c: number = 0) => `R$ ${(c / 100).toFixed(2).replace(".", ",")}`;
+const formatOptionalDate = (value: unknown, fallback = "—") => {
+  if (typeof value !== "string" || !value.trim()) return fallback;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? fallback
+    : date.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+};
 const brazilianDate = (date: string) => {
   const [year, month, day] = date.split("-");
   return year && month && day ? `${day}/${month}/${year}` : date;

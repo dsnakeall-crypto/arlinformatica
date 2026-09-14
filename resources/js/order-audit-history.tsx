@@ -39,7 +39,8 @@ export default function OrderAuditHistory({ orderId }: { orderId: number }) {
     }
   };
 
-  const when = (value: string) => {
+  const when = (value: string | null | undefined) => {
+    if (!value?.trim()) return '—';
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? value : date.toLocaleString('pt-BR');
   };

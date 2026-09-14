@@ -41,6 +41,13 @@ const masks = {
 };
 
 const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+const formatOptionalDate = (value: unknown, fallback = '—') => {
+  if (typeof value !== 'string' || !value.trim()) return fallback;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? fallback
+    : date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+};
 const statusLabel: Record<string, string> = {
   analysis: 'Em Análise',
   waiting_part: 'Aguardando Peça',
@@ -490,6 +497,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     <ol className="arl-order-stage-rail" aria-label="Etapas da Ordem de Serviço">{stages.map((stage, index) => { const state = stageState(index); return <li key={stage} data-stage-state={state} className={`arl-order-stage ${state}`} aria-current={state === 'current' ? 'step' : undefined}><span>{index + 1}</span><b>{stage}</b></li>; })}</ol>
     <section className="panel arl-intake-card" aria-labelledby="arl-intake-title">
       <div className="section-title arl-intake-title"><div><span className="arl-eyebrow">ENTRADA</span><h2 id="arl-intake-title">Ficha de entrada</h2></div>{!immutable&&<button type="button" className="arl-od-btn" onClick={editOrder}><Pencil/><span>Editar ficha</span></button>}</div>
+      <div className="arl-intake-dates"><span><b>Data de entrada:</b> {formatOptionalDate(order.received_at)}</span><i aria-hidden="true">|</i><span><b>Data de saída:</b> {['completed', 'interrupted'].includes(order.status) ? formatOptionalDate(order.completed_at) : 'Em aberto'}</span></div>
       <div className="arl-intake-row"><h3>Cliente</h3><div><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></div></div>
       <div className="arl-intake-row"><h3>Equipamento</h3><div><p>{order.equipment_description || 'Equipamento não informado'}</p></div></div>
       <div className="arl-intake-row"><h3>Fabricante / Modelo / Acessórios</h3><div><p>{order.equipment_details || 'Não informado'}</p></div></div>
