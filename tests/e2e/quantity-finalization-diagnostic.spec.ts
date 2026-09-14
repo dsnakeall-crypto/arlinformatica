@@ -66,7 +66,7 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
     return Array.isArray(body?.items) && body.items.some((item: any) => Number(item.catalog_id) === Number(service.id) && Number(item.quantity) === 4);
   });
 
-  await root.getByRole('button', { name: 'Concluir OS' }).click();
+  await root.getByRole('button', { name: 'Concluir', exact: true }).click();
   const saved = await pendingSaveResponse;
   expect(saved.status()).toBe(200);
 

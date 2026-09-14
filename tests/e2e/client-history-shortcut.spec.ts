@@ -13,7 +13,7 @@ async function openOrder(page: Page, orderNumber: string) {
 
 async function finalizeThroughUi(page: Page, order: { id: number; number: string }, discountCents: number) {
   await openOrder(page, order.number);
-  await page.getByRole('button', { name: 'Concluir OS' }).click();
+  await page.getByRole('button', { name: 'Concluir', exact: true }).click();
   const modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(modal).toBeVisible();
   await expect(modal.locator('.finish-item input').first()).toHaveValue('Formatação E2E');
@@ -77,7 +77,7 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
   await openOrder(page, discountedOrder.number);
 
   const detail = page.locator('[data-arl-order-detail-react="1"]');
-  await detail.getByRole('button', { name: 'Ver histórico do cliente' }).click();
+  await detail.getByRole('button', { name: 'Histórico', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: clientName, exact: true })).toBeVisible();
   const discountedHistory = page.locator('.clients-history-order').filter({ hasText: `OS #${discountedOrder.number}` });
@@ -93,5 +93,5 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
   await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
   const mobileDetail = page.locator('[data-mobile-read-only="1"]');
   await expect(mobileDetail).toBeVisible();
-  await expect(mobileDetail.getByRole('button', { name: 'Ver histórico do cliente' })).toHaveCount(0);
+  await expect(mobileDetail.getByRole('button', { name: 'Histórico', exact: true })).toHaveCount(0);
 });

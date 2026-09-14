@@ -105,7 +105,7 @@ test('Funcionário vê somente operação e o backend continua sendo a autoridad
   expect(order.status).toBe(201);
   await page.goto(`/orders/${order.body.id}`);
   await expect(page.getByRole('heading', { name: `OS #${order.body.number}` })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Registrar pagamento/ })).toHaveCount(0);
+  await expect(page.locator('[data-order-action="payment"]')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Finalizar' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Reabrir OS' })).toHaveCount(0);
   const orderStatus = page.locator('.status-picker select');

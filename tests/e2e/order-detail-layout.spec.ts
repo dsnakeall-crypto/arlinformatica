@@ -61,15 +61,16 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(header.getByText(equipmentDescription, { exact: true })).toBeVisible();
   await expect(header.getByText(equipmentDetails, { exact: true })).toHaveCount(0);
   await expect(header.locator('.status-picker')).toBeVisible();
-  await expect(header.getByRole('button', { name: 'Editar OS' })).toBeVisible();
-  await expect(header.getByRole('button', { name: 'Gerar orçamento' })).toBeVisible();
-  await expect(header.getByRole('button', { name: 'Registrar pagamento' })).toHaveCount(0);
+  await expect(header.getByRole('button', { name: 'Histórico', exact: true })).toBeVisible();
+  await expect(header.getByRole('button', { name: 'Editar', exact: true })).toBeVisible();
+  await expect(header.getByRole('button', { name: 'Orçamento', exact: true })).toBeVisible();
+  await expect(header.getByRole('button', { name: 'Pagamento', exact: true })).toHaveCount(0);
 
   await expect(root.locator('.contact-links.external-actions')).toHaveCount(0);
 
   const opening = header.locator('.arl-opening-call');
-  await expect(opening.getByText("PDF's e Reaberturas OS", { exact: true })).toBeVisible();
-  await opening.locator('summary').click();
+  await expect(opening.getByRole('button', { name: "PDF's", exact: true })).toBeVisible();
+  await opening.getByRole('button', { name: "PDF's", exact: true }).click();
   await expect(opening.getByRole('link', { name: 'Mensagem de abertura' })).toBeVisible();
   await expect(opening.getByRole('link', { name: 'Termo de Recebimento PDF' })).toBeVisible();
   await expect(opening.getByText('Relatório Técnico Final', { exact: true })).toBeVisible();
@@ -79,7 +80,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(rail).toBeVisible();
   await expect(rail.locator('li')).toHaveCount(5);
   await expect(rail.locator('li').nth(0)).toContainText('Entrada');
-  await expect(rail.locator('li').nth(1)).toContainText('Orçamento');
+  await expect(rail.locator('li').nth(1)).toContainText('Aguardando');
   await expect(rail.locator('li').nth(2)).toContainText('Execução');
   await expect(rail.locator('li').nth(3)).toContainText('Finalização');
   await expect(rail.locator('li').nth(4)).toContainText('Pagamento');
@@ -102,9 +103,9 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
 
   const workflow = root.locator('.arl-order-workflow');
   const headerActions = root.locator('.arl-order-header-actions');
-  await expect(headerActions.getByRole('button', { name: 'Concluir OS', exact: true })).toBeVisible();
-  const actionLabels = await headerActions.locator(':scope > button, :scope > details > summary').allTextContents();
-  expect(actionLabels.indexOf('Concluir OS')).toBeGreaterThan(actionLabels.indexOf("PDF's e Reaberturas OS"));
+  await expect(headerActions.getByRole('button', { name: 'Concluir', exact: true })).toBeVisible();
+  const actionLabels = await headerActions.locator(':scope > button, :scope > .arl-header-pdf-actions > button').allTextContents();
+  expect(actionLabels).toEqual(['Histórico', 'Editar', 'Orçamento', "PDF's", 'Concluir']);
   const headings = await workflow.locator(':scope > section h2').allTextContents();
   const position = (name: string) => headings.findIndex((value) => value.trim() === name);
   const ordered = ['Serviços / Produtos', 'Laudo Final', 'Orçamentos', 'Pagamento'];
@@ -153,7 +154,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   const fitsTablet = await root.evaluate((node) => node.scrollWidth <= node.clientWidth + 1);
   expect(fitsTablet, 'Ver OS não deve provocar overflow horizontal da página em tablet').toBe(true);
 
-  await headerActions.getByRole('button', { name: 'Concluir OS', exact: true }).click();
+  await headerActions.getByRole('button', { name: 'Concluir', exact: true }).click();
   const finalization = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(finalization).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });

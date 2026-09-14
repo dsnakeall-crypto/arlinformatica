@@ -78,9 +78,9 @@ test.describe.serial('fluxo operacional principal', () => {
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
     await expect(page.getByText('Pagamento ainda não registrado.', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toHaveCount(0);
+    await expect(page.locator('[data-order-action="payment"]')).toHaveCount(0);
     await expect(page.getByText(/NaN|Invalid Date/)).toHaveCount(0);
-    await page.getByRole('button', { name: 'Gerar orçamento' }).click();
+    await page.locator('[data-order-action="budget"]').click();
     const budgetForm = page.getByRole('dialog', { name: 'Gerar orçamento' });
     await expect(budgetForm).toBeVisible();
     await budgetForm.getByLabel('Diagnóstico').fill('Falha de energia');
@@ -164,7 +164,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const finalized = await finalizedResponse.json();
     expect(finalized.items[0].source_budget_id).toBeTruthy();
     expect(finalized.items[0].description).toBe('Formatação E2E');
-    await expect(page.getByRole('button', { name: 'Gerar orçamento' })).toHaveCount(0);
+    await expect(page.locator('[data-order-action="budget"]')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Excluir orçamento' })).toHaveCount(0);
     const blockedDeletion = await api(page, `/orders/${orderId}/budgets/1`, 'DELETE');
     expect(blockedDeletion.status).toBe(409);
@@ -191,8 +191,8 @@ test.describe.serial('fluxo operacional principal', () => {
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Registrar pagamento' })).toBeVisible();
-    await page.getByRole('button', { name: 'Registrar pagamento' }).click();
+    await expect(page.locator('[data-order-action="payment"]')).toBeVisible();
+    await page.locator('[data-order-action="payment"]').click();
     const paymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
     await expect(paymentModal.getByRole('button', { name: /Pagar valor total/ })).toBeVisible();
     await paymentModal.getByLabel('Valor recebido (R$)').fill('50,00');
@@ -226,7 +226,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const receivableRow = page.locator('.transaction').filter({ hasText: `OS #${orderNumber}` });
     await expect(receivableRow).toBeVisible();
     await receivableRow.getByRole('button', { name: 'Abrir OS' }).click();
-    await page.getByRole('button', { name: 'Registrar novo pagamento' }).click();
+    await page.locator('[data-order-action="payment"]').click();
     const finalPaymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
     await finalPaymentModal.getByRole('button', { name: /Pagar valor total/ }).click();
     await finalPaymentModal.getByRole('button', { name: 'Confirmar pagamento' }).click();
@@ -250,7 +250,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await reopen.locator('textarea').fill('Correção do valor cobrado após conferência.');
     await reopen.getByRole('button', { name: 'Confirmar reabertura' }).click();
     await expect(page.locator('.status-picker select')).toHaveValue('analysis');
-    await page.getByRole('button', { name: 'Concluir OS' }).click();
+    await page.getByRole('button', { name: 'Concluir', exact: true }).click();
     const finalModal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
     await finalModal.getByLabel('Valor unitário de Formatação E2E').fill('140,00');
     await finalModal.locator('textarea').fill('Valor corrigido e equipamento reconferido.');

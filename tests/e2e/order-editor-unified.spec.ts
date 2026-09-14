@@ -66,8 +66,8 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   expect(term.status).toBe(200);
 
   const root = await openOrder(page, originalName, created.body.number);
-  await expect(root.getByRole('button', { name: 'Editar OS', exact: true })).toHaveCount(1);
-  await root.getByRole('button', { name: 'Editar OS', exact: true }).click();
+  await expect(root.getByRole('button', { name: 'Editar', exact: true })).toHaveCount(1);
+  await root.getByRole('button', { name: 'Editar', exact: true }).click();
 
   const dialog = page.getByRole('dialog', { name: `Editar OS #${created.body.number}` });
   await expect(dialog).toBeVisible();
@@ -140,7 +140,7 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   await expect(root.locator('.arl-order-header-identity').getByText(changedEquipment, { exact: true })).toBeVisible();
   await expect(root.getByText(changedProblem, { exact: true })).toBeVisible();
 
-  await root.getByRole('button', { name: 'Editar OS', exact: true }).click();
+  await root.getByRole('button', { name: 'Editar', exact: true }).click();
   const clearDialog = page.getByRole('dialog', { name: `Editar OS #${created.body.number}` });
   await clearDialog.getByLabel('Estado físico na entrada').fill('');
   const clearResponse = page.waitForResponse((response) => new URL(response.url()).pathname === `/api/orders/${created.body.id}`
@@ -217,7 +217,7 @@ test('rascunhos avisam saída e o Laudo Final é persistido antes da finalizaç�
     if (new URL(response.url()).pathname !== `/api/orders/${created.body.id}` || request.method() !== 'PATCH') return false;
     return request.postDataJSON()?.final_report === reportDraft;
   });
-  await root.getByRole('button', { name: 'Concluir OS', exact: true }).click();
+  await root.getByRole('button', { name: 'Concluir', exact: true }).click();
   const reportSaved = await reportFlush;
   expect(reportSaved.status(), 'Contrato de flush: o Laudo Final pendente deve ser salvo no servidor antes de abrir a finalização').toBe(200);
   const finalization = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
@@ -241,7 +241,7 @@ test('rascunhos avisam saída e o Laudo Final é persistido antes da finalizaç�
   await expect(root.getByText('Serviços salvos.', { exact: true })).toBeVisible();
   expect(await hasUnsavedGuard(page), 'Contrato rascunho: salvar serviços deve remover o aviso de saída pendente').toBe(false);
 
-  await root.getByRole('button', { name: 'Editar OS', exact: true }).click();
+  await root.getByRole('button', { name: 'Editar', exact: true }).click();
   const editor = page.getByRole('dialog', { name: `Editar OS #${created.body.number}` });
   await expect(editor).toBeVisible();
   await editor.getByLabel('Atendimento').selectOption('external');

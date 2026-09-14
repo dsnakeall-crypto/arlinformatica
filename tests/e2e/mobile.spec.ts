@@ -126,7 +126,7 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
   await expect(detail.getByRole('button', { name: 'Adicionar foto' })).toHaveCount(0);
   await expect(detail.getByRole('button', { name: 'Status', exact: true })).toHaveCount(0);
   await expect(detail.getByRole('button', { name: 'Finalizar' })).toHaveCount(0);
-  await expect(detail.getByRole('button', { name: 'Ver histórico do cliente' })).toHaveCount(0);
+  await expect(detail.getByRole('button', { name: 'Histórico', exact: true })).toHaveCount(0);
   await expect(detail.locator('input[type=file]')).toHaveCount(0);
 
   const apiWrites: string[] = [];

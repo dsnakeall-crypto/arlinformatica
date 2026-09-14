@@ -54,7 +54,7 @@ test('Ver OS React possui uma única raiz e blocos funcionais sem duplicação l
     services: node.querySelectorAll('.arl-od-services').length,
     finalReport: node.querySelectorAll('.arl-od-report').length,
     quickActions: node.querySelectorAll('.arl-order-quick-actions').length,
-    editButtons: Array.from(node.querySelectorAll('button')).filter((button) => button.textContent?.trim().includes('Editar OS')).length,
+    editButtons: node.querySelectorAll('[data-order-action="edit"]').length,
     finalizationSections: Array.from(node.querySelectorAll('section h2')).filter((heading) => heading.textContent?.trim() === 'Finalização da OS').length,
   }));
   expect(cardinality, `Contrato React duplicado: esperado 1 de cada bloco principal; recebido=${JSON.stringify(cardinality)}`).toEqual({
@@ -81,7 +81,7 @@ test('OS finalizada não oferece edição e exige reabertura antes da edição c
   expect([200, 201], `Contrato imutabilidade: backend não finalizou a OS; status=${finalized.status} body=${JSON.stringify(finalized.body)}`).toContain(finalized.status);
 
   const root = await openOrder(page, clientName, order.number);
-  await expect(root.getByRole('button', { name: 'Editar OS', exact: true }), 'Contrato finalizado: o botão Editar OS não pode existir antes da reabertura').toHaveCount(0);
+  await expect(root.getByRole('button', { name: 'Editar', exact: true }), 'Contrato finalizado: o botão Editar não pode existir antes da reabertura').toHaveCount(0);
   await expect(root.getByRole('button', { name: 'Editar ficha', exact: true }), 'Contrato finalizado: a ficha também não pode oferecer uma entrada alternativa para edição').toHaveCount(0);
   await expect(root.getByRole('button', { name: 'Reabrir OS', exact: true }), 'Contrato finalizado: o caminho disponível deve ser Reabrir OS').toBeVisible();
 
@@ -103,7 +103,7 @@ test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PA
   const panel = root.locator('.arl-od-report textarea');
 
   await panel.fill('Rascunho A do painel');
-  await root.getByRole('button', { name: 'Concluir OS' }).click();
+  await root.getByRole('button', { name: 'Concluir', exact: true }).click();
   let modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(modal.locator('textarea'), 'Contrato laudo painel→modal: cada abertura deve receber o rascunho atual do painel').toHaveValue('Rascunho A do painel');
   const services = await api(page, '/catalogs/services');
@@ -126,7 +126,7 @@ test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PA
   await modal.locator('.modal-close').click();
 
   await panel.fill('Rascunho B alterado depois de fechar');
-  await root.getByRole('button', { name: 'Concluir OS' }).click();
+  await root.getByRole('button', { name: 'Concluir', exact: true }).click();
   modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(modal.locator('textarea'), 'Contrato laudo reabertura: modal reutilizou valor antigo em vez do estado atual do painel').toHaveValue('Rascunho B alterado depois de fechar');
 

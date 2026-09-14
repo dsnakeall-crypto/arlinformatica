@@ -123,7 +123,7 @@ test('lápis da lista abre edição completa ou o fluxo existente de reabertura'
   const reopenedRoot = page.locator('[data-arl-order-detail-react="1"]');
   await expect(reopenedRoot.getByText('Reaberta', { exact: true }), 'Contrato visual: a OS reaberta deve ser identificável no detalhe').toBeVisible();
   await expect(reopenedRoot.locator('.contact-links.external-actions')).toHaveCount(0);
-  await reopenedRoot.getByRole('button', { name: 'Editar OS', exact: true }).click();
+  await reopenedRoot.getByRole('button', { name: 'Editar', exact: true }).click();
   const reopenedEditor = page.getByRole('dialog', { name: `Editar OS #${orders[1].number}` });
   await expect(reopenedEditor.getByLabel('Cliente da OS')).toHaveCount(0);
   await expect(reopenedEditor.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
