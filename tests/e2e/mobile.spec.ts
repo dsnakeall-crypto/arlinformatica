@@ -69,8 +69,16 @@ test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado'
   expect(fontSize).toBeGreaterThanOrEqual(16);
   const viewport = await page.locator('meta[name="viewport"]').getAttribute('content');
   expect(viewport).not.toContain('user-scalable=no');
-  await expect(page.locator('input[type=file]')).toHaveAttribute('capture', 'environment');
-  await expect(page.getByRole('button', { name: /Usar câmera/ })).toBeVisible();
+  const photoSection = page.getByRole('heading', { name: 'Fotos do equipamento' }).locator('..');
+  const photoInput = photoSection.locator('input[type=file]');
+  await expect(photoInput).not.toHaveAttribute('capture');
+  await expect(photoInput).toHaveAttribute('multiple', '');
+  const cameraButton = photoSection.getByRole('button', { name: /Usar câmera/ });
+  await expect(cameraButton).toBeVisible();
+  await cameraButton.click();
+  const cameraDialog = page.getByRole('dialog', { name: 'Capturar foto' });
+  await expect(cameraDialog).toBeVisible();
+  await cameraDialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
 });
 
 test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Status ou Finalizar', async ({ page }) => {
