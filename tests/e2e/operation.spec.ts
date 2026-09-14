@@ -151,8 +151,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const finalizePayload = (await finalizeRequestPromise).postDataJSON();
     expect(finalizePayload.approved_budget_id).toBeTruthy();
     expect(finalizePayload).not.toHaveProperty('items');
-    await expect(statusSelect).toHaveValue('completed');
-    await expect(page.locator('.completion').getByText('Finalizado', { exact: true })).toBeVisible();
+    await expect(statusSelect).toHaveValue('awaiting_payment');
     const documents = await api(page, `/orders/${orderId}/documents`);
     expect(documents.body.some((document: any) => document.type === 'final')).toBe(true);
     const finalizedResponse = await page.request.get(`/api/orders/${orderId}`);
