@@ -3,7 +3,7 @@ import ClientImport from "./client-import";
 import TermTextEditor from "./term-text-editor";
 import { isReopenedOrder } from "./order-reopened";
 import { CameraModal } from "./order-detail-react";
-import React, { FormEvent, useEffect, useState } from "react";
+import React, { FormEvent, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Bell,
@@ -792,7 +792,7 @@ function NewOrder({ done }: any) {
     [intakeCondition, setIntakeCondition] = useState(""),
     [equipmentDescription, setEquipmentDescription] = useState(""),
     [equipmentDetails, setEquipmentDetails] = useState(""),
-    [photo, setPhoto] = useState<File | null>(null),
+    [photos, setPhotos] = useState<File[]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [quick, setQuick] = useState(false),
@@ -827,6 +827,18 @@ function NewOrder({ done }: any) {
       />
     );
   const currentClient = clients.find((c) => c.id === client);
+  const photoPreviews = useMemo(
+    () => photos.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [photos],
+  );
+  useEffect(
+    () => () => photoPreviews.forEach(({ url }) => URL.revokeObjectURL(url)),
+    [photoPreviews],
+  );
+  const addPhotos = (files: FileList | File[] | null | undefined) => {
+    if (!files?.length) return;
+    setPhotos((current) => [...current, ...Array.from(files)]);
+  };
   const addItem = (item: Catalog) =>
     setOrderItems((current) => {
       const found = current.find((x) => x.catalog_id === item.id);
@@ -888,10 +900,10 @@ function NewOrder({ done }: any) {
           items,
         }),
       });
-      if (photo) {
-        const fd = new FormData();
-        fd.append("photo", photo);
-        await api(`/orders/${order.id}/photos`, { method: "POST", body: fd });
+      for (const photo of photos) {
+        const form = new FormData();
+        form.append("photo", photo);
+        await api(`/orders/${order.id}/photos`, { method: "POST", body: form });
       }
       done(order.id);
     } catch (x: any) {
@@ -1037,15 +1049,19 @@ function NewOrder({ done }: any) {
               <label className="upload">
                 <Camera />
                 <span>
-                  {photo
-                    ? photo.name
+                  {photos.length
+                    ? `${photos.length} foto${photos.length === 1 ? "" : "s"} anexada${photos.length === 1 ? "" : "s"}`
                     : "JPEG, PNG ou WebP — será otimizada para até 100 KB"}
                 </span>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   capture="environment"
-                  onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+                  multiple
+                  onChange={(e) => {
+                    addPhotos(e.target.files);
+                    e.target.value = "";
+                  }}
                 />
               </label>
               <button
@@ -1055,8 +1071,25 @@ function NewOrder({ done }: any) {
               >
                 ◉ Usar câmera
               </button>
-              {photo && (
-                <img className="preview" src={URL.createObjectURL(photo)} />
+              {photoPreviews.length > 0 && (
+                <div className="opening-photo-previews" aria-label="Fotos anexadas">
+                  {photoPreviews.map(({ file, url }, index) => (
+                    <figure key={`${file.name}-${file.lastModified}-${index}`}>
+                      <img className="preview" src={url} alt={`Prévia da foto ${index + 1}`} />
+                      <button
+                        type="button"
+                        aria-label={`Remover foto ${index + 1}`}
+                        onClick={() =>
+                          setPhotos((current) =>
+                            current.filter((_, photoIndex) => photoIndex !== index),
+                          )
+                        }
+                      >
+                        ×
+                      </button>
+                    </figure>
+                  ))}
+                </div>
               )}
             </section>
           </div>
@@ -1163,7 +1196,7 @@ function NewOrder({ done }: any) {
         <CameraModal
           onClose={() => setCamera(false)}
           onFile={(file) => {
-            setPhoto(file);
+            addPhotos([file]);
             setCamera(false);
           }}
         />
