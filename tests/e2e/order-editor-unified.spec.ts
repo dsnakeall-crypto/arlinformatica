@@ -134,7 +134,9 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   const persistedItem = persisted.body?.items?.find((row: any) => !row.finalization_id && Number(row.catalog_id) === Number(service.id));
   expect(Number(persistedItem?.quantity)).toBe(3);
 
-  await expect(root.getByText(originalName, { exact: true })).toBeVisible();
+  const intakeClientRow = root.locator('.arl-intake-card .arl-intake-row:has(> h3:text-is("Cliente"))');
+  await expect(intakeClientRow, 'Contrato preservação: a Ficha de entrada deve conter uma única linha de Cliente').toHaveCount(1);
+  await expect(intakeClientRow.locator('.arl-intake-client-name strong'), 'Contrato preservação: o cliente original deve continuar na Ficha de entrada').toHaveText(originalName);
   await expect(root.locator('.arl-order-header-identity').getByText(changedEquipment, { exact: true })).toBeVisible();
   await expect(root.getByText(changedProblem, { exact: true })).toBeVisible();
 
