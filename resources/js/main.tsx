@@ -4472,7 +4472,7 @@ function UsersAdmin() {
       </section>
       {form && (
         <div className="modal">
-          <form className="modal-card" onSubmit={save}>
+          <form className="modal-card users-admin-modal" onSubmit={save}>
             <h2>{form.id ? "Editar usuário" : "Novo usuário"}</h2>
             {["name", "login", "email"].map((k) => (
               <Field

@@ -22,7 +22,7 @@ export default function ClientImport() {
       setError(failure instanceof Error ? failure.message : 'Falha ao importar.');
     } finally { setBusy(false); }
   }
-  return <section className="form-card" style={{ border: '1px solid var(--arl-border)', width: '100%', maxWidth: '100%', minWidth: 0, overflowWrap: 'anywhere' }} aria-labelledby="client-import-title">
+  return <section className="form-card client-import-card" style={{ border: '1px solid var(--arl-border)', width: '100%', maxWidth: '100%', minWidth: 0, overflowWrap: 'anywhere' }} aria-labelledby="client-import-title">
     <h2 id="client-import-title">Importar clientes por CSV</h2>
     <p>Importe clientes do IntegraOS. CSV UTF-8, separado por ponto e vírgula, até 2 MB. Nome, CPF/CNPJ e Celular são obrigatórios. Endereço é opcional. Documentos já cadastrados serão ignorados.</p>
     <form style={{ display: 'grid', gap: 16, minWidth: 0 }} onSubmit={submit} aria-busy={busy}>

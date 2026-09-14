@@ -37,3 +37,9 @@
 /* Contraste temporário para mapear os limites de cards e tabelas operacionais. */
 .status-cards>article,.dashboard-orders,.orders-panel,.arl-order-detail-page .detail-grid>section,.detail-grid.arl-order-detail>section,.clients-list-panel,.clients-list-panel .client-list>article{border:1px solid var(--arl-test-border)!important}
 .dashboard-orders .dashboard-order-list,.orders-panel .orders-order-list{border:0!important}
+
+/* Contraste temporário nas áreas ainda fora do mapa operacional. As linhas de
+   dados continuam usando apenas seus separadores internos; a moldura pertence
+   ao painel que as contém. */
+.finance-main-hero,.finance-tabs,.finance-main-hero~.panel,.finance-main-hero~.finance-total-cards>article,.finance-main-hero~.payment-method-section .payment-method-grid>article,.finance-main-hero~.panel .finance-cards>article,.finance-main-hero~.report-summary>article,.admin-list,.users-admin-modal,[data-arl-post-sale-react="1"] .post-sale-card,[data-arl-post-sale-react="1"] .post-sale-empty,.arl-new-order .os-form>section,.arl-new-order .os-form>details,.arl-global-mobile-nav,.arl-mobile-read-only section{border:1px solid var(--arl-test-border)!important}
+.arl-global-mobile-nav{border-bottom:0!important}
