@@ -1056,7 +1056,6 @@ function NewOrder({ done }: any) {
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
-                  capture="environment"
                   multiple
                   onChange={(e) => {
                     addPhotos(e.target.files);

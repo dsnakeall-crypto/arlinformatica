@@ -421,7 +421,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     }
     return persistedOrder;
   };
-  const uploadFile = async (file?: File | null) => { if (!file) return; const form = new FormData(); form.append('photo', file); try { await api(`/orders/${order.id}/photos`, { method: 'POST', body: form }); await load(); } catch (e: any) { setError(e.message); } };
+  const uploadFiles = async (files?: FileList | File[] | null) => { if (!files?.length) return; try { for (const file of Array.from(files)) { const form = new FormData(); form.append('photo', file); await api(`/orders/${order.id}/photos`, { method: 'POST', body: form }); } await load(); } catch (e: any) { setError(e.message); } };
   const changeStatus = async (value: string) => {
     if (value === 'completed') { setFinalSignal((x) => x + 1); return; }
     if (value === 'interrupted') { setInterruptOpen(true); return; }
@@ -508,7 +508,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
         <section className="arl-intake-field"><h3>Problema relatado</h3><p>{order.reported_problem}</p></section>
         <section className={`arl-intake-field ${!order.intake_condition ? 'arl-checklist-ok' : ''}`}><h3>Estado físico na entrada</h3><p className={!order.intake_condition ? 'ok' : undefined}>{order.intake_condition || 'Equipamento aparentemente 100% sem avarias'}</p></section>
       </div>
-      <section className="arl-intake-photos"><h3>Fotos</h3><div><div className="arl-order-photo-tools"><label>↑ Enviar foto<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={(e) => void uploadFile(e.target.files?.[0])}/></label><button type="button" className="arl-camera-button" onClick={() => setCamera(true)}>◉ Usar câmera</button></div><div className="photos">{order.photos?.length ? order.photos.map((photo: any) => <img key={photo.id} src={`/api/orders/${order.id}/photos/${photo.id}`} alt={`Foto ${photo.id} da OS`}/>) : <p>Nenhuma foto anexada.</p>}</div></div></section>
+      <section className="arl-intake-photos"><h3>Fotos</h3><div><div className="arl-order-photo-tools"><label>↑ Enviar foto<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => { void uploadFiles(e.target.files); e.target.value = ''; }}/></label><button type="button" className="arl-camera-button" onClick={() => setCamera(true)}>◉ Usar câmera</button></div><div className="photos">{order.photos?.length ? order.photos.map((photo: any) => <img key={photo.id} src={`/api/orders/${order.id}/photos/${photo.id}`} alt={`Foto ${photo.id} da OS`}/>) : <p>Nenhuma foto anexada.</p>}</div></div></section>
     </section>
     <div className="detail-grid arl-order-detail arl-order-workflow">
       {immutable && order.items?.length > 0 && <section className="wide order-items-summary"><h2>Serviços / Produtos da OS</h2>{order.items.map((item: any) => <div className="order-item-line" key={item.id}><div><b>{item.description}</b><small>{item.quantity} × {money(item.unit_price_cents)}</small></div><strong>{money(item.subtotal_cents)}</strong></div>)}</section>}
@@ -528,7 +528,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     {reopenOpen && <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Reabrir OS #${order.number}`}><h2>Reabrir OS #{order.number}</h2><p>A mesma OS voltará para Em Análise. A finalização e o PDF atuais permanecerão no histórico.</p><label>Motivo da reabertura<textarea value={reopenNote} onChange={(event) => setReopenNote(event.target.value)}/></label><div className="arl-od-actions"><button type="button" onClick={() => setReopenOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={async () => { if (!reopenNote.trim()) return; await api(`/orders/${order.id}/reopen`, { method: 'POST', body: JSON.stringify({ note: reopenNote.trim() }) }); setReopenOpen(false); await load(); }}>Confirmar reabertura</button></div></section></div>}
     {interruptOpen && <InterruptionModal order={order} onClose={() => setInterruptOpen(false)} onSaved={async () => { setInterruptOpen(false); await load(); }}/>} 
     {photoChoice && <PhotoChoice onClose={() => setPhotoChoice(false)} onUpload={() => { setPhotoChoice(false); fileInput.current?.click(); }} onCamera={() => { setPhotoChoice(false); setCamera(true); }}/>} 
-    {camera && <CameraModal onClose={() => setCamera(false)} onFile={(file) => { setCamera(false); void uploadFile(file); }}/>} 
+    {camera && <CameraModal onClose={() => setCamera(false)} onFile={(file) => { setCamera(false); void uploadFiles([file]); }}/>}
     {share && <FinalShareCard order={order} share={share} onClose={() => setShare(null)}/>} 
   </div>;
 }
