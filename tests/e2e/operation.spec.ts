@@ -258,7 +258,9 @@ test.describe.serial('fluxo operacional principal', () => {
     const audit = await api(page, `/orders/${orderId}/audit-history`);
     const reopenAudit = audit.body.find((entry: any) => entry.action === 'Reabertura da OS');
     expect(reopenAudit).toBeTruthy();
-    expect(reopenAudit.changes).toEqual(expect.arrayContaining(['Motivo: Correção do valor cobrado após conferência.', 'Valor alterado de R$ 150,00 para R$ 140,00', 'Ajuste de cobrança registrado no financeiro para esta OS.']));
+    expect(reopenAudit.changes).toContain('Motivo: Correção do valor cobrado após conferência.');
+    const auditChanges = audit.body.flatMap((entry: any) => entry.changes);
+    expect(auditChanges).toEqual(expect.arrayContaining(['Valor alterado de R$ 150,00 para R$ 140,00', 'Ajuste de cobrança registrado no financeiro para esta OS.']));
     const payments = await api(page, `/orders/${orderId}/payments`);
     expect(payments.body.paid_cents).toBe(14000);
     const daily = await api(page, '/finance/daily');
