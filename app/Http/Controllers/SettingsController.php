@@ -8,7 +8,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 
 class SettingsController extends Controller
 {
@@ -60,16 +59,13 @@ class SettingsController extends Controller
             'number' => 'nullable|string|max:30', 'district' => 'nullable|string|max:100', 'city' => 'nullable|string|max:100', 'state' => ['nullable', 'regex:/^[A-Z]{2}$/'],
             'complement' => 'nullable|string|max:100', 'instagram' => 'nullable|url|max:255', 'google_review' => 'nullable|url|max:255',
             'budget_validity_days' => 'required|integer|min:1|max:365', 'budget_observation' => 'nullable|string|max:2000', 'budget_institutional_text' => 'required|string|max:1000', 'term_text' => 'required|string|max:10000',
-            'warranty_general_enabled' => 'sometimes|boolean', 'warranty_general_text' => 'nullable|string|max:5000', 'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
+            'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
         ], [
             'cnpj.regex' => 'O CNPJ deve conter 14 números.',
             'phone.regex' => 'O telefone deve conter 10 ou 11 números.',
             'postal_code.regex' => 'O CEP deve conter 8 números.',
             'state.regex' => 'A UF deve conter exatamente 2 letras.',
         ]);
-        if ($request->boolean('warranty_general_enabled') && blank($data['warranty_general_text'] ?? null)) {
-            throw ValidationException::withMessages(['warranty_general_text' => 'Informe o texto da garantia geral quando ela estiver ativada.']);
-        }
         DB::transaction(function () use ($data, $request) {
             $term = $data['term_text'];
             unset($data['term_text']);

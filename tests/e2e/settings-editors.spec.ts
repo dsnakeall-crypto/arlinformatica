@@ -98,13 +98,13 @@ test('configurações oculta integralmente Mensagens da navegação', async ({ p
   await expect(page.locator('.arl-post-message-panel')).toBeHidden();
 });
 
-test('configurações exibe somente as oito abas permitidas em uma linha', async ({ page }) => {
+test('configurações exibe somente as sete abas permitidas em uma linha', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
   const tabs = page.locator('.arl-settings-tab');
-  await expect(tabs).toHaveCount(8);
-  await expect(tabs.locator('b')).toHaveText(['Empresa', 'Identidade', 'Documentos', 'Garantia', 'Notificações', 'Backup', 'Sistema', 'Armazenamento']);
+  await expect(tabs).toHaveCount(7);
+  await expect(tabs.locator('b')).toHaveText(['Empresa', 'Identidade', 'Documentos', 'Notificações', 'Backup', 'Sistema', 'Armazenamento']);
   const tops = await tabs.evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
   expect(new Set(tops).size).toBe(1);
   for (const hidden of ['orders', 'messages', 'finance']) {
@@ -115,8 +115,8 @@ test('configurações exibe somente as oito abas permitidas em uma linha', async
   await expect(page.getByRole('heading', { name: 'Equipamentos', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Fabricantes', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Checklist de Entrada', exact: true })).toHaveCount(0);
-  await page.locator('.arl-settings-tab[data-section="warranty"]').click();
-  await expect(page.getByLabel('Mostrar garantia geral no PDF final')).toBeVisible();
+  await expect(page.locator('.arl-settings-tab[data-section="warranty"]')).toHaveCount(0);
+  await expect(page.getByLabel('Mostrar garantia geral no PDF final')).toHaveCount(0);
 });
 
 test('nova OS usa descrição manual e estado físico opcional independente do problema', async ({ page }) => {

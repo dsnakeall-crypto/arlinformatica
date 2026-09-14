@@ -23,6 +23,7 @@ class FinalizationController extends Controller
             'result' => 'required|in:'.implode(',', self::RESULTS), 'result_other' => 'nullable|required_if:result,other|string|max:255',
             'technical_report' => 'nullable|string|max:20000', 'discount_cents' => 'required|integer|min:0|max:999999999',
             'approved_budget_id' => 'nullable|exists:budgets,id', 'photo_ids' => 'array', 'photo_ids.*' => 'integer',
+            'show_item_warranties' => 'sometimes|boolean',
         ]);
 
         if (! empty($data['approved_budget_id'])) {
@@ -71,7 +72,8 @@ class FinalizationController extends Controller
         $photos = $order->photos->whereIn('id', $data['photo_ids'] ?? [])->map(function ($photo) {
             return ['id' => $photo->id, 'mime' => $photo->mime, 'data' => base64_encode(Storage::disk($photo->disk)->get($photo->path))];
         })->values()->all();
-        $snapshot = ['company' => $company, 'order' => $order->toArray(), 'result_label' => $resultLabel, 'photos' => $photos];
+        $showItemWarranties = (bool) ($data['show_item_warranties'] ?? false);
+        $snapshot = ['company' => $company, 'order' => $order->toArray(), 'result_label' => $resultLabel, 'photos' => $photos, 'show_item_warranties' => $showItemWarranties];
         $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             abort_if(in_array($locked->status, ['completed', 'interrupted'], true), 409, 'A OS já foi fechada e não pode ser finalizada.');
@@ -95,7 +97,7 @@ class FinalizationController extends Controller
         $documentOrder = $order->fresh()->load(['client', 'snapshot', 'checklists']);
         $documentOrderData = $documentOrder->toArray();
         $documentOrderData['intake_condition'] = $documentOrder->intake_condition;
-        $documents->issue($documentOrder, 'final', ['company' => $company, 'order' => $documentOrderData, 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos], $request->user()->id, (int) $finalization->revision);
+        $documents->issue($documentOrder, 'final', ['company' => $company, 'order' => $documentOrderData, 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos, 'show_item_warranties' => $showItemWarranties], $request->user()->id, (int) $finalization->revision);
 
         return response()->json(['order' => $order->fresh(), 'finalization' => $finalization], 201);
     }

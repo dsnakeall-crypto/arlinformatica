@@ -269,7 +269,7 @@ test('Serviços e Produtos cria e edita tipo, preço e garantia adicional', asyn
   await expect(row).toContainText('Garantia 2 anos');
 });
 
-test('Configurações usa sanfona exclusiva e salva Garantia Geral', async ({ page }) => {
+test('Configurações usa abas exclusivas e não exibe a garantia geral desativada', async ({ page }) => {
   await login(page);
   await page.locator('aside').getByRole('button', { name: 'Configurações' }).click();
   await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();
@@ -279,40 +279,28 @@ test('Configurações usa sanfona exclusiva e salva Garantia Geral', async ({ pa
   await expect(tabs).toBeVisible();
   const company = tabs.getByRole('tab', { name: 'Empresa', exact: true });
   const identity = tabs.getByRole('tab', { name: 'Identidade', exact: true });
-  const warranty = tabs.getByRole('tab', { name: 'Garantia', exact: true });
+  const documents = tabs.getByRole('tab', { name: 'Documentos', exact: true });
   await expect(company).toHaveClass(/active/);
   await identity.click();
   await expect(identity).toHaveClass(/active/);
   await expect(company).not.toHaveClass(/active/);
-  await warranty.click();
-  await expect(warranty).toHaveClass(/active/);
+  await documents.click();
+  await expect(documents).toHaveClass(/active/);
   await expect(identity).not.toHaveClass(/active/);
 
   const form = page.locator('form.settings-form');
   await expect(form.locator('[name="layout_mode"]')).toHaveCount(0);
   await expect(page.getByLabel('Layout neste dispositivo')).toBeVisible();
-  const toggle = form.getByLabel('Mostrar garantia geral no PDF final');
-  await expect(toggle).toBeVisible();
-  if (!(await toggle.isChecked())) await toggle.check();
-  const text = form.getByLabel('Texto da garantia geral');
-  await text.fill('Garantia geral configurada pelo E2E.');
+  await expect(tabs.getByRole('tab', { name: 'Garantia', exact: true })).toHaveCount(0);
+  await expect(form.getByLabel('Mostrar garantia geral no PDF final')).toHaveCount(0);
+  await expect(form.getByLabel('Texto da garantia geral')).toHaveCount(0);
 
   const save = form.getByRole('button', { name: 'Salvar configurações' });
   const savedResponsePromise = page.waitForResponse((response) => response.url().endsWith('/api/settings') && response.request().method() === 'PUT');
   await save.click();
   expect((await savedResponsePromise).status()).toBe(200);
   const saved = await api(page, '/settings');
-  expect(saved.body.warranty_general_enabled).toBe('1');
-  expect(saved.body.warranty_general_text).toBe('Garantia geral configurada pelo E2E.');
   expect(saved.body.layout_mode).toBeUndefined();
-
-  await text.fill('');
-  await toggle.uncheck();
-  const resetResponsePromise = page.waitForResponse((response) => response.url().endsWith('/api/settings') && response.request().method() === 'PUT');
-  await save.click();
-  expect((await resetResponsePromise).status()).toBe(200);
-  const reset = await api(page, '/settings');
-  expect(reset.body.warranty_general_enabled).toBe('0');
 });
 
 test('logoff encerra a sessão no Web/PC e leva ao login', async ({ page }) => {

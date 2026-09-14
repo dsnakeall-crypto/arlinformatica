@@ -3419,15 +3419,10 @@ function SettingsPage({ role }: any) {
     if (e.target.name === "postal_code") value = masks.cep(value);
     setData({ ...data, [e.target.name]: value });
   };
-  const warrantyOn =
-    data.warranty_general_enabled === true ||
-    data.warranty_general_enabled === "1" ||
-    data.warranty_general_enabled === 1;
   const tabs = [
     ["company", "Empresa", "▣"],
     ["identity", "Identidade", "◆"],
     ["documents", "Documentos", "▧"],
-    ["warranty", "Garantia", "•"],
     ["notifications", "Notificações", "♢"],
     ...(role === "Master"
       ? [
@@ -3438,7 +3433,7 @@ function SettingsPage({ role }: any) {
     ["storage", "Armazenamento", "▥"],
   ];
   const generalSave =
-    ["company", "identity", "warranty"].includes(section) ||
+    ["company", "identity"].includes(section) ||
     section === "documents";
   return (
     <>
@@ -3572,31 +3567,6 @@ function SettingsPage({ role }: any) {
                 <span>Texto do termo de recebimento</span>
                 <TermTextEditor value={data.term_text} onChange={change} />
               </label>
-            </>
-          )}
-          {section === "warranty" && (
-            <>
-              <h2>Garantia Geral</h2>
-              <label>
-                <input
-                  aria-label="Mostrar garantia geral no PDF final"
-                  type="checkbox"
-                  name="warranty_general_enabled"
-                  checked={warrantyOn}
-                  onChange={change}
-                />{" "}
-                Mostrar texto geral de garantia no PDF final
-              </label>
-              {warrantyOn && (
-                <label className="field">
-                  <span>Texto da garantia geral</span>
-                  <textarea
-                    name="warranty_general_text"
-                    value={data.warranty_general_text || ""}
-                    onChange={change}
-                  />
-                </label>
-              )}
             </>
           )}
           {message && <div className="notice">{message}</div>}

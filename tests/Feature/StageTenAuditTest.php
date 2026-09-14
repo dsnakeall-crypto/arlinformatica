@@ -76,39 +76,54 @@ class StageTenAuditTest extends TestCase
         $this->assertStringContainsString('google.com/maps', $detail['mobile_actions']['maps_url']);
     }
 
-    public function test_general_warranty_is_persisted_snapshotted_and_omitted_when_disabled(): void
+    public function test_item_warranty_visibility_is_snapshotted_per_finalization_and_preserves_historical_value(): void
     {
         $user = $this->user('Master', 'warranty-master');
+        $this->actingAs($user);
         $settings = app(CompanySettings::class);
-        $payload = $settings->all();
-        $payload['warranty_general_enabled'] = true;
-        $payload['warranty_general_text'] = 'Garantia geral original preservada no documento.';
-        $saved = $this->actingAs($user)->putJson('/api/settings', $payload)->assertOk();
-        $saved->assertJsonPath('warranty_general_enabled', '1')->assertJsonPath('warranty_general_text', 'Garantia geral original preservada no documento.');
-        $this->assertArrayNotHasKey('layout_mode', $saved->json());
+        $catalog = DB::table('service_catalog')->insertGetId([
+            'name' => 'Reparo com garantia', 'category' => 'service', 'price_cents' => 10000,
+            'warranty_enabled' => true, 'warranty_term' => 30, 'warranty_unit' => 'days',
+            'active' => true, 'created_at' => now(), 'updated_at' => now(),
+        ]);
 
         $client = $this->client();
         $order = ServiceOrder::create([
             'number' => '7666666', 'client_id' => $client->id, 'equipment_type_id' => DB::table('equipment_types')->value('id'),
             'attendance_type' => 'bench', 'status' => 'analysis', 'reported_problem' => 'Teste garantia', 'received_at' => now(), 'created_by' => $user->id,
         ]);
-        $order->snapshot()->create(['client' => $client->toArray(), 'company' => $settings->snapshot(), 'equipment' => ['name' => 'Notebook'], 'term_text' => $payload['term_text']]);
+        $order->snapshot()->create(['client' => $client->toArray(), 'company' => $settings->snapshot(), 'equipment' => ['name' => 'Notebook'], 'term_text' => $settings->all()['term_text']]);
         $this->postJson("/api/orders/{$order->id}/finalize", [
             'result' => 'repair_completed', 'technical_report' => 'Reparo concluído', 'discount_cents' => 0,
-            'items' => [['description' => 'Serviço sem garantia adicional', 'quantity' => 1, 'unit_price_cents' => 10000, 'warranty_enabled' => false]],
+            'show_item_warranties' => true,
+            'items' => [
+                ['catalog_id' => $catalog, 'description' => 'Reparo com garantia', 'quantity' => 1, 'unit_price_cents' => 10000, 'warranty_enabled' => true, 'warranty_term' => 30, 'warranty_unit' => 'days'],
+                ['description' => 'Serviço sem garantia', 'quantity' => 1, 'unit_price_cents' => 5000, 'warranty_enabled' => false],
+            ],
         ])->assertCreated();
 
-        DB::table('settings')->where('key', 'warranty_general_text')->update(['value' => 'Texto alterado depois da emissão']);
+        DB::table('service_catalog')->where('id', $catalog)->update(['warranty_term' => 90, 'updated_at' => now()]);
         $snapshot = json_decode(DB::table('generated_documents')->where(['service_order_id' => $order->id, 'type' => 'final'])->value('snapshot'), true);
-        $this->assertSame('Garantia geral original preservada no documento.', $snapshot['company']['warranty_general_text']);
+        $this->assertTrue($snapshot['show_item_warranties']);
+        $this->assertSame(30, json_decode($snapshot['items'][0]['warranty_snapshot'], true)['term']);
         $html = view('documents.final', $snapshot)->render();
-        $this->assertStringContainsString('GARANTIA GERAL', $html);
-        $this->assertStringContainsString('Garantia geral original preservada no documento.', $html);
-        $this->assertStringNotContainsString('Garantia:', $html);
+        $this->assertStringContainsString('Garantia adicional: 30 dias', $html);
+        $this->assertSame(1, substr_count($html, 'Garantia adicional:'));
+        $this->assertStringNotContainsString('90 dias', $html);
 
-        $snapshot['company']['warranty_general_enabled'] = '0';
-        $hidden = view('documents.final', $snapshot)->render();
-        $this->assertStringNotContainsString('GARANTIA GERAL', $hidden);
+        $hiddenOrder = ServiceOrder::create([
+            'number' => '7666667', 'client_id' => $client->id, 'equipment_type_id' => DB::table('equipment_types')->value('id'),
+            'attendance_type' => 'bench', 'status' => 'analysis', 'reported_problem' => 'Teste garantia oculta', 'received_at' => now(), 'created_by' => $user->id,
+        ]);
+        $hiddenOrder->snapshot()->create(['client' => $client->toArray(), 'company' => $settings->snapshot(), 'equipment' => ['name' => 'Notebook'], 'term_text' => $settings->all()['term_text']]);
+        $this->postJson("/api/orders/{$hiddenOrder->id}/finalize", [
+            'result' => 'repair_completed', 'technical_report' => 'Reparo concluído', 'discount_cents' => 0,
+            'show_item_warranties' => false,
+            'items' => [['catalog_id' => $catalog, 'description' => 'Reparo com garantia', 'quantity' => 1, 'unit_price_cents' => 10000, 'warranty_enabled' => true, 'warranty_term' => 90, 'warranty_unit' => 'days']],
+        ])->assertCreated();
+        $hiddenSnapshot = json_decode(DB::table('generated_documents')->where(['service_order_id' => $hiddenOrder->id, 'type' => 'final'])->value('snapshot'), true);
+        $this->assertFalse($hiddenSnapshot['show_item_warranties']);
+        $this->assertStringNotContainsString('Garantia adicional:', view('documents.final', $hiddenSnapshot)->render());
     }
 
     private function user(string $role, string $login): User
