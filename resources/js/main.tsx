@@ -2782,23 +2782,26 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
         )}
       </section>
       {closedItems.length > 0 && (
-        <section className="panel dashboard-orders dashboard-closed-orders">
-          <div className="dashboard-list-head">
-            <div>
-              <h2>Fechadas recentemente</h2>
-              <p>OS concluídas e interrompidas desta semana.</p>
+        <>
+          <div className="dashboard-section-divider" aria-hidden="true" />
+          <section className="panel dashboard-orders dashboard-closed-orders">
+            <div className="dashboard-list-head">
+              <div>
+                <h2>Fechadas recentemente</h2>
+                <p>OS concluídas e interrompidas desta semana.</p>
+              </div>
+              <button onClick={() => go("orders")}>Ver finalizadas</button>
             </div>
-            <button onClick={() => go("orders")}>Ver finalizadas</button>
-          </div>
-          <OrderTable
-            items={closedItems}
-            open={go}
-            dashboard
-            onStatus={changeStatus}
-            onDelete={remove}
-            role={role}
-          />
-        </section>
+            <OrderTable
+              items={closedItems}
+              open={go}
+              dashboard
+              onStatus={changeStatus}
+              onDelete={remove}
+              role={role}
+            />
+          </section>
+        </>
       )}
       <QuickEntry open={quick} onClose={() => setQuick(false)} />
       {interrupt && (
