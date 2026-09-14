@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { Camera, Check, Pencil, Plus, RotateCcw, Wallet, X } from 'lucide-react';
+import { Camera, Check, MapPin, Pencil, Phone, Plus, RotateCcw, Wallet, X } from 'lucide-react';
 import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
 import OrderAuditHistory from './order-audit-history';
 import '../css/order-detail-layout.css';
@@ -498,7 +498,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     <section className="panel arl-intake-card" aria-labelledby="arl-intake-title">
       <div className="section-title arl-intake-title"><div><span className="arl-eyebrow">ENTRADA</span><h2 id="arl-intake-title">Ficha de entrada</h2></div>{!immutable&&<button type="button" className="arl-od-btn" onClick={editOrder}><Pencil/><span>Editar ficha</span></button>}</div>
       <div className="arl-intake-dates"><span><b>Data de entrada:</b> {formatOptionalDate(order.received_at)}</span><i aria-hidden="true">|</i><span><b>Data de saída:</b> {['completed', 'interrupted'].includes(order.status) ? formatOptionalDate(order.completed_at) : 'Em aberto'}</span></div>
-      <div className="arl-intake-row"><h3>Cliente</h3><div><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></div></div>
+      <div className="arl-intake-row"><h3>Cliente</h3><div className="arl-intake-client-info"><p className="arl-intake-client-name"><strong>{order.client.name}</strong><span><Phone aria-hidden="true"/>{masks.phone(order.client.phone)}</span></p><p className="arl-intake-client-address"><MapPin aria-hidden="true"/><span>{[`${order.client.street || ''}${order.client.number ? `, ${order.client.number}` : ''}`, order.client.district, [order.client.city, order.client.state].filter(Boolean).join('/') , order.client.complement].filter(Boolean).join(' — ')}</span></p><p className="arl-intake-client-document">{masks.document(order.client.document)}</p></div></div>
       <div className="arl-intake-row"><h3>Equipamento</h3><div><p>{order.equipment_description || 'Equipamento não informado'}</p></div></div>
       <div className="arl-intake-row"><h3>Fabricante / Modelo / Acessórios</h3><div><p>{order.equipment_details || 'Não informado'}</p></div></div>
       <div className="arl-intake-row"><h3>Problema relatado</h3><div><p>{order.reported_problem}</p></div></div>
