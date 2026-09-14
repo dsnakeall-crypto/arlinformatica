@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   CircleDot,
   PackageSearch,
+  Pin,
   LogOut,
   Banknote,
   CreditCard,
@@ -4728,6 +4729,7 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem("arl-sidebar-collapsed") === "true",
   );
+  const [sidebarPinned, setSidebarPinned] = useState(false);
   const [navSummary, setNavSummary] = useState({
     open_orders: 0,
     available_post_sales: 0,
@@ -4744,9 +4746,28 @@ function App() {
   const [me, setMe] = useState<any>();
   useEffect(() => {
     api("/me")
-      .then(setMe)
+      .then((user) => {
+        setMe(user);
+        setSidebarPinned(Boolean(user.sidebar_pinned));
+        if (user.sidebar_pinned) setSidebarCollapsed(false);
+      })
       .catch(() => {});
   }, []);
+  const toggleSidebarPinned = async () => {
+    const next = !sidebarPinned;
+    setSidebarPinned(next);
+    if (next) setSidebarCollapsed(false);
+    try {
+      const saved = await api("/me/sidebar", {
+        method: "PATCH",
+        body: JSON.stringify({ sidebar_pinned: next }),
+      });
+      setSidebarPinned(Boolean(saved.sidebar_pinned));
+    } catch (error: any) {
+      setSidebarPinned(!next);
+      window.alert(error.message || "Não foi possível salvar a preferência do menu.");
+    }
+  };
   const orderPath = location.pathname.match(/^\/orders\/(\d+)$/),
     initialOrderId = orderPath ? Number(orderPath[1]) : undefined;
   const pathPage = (
@@ -4861,15 +4882,15 @@ function App() {
   ] as const;
   return (
     <div
-      className={`shell layout-${layout}${sidebarCollapsed ? " sidebar-collapsed" : ""}`}
+      className={`shell layout-${layout}${sidebarCollapsed && !sidebarPinned ? " sidebar-collapsed" : ""}${sidebarPinned ? " sidebar-pinned" : ""}`}
     >
       <aside
         className={mobileMenu ? "open" : ""}
         onMouseMove={() => {
-          if (!mobileLayout && sidebarCollapsed) setSidebarCollapsed(false);
+          if (!mobileLayout && !sidebarPinned && sidebarCollapsed) setSidebarCollapsed(false);
         }}
         onMouseLeave={() => {
-          if (!mobileLayout && !sidebarCollapsed) setSidebarCollapsed(true);
+          if (!mobileLayout && !sidebarPinned && !sidebarCollapsed) setSidebarCollapsed(true);
         }}
       >
         <button
@@ -4939,6 +4960,17 @@ function App() {
             ) : null;
           })}
         </nav>
+        <button
+          type="button"
+          className={`sidebar-pin-toggle${sidebarPinned ? " active" : ""}`}
+          aria-label={sidebarPinned ? "Desfixar menu lateral" : "Fixar menu lateral"}
+          aria-pressed={sidebarPinned}
+          title={sidebarPinned ? "Desfixar menu lateral" : "Fixar menu lateral"}
+          onClick={() => void toggleSidebarPinned()}
+        >
+          <Pin aria-hidden="true" />
+          <span>{sidebarPinned ? "Menu fixado" : "Fixar menu"}</span>
+        </button>
         <div className="profile">
           <div>
             <b>{me?.name || "ARL Informática"}</b>

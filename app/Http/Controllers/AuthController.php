@@ -29,7 +29,16 @@ class AuthController extends Controller
             'name' => $user->name,
             'login' => $user->login,
             'role' => $user->role->name,
+            'sidebar_pinned' => $user->sidebar_pinned,
         ]);
+    }
+
+    public function updateSidebarPreference(Request $request): JsonResponse
+    {
+        $data = $request->validate(['sidebar_pinned' => ['required', 'boolean']]);
+        $request->user()->update($data);
+
+        return response()->json(['sidebar_pinned' => $request->user()->sidebar_pinned]);
     }
 
     public function logout(Request $r)

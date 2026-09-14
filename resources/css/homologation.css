@@ -392,6 +392,13 @@ aside nav::-webkit-scrollbar { width:0; height:0; }
 .shell aside .profile>div { flex:1; min-width:0; overflow:hidden; }
 .shell aside .profile b,.shell aside .profile small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .shell aside .profile>button { flex-shrink:0; }
+.shell aside .sidebar-pin-toggle { position:relative; z-index:1; width:100%; min-height:36px; margin:8px 0 4px; padding:7px 10px; border:1px solid rgba(255,255,255,.13); border-radius:10px; background:rgba(255,255,255,.045); color:#c9c1c4; display:flex; align-items:center; justify-content:center; gap:8px; font-size:11px; font-weight:800; cursor:pointer; }
+.shell aside .sidebar-pin-toggle:hover,.shell aside .sidebar-pin-toggle:focus-visible { border-color:rgba(255,65,93,.55); background:rgba(255,255,255,.1); color:#fff; }
+.shell aside .sidebar-pin-toggle svg { width:15px; height:15px; flex:0 0 auto; transform:rotate(-35deg); transition:transform .15s ease,fill .15s ease; }
+.shell aside .sidebar-pin-toggle.active { border-color:rgba(255,65,93,.55); background:linear-gradient(180deg,rgba(218,9,43,.42),rgba(126,0,20,.38)); color:#fff; box-shadow:inset 0 1px rgba(255,255,255,.12); }
+.shell aside .sidebar-pin-toggle.active svg { fill:#e20a2d; transform:none; }
+.layout-desktop.sidebar-collapsed .sidebar-pin-toggle { width:40px; min-width:40px; margin-left:2px; padding:8px; }
+.layout-desktop.sidebar-collapsed .sidebar-pin-toggle span { display:none; }
 @media(max-width:800px){.layout-desktop > main,.layout-desktop.sidebar-collapsed > main{margin-left:0!important;width:100%!important}}
 
 /* Legacy oversized decoration created scrollable overflow beyond the sidebar. */

@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
+    Route::patch('/me/sidebar', [AuthController::class, 'updateSidebarPreference']);
     Route::get('/navigation-summary', [NavigationController::class, 'summary']);
     Route::get('/clients', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);

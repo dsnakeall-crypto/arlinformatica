@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { login } from './helpers';
+import { api, login } from './helpers';
 
 const expectedGroups = {
   'Operação': ['Painel', 'Ordens'],
@@ -59,6 +59,39 @@ test('menu recolhe, revela nomes no hover, libera largura e persiste após recar
   await expect(shell).not.toHaveClass(/sidebar-collapsed/);
   await page.reload();
   await expect(shell).not.toHaveClass(/sidebar-collapsed/);
+});
+
+test('usuário fixa, desfixa e mantém a preferência do menu após recarregar', async ({ page }) => {
+  await login(page);
+  expect((await api(page, '/me/sidebar', 'PATCH', { sidebar_pinned: false })).status).toBe(200);
+
+  const shell = page.locator('.shell');
+  const aside = page.locator('aside');
+  await page.getByRole('main').hover();
+  await expect(shell).toHaveClass(/sidebar-collapsed/);
+
+  const pin = aside.getByRole('button', { name: 'Fixar menu lateral', exact: true });
+  const pinnedResponse = page.waitForResponse(response => response.url().endsWith('/api/me/sidebar') && response.request().method() === 'PATCH');
+  await pin.click();
+  expect((await pinnedResponse).status()).toBe(200);
+  await expect(shell).toHaveClass(/sidebar-pinned/);
+  await expect(shell).not.toHaveClass(/sidebar-collapsed/);
+  await expect(aside.getByRole('button', { name: 'Desfixar menu lateral', exact: true })).toHaveAttribute('aria-pressed', 'true');
+
+  await page.reload();
+  await page.getByRole('main').hover();
+  await expect(shell).toHaveClass(/sidebar-pinned/);
+  await expect(shell).not.toHaveClass(/sidebar-collapsed/);
+
+  const unpin = aside.getByRole('button', { name: 'Desfixar menu lateral', exact: true });
+  const unpinnedResponse = page.waitForResponse(response => response.url().endsWith('/api/me/sidebar') && response.request().method() === 'PATCH');
+  await unpin.click();
+  expect((await unpinnedResponse).status()).toBe(200);
+  await page.getByRole('main').hover();
+  await expect(shell).toHaveClass(/sidebar-collapsed/);
+  await page.reload();
+  await expect(shell).toHaveClass(/sidebar-collapsed/);
+  await expect(aside.getByRole('button', { name: 'Fixar menu lateral', exact: true })).toHaveAttribute('aria-pressed', 'false');
 });
 
 for (const width of [1280, 1920]) {
