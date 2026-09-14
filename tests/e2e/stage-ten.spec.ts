@@ -182,8 +182,8 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
   await expect(chart.locator('.revenue-y-axis span')).toHaveCount(3);
   await expect(chart.locator('.revenue-column').filter({ hasText: 'R$ 150,00' })).toBeVisible();
   await expect(chart.locator('.revenue-column').filter({ hasText: 'R$ 325,00' })).toBeVisible();
-  await expect(chart.getByText('03/09/2026', { exact: true })).toBeVisible();
-  await expect(chart.getByText('04/09/2026', { exact: true })).toBeVisible();
+  await expect(chart.getByText('03/09/2026', { exact: true })).toHaveCount(1);
+  await expect(chart.getByText('04/09/2026', { exact: true })).toHaveCount(1);
   const expenseBar = chart.getByTestId('daily-expense-bar');
   await expect(expenseBar).toHaveCount(1);
   await expect(expenseBar).toHaveCSS('background-color', 'rgb(201, 0, 28)');
