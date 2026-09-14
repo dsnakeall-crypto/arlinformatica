@@ -91,11 +91,12 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
 
   const intake = root.locator('.arl-intake-card');
   await expect(intake.getByRole('heading', { name: 'Ficha de entrada', exact: true })).toBeVisible();
-  for (const label of ['Cliente', 'Equipamento', 'Fabricante / Modelo / Acessórios', 'Problema relatado', 'Estado físico na entrada', 'Fotos']) {
+  for (const label of ['Cliente', 'Equipamento', 'Problema relatado', 'Estado físico na entrada', 'Fotos']) {
     await expect(intake.getByRole('heading', { name: label, exact: true })).toBeVisible();
   }
   await expect(intake.getByText(equipmentDescription, { exact: true })).toBeVisible();
   await expect(intake.getByText(equipmentDetails, { exact: true })).toBeVisible();
+  await expect(intake.getByRole('heading', { name: 'Fabricante / Modelo / Acessórios', exact: true })).toHaveCount(0);
   await expect(intake.getByRole('button', { name: 'Editar ficha' })).toBeVisible();
   await expect(intake.locator('.arl-order-photo-tools label')).toContainText('Enviar foto');
   await expect(intake.getByRole('button', { name: '◉ Usar câmera' })).toBeVisible();
