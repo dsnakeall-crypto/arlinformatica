@@ -172,8 +172,10 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.getByLabel('Buscar clientes').fill('Cliente Homologação Visual');
   const visualClient = page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' });
   await visualClient.getByRole('button', { name: 'Visualizar' }).click();
-  await expect(page.getByText(service.name, { exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Baixar A4 final · Rev. 1', exact: true })).toHaveAttribute('href', `/api/orders/${orderResponse.body.id}/final/1/pdf`);
+  const visualHistoryCard = page.locator('.clients-history-order').filter({ hasText: `OS #${orderResponse.body.number}` });
+  await expect(visualHistoryCard.getByText(`Equipamento: ${orderResponse.body.equipment_description}`, { exact: true })).toBeVisible();
+  await expect(visualHistoryCard.locator('.clients-history-services')).toHaveCount(0);
+  await expect(visualHistoryCard.getByRole('link', { name: 'Baixar A4 final · Rev. 1', exact: true })).toHaveAttribute('href', `/api/orders/${orderResponse.body.id}/final/1/pdf`);
   await page.screenshot({ path: 'visual-artifacts/02-clientes-historico-desktop.png', fullPage: true });
 
   await nav.getByRole('button', { name: 'Pós-Venda' }).click();
@@ -217,8 +219,10 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
 
   const mobileVisualClient = page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' });
   await mobileVisualClient.getByRole('button', { name: 'Visualizar' }).click();
-  await expect(page.getByText(service.name, { exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderResponse.body.id}/final/1/pdf`);
+  const mobileHistoryCard = page.locator('.clients-history-order').filter({ hasText: `OS #${orderResponse.body.number}` });
+  await expect(mobileHistoryCard.getByText(`Equipamento: ${orderResponse.body.equipment_description}`, { exact: true })).toBeVisible();
+  await expect(mobileHistoryCard.locator('.clients-history-services')).toHaveCount(0);
+  await expect(mobileHistoryCard.getByRole('link', { name: 'Baixar A4 final · Rev. 1', exact: true })).toHaveAttribute('href', `/api/orders/${orderResponse.body.id}/final/1/pdf`);
   await page.screenshot({ path: 'visual-artifacts/02-clientes-historico-mobile.png', fullPage: true });
 
   await page.locator('.menu-toggle').click();

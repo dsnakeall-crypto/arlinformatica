@@ -82,11 +82,14 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
   await expect(page.getByRole('heading', { name: clientName, exact: true })).toBeVisible();
   const discountedHistory = page.locator('.clients-history-order').filter({ hasText: `OS #${discountedOrder.number}` });
   const zeroHistory = page.locator('.clients-history-order').filter({ hasText: `OS #${zeroDiscountOrder.number}` });
+  const persistedHistory = await api(page, `/clients/${client.body.id}`);
+  expect(persistedHistory.body.orders.find((order: any) => order.id === discountedOrder.id)?.discount_cents).toBe(1250);
+  expect(persistedHistory.body.orders.find((order: any) => order.id === zeroDiscountOrder.id)?.discount_cents).toBe(0);
   await expect(discountedHistory.getByText('Equipamento: Notebook', { exact: true })).toBeVisible();
-  await expect(discountedHistory.getByText('Desconto: R$ 12,50', { exact: true })).toBeVisible();
   await expect(discountedHistory.getByText(`Total: ${money(Number(service.price_cents) - 1250)}`, { exact: true })).toBeVisible();
-  await expect(zeroHistory.getByText(/^Desconto:/)).toHaveCount(0);
   await expect(zeroHistory.getByText(`Total: ${money(Number(service.price_cents))}`, { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Desconto:/)).toHaveCount(0);
+  await expect(page.locator('.clients-history-services')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Voltar para a OS' }).click();
   await expect(page.getByRole('heading', { name: `OS #${discountedOrder.number}`, exact: true })).toBeVisible();

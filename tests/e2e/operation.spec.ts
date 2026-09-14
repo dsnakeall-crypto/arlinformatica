@@ -269,14 +269,15 @@ test.describe.serial('fluxo operacional principal', () => {
 
   test('histórico do cliente e pós-venda aparecem imediatamente, mas ficam bloqueados por 24h', async ({ page }) => {
     await page.getByRole('button', { name: 'Clientes' }).click();
+    await page.getByLabel('Buscar clientes').fill('Cliente E2E');
     const clientCard = page.locator('.client-list article').filter({ hasText: 'Cliente E2E' });
     await clientCard.getByRole('button', { name: 'Visualizar' }).click();
     await expect(page.getByRole('heading', { name: 'Cliente E2E' })).toBeVisible();
     await expect(page.getByText(`OS #${orderNumber}`)).toBeVisible();
-    const latestService = page.locator('.clients-history-item-description').filter({ hasText: 'Formatação E2E' });
-    await expect(latestService, 'A mesma OS deve ocupar uma única linha com somente os itens da finalização vigente').toHaveCount(1);
-    await expect(latestService.locator('xpath=ancestor::li').getByText('R$ 140,00', { exact: true })).toBeVisible();
-    await expect(page.getByRole('link', { name: '2ª via PDF A4' })).toHaveAttribute('href', `/api/orders/${orderId}/final/2/pdf`);
+    const historyCard = page.locator('.clients-history-order').filter({ hasText: `OS #${orderNumber}` });
+    await expect(historyCard.getByText('Total: R$ 140,00', { exact: true })).toBeVisible();
+    await expect(historyCard.locator('.clients-history-services')).toHaveCount(0);
+    await expect(historyCard.getByRole('link', { name: 'Baixar A4 final · Rev. 2', exact: true })).toHaveAttribute('href', `/api/orders/${orderId}/final/2/pdf`);
     const history = await api(page, `/clients/${clientId}`);
     expect(history.body.orders.some((order: { id: number }) => order.id === orderId)).toBeTruthy();
     const historicalOrder = history.body.orders.find((order: { id: number }) => order.id === orderId);
