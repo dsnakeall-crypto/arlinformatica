@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Box, Search, Wrench } from 'lucide-react';
+import { Box, ListPlus, Search, Wrench } from 'lucide-react';
 import '../css/services-page.css';
 
 export type ServiceProductCatalogItem = {
@@ -17,6 +17,7 @@ type Props = {
   items: ServiceProductCatalogItem[];
   onSelect: (item: ServiceProductCatalogItem) => void;
   ariaLabel?: string;
+  showBrowseAll?: boolean;
 };
 
 const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
@@ -26,40 +27,44 @@ function TypeIcon({ category }: { category: ServiceProductCatalogItem['category'
   return category === 'product' ? <Box aria-hidden="true"/> : <Wrench aria-hidden="true"/>;
 }
 
-export default function ServiceProductSearch({ items, onSelect, ariaLabel = 'Pesquisar Serviço / Produto' }: Props) {
+export default function ServiceProductSearch({ items, onSelect, ariaLabel = 'Pesquisar Serviço / Produto', showBrowseAll = false }: Props) {
   const [query, setQuery] = useState('');
+  const [browseOpen, setBrowseOpen] = useState(false);
   const visible = useMemo(() => {
     const term = query.trim().toLocaleLowerCase('pt-BR');
-    if (!term) return [];
-    return items
-      .filter((item) => item.active !== false)
+    const activeItems = items.filter((item) => item.active !== false);
+    if (!term) return browseOpen ? activeItems : [];
+    return activeItems
       .filter((item) => {
         const category = item.category === 'product' ? 'produto' : 'serviço';
         return `${item.name} ${category}`.toLocaleLowerCase('pt-BR').includes(term);
       })
       .slice(0, 12);
-  }, [items, query]);
+  }, [browseOpen, items, query]);
 
   return <div className="arl-service-product-search">
-    <label className="services-search">
-      <Search aria-hidden="true"/>
-      <input
-        type="search"
-        aria-label={ariaLabel}
-        autoComplete="off"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="Pesquisar serviço ou produto"
-      />
-    </label>
-    {query.trim() && <div className="services-list arl-service-product-results" role="list" aria-label="Resultados da busca">
+    <div className="arl-service-product-search-controls">
+      <label className="services-search">
+        <Search aria-hidden="true"/>
+        <input
+          type="search"
+          aria-label={ariaLabel}
+          autoComplete="off"
+          value={query}
+          onChange={(event) => { setQuery(event.target.value); setBrowseOpen(false); }}
+          placeholder="Pesquisar serviço ou produto"
+        />
+      </label>
+      {showBrowseAll && <button type="button" className="primary arl-service-product-browse" aria-label="Adicionar serviços" aria-expanded={browseOpen} onClick={() => { setQuery(''); setBrowseOpen((open) => !open); }}><ListPlus aria-hidden="true"/><span>Adicionar serviços</span></button>}
+    </div>
+    {(query.trim() || browseOpen) && <div className="services-list arl-service-product-results" role="list" aria-label={browseOpen ? 'Todos os serviços e produtos ativos' : 'Resultados da busca'}>
       {visible.length ? visible.map((item) => <button
         type="button"
         key={item.id}
         className="services-row arl-service-product-result"
         data-category={item.category === 'product' ? 'product' : 'service'}
         aria-label={`Adicionar ${item.name}`}
-        onClick={() => { onSelect(item); setQuery(''); }}
+        onClick={() => { onSelect(item); setQuery(''); setBrowseOpen(false); }}
       >
         <span className={`services-type-icon ${item.category === 'product' ? 'product' : 'service'}`}><TypeIcon category={item.category}/></span>
         <span className="services-row-main">

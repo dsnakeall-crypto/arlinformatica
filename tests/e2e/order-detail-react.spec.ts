@@ -118,8 +118,11 @@ test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PA
   const itemTotal = `R$ ${(Number(service.price_cents) * 3 / 100).toFixed(2).replace('.', ',')}`;
   await expect(modal.locator('.money')).toContainText(`Subtotal ${itemTotal}`);
   await expect(modal.locator('.money')).toContainText(`Total ${itemTotal}`);
-  await addedItem.getByRole('button', { name: 'Remover' }).click();
+  await addedItem.getByRole('button', { name: `Remover ${service.name}`, exact: true }).click();
   await expect(modal.locator('[data-finalization-item="true"]')).toHaveCount(0);
+  await modal.getByRole('button', { name: 'Adicionar serviços', exact: true }).click();
+  const completeList = modal.getByRole('list', { name: 'Todos os serviços e produtos ativos' });
+  await expect(completeList.getByRole('button', { name: `Adicionar ${service.name}`, exact: true })).toBeVisible();
   await modal.locator('.modal-close').click();
 
   await panel.fill('Rascunho B alterado depois de fechar');
