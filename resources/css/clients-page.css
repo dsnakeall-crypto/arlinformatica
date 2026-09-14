@@ -42,7 +42,7 @@
  .clients-list-panel .client-list article.clients-row{grid-template-columns:minmax(0,1fr) auto;gap:7px 10px;margin:0;padding:10px;overflow:hidden}
  .clients-id{grid-column:1}.clients-main{grid-column:1}.clients-phone{grid-column:2;grid-row:1/3;align-self:center}.clients-address{grid-column:1/-1!important}.clients-actions{grid-column:1/-1!important;justify-content:flex-start!important;margin-top:2px;max-width:100%}.clients-separator{display:none}
  .clients-main b,.clients-address>span,.clients-address>small{white-space:normal;overflow-wrap:anywhere}.clients-phone{white-space:nowrap}
- .clients-actions a,.clients-actions button:not(.clients-select){width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important}
+ .clients-actions a,.clients-actions button:not(.clients-select){width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important}
 }
 @media(max-width:390px){
  .clients-toolbar{grid-template-columns:1fr}.clients-pagination,.clients-page-size{justify-content:space-between}.clients-page-size{grid-row:auto}.clients-sort{grid-template-columns:1fr}.clients-sort select{width:100%}

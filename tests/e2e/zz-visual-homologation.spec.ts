@@ -85,6 +85,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   const nav = page.locator('aside nav');
   await nav.getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
+  await page.getByLabel('Buscar clientes').fill('Cliente Homologação Visual');
   await expect(page.getByText('Cliente Homologação Visual', { exact: true }).first()).toBeVisible();
   await expect(page.getByText(`Cliente Nº ${clientResponse.body.id}`, { exact: true })).toBeVisible();
   await expect(page.getByText('Rua das Flores, 320 · Centro', { exact: true })).toBeVisible();
@@ -158,12 +159,17 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
     }],
   });
   expect(finalization.status).toBe(201);
+  const finalShare = page.getByRole('status', { name: 'Compartilhar fechamento da OS' });
+  await expect(finalShare).toBeVisible();
+  await finalShare.getByRole('button', { name: 'Fechar', exact: true }).click();
+  await expect(finalShare).toHaveCount(0);
 
   const pdf = await page.context().request.get(`/api/orders/${orderResponse.body.id}/final/1/pdf`);
   expect(pdf.ok()).toBeTruthy();
   await writeFile('visual-artifacts/05-fechamento-final.pdf', Buffer.from(await pdf.body()));
 
   await nav.getByRole('button', { name: 'Clientes' }).click();
+  await page.getByLabel('Buscar clientes').fill('Cliente Homologação Visual');
   const visualClient = page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' });
   await visualClient.getByRole('button', { name: 'Visualizar' }).click();
   await expect(page.getByText(service.name, { exact: true })).toBeVisible();
@@ -190,6 +196,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.locator('.menu-toggle').click();
   await page.locator('aside').getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
+  await page.getByLabel('Buscar clientes').fill('Cliente Homologação Visual');
   await expect(page.getByText('Cliente Homologação Visual', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('Araguari - MG · CEP 38400-000', { exact: true })).toBeVisible();
   await waitForOfficialIcons(page, [

@@ -37,6 +37,7 @@ test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado'
 
   await bottomNavigation.getByRole('button', { name: 'Clientes', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
+  await page.getByLabel('Buscar clientes').fill('Cliente Mobile Navegação');
   const firstClient = page.locator('.clients-list-panel .client-list article').filter({ hasText: 'Cliente Mobile Navegação' });
   await expect(firstClient).toBeVisible();
   const clientBounds = await firstClient.evaluate((element) => {
@@ -228,6 +229,8 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
     expect(response.status).toBe(201);
   }
   await page.reload();
+  await page.getByLabel('Buscar clientes').fill(`ZZ Lista Mobile ${suffix}-`);
+  await expect(page.locator('.clients-list-panel .client-list article')).toHaveCount(12);
   const lastItem = page.locator('.clients-list-panel .client-list article').filter({ hasText: longListNames.at(-1)! });
   await expect(lastItem).toBeVisible();
   await assertAboveBottomBar(lastItem);
