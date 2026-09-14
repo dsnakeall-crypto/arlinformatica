@@ -1,9 +1,12 @@
-const CACHE='arl-static-v3';
+// Os ícones oficiais podem ser atualizados mantendo o mesmo caminho público.
+// Não use uma resposta antiga do Cache Storage quando houver conexão: isso evita
+// que uma versão substituída do ícone reapareça após recarregar a página.
+const CACHE='arl-static-v4';
 const ROOT=new URL('./',self.registration.scope);
 const asset=path=>new URL(path,ROOT).href;
 const PRECACHE=['manifest.webmanifest','arl-assets/icons/icon-192.png','arl-assets/icons/icon-512.png','arl-assets/icons/icon-maskable-512.png'].map(asset);
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(PRECACHE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',event=>{const url=new URL(event.request.url);if(event.request.method!=='GET'||url.origin!==location.origin)return;if(url.href.startsWith(asset('arl-assets/'))||url.href.startsWith(asset('build/'))||url.href===asset('manifest.webmanifest'))event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response}))) });
+self.addEventListener('fetch',event=>{const url=new URL(event.request.url);if(event.request.method!=='GET'||url.origin!==location.origin)return;if(url.href.startsWith(asset('arl-assets/icons/')))event.respondWith(fetch(new Request(event.request,{cache:'reload'})).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response}).catch(()=>caches.match(event.request)));else if(url.href.startsWith(asset('arl-assets/'))||url.href.startsWith(asset('build/'))||url.href===asset('manifest.webmanifest'))event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response}))) });
 self.addEventListener('push',event=>{let data={title:'ARL Informática',description:'Existe uma nova notificação.',url:'./'};try{data={...data,...event.data.json()}}catch{}event.waitUntil(self.registration.showNotification(data.title,{body:data.description,icon:asset('arl-assets/icons/icon-192.png'),badge:asset('arl-assets/icons/icon-192.png'),data:{url:data.url}}))});
 self.addEventListener('notificationclick',event=>{event.notification.close();event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{const url=new URL(event.notification.data?.url||'./',ROOT).href;const existing=list.find(client=>client.url===url);return existing?existing.focus():clients.openWindow(url)}))});
