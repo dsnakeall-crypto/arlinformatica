@@ -125,6 +125,8 @@ for (const [index, status] of statuses.entries()) {
     if (!['completed', 'interrupted'].includes(status.code)) {
       await expect(rowStatus.locator('option[value="completed"]')).toHaveCount(0);
       await expect(rowStatus.locator('option[value="paid"]')).toHaveCount(0);
+    } else if (status.code === 'completed') {
+      await expect(rowStatus.locator('option[value="paid"]'), 'PAGO só pode aparecer quando existe valor pendente').toHaveCount(0);
     }
     await dashboardRow.getByRole('button', { name: 'Ver OS' }).click();
 
@@ -165,3 +167,61 @@ for (const [index, status] of statuses.entries()) {
     }
   });
 }
+
+test('OS concluída sem pagamento mostra Aguardando PGTO e exige forma para virar Pago', async ({ page }) => {
+  const { clientName, order } = await createOrder(page, 90, 'Aguardando PGTO');
+  const services = await api(page, '/catalogs/services');
+  const service = services.body.find((row: any) => Number(row.price_cents) > 0);
+  expect(service, 'O catálogo E2E precisa ter um serviço com valor para testar o recebimento').toBeTruthy();
+
+  const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute('content');
+  const finalizedResponse = await page.request.post(`/api/orders/${order.id}/finalize`, {
+    headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken ?? '' },
+    data: {
+    result: 'repair_completed',
+    technical_report: 'Serviço concluído e aguardando pagamento.',
+    discount_cents: 0,
+    photo_ids: [],
+    items: [{
+      catalog_id: service.id,
+      description: service.name,
+      quantity: 1,
+      unit_price_cents: Number(service.price_cents),
+      warranty_enabled: Boolean(service.warranty_enabled),
+      warranty_term: service.warranty_enabled ? service.warranty_term : null,
+      warranty_unit: service.warranty_enabled ? service.warranty_unit : null,
+    }],
+    is_paid: false,
+    },
+  });
+  const finalized = await finalizedResponse.json();
+  expect(finalizedResponse.status(), `Finalização sem pagamento falhou: ${JSON.stringify(finalized)}`).toBe(201);
+  expect(finalized.order.display_status).toBe('awaiting_payment');
+
+  await page.getByRole('button', { name: 'Ordens' }).click();
+  await page.getByPlaceholder('Número da OS ou nome do cliente…').fill(clientName);
+  const row = page.locator('.orders-order-list .order-row').filter({ hasText: clientName });
+  await expect(row).toBeVisible();
+  const statusSelect = row.getByLabel(`Status da OS ${order.number}`);
+  await expect(statusSelect.locator('option:checked')).toHaveText('Aguardando PGTO');
+  await expect(statusSelect.locator('option[value="paid"]')).toHaveText('PAGO');
+  await expect(statusSelect.locator('option[value="completed"]')).toHaveCount(0);
+
+  await statusSelect.selectOption('paid');
+  const modal = page.getByRole('dialog', { name: `Registrar pagamento da OS #${order.number}` });
+  await expect(modal).toBeVisible();
+  await expect(modal.getByText(`O valor total da OS, R$ ${(service.price_cents / 100).toFixed(2).replace('.', ',')}, será registrado como pago.`)).toBeVisible();
+  await modal.getByLabel('Forma de pagamento').selectOption('pix');
+  const paidResponse = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${order.id}/status`) && response.request().method() === 'PATCH');
+  await modal.getByRole('button', { name: 'Confirmar pagamento' }).click();
+  expect((await paidResponse).status()).toBe(200);
+  await expect(modal).toHaveCount(0);
+  await expect(row.getByLabel(`Status da OS ${order.number}`).locator('option:checked')).toHaveText('Pago');
+
+  const persisted = await api(page, `/orders/${order.id}`);
+  expect(persisted.body.display_status).toBe('paid');
+  expect(persisted.body.archived).toBe(1);
+  const payments = await api(page, `/orders/${order.id}/payments`);
+  expect(payments.body.paid_cents).toBe(service.price_cents);
+  expect(payments.body.balance_cents).toBe(0);
+});

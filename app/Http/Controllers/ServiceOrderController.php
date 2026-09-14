@@ -15,14 +15,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ServiceOrderController extends Controller
 {
     public function index(Request $r, PostSaleService $postSales): JsonResponse
     {
         $postSales->catchUp(true);
+        $paidByOrder = $this->effectivePaymentsByOrder();
         $q = ServiceOrder::query()
             ->select('service_orders.*')
+            ->addSelect(DB::raw('COALESCE(payment_status.paid_cents, 0) as paid_cents'))
+            ->leftJoinSub($paidByOrder, 'payment_status', 'payment_status.service_order_id', '=', 'service_orders.id')
             ->with('client:id,name,phone,street,number,district,city,state')
             ->withExists(['histories as reopened' => fn ($history) => $history->where('from_status', 'completed')->where('to_status', 'analysis')]);
         $requestedStatus = (string) $r->query('status', '');
@@ -61,7 +67,14 @@ class ServiceOrderController extends Controller
 
         $perPage = max(1, min(100, (int) $r->integer('per_page', 50)));
 
-        return response()->json([...$q->paginate($perPage)->toArray(), 'summary' => $summary]);
+        $orders = $q->paginate($perPage);
+        $orders->getCollection()->transform(function (ServiceOrder $order) {
+            $order->setAttribute('display_status', $this->displayStatus($order, (int) $order->paid_cents));
+
+            return $order;
+        });
+
+        return response()->json([...$orders->toArray(), 'summary' => $summary]);
     }
 
     public function desk(PostSaleService $postSales): JsonResponse
@@ -160,7 +173,7 @@ class ServiceOrderController extends Controller
     {
         $order->load(['client', 'checklists', 'items', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']);
         $payload = $order->toArray();
-        $payload['display_status'] = $order->archived ? 'paid' : $order->status;
+        $payload['display_status'] = $this->displayStatus($order, $this->paidCentsForOrder($order));
         $payload['reopened'] = $order->histories->contains(fn ($history) => $history->from_status === 'completed' && $history->to_status === 'analysis');
         $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;
         $payload['interruption_work_done'] = $order->status === 'interrupted' ? $order->interruption_work_done : null;
@@ -210,6 +223,7 @@ class ServiceOrderController extends Controller
             'status' => 'required|in:analysis,waiting_part,in_service,completed,interrupted,paid',
             'interruption_reason' => 'nullable|required_if:status,interrupted|string|max:10000',
             'interruption_work_done' => 'nullable|required_if:status,interrupted|string|max:10000',
+            'payment_method' => ['nullable', Rule::in(['cash', 'pix', 'credit', 'debit'])],
         ]);
         if ($data['status'] === 'interrupted') {
             abort_if(blank(trim((string) $data['interruption_reason'])), 422, 'Informe o motivo da interrupção.');
@@ -229,17 +243,56 @@ class ServiceOrderController extends Controller
         }
 
         if ($data['status'] === 'paid') {
-            abort_if($order->archived, 409, 'Esta OS já está em OS Finalizadas.');
-            abort_unless($order->status === 'completed', 422, 'Finalize a OS antes de marcá-la como paga e retirada.');
-            $total = $this->orderTotalCents($order);
-            $paid = $this->paidCentsForOrder($order);
-            abort_if($paid < $total, 422, 'Ainda existe saldo pendente. Registre o pagamento restante antes de marcar a OS como PAGO.');
+            DB::transaction(function () use ($order, $r, $data) {
+                $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+                abort_if($locked->archived, 409, 'Esta OS já está em OS Finalizadas.');
+                abort_unless($locked->status === 'completed', 422, 'Finalize a OS antes de marcá-la como paga e retirada.');
+                $total = $this->orderTotalCents($locked);
+                $paid = $this->paidCentsForOrder($locked);
+                $balance = max(0, $total - $paid);
 
-            DB::transaction(function () use ($order, $r) {
-                $before = $order->status;
-                $order->forceFill(['archived' => true])->save();
+                if ($balance > 0 && blank($data['payment_method'] ?? null)) {
+                    throw ValidationException::withMessages(['payment_method' => 'Escolha a forma de pagamento.']);
+                }
+
+                $paymentId = null;
+                if ($balance > 0) {
+                    $now = now('UTC');
+                    $paymentId = DB::table('payments')->insertGetId([
+                        'service_order_id' => $locked->id,
+                        'amount_cents' => $balance,
+                        'method' => $data['payment_method'],
+                        'paid_at' => $now,
+                        'user_id' => $r->user()->id,
+                        'idempotency_key' => 'status-payment-'.Str::uuid(),
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                    $transactionId = DB::table('financial_transactions')->insertGetId([
+                        'payment_id' => $paymentId,
+                        'origin' => 'service_order',
+                        'description' => "OS {$locked->number}",
+                        'amount_cents' => $balance,
+                        'occurred_at' => $now,
+                        'user_id' => $r->user()->id,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                    DB::table('audit_logs')->insert([
+                        'user_id' => $r->user()->id,
+                        'action' => 'payment.created',
+                        'subject_type' => 'payment',
+                        'subject_id' => $paymentId,
+                        'after' => json_encode(['transaction_id' => $transactionId, 'amount_cents' => $balance, 'method' => $data['payment_method'], 'order_total_cents' => $total, 'previous_paid_cents' => $paid, 'balance_after_cents' => 0, 'source' => 'status']),
+                        'ip_address' => $r->ip(),
+                        'created_at' => $now,
+                    ]);
+                }
+
+                $before = $locked->status;
+                $locked->forceFill(['archived' => true])->save();
                 StatusHistory::create([
-                    'service_order_id' => $order->id,
+                    'service_order_id' => $locked->id,
                     'from_status' => $before,
                     'to_status' => 'paid',
                     'user_id' => $r->user()->id,
@@ -248,8 +301,8 @@ class ServiceOrderController extends Controller
                     'user_id' => $r->user()->id,
                     'action' => 'service_order.marked_paid_and_retrieved',
                     'subject_type' => 'service_order',
-                    'subject_id' => $order->id,
-                    'after' => json_encode(['archived' => true, 'display_status' => 'paid']),
+                    'subject_id' => $locked->id,
+                    'after' => json_encode(['archived' => true, 'display_status' => 'paid', 'payment_id' => $paymentId]),
                     'ip_address' => $r->ip(),
                     'created_at' => now(),
                 ]);
@@ -351,7 +404,7 @@ class ServiceOrderController extends Controller
 
         $fresh = $order->fresh();
         $payload = $fresh->toArray();
-        $payload['display_status'] = $fresh->archived ? 'paid' : $fresh->status;
+        $payload['display_status'] = $this->displayStatus($fresh, $this->paidCentsForOrder($fresh));
         $payload['interruption_reason'] = $fresh->status === 'interrupted' ? $fresh->technical_report : null;
         $payload['interruption_work_done'] = $fresh->status === 'interrupted' ? $fresh->interruption_work_done : null;
 
@@ -391,6 +444,34 @@ class ServiceOrderController extends Controller
             ->where('ft.origin', 'service_order')
             ->selectRaw('COALESCE(SUM(COALESCE(adjustment.new_cents, ft.amount_cents)), 0) as paid_cents')
             ->value('paid_cents') ?? 0);
+    }
+
+    private function effectivePaymentsByOrder()
+    {
+        $latest = DB::table('financial_adjustments')
+            ->select('transaction_id', DB::raw('MAX(id) as adjustment_id'))
+            ->groupBy('transaction_id');
+
+        return DB::table('financial_transactions as ft')
+            ->join('payments as p', 'p.id', '=', 'ft.payment_id')
+            ->leftJoinSub($latest, 'latest_adjustment', 'latest_adjustment.transaction_id', '=', 'ft.id')
+            ->leftJoin('financial_adjustments as adjustment', 'adjustment.id', '=', 'latest_adjustment.adjustment_id')
+            ->where('ft.origin', 'service_order')
+            ->groupBy('p.service_order_id')
+            ->select('p.service_order_id', DB::raw('SUM(COALESCE(adjustment.new_cents, ft.amount_cents)) as paid_cents'));
+    }
+
+    private function displayStatus(ServiceOrder $order, int $paidCents): string
+    {
+        if ($order->archived) {
+            return 'paid';
+        }
+
+        if ($order->status === 'completed' && (int) $order->total_cents > $paidCents) {
+            return 'awaiting_payment';
+        }
+
+        return $order->status;
     }
 
     private function companySnapshot(): array

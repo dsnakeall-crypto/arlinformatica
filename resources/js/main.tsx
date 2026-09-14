@@ -81,6 +81,8 @@ type Order = {
   number: string;
   client: Client;
   status: string;
+  display_status?: string;
+  paid_cents?: number;
   attendance_type: string;
   reported_problem: string;
   received_at: string;
@@ -409,6 +411,8 @@ const status: any = {
   in_service: "Em Serviço",
   completed: "Concluído",
   interrupted: "Interrompido",
+  awaiting_payment: "Aguardando PGTO",
+  paid: "Pago",
 };
 function OrderTable({
   items,
@@ -446,6 +450,7 @@ function OrderTable({
               const reopened = isReopenedOrder(o);
               const interrupted = o.status === "interrupted";
               const closed = o.status === "completed" || interrupted;
+              const displayStatus = o.display_status || o.status;
               return (
                 <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
                   <td><b>#{o.number}</b></td>
@@ -458,15 +463,17 @@ function OrderTable({
                   </td>
                   <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
                   <td>
-                    <label className={`row-status status-${o.status}`}>
+                    <label className={`row-status status-${displayStatus}`}>
                       <span className="sr-only">Alterar status da OS {o.number}</span>
                       <CircleDot className="row-status-icon" aria-hidden="true" />
-                      <select aria-label={`Status da OS ${o.number}`} value={o.status} disabled={closed} onChange={(e) => onStatus(o, e.target.value)}>
+                      <select aria-label={`Status da OS ${o.number}`} value={displayStatus} disabled={closed} onChange={(e) => onStatus(o, e.target.value)}>
                         <option value="analysis">Em Análise</option>
                         <option value="waiting_part">Aguardando Peça</option>
                         <option value="in_service">Em Serviço</option>
                         {(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}
                         {o.status === "completed" && <option value="completed">Concluído</option>}
+                        {displayStatus === "awaiting_payment" && <option value="awaiting_payment">Aguardando PGTO</option>}
+                        {displayStatus === "paid" && <option value="paid">Pago</option>}
                       </select>
                     </label>
                   </td>
@@ -510,13 +517,16 @@ function OrderTable({
         <tbody>{items.map((o: Order) => {
           const reopened = isReopenedOrder(o);
           const interrupted = o.status === "interrupted";
+          const displayStatus = o.display_status || o.status;
+          const awaitingPayment = displayStatus === "awaiting_payment";
+          const canSetPaid = awaitingPayment && ["Master", "Administrador"].includes(role);
           const closed = Boolean(o.completed_at) || interrupted;
           return (
             <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
               <td><b>#{o.number}</b></td>
               <td><span className="order-customer"><strong>{o.client.name}</strong>{reopened && <span className="arl-reopened-marker" aria-label="OS reaberta">Reaberta</span>}{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
               <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
-              <td><label className={`row-status status-${o.status}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={o.status} disabled={closed} onChange={(e) => onStatus(o, e.target.value)}><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</select></label></td>
+              <td><label className={`row-status status-${displayStatus}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={displayStatus} disabled={closed && !canSetPaid} onChange={(e) => onStatus(o, e.target.value)}>{awaitingPayment ? <><option value="awaiting_payment">Aguardando PGTO</option>{canSetPaid && <option value="paid">PAGO</option>}</> : displayStatus === "paid" ? <option value="paid">Pago</option> : <><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</>}</select></label></td>
               <td><span className="order-client-report" title={o.reported_problem || undefined}>{o.reported_problem || ""}</span></td>
               <td>{closed ? <span className="order-value"><strong>{money(o.total_cents || 0)}</strong><small>{formatOptionalDate(o.completed_at)}</small></span> : <em className="order-value-pending">A orçar</em>}</td>
               <td><span className="order-actions"><a className="order-whatsapp" href={o.client.whatsapp_url} target="_blank" rel="noreferrer" aria-label={`WhatsApp da OS ${o.number}`}><img src="/arl-assets/icons/icon-whatsapp.png" alt="" /></a><a className="order-maps" href={o.client.maps_url} target="_blank" rel="noreferrer" aria-label={`Abrir endereço da OS ${o.number} no Google Maps`}><img src="/arl-assets/icons/icon-maps.png" alt="" /></a><button className="order-view" type="button" aria-label="Ver OS" title="Ver OS" onClick={() => open("orders", o.id)}><Eye aria-hidden="true" /><span className="sr-only">Ver OS</span></button>{onEdit && ["Master", "Administrador"].includes(role) && !interrupted && <button className={o.status === "completed" ? "order-reopen" : "order-edit"} type="button" aria-label={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} title={o.status === "completed" ? "Reabrir como garantia" : "Editar OS"} onClick={() => onEdit(o)}>{o.status === "completed" ? <RotateCcw /> : <Pencil />}</button>}{["Master", "Administrador"].includes(role) && <button type="button" className="arl-order-delete" aria-label={`Excluir OS ${o.number}`} title="Excluir OS" onClick={() => onDelete(o)}><Trash2 /></button>}</span></td>
@@ -600,6 +610,54 @@ function InterruptionModal({ order, onClose, onSaved }: any) {
     </div>
   );
 }
+function StatusPaymentModal({ order, onClose, onSaved }: any) {
+  const [method, setMethod] = useState(""),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!method) {
+      setError("Escolha a forma de pagamento.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      await api(`/orders/${order.id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "paid", payment_method: method }),
+      });
+      onSaved();
+    } catch (x: any) {
+      setError(Object.values(x.errors || {}).flat()[0] as string || x.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="order-modal" role="dialog" aria-modal="true" aria-labelledby="status-payment-title">
+      <form onSubmit={submit}>
+        <h2 id="status-payment-title">Registrar pagamento da OS #{order.number}</h2>
+        <p>O valor total da OS, {money(order.total_cents || 0)}, será registrado como pago.</p>
+        <label className="field">
+          <span>Forma de pagamento *</span>
+          <select aria-label="Forma de pagamento" value={method} onChange={(e) => setMethod(e.target.value)} autoFocus>
+            <option value="">Selecione</option>
+            <option value="cash">Dinheiro</option>
+            <option value="pix">Pix</option>
+            <option value="credit">Cartão de crédito</option>
+            <option value="debit">Cartão de débito</option>
+          </select>
+        </label>
+        {error && <div className="alert">{error}</div>}
+        <div className="actions">
+          <button type="button" onClick={onClose}>Cancelar</button>
+          <button className="primary" disabled={busy}>{busy ? "Registrando…" : "Confirmar pagamento"}</button>
+        </div>
+      </form>
+    </div>
+  );
+}
 function Orders({ open, role }: any) {
   const [items, setItems] = useState<Order[]>([]),
     [meta, setMeta] = useState<any>({}),
@@ -609,7 +667,8 @@ function Orders({ open, role }: any) {
     [perPage, setPerPage] = useState(50),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
-    [interrupt, setInterrupt] = useState<Order>();
+    [interrupt, setInterrupt] = useState<Order>(),
+    [payment, setPayment] = useState<Order>();
   const load = () => {
     setLoading(true);
     api(
@@ -627,6 +686,10 @@ function Orders({ open, role }: any) {
   const changeStatus = async (o: Order, next: string) => {
     if (next === "interrupted") {
       setInterrupt(o);
+      return;
+    }
+    if (next === "paid") {
+      setPayment(o);
       return;
     }
     await api(`/orders/${o.id}/status`, {
@@ -773,6 +836,16 @@ function Orders({ open, role }: any) {
           onClose={() => setInterrupt(undefined)}
           onSaved={() => {
             setInterrupt(undefined);
+            load();
+          }}
+        />
+      )}
+      {payment && (
+        <StatusPaymentModal
+          order={payment}
+          onClose={() => setPayment(undefined)}
+          onSaved={() => {
+            setPayment(undefined);
             load();
           }}
         />

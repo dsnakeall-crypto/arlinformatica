@@ -43,3 +43,4 @@
    ao painel que as contém. */
 .finance-main-hero,.finance-tabs,.finance-main-hero~.panel,.finance-main-hero~.finance-total-cards>article,.finance-main-hero~.payment-method-section .payment-method-grid>article,.finance-main-hero~.panel .finance-cards>article,.finance-main-hero~.report-summary>article,.admin-list,.users-admin-modal,[data-arl-post-sale-react="1"] .post-sale-card,[data-arl-post-sale-react="1"] .post-sale-empty,.arl-new-order .os-form>section,.arl-new-order .os-form>details,.arl-global-mobile-nav,.arl-mobile-read-only section{border:1px solid var(--arl-test-border)!important}
 .arl-global-mobile-nav{border-bottom:0!important}
+.status-awaiting_payment{background:#fff7d6;color:#725500;border-color:#e6cf78}.status-paid{background:#e6f8ed;color:#167941;border-color:#b9e1c7}

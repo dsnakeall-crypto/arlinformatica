@@ -111,7 +111,7 @@ class FinalizationController extends Controller
 
         $freshOrder = $order->fresh();
         $orderPayload = $freshOrder->toArray();
-        $orderPayload['display_status'] = $freshOrder->archived ? 'paid' : $freshOrder->status;
+        $orderPayload['display_status'] = $freshOrder->archived ? 'paid' : ($freshOrder->status === 'completed' && (int) $freshOrder->total_cents > 0 ? 'awaiting_payment' : $freshOrder->status);
 
         return response()->json(['order' => $orderPayload, 'finalization' => $finalization], 201);
     }

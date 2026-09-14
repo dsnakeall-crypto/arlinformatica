@@ -237,4 +237,41 @@ class ServiceOrderWorkflowTest extends TestCase
             'to_status' => 'paid',
         ]);
     }
+
+    public function test_existing_unpaid_completion_is_presented_as_awaiting_payment_and_can_be_paid_from_status(): void
+    {
+        $user = $this->master();
+        $order = $this->order($user);
+        $order->forceFill([
+            'status' => 'completed',
+            'completed_at' => now(),
+            'result' => 'repair_completed',
+            'subtotal_cents' => 12500,
+            'total_cents' => 12500,
+        ])->save();
+
+        $this->getJson("/api/orders/{$order->id}")
+            ->assertOk()
+            ->assertJsonPath('status', 'completed')
+            ->assertJsonPath('display_status', 'awaiting_payment');
+        $this->getJson('/api/orders?tab=finalized')
+            ->assertOk()
+            ->assertJsonFragment(['id' => $order->id, 'status' => 'completed', 'display_status' => 'awaiting_payment']);
+
+        $this->patchJson("/api/orders/{$order->id}/status", ['status' => 'paid'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('payment_method');
+        $this->assertDatabaseCount('payments', 0);
+
+        $this->patchJson("/api/orders/{$order->id}/status", ['status' => 'paid', 'payment_method' => 'debit'])
+            ->assertOk()
+            ->assertJsonPath('archived', 1)
+            ->assertJsonPath('display_status', 'paid');
+
+        $this->assertDatabaseHas('payments', ['service_order_id' => $order->id, 'amount_cents' => 12500, 'method' => 'debit']);
+        $paymentId = (int) DB::table('payments')->where('service_order_id', $order->id)->value('id');
+        $this->assertDatabaseHas('financial_transactions', ['payment_id' => $paymentId, 'origin' => 'service_order', 'amount_cents' => 12500]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'payment.created', 'subject_type' => 'payment', 'subject_id' => $paymentId]);
+        $this->getJson('/api/finance/receivables')->assertOk()->assertJsonPath('count', 0);
+    }
 }

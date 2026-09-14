@@ -56,6 +56,7 @@ const statusLabel: Record<string, string> = {
   in_service: 'Em Serviço',
   completed: 'Finalizado',
   interrupted: 'Interrompido',
+  awaiting_payment: 'Aguardando PGTO',
   paid: 'Pago',
 };
 const paymentMethodLabel = (value: string) => ({ pix: 'Pix', cash: 'Dinheiro', debit: 'Débito', credit: 'Crédito', transfer: 'Transferência', other: 'Outro' } as Record<string, string>)[value] || value;
@@ -430,12 +431,12 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     if (value === 'interrupted') { setInterruptOpen(true); return; }
     try { await api(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: value }) }); await load(); } catch (e: any) { window.alert(e.message); await load(); }
   };
-  const shownStatus = order.archived ? 'paid' : order.status;
+  const shownStatus = order.display_status || (order.archived ? 'paid' : order.status);
   const activeStatusOptions = [['analysis', 'Em Análise'], ['waiting_part', 'Aguardando Peça'], ['in_service', 'Em Serviço'], ['interrupted', 'Interrompido'], ['completed', 'Finalizado']];
   const canAdminister = ['Master', 'Administrador'].includes(role);
   const statusOptions = role === 'Funcionário'
     ? activeStatusOptions.filter(([value]) => !['completed', 'interrupted'].includes(value))
-    : order.archived ? [['paid', 'Pago']] : order.status === 'completed' ? [['completed', 'Finalizado'], ['paid', 'Pago']] : interrupted ? [['interrupted', 'Interrompido']] : activeStatusOptions;
+    : order.archived ? [['paid', 'Pago']] : shownStatus === 'awaiting_payment' ? [['awaiting_payment', 'Aguardando PGTO']] : order.status === 'completed' ? [['completed', 'Finalizado'], ['paid', 'Pago']] : interrupted ? [['interrupted', 'Interrompido']] : activeStatusOptions;
   const editOrder = () => onEdit ? onEdit() : setEditOpen(true);
   const finalMessage = [`Olá, ${order.client?.name || 'cliente'} 👋`, `Seu Equipamento está pronto da OS ${order.number}! 🎉`, '📋 Detalhes do Serviço:', `- Valor: ${money(order.total_cents || 0)}`, '💳 Formas de Pagamento:', '- PIX (Chave): 35988285777', '- Cartão: (Com taxas inclusas)', '- Dinheiro: (Favor trazer trocado)', '⚠️ A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.', 'Agradecemos pela preferência! 😊'].join('\n');
   const shareFinalReport = async () => {
@@ -490,7 +491,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
       <div className="arl-order-header-main">
         <button type="button" className="arl-order-back" onClick={back}>← Voltar</button>
         <div className="arl-order-header-identity"><span className="arl-eyebrow">ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}{interrupted&&<span className="arl-reopened-marker arl-interrupted-marker arl-order-reopened-marker">Interrompida</span>}<div className="arl-order-header-meta"><span className="arl-order-client-link"><strong>{order.client.name}</strong></span><span>{order.equipment_description || 'Equipamento não informado'}</span><span>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</span></div></div>
-        <label className={`status-picker status-${shownStatus}`}><span>Status</span><select ref={statusSelect} value={shownStatus} disabled={order.archived || interrupted} onChange={(e) => void changeStatus(e.target.value)}>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label className={`status-picker status-${shownStatus}`}><span>Status</span><select ref={statusSelect} value={shownStatus} disabled={order.archived || interrupted || shownStatus === 'awaiting_payment'} onChange={(e) => void changeStatus(e.target.value)}>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       </div>
       <div className="arl-order-quick-actions arl-order-header-actions">
         {onOpenClientHistory && <button type="button" data-order-action="history" onClick={() => onOpenClientHistory(order.client.id)}><History aria-hidden="true"/><span>Histórico</span></button>}

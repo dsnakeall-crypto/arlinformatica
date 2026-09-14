@@ -49,7 +49,7 @@ class StageFourTest extends TestCase
     {
         $catalog = DB::table('service_catalog')->insertGetId(['name' => 'Formatação', 'category' => 'service', 'price_cents' => 10000, 'warranty_enabled' => true, 'warranty_term' => 30, 'warranty_unit' => 'days', 'active' => true, 'created_at' => now(), 'updated_at' => now()]);
         $response = $this->finalize(['result' => 'repair_completed', 'technical_report' => 'Sistema reparado e testado.', 'discount_cents' => 1000, 'items' => [['catalog_id' => $catalog, 'description' => 'Formatação', 'quantity' => 2, 'unit_price_cents' => 10000, 'warranty_enabled' => true, 'warranty_term' => 30, 'warranty_unit' => 'days', 'warranty_description' => 'Garantia do serviço']]])->assertCreated();
-        $response->assertJsonPath('finalization.subtotal_cents', 20000)->assertJsonPath('finalization.total_cents', 19000);
+        $response->assertJsonPath('finalization.subtotal_cents', 20000)->assertJsonPath('finalization.total_cents', 19000)->assertJsonPath('order.display_status', 'awaiting_payment');
         $this->assertDatabaseCount('payments', 0);
         $this->getJson('/api/finance/receivables')->assertOk()->assertJsonFragment(['id' => $this->order->id, 'balance_cents' => 19000]);
         DB::table('service_catalog')->where('id', $catalog)->update(['name' => 'Novo nome', 'price_cents' => 99999, 'warranty_term' => 1]);
