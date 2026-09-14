@@ -181,7 +181,7 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(decodeURIComponent(whatsappHref || '')).not.toContain('Acesse o PDF da Ordem de Serviço aqui');
     await page.reload();
     const documentMenu = page.locator('.arl-opening-call');
-    await documentMenu.locator('summary').click();
+    await documentMenu.getByRole('button', { name: "PDF's", exact: true }).click();
     await expect(documentMenu.getByRole('button', { name: 'Relatório Técnico Final' })).toBeVisible();
     await expect(documentMenu.getByRole('button', { name: 'Reabrir OS' })).toBeVisible();
   });
@@ -244,7 +244,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.goto(`/orders/${orderId}`);
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
     const menu = page.locator('.arl-opening-call');
-    await menu.locator('summary').click();
+    await menu.getByRole('button', { name: "PDF's", exact: true }).click();
     await menu.getByRole('button', { name: 'Reabrir OS' }).click();
     const reopen = page.getByRole('dialog', { name: `Reabrir OS #${orderNumber}` });
     await reopen.locator('textarea').fill('Correção do valor cobrado após conferência.');
