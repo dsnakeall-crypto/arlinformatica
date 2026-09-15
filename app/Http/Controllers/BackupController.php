@@ -14,11 +14,21 @@ use Throwable;
 
 class BackupController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(BackupService $service): JsonResponse
     {
         $backups = Backup::latest()->get()->map(fn (Backup $backup) => $this->resource($backup));
 
-        return response()->json(['data' => $backups, 'total_bytes' => $backups->sum('bytes'), 'automatic' => ['enabled' => (bool) config('backup.automatic'), 'frequency' => config('backup.frequency'), 'retention' => config('backup.retention')]]);
+        return response()->json(['data' => $backups, 'total_bytes' => $backups->sum('bytes'), 'automatic' => $service->automaticSettings()]);
+    }
+
+    public function updateAutomatic(Request $request, BackupService $service, Audit $audit): JsonResponse
+    {
+        $data = $request->validate(['enabled' => 'required|boolean', 'frequency' => ['required', Rule::in(['daily', 'weekly', 'monthly'])], 'retention' => 'required|integer|min:1|max:365']);
+        $before = $service->automaticSettings();
+        $service->saveAutomaticSettings($data);
+        $audit->record($request, 'backup.automatic_settings_updated', 'settings', null, $before, $data);
+
+        return response()->json($service->automaticSettings());
     }
 
     public function store(Request $request, BackupService $service): JsonResponse

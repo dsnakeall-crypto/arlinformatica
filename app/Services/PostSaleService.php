@@ -3,12 +3,15 @@
 namespace App\Services;
 
 use App\Models\ServiceOrder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class PostSaleService
 {
-    public const ACTIONS = ['follow_up', 'google', 'instagram'];
+    public const ACTIONS = ['google', 'instagram'];
+
+    public const MANUAL_EXCLUSION_REASON = 'Excluído manualmente do Pós-Venda';
 
     public function __construct(private readonly NotificationService $notifications) {}
 
@@ -27,7 +30,11 @@ class PostSaleService
             });
 
             DB::table('post_sale_cycles')->where('active', true)->where('eligible_at', '<=', now())->get()->each(function ($cycle) {
-                $pending = DB::table('post_sale_actions')->where('cycle_id', $cycle->id)->whereNull('confirmed_at')->exists();
+                $pending = DB::table('post_sale_actions')
+                    ->where('cycle_id', $cycle->id)
+                    ->whereIn('type', self::ACTIONS)
+                    ->whereNull('confirmed_at')
+                    ->exists();
                 if (! $pending) {
                     $this->notifications->resolve("post-sale:$cycle->id");
 
@@ -49,6 +56,16 @@ class PostSaleService
         if (DB::table('post_sale_cycles')->where('service_order_id', $order->id)->exists()) {
             return false;
         }
+        $recentManualExclusion = DB::table('post_sale_cycles')
+            ->where('client_id', $order->client_id)
+            ->where('archive_reason', self::MANUAL_EXCLUSION_REASON)
+            ->whereNotNull('archived_at')
+            ->orderByDesc('archived_at')
+            ->lockForUpdate()
+            ->first();
+        if ($recentManualExclusion && $order->created_at->lessThan(Carbon::parse($recentManualExclusion->archived_at)->addDays(30))) {
+            return false;
+        }
         $active = DB::table('post_sale_cycles')->where('client_id', $order->client_id)->where('active', true)->lockForUpdate()->first();
         if ($active) {
             $old = ServiceOrder::find($active->service_order_id);
@@ -58,7 +75,7 @@ class PostSaleService
             DB::table('post_sale_cycles')->where('id', $active->id)->update(['active' => false, 'archived_at' => now(), 'archive_reason' => 'Nova OS elegível após 60 dias', 'updated_at' => now()]);
             $this->notifications->resolve("post-sale:$active->id");
         }
-        $cycle = DB::table('post_sale_cycles')->insertGetId(['client_id' => $order->client_id, 'service_order_id' => $order->id, 'active' => true, 'eligible_at' => $order->completed_at->copy()->addDays(5), 'created_at' => now(), 'updated_at' => now()]);
+        $cycle = DB::table('post_sale_cycles')->insertGetId(['client_id' => $order->client_id, 'service_order_id' => $order->id, 'active' => true, 'eligible_at' => $order->completed_at->copy()->addHours(24), 'created_at' => now(), 'updated_at' => now()]);
         foreach (self::ACTIONS as $type) {
             DB::table('post_sale_actions')->insertOrIgnore(['cycle_id' => $cycle, 'type' => $type, 'created_at' => now(), 'updated_at' => now()]);
         }

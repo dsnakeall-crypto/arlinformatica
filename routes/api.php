@@ -1,17 +1,23 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientImportController;
 use App\Http\Controllers\DiagnosticController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FinalizationController;
+use App\Http\Controllers\FinalShareController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\NavigationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostSaleController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\ServiceOrderAuditController;
 use App\Http\Controllers\ServiceOrderController;
+use App\Http\Controllers\ServiceOrderMaintenanceController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\TechnicalReportController;
@@ -20,10 +26,14 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::patch('/me/sidebar', [AuthController::class, 'updateSidebarPreference']);
+    Route::get('/navigation-summary', [NavigationController::class, 'summary']);
     Route::get('/clients', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::get('/clients/{client}', [ClientController::class, 'show']);
     Route::put('/clients/{client}', [ClientController::class, 'update'])->middleware('role:Master,Administrador');
+    Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->middleware('role:Master,Administrador');
     Route::get('/catalogs/checklist', [CatalogController::class, 'checklist']);
     Route::get('/catalogs/{catalog}', [CatalogController::class, 'index']);
     Route::middleware('role:Master,Administrador')->group(function () {
@@ -34,6 +44,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/storage/statistics', [StorageController::class, 'statistics']);
     });
     Route::middleware('role:Master')->group(function () {
+        Route::post('/settings/clients/import', [ClientImportController::class, 'store']);
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
         Route::put('/users/{user}', [UserController::class, 'update']);
@@ -42,6 +53,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/storage/photos', [StorageController::class, 'purge']);
         Route::delete('/photos/{photo}', [StorageController::class, 'destroy']);
         Route::get('/backups', [BackupController::class, 'index']);
+        Route::put('/backups/automatic', [BackupController::class, 'updateAutomatic']);
         Route::post('/backups', [BackupController::class, 'store'])->middleware('throttle:2,10');
         Route::post('/backups/upload', [BackupController::class, 'upload'])->middleware('throttle:2,10');
         Route::get('/backups/{backup}/download', [BackupController::class, 'download']);
@@ -51,31 +63,51 @@ Route::middleware('auth')->group(function () {
         Route::post('/diagnostics/push-test', [DiagnosticController::class, 'testPush'])->middleware('throttle:3,10');
     });
     Route::get('/orders', [ServiceOrderController::class, 'index']);
+    Route::get('/orders/desk', [ServiceOrderController::class, 'desk']);
     Route::post('/orders', [ServiceOrderController::class, 'store']);
     Route::get('/orders/{order}', [ServiceOrderController::class, 'show']);
+    Route::get('/orders/{order}/audit-history', [ServiceOrderAuditController::class, 'index']);
+    Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
+    Route::middleware('role:Master,Administrador')->group(function () {
+        Route::delete('/orders/{order}', [ServiceOrderMaintenanceController::class, 'destroy']);
+        Route::post('/orders/{order}/reopen', [ServiceOrderMaintenanceController::class, 'reopen']);
+    });
     Route::post('/orders/{order}/photos', [ServiceOrderController::class, 'uploadPhoto']);
     Route::get('/orders/{order}/photos/{photo}', [ServiceOrderController::class, 'photo']);
     Route::patch('/orders/{order}/status', [ServiceOrderController::class, 'updateStatus']);
-    Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store']);
-    Route::get('/orders/{order}/payment', [FinanceController::class, 'payment']);
-    Route::post('/orders/{order}/payment', [FinanceController::class, 'pay']);
-    Route::post('/finance/quick-entry', [FinanceController::class, 'quickEntry']);
-    Route::get('/finance/overview', [FinanceController::class, 'overview']);
-    Route::get('/finance/daily', [FinanceController::class, 'transactions']);
-    Route::get('/finance/month', [FinanceController::class, 'month']);
-    Route::post('/finance/transactions/{transaction}/adjust', [FinanceController::class, 'adjust'])->middleware('role:Master,Administrador');
-    Route::post('/finance/reports', [FinanceController::class, 'issueReport']);
-    Route::get('/finance/reports/{document}/pdf', [FinanceController::class, 'report']);
+    Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store'])->middleware('role:Master,Administrador');
+    Route::get('/orders/{order}/final-share', [FinalShareController::class, 'show']);
+    Route::middleware('role:Master,Administrador')->group(function () {
+        Route::get('/orders/{order}/payment', [FinanceController::class, 'payment']);
+        Route::get('/orders/{order}/payments', [FinanceController::class, 'payments']);
+        Route::post('/orders/{order}/payment', [FinanceController::class, 'pay']);
+        Route::post('/orders/{order}/refunds', [FinanceController::class, 'refund']);
+        Route::post('/finance/quick-entry', [FinanceController::class, 'quickEntry']);
+        Route::get('/finance/overview', [FinanceController::class, 'overview']);
+        Route::get('/finance/daily', [FinanceController::class, 'transactions']);
+        Route::get('/finance/receivables', [FinanceController::class, 'receivables']);
+        Route::get('/finance/month', [FinanceController::class, 'month']);
+        Route::post('/finance/transactions/{transaction}/adjust', [FinanceController::class, 'adjust']);
+        Route::post('/finance/expenses', [FinanceController::class, 'storeExpense']);
+        Route::put('/finance/expenses/{expense}', [FinanceController::class, 'updateExpense']);
+        Route::delete('/finance/expenses/{expense}', [FinanceController::class, 'destroyExpense']);
+        Route::post('/finance/reports', [FinanceController::class, 'issueReport']);
+        Route::get('/finance/reports/{document}/pdf', [FinanceController::class, 'report']);
+    });
     Route::middleware('role:Master,Administrador')->group(function () {
         Route::get('/settings', [SettingsController::class, 'show']);
         Route::put('/settings', [SettingsController::class, 'update']);
         Route::post('/settings/logo', [SettingsController::class, 'logo']);
+        Route::get('/post-sales/settings', [PostSaleController::class, 'settings']);
+        Route::put('/post-sales/settings', [PostSaleController::class, 'updateSettings']);
     });
     Route::get('/settings/logo/{variant}', [SettingsController::class, 'logoFile']);
+    Route::get('/operational-settings', [SettingsController::class, 'operational']);
     Route::get('/orders/{order}/term', [DocumentController::class, 'term']);
     Route::get('/orders/{order}/budgets', [BudgetController::class, 'index']);
     Route::post('/orders/{order}/budgets', [BudgetController::class, 'store']);
     Route::patch('/orders/{order}/budgets/{revision}/status', [BudgetController::class, 'status']);
+    Route::delete('/orders/{order}/budgets/{revision}', [BudgetController::class, 'destroy'])->middleware('role:Master,Administrador');
     Route::get('/orders/{order}/budgets/{revision}/pdf', [DocumentController::class, 'budget']);
     Route::get('/orders/{order}/documents', [DocumentController::class, 'index']);
     Route::get('/orders/{order}/final/{revision}/pdf', [DocumentController::class, 'finalDocument']);
@@ -87,6 +119,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/report-templates', [TechnicalReportTemplateController::class, 'index']);
     Route::get('/post-sales', [PostSaleController::class, 'index']);
     Route::post('/post-sales/{cycle}/{type}/confirm', [PostSaleController::class, 'confirm']);
+    Route::delete('/post-sales/{cycle}', [PostSaleController::class, 'destroy']);
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'read']);

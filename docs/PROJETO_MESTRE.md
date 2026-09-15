@@ -191,13 +191,11 @@ Cada item pode ter Garantia Contratual Adicional padrão:
 
 Ao usar o item numa OS, copiar snapshot da garantia e permitir ajuste naquela OS.
 
-## 15. Garantia geral
+## 15. Garantias no PDF final
 
-Configurações > Garantia:
-- Exibir texto geral no PDF: sim/não.
-- Texto editável.
+A antiga garantia geral permanece armazenada apenas por compatibilidade histórica, sem opção visível em Configurações e sem uso em novos documentos.
 
-Se um item não tiver garantia contratual marcada, não escrever "sem garantia"; apenas omitir a seção correspondente. Garantia contratual não substitui direitos legais do consumidor.
+Na finalização de cada OS, uma opção desmarcada por padrão permite incluir no PDF as garantias contratuais adicionais copiadas dos itens. A escolha e as garantias dos itens fazem parte do snapshot da revisão emitida. Se um item não tiver garantia contratual marcada, não escrever "sem garantia"; apenas omitir a informação correspondente. Garantia contratual não substitui direitos legais do consumidor.
 
 ## 16. Equipamentos e fabricantes
 
@@ -705,7 +703,6 @@ Tela principal de Configurações deve ser uma central organizada por cards:
 - Fabricantes.
 - Checklist de Entrada.
 - Termos e Documentos.
-- Garantia.
 - Mensagens.
 - Pós-Venda.
 - Laudos.

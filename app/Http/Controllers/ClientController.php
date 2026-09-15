@@ -8,18 +8,43 @@ use App\Services\DocumentValidator;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
 {
     public function index(Request $r): JsonResponse
     {
-        $q = Client::query()->orderBy('name');
-        if ($s = trim((string) $r->query('q'))) {
-            $q->where(fn ($x) => $x->where('name', 'like', "%$s%")->orWhere('phone', 'like', "%$s%")->orWhere('document', 'like', '%'.DocumentValidator::normalize($s).'%'));
+        $q = Client::query();
+        $search = preg_replace('/\s+/', ' ', trim((string) $r->query('q')));
+        if ($search !== '') {
+            $terms = array_values(array_filter(explode(' ', $search)));
+            foreach ($terms as $term) {
+                $document = DocumentValidator::normalize($term);
+                $q->where(function ($query) use ($term, $document) {
+                    $query->where('name', 'like', "%{$term}%")
+                        ->orWhere('phone', 'like', "%{$term}%");
+                    if ($document !== '') {
+                        $query->orWhere('document', 'like', "%{$document}%");
+                    }
+                });
+            }
+
+            // Pesquisa progressiva: quem começa pelo texto digitado aparece primeiro,
+            // sem esconder os demais resultados que contêm o termo.
+            $q->orderByRaw('CASE WHEN LOWER(name) LIKE ? THEN 0 ELSE 1 END', [mb_strtolower($search).'%']);
+        }
+        $q->orderBy('name')->orderBy('id');
+
+        // A Gestão de Clientes carrega o catálogo inteiro uma única vez e filtra localmente.
+        // Os demais consumidores continuam usando a paginação existente por padrão.
+        if ($r->boolean('all')) {
+            return response()->json(['data' => $q->get()]);
         }
 
-        return response()->json($q->paginate(20));
+        $perPage = max(1, min(100, (int) $r->integer('per_page', $search !== '' ? 100 : 20)));
+
+        return response()->json($q->paginate($perPage));
     }
 
     public function store(Request $r, NotificationService $notifications): JsonResponse
@@ -41,9 +66,53 @@ class ClientController extends Controller
         return response()->json($client->fresh());
     }
 
+    public function destroy(Request $r, Client $client, Audit $audit): JsonResponse
+    {
+        $before = $client->toArray();
+        $client->delete();
+        $audit->record($r, 'client.deleted', Client::class, $client->id, $before, [
+            'id' => $client->id,
+            'deleted_at' => $client->deleted_at?->toISOString(),
+            'soft_deleted' => true,
+        ]);
+
+        return response()->json([
+            'deleted' => true,
+            'id' => $client->id,
+            'message' => 'Cliente removido da listagem. O histórico de OS foi preservado.',
+        ]);
+    }
+
     public function show(Client $client): JsonResponse
     {
-        $orders = $client->serviceOrders()->latest('received_at')->with(['documents' => fn ($q) => $q->where('type', 'final')->latest('revision')])->get();
+        $orders = $client->serviceOrders()
+            ->latest('received_at')
+            ->with([
+                'items' => fn ($q) => $q
+                    ->where(function ($items) {
+                        $items->where(function ($draftItems) {
+                            $draftItems->whereNull('finalization_id')
+                                ->whereNotExists(function ($finalizations) {
+                                    $finalizations->selectRaw('1')
+                                        ->from('service_order_finalizations')
+                                        ->whereColumn('service_order_finalizations.service_order_id', 'service_order_items.service_order_id');
+                                });
+                        })->orWhereRaw('finalization_id = (SELECT latest_finalization.id FROM service_order_finalizations AS latest_finalization WHERE latest_finalization.service_order_id = service_order_items.service_order_id ORDER BY latest_finalization.revision DESC LIMIT 1)');
+                    })
+                    ->orderBy('id'),
+                'documents' => fn ($q) => $q->whereIn('type', ['final', 'budget'])->latest('issued_at'),
+            ])
+            ->get();
+
+        $budgets = DB::table('budgets')
+            ->whereIn('service_order_id', $orders->pluck('id'))
+            ->orderByDesc('revision')
+            ->get()
+            ->groupBy('service_order_id');
+
+        $orders->each(function ($order) use ($budgets) {
+            $order->setAttribute('budgets', $budgets->get($order->id, collect())->values());
+        });
 
         return response()->json(['client' => $client, 'orders' => $orders]);
     }

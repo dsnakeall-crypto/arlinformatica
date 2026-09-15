@@ -36,6 +36,18 @@ class OperationFlowTest extends TestCase
         $this->getJson('/api/orders/'.$order['id'])->assertOk()->assertJsonPath('checklists', []);
     }
 
+    public function test_intake_condition_is_optional_and_term_never_leaves_the_section_blank(): void
+    {
+        $empty = ['order' => ['number' => '0000001', 'received_at' => now()->toIso8601String(), 'reported_problem' => 'Não liga', 'attendance_type' => 'bench', 'intake_condition' => null], 'snapshot' => ['company' => [], 'client' => ['name' => 'Cliente', 'document' => '52998224725'], 'term_text' => 'Termo']];
+        $this->assertStringContainsString('Equipamento aparentemente 100% sem avarias', view('documents.term', $empty)->render());
+
+        $filled = $empty;
+        $filled['order']['intake_condition'] = 'Tela trincada no canto direito';
+        $rendered = view('documents.term', $filled)->render();
+        $this->assertStringContainsString('Tela trincada no canto direito', $rendered);
+        $this->assertStringNotContainsString('Equipamento aparentemente 100% sem avarias', $rendered);
+    }
+
     public function test_duplicate_document_is_rejected(): void
     {
         $this->seed(DatabaseSeeder::class);

@@ -13,7 +13,7 @@ class RunBackup extends Command
 
     public function handle(BackupService $service): int
     {
-        if (! config('backup.automatic') && ! $this->option('force')) {
+        if (! $service->automaticSettings()['enabled'] && ! $this->option('force')) {
             $this->components->info('Backup automático desativado.');
 
             return self::SUCCESS;

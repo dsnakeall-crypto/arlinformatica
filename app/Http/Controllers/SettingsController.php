@@ -11,6 +11,34 @@ use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
+    public function operational(CompanySettings $settings): JsonResponse
+    {
+        $all = $settings->all();
+
+        return response()->json([
+            'budget_validity_days' => (int) $all['budget_validity_days'],
+            'company_name' => (string) $all['company_name'],
+            'trade_name' => (string) $all['trade_name'],
+        ]);
+    }
+
+    public function theme(CompanySettings $settings): JsonResponse
+    {
+        return response()->json($settings->theme());
+    }
+
+    public function updateTheme(Request $request, CompanySettings $settings): JsonResponse
+    {
+        abort_unless(in_array($request->user()->role->name, ['Master', 'Administrador']), 403);
+        $request->validate([
+            'theme_primary' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'theme_sidebar' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'theme_accent' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        ]);
+
+        return response()->json($settings->theme());
+    }
+
     public function show(CompanySettings $settings): JsonResponse
     {
         return response()->json($settings->all());
@@ -19,25 +47,38 @@ class SettingsController extends Controller
     public function update(Request $request, CompanySettings $settings): JsonResponse
     {
         abort_unless(in_array($request->user()->role->name, ['Master', 'Administrador']), 403);
+        $request->merge([
+            'cnpj' => preg_replace('/\D/', '', (string) $request->input('cnpj', '')),
+            'phone' => preg_replace('/\D/', '', (string) $request->input('phone', '')),
+            'postal_code' => preg_replace('/\D/', '', (string) $request->input('postal_code', '')),
+            'state' => mb_strtoupper(trim((string) $request->input('state', ''))),
+        ]);
         $data = $request->validate([
             'company_name' => 'required|string|max:150', 'trade_name' => 'nullable|string|max:150', 'cnpj' => ['nullable', 'regex:/^\d{14}$/'],
-            'phone' => 'nullable|string|max:20', 'email' => 'nullable|email|max:150', 'postal_code' => ['nullable', 'regex:/^\d{8}$/'], 'street' => 'nullable|string|max:150',
+            'phone' => ['nullable', 'regex:/^\d{10,11}$/'], 'email' => 'nullable|email|max:150', 'postal_code' => ['nullable', 'regex:/^\d{8}$/'], 'street' => 'nullable|string|max:150',
             'number' => 'nullable|string|max:30', 'district' => 'nullable|string|max:100', 'city' => 'nullable|string|max:100', 'state' => ['nullable', 'regex:/^[A-Z]{2}$/'],
             'complement' => 'nullable|string|max:100', 'instagram' => 'nullable|url|max:255', 'google_review' => 'nullable|url|max:255',
             'budget_validity_days' => 'required|integer|min:1|max:365', 'budget_observation' => 'nullable|string|max:2000', 'budget_institutional_text' => 'required|string|max:1000', 'term_text' => 'required|string|max:10000',
-            'layout_mode' => 'required|in:automatic,desktop,mobile', 'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
-            'post_sale_follow_up' => 'sometimes|required|string|max:5000', 'post_sale_google' => 'sometimes|required|string|max:5000', 'post_sale_instagram' => 'sometimes|required|string|max:5000',
+            'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
+        ], [
+            'cnpj.regex' => 'O CNPJ deve conter 14 números.',
+            'phone.regex' => 'O telefone deve conter 10 ou 11 números.',
+            'postal_code.regex' => 'O CEP deve conter 8 números.',
+            'state.regex' => 'A UF deve conter exatamente 2 letras.',
         ]);
         DB::transaction(function () use ($data, $request) {
             $term = $data['term_text'];
             unset($data['term_text']);
             foreach ($data as $key => $value) {
-                DB::table('settings')->updateOrInsert(['key' => $key], ['value' => (string) ($value ?? ''), 'updated_at' => now(), 'created_at' => now()]);
-            } $current = DB::table('versioned_templates')->where('type', 'term')->where('active', true)->latest('version')->first();
+                $stored = is_bool($value) ? ($value ? '1' : '0') : (string) ($value ?? '');
+                DB::table('settings')->updateOrInsert(['key' => $key], ['value' => $stored, 'updated_at' => now(), 'created_at' => now()]);
+            }
+            $current = DB::table('versioned_templates')->where('type', 'term')->where('active', true)->latest('version')->first();
             if (! $current || $current->body !== $term) {
                 DB::table('versioned_templates')->where('type', 'term')->update(['active' => false]);
                 DB::table('versioned_templates')->insert(['type' => 'term', 'name' => 'Termo de recebimento', 'version' => (($current->version ?? 0) + 1), 'body' => $term, 'active' => true, 'created_by' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
-            } DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'settings.updated', 'subject_type' => 'settings', 'after' => json_encode([...$data, 'term_text' => $term]), 'ip_address' => $request->ip(), 'created_at' => now()]);
+            }
+            DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'settings.updated', 'subject_type' => 'settings', 'after' => json_encode([...$data, 'term_text' => $term]), 'ip_address' => $request->ip(), 'created_at' => now()]);
         });
 
         return response()->json($settings->all());

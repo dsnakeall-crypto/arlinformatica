@@ -29,40 +29,59 @@ class StageSixTest extends TestCase
         $this->client = DB::table('clients')->insertGetId(['name' => 'João da Silva', 'document' => '52998224725', 'phone' => '(35) 99999-9999', 'postal_code' => '37160000', 'street' => 'Rua A', 'number' => '10', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG', 'created_at' => now(), 'updated_at' => now()]);
     }
 
-    public function test_only_completed_repair_becomes_due_on_fifth_day_without_duplicates(): void
+    public function test_only_completed_repair_is_visible_immediately_and_becomes_due_after_24_hours_without_duplicates(): void
     {
         Carbon::setTestNow('2026-09-10 12:00:00');
-        $repair = $this->order('0000300', now()->subDays(4), 'repair_completed');
+        $completedAt = now()->subMinute();
+        $repair = $this->order('0000300', $completedAt, 'repair_completed');
         $this->order('0000301', now()->subDays(10), 'no_fault');
+
         app(PostSaleService::class)->catchUp();
+
         $this->assertDatabaseCount('post_sale_cycles', 1);
+        $this->assertDatabaseCount('post_sale_actions', 2);
         $this->assertDatabaseCount('notifications', 0);
-        Carbon::setTestNow('2026-09-11 12:00:00');
+        $cycle = DB::table('post_sale_cycles')->where('service_order_id', $repair->id)->first();
+        $this->assertSame($completedAt->copy()->addHours(24)->format('Y-m-d H:i:s'), Carbon::parse($cycle->eligible_at)->format('Y-m-d H:i:s'));
+
+        $this->actingAs($this->user)->getJson('/api/post-sales')
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.number', '0000300')
+            ->assertJsonPath('0.available', false)
+            ->assertJsonPath('0.eligible_at', $completedAt->copy()->addHours(24)->toIso8601String());
+
+        $this->postJson("/api/post-sales/{$cycle->id}/google/confirm")
+            ->assertConflict()
+            ->assertJsonPath('message', 'O Pós-Venda desta OS será liberado 24 horas após a conclusão.');
+
+        Carbon::setTestNow($completedAt->copy()->addHours(24)->addSecond());
         app(PostSaleService::class)->catchUp();
         app(PostSaleService::class)->catchUp();
-        $this->assertDatabaseCount('post_sale_actions', 3);
+
         $this->assertDatabaseCount('notifications', 1);
+        $this->actingAs($this->user)->getJson('/api/post-sales')->assertOk()->assertJsonPath('0.available', true);
         $this->assertDatabaseHas('post_sale_cycles', ['service_order_id' => $repair->id, 'active' => true]);
     }
 
     public function test_catch_up_endpoint_creates_due_pending_cycle(): void
     {
-        $order = $this->order('0000302', now()->subDays(6), 'repair_completed');
-        $this->actingAs($this->user)->getJson('/api/post-sales')->assertOk()->assertJsonPath('0.number', '0000302');
+        $order = $this->order('0000302', now()->subDays(2), 'repair_completed');
+        $this->actingAs($this->user)->getJson('/api/post-sales')->assertOk()->assertJsonPath('0.number', '0000302')->assertJsonPath('0.available', true);
         $this->assertDatabaseHas('post_sale_cycles', ['service_order_id' => $order->id]);
         $this->assertDatabaseHas('notifications', ['type' => 'post_sale_due']);
     }
 
     public function test_actions_are_independent_snapshot_messages_and_cannot_be_reconfirmed(): void
     {
-        $this->order('0000303', now()->subDays(6), 'repair_completed');
+        $this->order('0000303', now()->subDays(2), 'repair_completed');
         app(PostSaleService::class)->catchUp();
         $cycle = DB::table('post_sale_cycles')->value('id');
-        foreach (['follow_up', 'google', 'instagram'] as $type) {
+        foreach (['google', 'instagram'] as $type) {
             $this->actingAs($this->user)->postJson("/api/post-sales/$cycle/$type/confirm")->assertOk();
             $this->assertDatabaseHas('post_sale_actions', ['cycle_id' => $cycle, 'type' => $type, 'confirmed_by' => $this->user->id]);
         }
-        $this->postJson("/api/post-sales/$cycle/follow_up/confirm")->assertConflict();
+        $this->postJson("/api/post-sales/$cycle/google/confirm")->assertConflict();
         $this->assertDatabaseHas('audit_logs', ['action' => 'post_sale.confirmed', 'subject_id' => $cycle]);
         $this->assertDatabaseHas('notifications', ['deduplication_key' => "post-sale:$cycle", 'active' => false]);
     }
@@ -77,6 +96,53 @@ class StageSixTest extends TestCase
         $this->assertDatabaseHas('post_sale_cycles', ['service_order_id' => $new->id, 'active' => true]);
         $this->assertDatabaseHas('service_orders', ['id' => $old->id, 'number' => '0000304']);
         $this->actingAs($this->user)->getJson('/api/post-sales')->assertJsonCount(1)->assertJsonPath('0.number', '0000305');
+    }
+
+    public function test_manual_post_sale_card_deletion_preserves_the_order_actions_and_blocks_the_same_order_and_client_for_thirty_days(): void
+    {
+        Carbon::setTestNow('2026-09-10 12:00:00');
+        $original = $this->order('0000306', now()->subDays(2), 'repair_completed');
+        app(PostSaleService::class)->catchUp();
+        $cycle = DB::table('post_sale_cycles')->where('service_order_id', $original->id)->first();
+        DB::table('post_sale_actions')->where('cycle_id', $cycle->id)->where('type', 'google')->update([
+            'confirmed_at' => now(),
+            'confirmed_by' => $this->user->id,
+        ]);
+
+        $this->actingAs($this->user)->deleteJson("/api/post-sales/{$cycle->id}")
+            ->assertOk()
+            ->assertJsonPath('deleted', true);
+
+        $this->assertDatabaseHas('service_orders', ['id' => $original->id, 'number' => '0000306']);
+        $this->assertDatabaseHas('post_sale_cycles', [
+            'id' => $cycle->id,
+            'active' => false,
+            'archive_reason' => PostSaleService::MANUAL_EXCLUSION_REASON,
+        ]);
+        $this->assertDatabaseHas('post_sale_actions', [
+            'cycle_id' => $cycle->id,
+            'type' => 'google',
+            'confirmed_by' => $this->user->id,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'post_sale.card_deleted',
+            'subject_id' => $cycle->id,
+            'user_id' => $this->user->id,
+        ]);
+
+        $original->update(['status' => 'analysis', 'completed_at' => null]);
+        $original->update(['status' => 'completed', 'completed_at' => now()]);
+        app(PostSaleService::class)->catchUp();
+        $this->assertDatabaseCount('post_sale_cycles', 1);
+
+        $blockedNewOrder = $this->order('0000307', now(), 'repair_completed');
+        app(PostSaleService::class)->catchUp();
+        $this->assertDatabaseMissing('post_sale_cycles', ['service_order_id' => $blockedNewOrder->id]);
+
+        Carbon::setTestNow(now()->addDays(30)->addSecond());
+        $allowedNewOrder = $this->order('0000308', now(), 'repair_completed');
+        app(PostSaleService::class)->catchUp();
+        $this->assertDatabaseHas('post_sale_cycles', ['service_order_id' => $allowedNewOrder->id, 'active' => true]);
     }
 
     public function test_new_client_and_order_notifications_are_idempotent_and_authorized(): void

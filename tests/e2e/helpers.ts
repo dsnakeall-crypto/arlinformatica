@@ -15,7 +15,8 @@ export async function login(page: Page, login = 'e2e.master') {
   }, { login, password });
   expect(result.status, JSON.stringify(result.body)).toBe(200);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Painel' })).toBeVisible();
+  await expect(page.locator('main')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Notificações', exact: true })).toBeVisible();
 }
 
 export async function api(page: Page, path: string, method = 'GET', body?: unknown) {
@@ -31,8 +32,8 @@ export async function api(page: Page, path: string, method = 'GET', body?: unkno
 }
 
 export function uniqueDocument(seed = Date.now()) {
-  const base = String(seed).slice(-8).padStart(8, '0');
-  const digits = `39053344${base}`.slice(0, 9);
+  const raw = String(seed).replace(/\D/g, '');
+  const digits = raw.padStart(9, '0').slice(-9);
   let sum = 0;
   for (let i = 0; i < 9; i++) sum += Number(digits[i]) * (10 - i);
   const d1 = ((sum * 10) % 11) % 10;
@@ -40,4 +41,12 @@ export function uniqueDocument(seed = Date.now()) {
   const ten = digits + d1;
   for (let i = 0; i < 10; i++) sum += Number(ten[i]) * (11 - i);
   return ten + (((sum * 10) % 11) % 10);
+}
+
+// Select through the React search rather than the retired hidden select.
+export async function selectNewOrderClient(page: Page, id: number) {
+  const client = await api(page, '/clients/' + id);
+  expect(client.status).toBe(200);
+  await page.locator('.arl-client-search input').fill(client.body.client.name);
+  await page.locator('.arl-client-results button[data-id="' + id + '"]').click();
 }

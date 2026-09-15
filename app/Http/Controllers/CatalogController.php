@@ -15,7 +15,15 @@ class CatalogController extends Controller
     public function index(Request $request, string $catalog): JsonResponse
     {
         $table = self::TABLES[$catalog] ?? abort(404);
-        $query = DB::table($table)->orderBy('name');
+        $query = DB::table($table);
+        if ($catalog === 'services') {
+            $query->select($table.'.*')->selectSub(function ($usage) use ($table) {
+                $usage->from('service_order_items')
+                    ->selectRaw('COUNT(DISTINCT service_order_id)')
+                    ->whereColumn('service_order_items.catalog_id', $table.'.id');
+            }, 'usage_count');
+        }
+        $query->orderBy('name');
         if ($request->boolean('active', true)) {
             $query->where('active', true);
         }

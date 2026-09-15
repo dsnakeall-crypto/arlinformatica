@@ -11,6 +11,8 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\DataProvider;
+use ReflectionMethod;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -70,6 +72,46 @@ class StageEightTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'backup.restore_completed']);
     }
 
+    public function test_restore_snapshot_only_changes_managed_private_files(): void
+    {
+        $master = $this->user('Master', 'master');
+        Storage::disk('local')->put('documents/snapshot.txt', 'conteudo-antigo');
+        Storage::disk('local')->put('framework/cache/runtime.txt', 'framework-antigo');
+        Storage::disk('local')->put('logs/laravel.log', 'log-antigo');
+        Storage::disk('local')->put('backup-work/runtime.tmp', 'temporario-antigo');
+        Storage::disk('local')->put('restore-staging/runtime.tmp', 'recuperacao-antiga');
+
+        $backup = app(BackupService::class)->create($master);
+        $sourcePath = $backup->path;
+        $zip = new ZipArchive;
+        $zip->open(Storage::disk('local')->path($sourcePath));
+        $this->assertSame('conteudo-antigo', $zip->getFromName('storage/documents/snapshot.txt'));
+        $this->assertFalse($zip->locateName('storage/framework/cache/runtime.txt'));
+        $this->assertFalse($zip->locateName('storage/logs/laravel.log'));
+        $this->assertFalse($zip->locateName('storage/backup-work/runtime.tmp'));
+        $this->assertFalse($zip->locateName('storage/restore-staging/runtime.tmp'));
+        $zip->close();
+
+        Storage::disk('local')->put('documents/snapshot.txt', 'conteudo-novo');
+        Storage::disk('local')->put('documents/criado-depois.txt', 'deve-sumir');
+        Storage::disk('local')->put('framework/cache/runtime.txt', 'framework-atual');
+        Storage::disk('local')->put('logs/laravel.log', 'log-atual');
+        Storage::disk('local')->put('backup-work/runtime.tmp', 'temporario-atual');
+        Storage::disk('local')->put('restore-staging/runtime.tmp', 'recuperacao-atual');
+
+        $safety = app(BackupService::class)->restore($backup, $master);
+
+        $this->assertSame('conteudo-antigo', Storage::disk('local')->get('documents/snapshot.txt'));
+        Storage::disk('local')->assertMissing('documents/criado-depois.txt');
+        $this->assertSame('framework-atual', Storage::disk('local')->get('framework/cache/runtime.txt'));
+        $this->assertSame('log-atual', Storage::disk('local')->get('logs/laravel.log'));
+        $this->assertSame('temporario-atual', Storage::disk('local')->get('backup-work/runtime.tmp'));
+        $this->assertSame('recuperacao-atual', Storage::disk('local')->get('restore-staging/runtime.tmp'));
+        Storage::disk('local')->assertExists($sourcePath);
+        Storage::disk('local')->assertExists($safety->path);
+        $this->assertDatabaseHas('backups', ['id' => $safety->id, 'kind' => 'safety', 'protected' => true]);
+    }
+
     public function test_invalid_zip_checksum_manifest_and_zip_slip_are_rejected(): void
     {
         $master = $this->user('Master', 'master');
@@ -95,6 +137,27 @@ class StageEightTest extends TestCase
         $this->assertDatabaseHas('backups', ['id' => $protected->id]);
         $this->artisan('scheduler:heartbeat')->assertSuccessful();
         $this->assertDatabaseHas('settings', ['key' => 'scheduler_heartbeat_at']);
+    }
+
+    public function test_master_can_persist_automatic_backup_configuration_with_audit(): void
+    {
+        $master = $this->user('Master', 'master');
+        $this->actingAs($master)->putJson('/api/backups/automatic', ['enabled' => true, 'frequency' => 'weekly', 'retention' => 12])
+            ->assertOk()->assertJson(['enabled' => true, 'frequency' => 'weekly', 'retention' => 12]);
+        $this->assertDatabaseHas('settings', ['key' => 'backup_frequency', 'value' => 'weekly']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'backup.automatic_settings_updated']);
+    }
+
+    #[DataProvider('unsafeBackupPaths')]
+    public function test_every_unsafe_zip_path_shape_is_rejected(string $path): void
+    {
+        $method = new ReflectionMethod(BackupService::class, 'safeEntry');
+        $this->assertFalse($method->invoke(app(BackupService::class), $path), "Path should be unsafe: $path");
+    }
+
+    public static function unsafeBackupPaths(): array
+    {
+        return [['..'], ['a/..'], ['../arquivo'], ['a/../arquivo'], ['..\\arquivo'], ['a\\..\\arquivo'], ['/absoluto'], ['C:\\arquivo'], ["arquivo\0oculto"], ['arquivo.php'], ['storage/.env']];
     }
 
     public function test_diagnostics_do_not_expose_secrets_and_push_failure_does_not_block_notification(): void

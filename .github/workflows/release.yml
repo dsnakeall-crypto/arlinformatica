@@ -3,27 +3,115 @@ on: { workflow_dispatch: {} }
 permissions: { contents: read }
 jobs:
   package:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with: {php-version: '8.2', extensions: 'mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip', coverage: none}
+      - name: Setup PHP for release checks without OPcache
+        uses: shivammathur/setup-php@v2
+        with: {php-version: '8.2', extensions: 'mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip, :opcache', coverage: none}
+      - name: Verificar runtime PHP do E2E
+        run: |
+          php -v
+          if php -m | grep -Fxq 'Zend OPcache'; then
+            echo 'Zend OPcache deve permanecer desabilitado durante o E2E do release.' >&2
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with: {node-version: 22, cache: npm}
       - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer audit --locked --no-dev
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+      - name: Preparar ambiente de teste
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
+          {
+            echo 'DB_CONNECTION=sqlite'
+            echo "DB_DATABASE=${GITHUB_WORKSPACE}/database/database.sqlite"
+            echo 'SESSION_DRIVER=array'
+            echo 'CACHE_STORE=array'
+            echo 'QUEUE_CONNECTION=sync'
+          } >> .env
+          php artisan key:generate
+      - run: php artisan migrate --seed --force
       - run: vendor/bin/pint --test
       - run: php artisan test
       - run: npm run typecheck
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: release-playwright-report-${{ github.sha }}
+          path: |
+            playwright-report/
+            storage/logs/laravel.log
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Preparar dependências PHP de produção
+        run: |
+          composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+          composer check-platform-reqs --no-dev
       - name: Montar pacote sem dados privados
         shell: bash
         run: |
           set -euo pipefail
           RELEASE="arl-informatica-${GITHUB_SHA}"
-          mkdir -p "release/${RELEASE}"
-          rsync -a ./ "release/${RELEASE}/" --exclude='.git' --exclude='.github' --exclude='.env' --exclude='node_modules' --exclude='database/*.sqlite' --exclude='storage/app/private' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' --exclude='tests' --exclude='release'
-          printf 'Projeto: ARL Informática\nCommit: %s\nData UTC: %s\nVersão: %s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "$GITHUB_REF_NAME" > "release/${RELEASE}/RELEASE_MANIFEST.txt"
+          ROOT="release/${RELEASE}"
+          mkdir -p "${ROOT}"
+          rsync -a ./ "${ROOT}/" --exclude='.git' --exclude='.github' --exclude='.env' --exclude='node_modules' --exclude='database/*.sqlite' --exclude='storage/app/private' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' --exclude='storage/framework/testing/' --exclude='tests' --exclude='playwright-report' --exclude='test-results' --exclude='release'
+
+          fail=0
+          for forbidden in '.git' '.github' '.env' 'node_modules' 'storage/app/private' 'tests' 'playwright-report' 'test-results'; do
+            if [ -e "${ROOT}/${forbidden}" ]; then
+              echo "Conteúdo proibido permaneceu no pacote: ${forbidden}" >&2
+              fail=1
+            fi
+          done
+
+          if find "${ROOT}/database" -type f -name '*.sqlite' -print -quit 2>/dev/null | grep -q .; then
+            echo 'Banco SQLite de runtime/teste permaneceu no pacote:' >&2
+            find "${ROOT}/database" -type f -name '*.sqlite' -print >&2
+            fail=1
+          fi
+
+          if [ -d "${ROOT}/storage/logs" ]; then
+            unexpected_logs="$(find "${ROOT}/storage/logs" -type f ! -name '.gitignore' -print)"
+            if [ -n "${unexpected_logs}" ]; then
+              echo 'Logs de runtime/teste permaneceram no pacote:' >&2
+              printf '%s\n' "${unexpected_logs}" >&2
+              fail=1
+            fi
+          fi
+
+          if [ -e "${ROOT}/storage/framework/testing" ]; then
+            echo 'storage/framework/testing deve ser excluído integralmente do pacote.' >&2
+            find "${ROOT}/storage/framework/testing" -print >&2
+            fail=1
+          fi
+
+          if [ -d "${ROOT}/storage/framework" ]; then
+            unexpected_framework="$(find "${ROOT}/storage/framework" -type f \
+              ! -path "${ROOT}/storage/framework/cache/.gitignore" \
+              ! -path "${ROOT}/storage/framework/sessions/.gitignore" \
+              ! -path "${ROOT}/storage/framework/views/.gitignore" \
+              -print)"
+            if [ -n "${unexpected_framework}" ]; then
+              echo 'Artefatos inesperados permaneceram sob storage/framework/:' >&2
+              printf '%s\n' "${unexpected_framework}" >&2
+              fail=1
+            fi
+          fi
+
+          if [ "${fail}" -ne 0 ]; then
+            echo 'Falha de segurança: o pacote montado contém dados de runtime/teste.' >&2
+            exit 1
+          fi
+
+          printf 'Projeto: ARL Informática\nCommit: %s\nData UTC: %s\nVersão: %s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "$GITHUB_REF_NAME" > "${ROOT}/RELEASE_MANIFEST.txt"
           tar -C release -czf "release/${RELEASE}.tar.gz" "${RELEASE}"
+          sha256sum "release/${RELEASE}.tar.gz" > "release/${RELEASE}.tar.gz.sha256"
       - uses: actions/upload-artifact@v4
-        with: {name: 'arl-informatica-${{ github.sha }}', path: 'release/*.tar.gz', if-no-files-found: error, retention-days: 14}
+        with: {name: 'arl-informatica-${{ github.sha }}', path: 'release/*.tar.gz*', if-no-files-found: error, retention-days: 14}

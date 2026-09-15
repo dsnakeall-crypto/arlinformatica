@@ -8,9 +8,10 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo
+          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip
           coverage: none
       - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer audit --locked --no-dev
       - name: Prepare test environment
         run: |
           cp .env.example .env
@@ -26,6 +27,52 @@ jobs:
       - run: php artisan migrate --seed --force
       - run: vendor/bin/pint --test
       - run: php artisan test
+      - name: Validate production PHP dependencies
+        run: |
+          composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+          composer check-platform-reqs --no-dev
+  backend-mysql:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: arl_test
+          MYSQL_USER: arl_test
+          MYSQL_PASSWORD: arl_test_password
+          MYSQL_ROOT_PASSWORD: root_test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_test_password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      APP_KEY: 'base64:7n9S6t2H7Hn23xH5H3YgNnLh6dI0vY7Hc7Jt6nD6m1M='
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: arl_test
+      DB_USERNAME: arl_test
+      DB_PASSWORD: arl_test_password
+      SESSION_DRIVER: array
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - uses: actions/checkout@v4
+      - run: touch .env
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_mysql, gd, fileinfo, zip
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: php artisan migrate --seed --force
+      - run: php artisan migrate:status
+      - run: php artisan test
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -33,17 +80,27 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: 22, cache: npm}
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run typecheck
+      - run: npm run test:unit
       - run: npm run build
   e2e:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - name: Setup PHP for E2E without OPcache
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip
+          extensions: mbstring, sqlite3, pdo_sqlite, gd, fileinfo, zip, :opcache
           coverage: none
+      - name: Verify E2E PHP runtime
+        run: |
+          php -v
+          if php -m | grep -Fxq 'Zend OPcache'; then
+            echo 'Zend OPcache must be disabled for the E2E PHP built-in server.' >&2
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with: {node-version: 22, cache: npm}
       - run: composer install --no-interaction --prefer-dist --no-progress
@@ -58,5 +115,12 @@ jobs:
           path: |
             playwright-report/
             storage/logs/laravel.log
+          if-no-files-found: warn
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-homologation-${{ github.sha }}
+          path: visual-artifacts/
           if-no-files-found: warn
           retention-days: 7

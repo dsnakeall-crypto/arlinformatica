@@ -23,7 +23,10 @@
     "post-autoload-dump": ["Illuminate\\Foundation\\ComposerScripts::postAutoloadDump", "@php artisan package:discover --ansi"],
     "test": "@php artisan test"
   },
-  "config": {"optimize-autoloader": true, "preferred-install": "dist", "sort-packages": true},
+  "config": {"optimize-autoloader": true, "preferred-install": "dist", "sort-packages": true,
+    "allow-plugins": {
+      "php-http/discovery": true
+    }},
   "minimum-stability": "stable",
   "prefer-stable": true
 }

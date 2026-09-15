@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">ARL Informática</title>
+  <desc id="description">Ícone verde com as letras ARL em branco</desc>
+  <rect width="512" height="512" rx="96" fill="#063b2d"/>
+  <path fill="#f5fff9" d="M96 352 170 160h52l74 192h-52l-14-42h-70l-14 42H96Zm78-86h42l-21-64-21 64Zm132 86V160h52v146h74v46H306Z"/>
+</svg>
