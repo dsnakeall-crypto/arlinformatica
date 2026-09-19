@@ -199,9 +199,9 @@
 }
 
 .status-picker.status-in_service {
-    color: #7a3db3;
-    background: #f6effd;
-    border-color: #dcc4f2;
+    color: #0f5132;
+    background: #e8f3ec;
+    border-color: #a9cfb8;
 }
 
 .status-picker.status-completed {
