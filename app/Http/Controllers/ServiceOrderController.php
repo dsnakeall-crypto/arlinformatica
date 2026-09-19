@@ -41,7 +41,12 @@ class ServiceOrderController extends Controller
         }
         match ($tab) {
             'progress' => $q->whereIn('status', ['analysis', 'waiting_part', 'in_service']),
-            'finalized' => $q->whereIn('status', ['completed', 'interrupted']),
+            'awaiting_payment' => $q
+                ->where('status', 'completed')
+                ->whereRaw('COALESCE(payment_status.paid_cents, 0) < service_orders.total_cents'),
+            'finalized' => $q
+                ->where('status', 'completed')
+                ->whereRaw('COALESCE(payment_status.paid_cents, 0) >= service_orders.total_cents'),
             'interrupted' => $q->where('status', 'interrupted'),
             'closed_week' => $q
                 ->whereIn('status', ['completed', 'interrupted'])

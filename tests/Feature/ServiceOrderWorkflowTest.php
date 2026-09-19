@@ -138,7 +138,7 @@ class ServiceOrderWorkflowTest extends TestCase
             ->assertJsonPath('paid_orders', 0);
 
         $this->getJson('/api/orders/desk')->assertOk()->assertJsonMissing(['id' => $order->id]);
-        $this->getJson('/api/orders?tab=finalized')
+        $this->getJson('/api/orders?tab=interrupted')
             ->assertOk()
             ->assertJsonFragment(['id' => $order->id, 'status' => 'interrupted'])
             ->assertJsonPath('total', 1)
@@ -256,6 +256,9 @@ class ServiceOrderWorkflowTest extends TestCase
             ->assertJsonPath('display_status', 'awaiting_payment');
         $this->getJson('/api/orders?tab=finalized')
             ->assertOk()
+            ->assertJsonMissing(['id' => $order->id]);
+        $this->getJson('/api/orders?tab=awaiting_payment')
+            ->assertOk()
             ->assertJsonFragment(['id' => $order->id, 'status' => 'completed', 'display_status' => 'awaiting_payment']);
 
         $this->patchJson("/api/orders/{$order->id}/status", ['status' => 'paid'])
@@ -273,5 +276,7 @@ class ServiceOrderWorkflowTest extends TestCase
         $this->assertDatabaseHas('financial_transactions', ['payment_id' => $paymentId, 'origin' => 'service_order', 'amount_cents' => 12500]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'payment.created', 'subject_type' => 'payment', 'subject_id' => $paymentId]);
         $this->getJson('/api/finance/receivables')->assertOk()->assertJsonPath('count', 0);
+        $this->getJson('/api/orders?tab=awaiting_payment')->assertOk()->assertJsonMissing(['id' => $order->id]);
+        $this->getJson('/api/orders?tab=finalized')->assertOk()->assertJsonFragment(['id' => $order->id, 'display_status' => 'paid']);
     }
 }

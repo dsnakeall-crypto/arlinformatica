@@ -662,7 +662,7 @@ function Orders({ open, role }: any) {
   const [items, setItems] = useState<Order[]>([]),
     [meta, setMeta] = useState<any>({}),
     [q, setQ] = useState(""),
-    [tab, setTab] = useState("all"),
+    [tab, setTab] = useState("progress"),
     [page, setPage] = useState(1),
     [perPage, setPerPage] = useState(50),
     [loading, setLoading] = useState(true),
@@ -735,15 +735,6 @@ function Orders({ open, role }: any) {
       <section className="panel orders-panel">
         <div className="order-tabs" role="tablist" aria-label="Filtrar ordens">
           <button
-            className={tab === "all" ? "active" : ""}
-            onClick={() => {
-              setTab("all");
-              setPage(1);
-            }}
-          >
-            Todas
-          </button>
-          <button
             className={tab === "progress" ? "active" : ""}
             onClick={() => {
               setTab("progress");
@@ -751,6 +742,15 @@ function Orders({ open, role }: any) {
             }}
           >
             Em Andamento
+          </button>
+          <button
+            className={tab === "awaiting_payment" ? "active" : ""}
+            onClick={() => {
+              setTab("awaiting_payment");
+              setPage(1);
+            }}
+          >
+            Aguardando PGTO
           </button>
           <button
             className={tab === "finalized" ? "active" : ""}
@@ -769,6 +769,15 @@ function Orders({ open, role }: any) {
             }}
           >
             Interrompidas
+          </button>
+          <button
+            className={tab === "all" ? "active" : ""}
+            onClick={() => {
+              setTab("all");
+              setPage(1);
+            }}
+          >
+            Todas
           </button>
         </div>
         <div className="filters">
