@@ -2884,7 +2884,6 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
             <h2>Ordens em andamento</h2>
             <p>Atualize o status diretamente na linha.</p>
           </div>
-          <button onClick={() => go("orders")}>Ver todas</button>
         </div>
         {loading ? (
           <div className="state">Carregando painel…</div>
@@ -2908,7 +2907,6 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
                 <h2>Fechadas recentemente</h2>
                 <p>OS concluídas e interrompidas desta semana.</p>
               </div>
-              <button onClick={() => go("orders")}>Ver finalizadas</button>
             </div>
             <OrderTable
               items={closedItems}
