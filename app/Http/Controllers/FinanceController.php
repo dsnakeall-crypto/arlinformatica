@@ -183,6 +183,7 @@ class FinanceController extends Controller
         $data = $request->validate([
             'spent_on' => ['required', 'date_format:Y-m-d'],
             'description' => ['required', 'string', 'max:160'],
+            'category' => ['required', Rule::in(['merchandise_purchase', 'usage_material'])],
             'amount_cents' => ['required', 'integer', 'min:1'],
         ]);
         $now = CarbonImmutable::now('UTC');
@@ -203,7 +204,7 @@ class FinanceController extends Controller
         abort_unless($row, 404);
         $now = CarbonImmutable::now('UTC');
         DB::table('financial_expenses')->where('id', $expense)->update(['deleted_at' => $now, 'deleted_by' => $request->user()->id, 'updated_at' => $now]);
-        $before = ['spent_on' => $row->spent_on, 'description' => $row->description, 'amount_cents' => (int) $row->amount_cents];
+        $before = ['spent_on' => $row->spent_on, 'description' => $row->description, 'category' => $row->category, 'amount_cents' => (int) $row->amount_cents];
         $this->audit($request, 'finance.expense_deleted', 'financial_expense', $expense, $before, ['deleted_at' => $now->toIso8601String()]);
 
         return response()->json(['message' => 'Despesa excluída com registro de auditoria.']);
@@ -214,11 +215,12 @@ class FinanceController extends Controller
         $data = $request->validate([
             'spent_on' => ['required', 'date_format:Y-m-d'],
             'description' => ['required', 'string', 'max:160'],
+            'category' => ['required', Rule::in(['merchandise_purchase', 'usage_material'])],
             'amount_cents' => ['required', 'integer', 'min:1'],
         ]);
         $row = DB::table('financial_expenses')->whereNull('deleted_at')->find($expense);
         abort_unless($row, 404);
-        $before = ['spent_on' => $row->spent_on, 'description' => $row->description, 'amount_cents' => (int) $row->amount_cents];
+        $before = ['spent_on' => $row->spent_on, 'description' => $row->description, 'category' => $row->category, 'amount_cents' => (int) $row->amount_cents];
         DB::table('financial_expenses')->where('id', $expense)->update([...$data, 'updated_at' => now()]);
         $this->audit($request, 'finance.expense_updated', 'financial_expense', $expense, $before, $data);
 

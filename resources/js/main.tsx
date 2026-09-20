@@ -2058,6 +2058,7 @@ function QuickEntry({ open, onClose, onSaved }: any) {
 }
 function ExpenseEntry({ open, onClose, onSaved, item }: any) {
   const [spentOn, setSpentOn] = useState(""),
+    [category, setCategory] = useState("merchandise_purchase"),
     [description, setDescription] = useState(""),
     [value, setValue] = useState(""),
     [busy, setBusy] = useState(false),
@@ -2070,6 +2071,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
           timeZone: "America/Sao_Paulo",
         }).format(new Date()),
     );
+    setCategory(item?.category || "merchandise_purchase");
     setDescription(item?.description || "");
     setValue(
       item ? (item.amount_cents / 100).toFixed(2).replace(".", ",") : "",
@@ -2085,6 +2087,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
         method: item ? "PUT" : "POST",
         body: JSON.stringify({
           spent_on: spentOn,
+          category,
           description: description.trim(),
           amount_cents: Math.round(Number(value.replace(",", ".")) * 100),
         }),
@@ -2123,6 +2126,13 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
           onChange={(e: any) => setSpentOn(e.target.value)}
           required
         />
+        <label className="field">
+          <span>Categoria *</span>
+          <select value={category} onChange={(e) => setCategory(e.target.value)} required>
+            <option value="merchandise_purchase">Compra de mercadoria</option>
+            <option value="usage_material">Material de uso</option>
+          </select>
+        </label>
         <Field
           label="Descrição"
           value={description}
