@@ -5033,6 +5033,9 @@ function App() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [mobileQuickEntry, setMobileQuickEntry] = useState(false);
   const mobileLayout = layout === "mobile";
+  useEffect(() => {
+    if (mobileLayout) setMobileMenu(false);
+  }, [mobileLayout]);
   const canAdminister = me?.role === "Master" || me?.role === "Administrador";
   const loadNavigationSummary = () =>
     api("/navigation-summary")
@@ -5247,13 +5250,15 @@ function App() {
         }
       >
         <header className="app-head">
-          <button
-            className="menu-toggle"
-            aria-label="Abrir menu"
-            onClick={() => setMobileMenu(true)}
-          >
-            <Menu />
-          </button>
+          {!mobileLayout && (
+            <button
+              className="menu-toggle"
+              aria-label="Abrir menu"
+              onClick={() => setMobileMenu(true)}
+            >
+              <Menu />
+            </button>
+          )}
           <div className="mobile-logo">
             <strong>
               {mobileLayout && page === "dashboard" && !detail
