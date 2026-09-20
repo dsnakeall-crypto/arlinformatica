@@ -10,6 +10,8 @@ import {
   Box,
   Camera,
   ChevronDown,
+  ArrowDown,
+  ArrowUp,
   ClipboardList,
   LayoutDashboard,
   Plus,
@@ -2627,18 +2629,19 @@ function FinancePage({ role, openOrder }: any) {
           </div>
           <div className="finance-tabs finance-movement-filters" aria-label="Grupo de lançamentos">
             {[
-              ["all", "Todos"],
-              ["entries", "Entradas"],
-              ["outflows", "Saídas"],
-              ["expense", "Despesas"],
-              ["refund", "Estornos"],
-            ].map(([value, label]) => (
+              ["all", "Todos", ClipboardList],
+              ["entries", "Entradas", ArrowDown],
+              ["outflows", "Saídas", ArrowUp],
+              ["expense", "Despesas", Wallet],
+              ["refund", "Estornos", RotateCcw],
+            ].map(([value, label, Icon]: any) => (
               <button
                 type="button"
                 key={value}
                 className={moveFilter === value ? "active" : ""}
                 onClick={() => setMoveFilter(value)}
               >
+                <Icon aria-hidden="true" />
                 {label}
               </button>
             ))}
