@@ -109,6 +109,10 @@ class FinanceRefundBalanceTest extends TestCase
         $row = collect($daily)->firstWhere('id', $refund['financial_transaction_id']);
         $this->assertSame(-1890, $row['effective_cents']);
         $this->assertSame('cash', $row['method']);
+        $this->assertSame('refund', $row['kind']);
+        $this->assertSame('0000001', $row['order_number']);
+        $this->assertSame('Troco faltou do desconto', $row['refund_reason']);
+        $this->assertSame('Master', $row['user_name']);
         $this->assertDatabaseHas('financial_transactions', [
             'id' => $refund['financial_transaction_id'], 'origin' => 'adjustment', 'amount_cents' => 1890,
         ]);
@@ -124,6 +128,37 @@ class FinanceRefundBalanceTest extends TestCase
         $this->getJson('/api/finance/daily?date=2026-09-12')->assertJsonPath('total_cents', 700);
     }
 
+    public function test_refund_method_is_independent_from_original_payment_method(): void
+    {
+        $this->pay(13000, 'debit-payment', 'debit')->assertCreated();
+        $this->postJson("/api/orders/{$this->order->id}/refunds", [
+            'amount_cents' => 3000, 'method' => 'pix', 'reason' => 'Devolução combinada com o cliente',
+        ])->assertCreated()->assertJsonPath('method', 'pix');
+
+        $this->assertDatabaseHas('payments', [
+            'service_order_id' => $this->order->id, 'amount_cents' => 13000, 'method' => 'debit',
+        ]);
+        $this->assertDatabaseHas('service_order_refunds', [
+            'service_order_id' => $this->order->id, 'amount_cents' => 3000, 'method' => 'pix',
+        ]);
+        $this->postJson('/api/finance/expenses', [
+            'spent_on' => '2026-09-12', 'description' => 'Material da bancada',
+            'category' => 'usage_material', 'amount_cents' => 1200,
+        ])->assertCreated();
+        $this->getJson('/api/finance/month?period=2026-09')->assertOk()
+            ->assertJsonPath('total_cents', 13000)
+            ->assertJsonPath('refund_cents', 3000)
+            ->assertJsonPath('expense_cents', 1200)
+            ->assertJsonPath('net_cents', 8800)
+            ->assertJsonPath('methods.debit.entry_cents', 13000)
+            ->assertJsonPath('methods.debit.outflow_cents', 0)
+            ->assertJsonPath('methods.pix.entry_cents', 0)
+            ->assertJsonPath('methods.pix.outflow_cents', 3000);
+        $this->postJson("/api/orders/{$this->order->id}/refunds", [
+            'amount_cents' => 100, 'method' => 'debit', 'reason' => 'Forma não permitida',
+        ])->assertUnprocessable();
+    }
+
     public function test_refund_is_an_outflow_on_its_local_day_and_does_not_rewrite_the_payment_month(): void
     {
         CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-08-20 15:00:00', 'UTC'));
@@ -133,16 +168,18 @@ class FinanceRefundBalanceTest extends TestCase
         $this->getJson('/api/finance/daily?date=2026-09-30')->assertJsonPath('total_cents', -1890);
         $this->getJson('/api/finance/daily?date=2026-10-01')->assertJsonPath('total_cents', 0);
         $this->getJson('/api/finance/month?period=2026-08')
-            ->assertJsonPath('total_cents', 13000)->assertJsonPath('refund_cents', 0)->assertJsonPath('outflow_cents', 0);
+            ->assertJsonPath('total_cents', 13000)->assertJsonPath('refund_cents', 0)->assertJsonMissingPath('outflow_cents');
         $this->getJson('/api/finance/month?period=2026-09')
             ->assertJsonPath('total_cents', 0)->assertJsonPath('refund_cents', 1890)
-            ->assertJsonPath('outflow_cents', 1890)->assertJsonPath('daily_expenses.2026-09-30', 1890);
+            ->assertJsonPath('daily_expenses.2026-09-30', null)
+            ->assertJsonPath('daily_refunds.2026-09-30', 1890)
+            ->assertJsonMissingPath('outflow_cents');
     }
 
-    private function pay(int $amount, string $key)
+    private function pay(int $amount, string $key, string $method = 'pix')
     {
         return $this->postJson("/api/orders/{$this->order->id}/payment", [
-            'amount_cents' => $amount, 'method' => 'pix', 'idempotency_key' => $key,
+            'amount_cents' => $amount, 'method' => $method, 'idempotency_key' => $key,
         ]);
     }
 

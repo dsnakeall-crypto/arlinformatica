@@ -108,5 +108,7 @@ class FinanceMonthStabilityTest extends TestCase
         $items = collect($response->json('items'));
         $this->assertSame(15000, $items->firstWhere('description', 'Serviço pago')['total_cents']);
         $this->assertFalse($items->contains('description', 'Item provisório sem pagamento'));
+        $this->assertSame('7888801', $response->json('transactions.0.order_number'));
+        $this->assertSame('Finance Stability', $response->json('transactions.0.user_name'));
     }
 }

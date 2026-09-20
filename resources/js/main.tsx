@@ -10,6 +10,8 @@ import {
   Box,
   Camera,
   ChevronDown,
+  ArrowDown,
+  ArrowUp,
   ClipboardList,
   LayoutDashboard,
   Plus,
@@ -37,6 +39,10 @@ import {
   EllipsisVertical,
   Star,
   Instagram,
+  BarChart3,
+  CalendarDays,
+  CircleDollarSign,
+  ReceiptText,
 } from "lucide-react";
 import "../css/app.css";
 import "../css/homologation.css";
@@ -48,7 +54,6 @@ import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
 import {
   OrderPaymentFigures,
-  MonthlyRefundNote,
 } from "./finance-refund-summary";
 import { FinanceDate } from "./finance-date";
 type Page =
@@ -2058,6 +2063,7 @@ function QuickEntry({ open, onClose, onSaved }: any) {
 }
 function ExpenseEntry({ open, onClose, onSaved, item }: any) {
   const [spentOn, setSpentOn] = useState(""),
+    [category, setCategory] = useState("merchandise_purchase"),
     [description, setDescription] = useState(""),
     [value, setValue] = useState(""),
     [busy, setBusy] = useState(false),
@@ -2070,6 +2076,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
           timeZone: "America/Sao_Paulo",
         }).format(new Date()),
     );
+    setCategory(item?.category || "merchandise_purchase");
     setDescription(item?.description || "");
     setValue(
       item ? (item.amount_cents / 100).toFixed(2).replace(".", ",") : "",
@@ -2085,6 +2092,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
         method: item ? "PUT" : "POST",
         body: JSON.stringify({
           spent_on: spentOn,
+          category,
           description: description.trim(),
           amount_cents: Math.round(Number(value.replace(",", ".")) * 100),
         }),
@@ -2123,6 +2131,13 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
           onChange={(e: any) => setSpentOn(e.target.value)}
           required
         />
+        <label className="field">
+          <span>Categoria *</span>
+          <select value={category} onChange={(e) => setCategory(e.target.value)} required>
+            <option value="merchandise_purchase">Compra de mercadoria</option>
+            <option value="usage_material">Material de uso</option>
+          </select>
+        </label>
         <Field
           label="Descrição"
           value={description}
@@ -2148,6 +2163,24 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
   );
 }
 const money = (c: number = 0) => `R$ ${(c / 100).toFixed(2).replace(".", ",")}`;
+const expenseCategoryLabel = (category?: string | null) =>
+  category === "merchandise_purchase"
+    ? "Compra de mercadoria"
+    : category === "usage_material"
+      ? "Material de uso"
+      : "Sem categoria";
+const financeMethodLabel = (method?: string | null) =>
+  ({ cash: "Dinheiro", pix: "Pix", debit: "Débito", credit: "Crédito", transfer: "Transferência", other: "Outro" } as Record<string, string>)[method || ""] || "Não informada";
+const movementTitle = (row: any) =>
+  row.kind === "refund"
+    ? `Estorno da OS #${row.order_number || "—"}`
+    : row.kind === "expense"
+      ? "Despesa"
+      : row.kind === "service_order"
+        ? `Entrada de OS #${row.order_number || "—"}`
+        : row.kind === "quick_entry"
+          ? "Entrada rápida"
+          : "Ajuste financeiro";
 const formatOptionalDate = (value: unknown, fallback = "—") => {
   if (typeof value !== "string" || !value.trim()) return fallback;
   const date = new Date(value);
@@ -2162,7 +2195,7 @@ const brazilianDate = (date: string) => {
 function DailyRevenueChart({ data }: any) {
   if (!data.length) return <p>Nenhuma movimentação neste mês.</p>;
   const maximum = Math.max(
-    ...data.flatMap((day: any) => [day.amount_cents, day.expense_cents]),
+    ...data.flatMap((day: any) => [day.amount_cents, day.expense_cents, day.refund_cents]),
     1,
   );
   const ticks = [maximum, Math.round(maximum / 2), 0];
@@ -2209,6 +2242,14 @@ function DailyRevenueChart({ data }: any) {
                     height: `${Math.max(4, (day.expense_cents / maximum) * 100)}%`,
                   }}
                   title={`${brazilianDate(day.date)} — saída: ${money(day.expense_cents)}`}
+                />
+              )}
+              {day.refund_cents > 0 && (
+                <div
+                  className="revenue-bar refund"
+                  data-testid="daily-refund-bar"
+                  style={{ height: `${Math.max(4, (day.refund_cents / maximum) * 100)}%` }}
+                  title={`${brazilianDate(day.date)} — estorno: ${money(day.refund_cents)}`}
                 />
               )}
             </div>
@@ -2297,13 +2338,14 @@ function FinancePage({ role, openOrder }: any) {
   if (loading) return <div className="state">Carregando financeiro real…</div>;
   if (error) return <div className="state error">{error}</div>;
   const canReport = role === "Master" || role === "Administrador";
-  const tabs = [
-    ["overview", "Visão Geral"],
-    ["daily", "Caixa Diário"],
-    ["moves", "Movimentações"],
-    ["receivables", "A Receber"],
-    ["month", "Mensal"],
-    ...(canReport ? [["reports", "Relatórios"]] : []),
+  const tabs: [string, string, React.ComponentType<any>][] = [
+    ["overview", "Visão Geral", LayoutDashboard],
+    ["daily", "Caixa Diário", Clock3],
+    ["moves", "Movimentações", ReceiptText],
+    ["receivables", "A Receber", CircleDollarSign],
+    ["month", "Mensal", CalendarDays],
+    ...(canReport ? [["reports", "Relatórios", BarChart3] as [string, string, React.ComponentType<any>]] : []),
+    ["expenses", "Despesas", Wallet],
   ];
   const issue = async () => {
     const d = await api("/finance/reports", {
@@ -2323,19 +2365,22 @@ function FinancePage({ role, openOrder }: any) {
       ).getUTCDate()
     : 0;
   const monthAmounts = new Map(Object.entries(month?.daily || {})),
-    expenseAmounts = new Map(Object.entries(month?.daily_expenses || {}));
+    expenseAmounts = new Map(Object.entries(month?.daily_expenses || {})),
+    refundAmounts = new Map(Object.entries(month?.daily_refunds || {}));
   const chartDays = Array.from({ length: daysInMonth }, (_, index) => {
     const date = `${period}-${String(index + 1).padStart(2, "0")}`;
     return {
       date,
       amount_cents: Number(monthAmounts.get(date) || 0),
       expense_cents: Number(expenseAmounts.get(date) || 0),
+      refund_cents: Number(refundAmounts.get(date) || 0),
     };
   });
   const received = month?.total_cents || 0,
-    spent = month?.outflow_cents || 0,
-    remaining = received - spent,
-    moved = received + spent;
+    refunded = month?.refund_cents || 0,
+    expenses = month?.expense_cents || 0,
+    remaining = month?.net_cents ?? received - refunded - expenses,
+    receivedAfterRefunds = received - refunded;
   const percentage = (value: number, total = received) =>
     total > 0 ? Math.round((value / total) * 100) : 0;
   const compare = (value: number, old: number) =>
@@ -2349,6 +2394,8 @@ function FinancePage({ role, openOrder }: any) {
     ["pix", "Pix", Landmark],
     ["credit", "Cartão de crédito", CreditCard],
     ["debit", "Cartão de débito", CreditCard],
+    ["transfer", "Transferência", Landmark],
+    ["other", "Outro", Wallet],
   ] as const;
   const openMoves = (filter: string) => {
     setMoveFilter(filter);
@@ -2357,7 +2404,7 @@ function FinancePage({ role, openOrder }: any) {
   const movementRows = [
     ...(month?.transactions || []).map((row: any) => ({
       ...row,
-      kind: "entry",
+      kind: row.origin === "service_order" ? "service_order" : "quick_entry",
       date: row.occurred_at,
     })),
     ...(month?.expenses || []).map((row: any) => ({
@@ -2371,11 +2418,11 @@ function FinancePage({ role, openOrder }: any) {
       description: `Estorno da OS ${row.order_number}`,
       date: row.refunded_at,
     })),
-  ].filter(
+  ].sort((a: any, b: any) => String(b.date).localeCompare(String(a.date))).filter(
     (row: any) =>
       moveFilter === "all" ||
       (moveFilter === "entries"
-        ? row.kind === "entry"
+          ? row.kind === "service_order" || row.kind === "quick_entry"
         : moveFilter === "outflows"
           ? row.kind !== "entry"
           : row.kind === moveFilter),
@@ -2417,24 +2464,28 @@ function FinancePage({ role, openOrder }: any) {
           </>
         }
       />
-      <section className="finance-main-hero" aria-label="Recebido no mês">
-        <small>RECEBIDO NO MÊS</small>
-        <strong>{monthLoading ? "…" : money(received)}</strong>
-        {!monthLoading && (
-          <MonthlyRefundNote
-            received={received}
-            refunded={month?.refund_cents || 0}
-          />
-        )}
+      <section className="finance-main-hero" aria-label="Resumo financeiro do mês">
+        {[
+          ["Recebido no mês", received, "inflow"],
+          ["Estornos", refunded, "outflow"],
+          ["Despesas", expenses, "outflow"],
+          ["Líquido", remaining, "net"],
+        ].map(([label, value, kind]: any) => (
+          <article className={kind} key={label}>
+            <small>{label}</small>
+            <strong>{monthLoading ? "…" : money(value)}</strong>
+          </article>
+        ))}
         <span>{period.split("-").reverse().join("/")}</span>
       </section>
-      <div className="finance-tabs">
-        {tabs.map(([v, l]) => (
+      <div className="finance-tabs" role="tablist" aria-label="Seções do Financeiro">
+        {tabs.map(([v, l, Icon]) => (
           <button
             key={v}
             className={tab === v ? "active" : ""}
             onClick={() => setTab(v)}
           >
+            <Icon aria-hidden="true" />
             {l}
           </button>
         ))}
@@ -2453,8 +2504,11 @@ function FinancePage({ role, openOrder }: any) {
             <h2 id="payment-method-title">Formas de pagamento</h2>
             <div className="payment-method-grid">
               {methods.map(([key, label, Icon]) => {
-                const value = month?.methods?.[key]?.total_cents || 0,
-                  pct = percentage(value);
+                const method = month?.methods?.[key] || {},
+                  entry = method.entry_cents || 0,
+                  outflow = method.outflow_cents || 0,
+                  net = method.net_cents ?? entry - outflow,
+                  pct = percentage(net, remaining);
                 return (
                   <article key={key}>
                     <div className={`method-icon ${key}`}>
@@ -2462,11 +2516,12 @@ function FinancePage({ role, openOrder }: any) {
                     </div>
                     <div>
                       <small>{label}</small>
-                      <strong>{money(value)}</strong>
+                      <strong className="amount-positive">Entrada {money(entry)}</strong>
+                      <b className="amount-negative">Saída − {money(outflow)}</b>
                       <div className="percent-track">
-                        <i style={{ width: `${pct}%` }} />
+                        <i style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
                       </div>
-                      <span>{pct}% do total</span>
+                      <span>{pct}% do líquido</span>
                     </div>
                   </article>
                 );
@@ -2479,20 +2534,20 @@ function FinancePage({ role, openOrder }: any) {
           >
             <h2 id="origin-title">De onde vêm as entradas</h2>
             {[
-              ["Serviços/OS", month?.service_orders_cents || 0, "orders"],
+              ["Serviços/OS após estornos", month?.service_orders_net_cents || 0, "orders"],
               ["Entrada Rápida", month?.quick_entries_cents || 0, "quick"],
             ].map(([label, value, key]: any) => (
               <article key={key}>
                 <div>
                   <b>{label}</b>
                   <span>
-                    {money(value)} · {percentage(value)}%
+                    {money(value)} · {percentage(value, receivedAfterRefunds)}%
                   </span>
                 </div>
                 <div className="origin-track">
                   <i
                     className={key}
-                    style={{ width: `${percentage(value)}%` }}
+                    style={{ width: `${Math.max(0, Math.min(100, percentage(value, receivedAfterRefunds)))}%` }}
                   />
                 </div>
               </article>
@@ -2503,11 +2558,11 @@ function FinancePage({ role, openOrder }: any) {
             aria-label="Totais do período"
           >
             {[
-              ["Total Entradas", received, "entries"],
-              ["Total Saídas", spent, "outflows"],
-              ["Total Movimentado", moved, "all"],
+              ["Entradas brutas", received, "entries", "positive"],
+              ["Estornos", refunded, "refund", "negative"],
+              ["Despesas", expenses, "expense", "negative"],
             ].map(([label, value, filter]: any) => (
-              <article key={label}>
+              <article className={filter === "entries" ? "positive" : "negative"} key={label}>
                 <small>{label}</small>
                 <strong>{money(value)}</strong>
                 <button onClick={() => openMoves(filter)}>
@@ -2516,22 +2571,41 @@ function FinancePage({ role, openOrder }: any) {
               </article>
             ))}
           </section>
+          <section className="panel finance-overview-movements">
+            <h2>Lançamentos identificados</h2>
+            {movementRows.slice(0, 8).map((t: any) => (
+              <article className={`transaction movement-${t.kind}`} key={`overview-${t.kind}-${t.id}`}>
+                <div>
+                  <b>{movementTitle(t)}</b>
+                  <small>{t.description}{t.kind === "expense" ? ` · ${expenseCategoryLabel(t.category)}` : ""}</small>
+                  <small><FinanceDate value={t.date} /> · {t.user_name || "Usuário não identificado"}{t.method ? ` · ${financeMethodLabel(t.method)}` : ""}</small>
+                  {t.reason && <small>Motivo: {t.reason}</small>}
+                </div>
+                <strong className={t.kind === "service_order" || t.kind === "quick_entry" ? "amount-positive" : "amount-negative"}>
+                  {t.kind === "service_order" || t.kind === "quick_entry" ? "+ " : "− "}{money(t.effective_cents ?? t.amount_cents)}
+                </strong>
+              </article>
+            ))}
+            {!movementRows.length && <div className="state">Nenhum lançamento no mês selecionado.</div>}
+          </section>
         </>
       )}
       {tab === "daily" && (
         <section className="panel finance-daily">
           <h2>Caixa Diário automático</h2>
-          <strong>Total: {money(daily.total_cents)}</strong>
+          <strong className={daily.total_cents >= 0 ? "amount-positive" : "amount-negative"}>Total: {money(daily.total_cents)}</strong>
           {daily.transactions.length ? (
             daily.transactions.map((t: any) => (
-              <article className="transaction" key={t.id}>
+              <article className={`transaction movement-${t.kind}`} key={`${t.kind}-${t.id}`}>
                 <div>
-                  <b>{t.description}</b>
+                  <b>{movementTitle(t)}</b>
+                  <small>{t.description}{t.kind === "expense" ? ` · ${expenseCategoryLabel(t.category)}` : ""}</small>
                   <small>
-                    <FinanceDate value={t.occurred_at} /> · {t.user_name}
+                    <FinanceDate value={t.occurred_at} /> · {t.user_name || "Usuário não identificado"}{t.method ? ` · ${financeMethodLabel(t.method)}` : ""}
                   </small>
+                  {t.refund_reason && <small>Motivo: {t.refund_reason}</small>}
                 </div>
-                <strong>{money(t.effective_cents)}</strong>
+                <strong className={t.effective_cents >= 0 ? "amount-positive" : "amount-negative"}>{t.effective_cents >= 0 ? "+ " : "− "}{money(Math.abs(t.effective_cents))}</strong>
               </article>
             ))
           ) : (
@@ -2552,34 +2626,39 @@ function FinancePage({ role, openOrder }: any) {
                     : "Todas as movimentações"}
               </p>
             </div>
-            <select
-              aria-label="Grupo de lançamentos"
-              value={moveFilter}
-              onChange={(e) => setMoveFilter(e.target.value)}
-            >
-              <option value="all">Todos</option>
-              <option value="entries">Entradas</option>
-              <option value="outflows">Saídas</option>
-              <option value="expense">Despesas</option>
-              <option value="refund">Estornos</option>
-            </select>
+          </div>
+          <div className="finance-tabs finance-movement-filters" aria-label="Grupo de lançamentos">
+            {[
+              ["all", "Todos", ClipboardList],
+              ["entries", "Entradas", ArrowDown],
+              ["outflows", "Saídas", ArrowUp],
+              ["expense", "Despesas", Wallet],
+              ["refund", "Estornos", RotateCcw],
+            ].map(([value, label, Icon]: any) => (
+              <button
+                type="button"
+                key={value}
+                className={moveFilter === value ? "active" : ""}
+                onClick={() => setMoveFilter(value)}
+              >
+                <Icon aria-hidden="true" />
+                {label}
+              </button>
+            ))}
           </div>
           {movementRows.length ? (
             movementRows.map((t: any) => (
               <article className="transaction" key={`${t.kind}-${t.id}`}>
                 <div>
-                  <b>{t.description}</b>
+                  <b>{movementTitle(t)}</b>
                   <small>
-                    {t.kind === "refund"
-                      ? "Estorno"
-                      : t.kind === "expense"
-                        ? "Despesa"
-                        : "Entrada"}{" "}
-                    · <FinanceDate value={t.date} />
+                    {t.description}{t.kind === "expense" ? ` · ${expenseCategoryLabel(t.category)}` : ""}
                   </small>
+                  <small><FinanceDate value={t.date} /> · {t.user_name || "Usuário não identificado"}{t.method ? ` · ${financeMethodLabel(t.method)}` : ""}</small>
+                  {t.reason && <small>Motivo: {t.reason}</small>}
                 </div>
-                <strong>
-                  {t.kind === "entry" ? "" : "− "}
+                <strong className={t.kind === "service_order" || t.kind === "quick_entry" ? "amount-positive" : "amount-negative"}>
+                  {t.kind === "service_order" || t.kind === "quick_entry" ? "+ " : "− "}
                   {money(t.effective_cents ?? t.amount_cents)}
                 </strong>
                 {t.kind === "expense" && canReport && (
@@ -2693,29 +2772,22 @@ function FinancePage({ role, openOrder }: any) {
             aria-label="Indicadores gerenciais"
           >
             {[
-              ["Receita", received, previous?.total_cents || 0],
-              ["Despesas", spent, previous?.outflow_cents || 0],
+              ["Recebido", received, previous?.total_cents || 0],
+              ["Estornos", refunded, previous?.refund_cents || 0],
+              ["Despesas", expenses, previous?.expense_cents || 0],
               [
-                "Lucro Líquido",
+                "Líquido",
                 remaining,
-                (previous?.total_cents || 0) - (previous?.outflow_cents || 0),
-              ],
-              [
-                "Margem",
-                received ? Math.round((remaining / received) * 100) : 0,
-                previous?.total_cents
-                  ? Math.round(
-                      ((previous.total_cents - previous.outflow_cents) /
-                        previous.total_cents) *
-                        100,
-                    )
-                  : 0,
+                previous?.net_cents ??
+                  (previous?.total_cents || 0) -
+                    (previous?.refund_cents || 0) -
+                    (previous?.expense_cents || 0),
               ],
             ].map(([label, value, old]: any) => (
-              <article key={label}>
+              <article className={label === "Estornos" || label === "Despesas" || value < 0 ? "negative" : "positive"} key={label}>
                 <small>{label}</small>
                 <strong>
-                  {label === "Margem" ? `${value}%` : money(value)}
+                  {money(value)}
                 </strong>
                 <span
                   className={compare(value, old) >= 0 ? "positive" : "negative"}
@@ -2727,9 +2799,9 @@ function FinancePage({ role, openOrder }: any) {
             ))}
           </section>
           <section className="panel revenue-panel">
-            <h2>Receita vs Despesas por dia</h2>
+            <h2>Entradas, estornos e despesas por dia</h2>
             <div className="finance-chart-subhead">
-              <p>Entradas e saídas na data em que ocorreram.</p>
+              <p>Cada natureza permanece separada na data em que ocorreu.</p>
               <button className="primary" onClick={issue}>
                 Gerar PDF privado
               </button>
@@ -2742,6 +2814,26 @@ function FinancePage({ role, openOrder }: any) {
             <button onClick={() => openMoves("refund")}>Ver lançamentos</button>
           </section>
         </>
+      )}
+      {tab === "expenses" && (
+        <section className="panel finance-expenses">
+          <h2>Despesas do mês</h2>
+          <div className="finance-table-wrap">
+            <table className="finance-table">
+              <thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th>Valor</th></tr></thead>
+              <tbody>
+                {month?.expenses?.length ? month.expenses.map((row: any) => (
+                  <tr key={row.id}>
+                    <td>{brazilianDate(row.spent_on)}</td>
+                    <td>{expenseCategoryLabel(row.category)}</td>
+                    <td>{row.description}</td>
+                    <td className="amount-negative">− {money(row.amount_cents)}</td>
+                  </tr>
+                )) : <tr><td colSpan={4}>Nenhuma despesa no mês selecionado.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
       <QuickEntry
         open={quick}

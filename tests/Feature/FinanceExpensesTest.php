@@ -8,6 +8,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class FinanceExpensesTest extends TestCase
@@ -37,11 +38,13 @@ class FinanceExpensesTest extends TestCase
         $expense = $this->postJson('/api/finance/expenses', [
             'spent_on' => '2026-09-09',
             'description' => 'Álcool isopropílico',
+            'category' => 'usage_material',
             'amount_cents' => 3500,
-        ])->assertCreated()->json();
+        ])->assertCreated()->assertJsonPath('category', 'usage_material')->json();
         $this->postJson('/api/finance/expenses', [
             'spent_on' => '2026-08-31',
             'description' => 'Pasta térmica',
+            'category' => 'usage_material',
             'amount_cents' => 1200,
         ])->assertCreated();
 
@@ -49,17 +52,28 @@ class FinanceExpensesTest extends TestCase
             ->assertJsonPath('total_cents', 20000)
             ->assertJsonPath('quick_entries_cents', 20000)
             ->assertJsonPath('expense_cents', 3500)
+            ->assertJsonPath('net_cents', 16500)
             ->assertJsonPath('daily_expenses.2026-09-09', 3500)
             ->assertJsonCount(1, 'expenses');
         $this->getJson('/api/finance/month?period=2026-08')->assertOk()
             ->assertJsonPath('expense_cents', 1200)
             ->assertJsonMissing(['description' => 'Álcool isopropílico']);
+        $daily = $this->getJson('/api/finance/daily?date=2026-09-09')->assertOk()
+            ->assertJsonPath('total_cents', 16500)->json('transactions');
+        $dailyExpense = collect($daily)->firstWhere('kind', 'expense');
+        $this->assertSame('usage_material', $dailyExpense['category']);
+        $this->assertSame('Master', $dailyExpense['user_name']);
+        $this->assertSame(-3500, $dailyExpense['effective_cents']);
+        Storage::fake('local');
+        $report = $this->postJson('/api/finance/reports', ['period' => '2026-09'])
+            ->assertCreated()->json();
+        Storage::disk('local')->assertExists("documents/finance/2026-09-r{$report['revision']}.pdf");
         $this->assertDatabaseHas('audit_logs', ['action' => 'finance.expense_created', 'subject_id' => $expense['id']]);
     }
 
     public function test_only_financial_corrector_roles_can_create_or_delete_expenses_and_deletion_is_audited(): void
     {
-        $payload = ['spent_on' => '2026-09-09', 'description' => 'Pincéis', 'amount_cents' => 1800];
+        $payload = ['spent_on' => '2026-09-09', 'description' => 'Pincéis', 'category' => 'usage_material', 'amount_cents' => 1800];
         $this->actingAs($this->employee)->postJson('/api/finance/expenses', $payload)->assertForbidden();
         $id = $this->actingAs($this->master)->postJson('/api/finance/expenses', $payload)->assertCreated()->json('id');
         $this->actingAs($this->employee)->deleteJson("/api/finance/expenses/$id")->assertForbidden();
@@ -74,9 +88,10 @@ class FinanceExpensesTest extends TestCase
     {
         $id = $this->actingAs($this->master)->postJson('/api/finance/expenses', [
             'spent_on' => '2026-08-31', 'description' => 'Valor incorreto', 'amount_cents' => 9000,
+            'category' => 'merchandise_purchase',
         ])->assertCreated()->json('id');
 
-        $corrected = ['spent_on' => '2026-09-10', 'description' => 'Fonte de bancada', 'amount_cents' => 6500];
+        $corrected = ['spent_on' => '2026-09-10', 'description' => 'Fonte de bancada', 'category' => 'merchandise_purchase', 'amount_cents' => 6500];
         $this->actingAs($this->employee)->putJson("/api/finance/expenses/$id", $corrected)->assertForbidden();
         $this->actingAs($this->master)->putJson("/api/finance/expenses/$id", $corrected)->assertOk()
             ->assertJsonPath('amount_cents', 6500)->assertJsonPath('spent_on', '2026-09-10');
@@ -86,6 +101,23 @@ class FinanceExpensesTest extends TestCase
         $audit = DB::table('audit_logs')->where(['action' => 'finance.expense_updated', 'subject_id' => $id])->first();
         $this->assertSame(9000, json_decode($audit->before, true)['amount_cents']);
         $this->assertSame(6500, json_decode($audit->after, true)['amount_cents']);
+    }
+
+    public function test_new_expense_requires_known_category_and_legacy_expense_remains_readable(): void
+    {
+        $payload = ['spent_on' => '2026-09-09', 'description' => 'Sem categoria nova', 'amount_cents' => 1800];
+        $this->actingAs($this->master)->postJson('/api/finance/expenses', $payload)
+            ->assertUnprocessable()->assertJsonValidationErrors('category');
+        $this->postJson('/api/finance/expenses', [...$payload, 'category' => 'categoria-inventada'])
+            ->assertUnprocessable()->assertJsonValidationErrors('category');
+
+        DB::table('financial_expenses')->insert([
+            ...$payload, 'category' => null, 'created_by' => $this->master->id,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $this->getJson('/api/finance/month?period=2026-09')->assertOk()
+            ->assertJsonPath('expenses.0.category', null)
+            ->assertJsonPath('expenses.0.description', 'Sem categoria nova');
     }
 
     public function test_refund_is_a_current_outflow_preserves_order_total_and_is_limited_to_effective_payment(): void
@@ -109,7 +141,13 @@ class FinanceExpensesTest extends TestCase
 
         $this->assertDatabaseHas('service_orders', ['id' => $order, 'total_cents' => 15000]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'service_order.refund_created', 'subject_type' => 'service_order', 'subject_id' => $order]);
-        $this->getJson('/api/finance/month?period=2026-09')->assertJsonPath('refund_cents', 10000)->assertJsonPath('outflow_cents', 10000);
+        $this->getJson('/api/finance/month?period=2026-09')
+            ->assertJsonPath('total_cents', 15000)
+            ->assertJsonPath('refund_cents', 10000)
+            ->assertJsonPath('net_cents', 5000)
+            ->assertJsonPath('methods.pix.entry_cents', 15000)
+            ->assertJsonPath('methods.pix.outflow_cents', 10000)
+            ->assertJsonMissingPath('outflow_cents');
         $this->getJson("/api/orders/$order/audit-history")->assertJsonFragment(['action' => 'Estorno da OS']);
     }
 

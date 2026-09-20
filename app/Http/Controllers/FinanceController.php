@@ -183,6 +183,7 @@ class FinanceController extends Controller
         $data = $request->validate([
             'spent_on' => ['required', 'date_format:Y-m-d'],
             'description' => ['required', 'string', 'max:160'],
+            'category' => ['required', Rule::in(['merchandise_purchase', 'usage_material'])],
             'amount_cents' => ['required', 'integer', 'min:1'],
         ]);
         $now = CarbonImmutable::now('UTC');
@@ -203,7 +204,7 @@ class FinanceController extends Controller
         abort_unless($row, 404);
         $now = CarbonImmutable::now('UTC');
         DB::table('financial_expenses')->where('id', $expense)->update(['deleted_at' => $now, 'deleted_by' => $request->user()->id, 'updated_at' => $now]);
-        $before = ['spent_on' => $row->spent_on, 'description' => $row->description, 'amount_cents' => (int) $row->amount_cents];
+        $before = ['spent_on' => $row->spent_on, 'description' => $row->description, 'category' => $row->category, 'amount_cents' => (int) $row->amount_cents];
         $this->audit($request, 'finance.expense_deleted', 'financial_expense', $expense, $before, ['deleted_at' => $now->toIso8601String()]);
 
         return response()->json(['message' => 'Despesa excluída com registro de auditoria.']);
@@ -214,11 +215,12 @@ class FinanceController extends Controller
         $data = $request->validate([
             'spent_on' => ['required', 'date_format:Y-m-d'],
             'description' => ['required', 'string', 'max:160'],
+            'category' => ['required', Rule::in(['merchandise_purchase', 'usage_material'])],
             'amount_cents' => ['required', 'integer', 'min:1'],
         ]);
         $row = DB::table('financial_expenses')->whereNull('deleted_at')->find($expense);
         abort_unless($row, 404);
-        $before = ['spent_on' => $row->spent_on, 'description' => $row->description, 'amount_cents' => (int) $row->amount_cents];
+        $before = ['spent_on' => $row->spent_on, 'description' => $row->description, 'category' => $row->category, 'amount_cents' => (int) $row->amount_cents];
         DB::table('financial_expenses')->where('id', $expense)->update([...$data, 'updated_at' => now()]);
         $this->audit($request, 'finance.expense_updated', 'financial_expense', $expense, $before, $data);
 
@@ -231,7 +233,7 @@ class FinanceController extends Controller
         $data = $request->validate([
             'amount_cents' => ['required', 'integer', 'min:1'],
             'reason' => ['required', 'string', 'min:3', 'max:1000'],
-            'method' => ['required', Rule::in(['pix', 'cash', 'debit', 'credit', 'transfer', 'other'])],
+            'method' => ['required', Rule::in(['pix', 'cash'])],
         ]);
         $refund = DB::transaction(function () use ($request, $order, $data) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
@@ -301,25 +303,49 @@ class FinanceController extends Controller
         [$start, $end] = $this->dayBounds($request->input('date'));
         $rows = $this->effective()->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')
             ->leftJoin('service_order_refunds as refund', 'refund.financial_transaction_id', '=', 'financial_transactions.id')
-            ->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')
+            ->leftJoin('service_orders as payment_order', 'payment_order.id', '=', 'payments.service_order_id')
+            ->leftJoin('service_orders as refund_order', 'refund_order.id', '=', 'refund.service_order_id')
             ->leftJoin('users', 'users.id', '=', 'financial_transactions.user_id')
             ->whereBetween('occurred_at', [$start->utc(), $end->utc()])
-            ->addSelect(DB::raw('COALESCE(refund.method, payments.method) as method'), 'service_orders.number as order_number', 'users.name as user_name', 'refund.amount_cents as refund_cents')
+            ->addSelect(
+                DB::raw('COALESCE(refund.method, payments.method) as method'),
+                DB::raw('COALESCE(refund_order.number, payment_order.number) as order_number'),
+                'users.name as user_name',
+                'refund.amount_cents as refund_cents',
+                'refund.reason as refund_reason'
+            )
             ->orderByDesc('occurred_at')->get()
             ->map(function ($row) {
                 // O vínculo identifica estorno; outros ajustes não são automaticamente saídas.
                 $row->effective_cents = $row->refund_cents === null
                     ? (int) $row->effective_cents
                     : -(int) $row->refund_cents;
+                $row->kind = $row->refund_cents !== null
+                    ? 'refund'
+                    : ($row->origin === 'service_order' ? 'service_order' : ($row->origin === 'quick_entry' ? 'quick_entry' : 'adjustment'));
 
                 return $row;
             });
 
+        $expenses = DB::table('financial_expenses')
+            ->leftJoin('users', 'users.id', '=', 'financial_expenses.created_by')
+            ->whereNull('financial_expenses.deleted_at')
+            ->where('financial_expenses.spent_on', $start->format('Y-m-d'))
+            ->get(['financial_expenses.*', 'users.name as user_name'])
+            ->map(function ($row) {
+                $row->kind = 'expense';
+                $row->occurred_at = $row->spent_on;
+                $row->effective_cents = -(int) $row->amount_cents;
+
+                return $row;
+            });
+        $movements = $rows->concat($expenses)->sortByDesc('occurred_at')->values();
+
         return response()->json([
             'date' => $start->format('Y-m-d'),
             'timezone' => self::TZ,
-            'total_cents' => $rows->sum('effective_cents'),
-            'transactions' => $rows,
+            'total_cents' => (int) $movements->sum('effective_cents'),
+            'transactions' => $movements,
         ]);
     }
 
@@ -329,9 +355,12 @@ class FinanceController extends Controller
         $start = CarbonImmutable::createFromFormat('Y-m-d H:i:s', "$period-01 00:00:00", self::TZ);
         $end = $start->endOfMonth();
         $utcBounds = [$start->utc(), $end->utc()];
-        $expenses = DB::table('financial_expenses')->whereNull('deleted_at')
+        $expenses = DB::table('financial_expenses')
+            ->leftJoin('users', 'users.id', '=', 'financial_expenses.created_by')
+            ->whereNull('financial_expenses.deleted_at')
             ->whereBetween('spent_on', [$start->format('Y-m-d'), $end->format('Y-m-d')])
-            ->orderBy('spent_on')->get();
+            ->orderBy('spent_on')
+            ->get(['financial_expenses.*', 'users.name as user_name']);
         $refunds = DB::table('service_order_refunds as refunds')
             ->join('service_orders', 'service_orders.id', '=', 'refunds.service_order_id')
             ->join('users', 'users.id', '=', 'refunds.created_by')
@@ -341,9 +370,11 @@ class FinanceController extends Controller
 
         $rows = $this->effective()
             ->leftJoin('payments', 'payments.id', '=', 'financial_transactions.payment_id')
+            ->leftJoin('service_orders', 'service_orders.id', '=', 'payments.service_order_id')
+            ->leftJoin('users', 'users.id', '=', 'financial_transactions.user_id')
             ->whereIn('financial_transactions.origin', ['service_order', 'quick_entry'])
             ->whereBetween('financial_transactions.occurred_at', $utcBounds)
-            ->addSelect('payments.method', 'payments.service_order_id')
+            ->addSelect('payments.method', 'payments.service_order_id', 'service_orders.number as order_number', 'users.name as user_name')
             ->orderBy('financial_transactions.occurred_at')
             ->get();
 
@@ -410,25 +441,43 @@ class FinanceController extends Controller
         $dailyExpenses = $expenses->groupBy('spent_on')->map(fn ($day) => (int) $day->sum('amount_cents'))->sortKeys();
         $dailyRefunds = $refunds->groupBy(fn ($row) => CarbonImmutable::parse($row->refunded_at, 'UTC')->setTimezone(self::TZ)->format('Y-m-d'))
             ->map(fn ($day) => (int) $day->sum('amount_cents'))->sortKeys();
-        $allDates = $dailyExpenses->keys()->merge($dailyRefunds->keys())->unique();
-        $dailyOutflows = $allDates->mapWithKeys(fn ($date) => [$date => (int) ($dailyExpenses->get($date, 0) + $dailyRefunds->get($date, 0))])->sortKeys();
-        $methods = $orders->filter(fn ($row) => $row->method)->groupBy('method')
-            ->map(fn ($method) => ['quantity' => $method->count(), 'total_cents' => (int) $method->sum('effective_cents')]);
+        $methodKeys = $orders->pluck('method')->merge($refunds->pluck('method'))->filter()->unique();
+        $methods = $methodKeys->mapWithKeys(function (string $method) use ($orders, $refunds) {
+            $entries = $orders->where('method', $method);
+            $outflows = $refunds->where('method', $method);
+            $entryCents = (int) $entries->sum('effective_cents');
+            $outflowCents = (int) $outflows->sum('amount_cents');
+
+            return [$method => [
+                'quantity' => $entries->count(),
+                'outflow_quantity' => $outflows->count(),
+                'total_cents' => $entryCents,
+                'entry_cents' => $entryCents,
+                'outflow_cents' => $outflowCents,
+                'net_cents' => $entryCents - $outflowCents,
+            ]];
+        });
+
+        $receivedCents = (int) $rows->sum('effective_cents');
+        $expenseCents = (int) $expenses->sum('amount_cents');
+        $refundCents = (int) $refunds->sum('amount_cents');
 
         return response()->json([
             'period' => $period,
-            'total_cents' => (int) $rows->sum('effective_cents'),
+            'total_cents' => $receivedCents,
             'service_orders_cents' => (int) $orders->sum('effective_cents'),
+            'service_orders_net_cents' => (int) $orders->sum('effective_cents') - $refundCents,
             'quick_entries_cents' => (int) $rows->where('origin', 'quick_entry')->sum('effective_cents'),
-            'expense_cents' => (int) $expenses->sum('amount_cents'),
-            'refund_cents' => (int) $refunds->sum('amount_cents'),
-            'outflow_cents' => (int) $expenses->sum('amount_cents') + (int) $refunds->sum('amount_cents'),
+            'expense_cents' => $expenseCents,
+            'refund_cents' => $refundCents,
+            'net_cents' => $receivedCents - $refundCents - $expenseCents,
             'paid_orders' => $paidOrderCount,
             'average_ticket_cents' => $paidOrderCount ? intdiv((int) $orders->sum('effective_cents'), $paidOrderCount) : 0,
             'discount_cents' => $discount,
             'allocation_note' => 'Itens e descontos são rateados proporcionalmente ao recebimento acumulado de cada OS; o cálculo cumulativo atribui eventuais centavos residuais à parcela final.',
             'daily' => $daily,
-            'daily_expenses' => $dailyOutflows,
+            'daily_expenses' => $dailyExpenses,
+            'daily_refunds' => $dailyRefunds,
             'expenses' => $expenses->values(),
             'refunds' => $refunds->values(),
             'methods' => $methods,

@@ -159,6 +159,36 @@ test('Financeiro carrega o mês no topo e reaproveita os dados na aba mensal', a
   expect(monthRequests).toHaveLength(2);
 });
 
+test('Movimentações usa botões para preservar os cinco filtros do lançamento', async ({ page }) => {
+  await login(page);
+  await page.route('**/api/finance/month?period=*', async (route) => {
+    await route.fulfill({ json: {
+      period: '2026-09', total_cents: 10000, service_orders_cents: 7000, service_orders_net_cents: 6000,
+      quick_entries_cents: 3000, paid_orders: 1, average_ticket_cents: 7000, discount_cents: 0,
+      expense_cents: 1200, refund_cents: 1000, net_cents: 7800, daily: {}, daily_expenses: {}, daily_refunds: {}, methods: {}, items: [],
+      transactions: [
+        { id: 1, origin: 'service_order', order_number: '0000100', description: 'OS 0000100', occurred_at: '2026-09-10T12:00:00Z', user_name: 'Master', amount_cents: 7000, effective_cents: 7000 },
+        { id: 2, origin: 'quick_entry', description: 'Serviço rápido não cadastrado', occurred_at: '2026-09-10T13:00:00Z', user_name: 'Master', amount_cents: 3000, effective_cents: 3000 },
+      ],
+      expenses: [{ id: 3, spent_on: '2026-09-10', description: 'Pasta térmica', category: 'usage_material', user_name: 'Master', amount_cents: 1200 }],
+      refunds: [{ id: 4, order_number: '0000100', description: 'Estorno da OS 0000100', reason: 'Desconto concedido', refunded_at: '2026-09-10T14:00:00Z', user_name: 'Master', method: 'pix', amount_cents: 1000 }],
+    }});
+  });
+
+  await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
+  await page.getByRole('button', { name: 'Movimentações', exact: true }).click();
+
+  const filters = page.locator('.finance-movement-filters');
+  await expect(filters.getByRole('button')).toHaveText(['Todos', 'Entradas', 'Saídas', 'Despesas', 'Estornos']);
+  await expect(filters.getByRole('button', { name: 'Todos', exact: true })).toHaveClass(/active/);
+  await expect(page.getByLabel('Grupo de lançamentos').locator('select')).toHaveCount(0);
+
+  await filters.getByRole('button', { name: 'Despesas', exact: true }).click();
+  await expect(filters.getByRole('button', { name: 'Despesas', exact: true })).toHaveClass(/active/);
+  await expect(page.locator('.finance-movements .transaction')).toHaveCount(1);
+  await expect(page.locator('.finance-movements .transaction')).toContainText('Pasta térmica');
+});
+
 test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vazar do card', async ({ page }) => {
   await login(page);
   await page.route('**/api/finance/month?period=*', async (route) => {
@@ -166,8 +196,8 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
       json: {
         period: '2026-09', total_cents: 47500, service_orders_cents: 47500,
         quick_entries_cents: 0, paid_orders: 3, average_ticket_cents: 15833,
-        discount_cents: 0, expense_cents: 7500, outflow_cents: 7500, refund_cents: 0, daily: { '2026-09-03': 15000, '2026-09-04': 32500 },
-        daily_expenses: { '2026-09-04': 7500 }, expenses: [], refunds: [], methods: {}, transactions: [], items: [],
+        discount_cents: 0, expense_cents: 7500, refund_cents: 0, net_cents: 40000, daily: { '2026-09-03': 15000, '2026-09-04': 32500 },
+        daily_expenses: { '2026-09-04': 7500 }, daily_refunds: {}, expenses: [], refunds: [], methods: {}, transactions: [], items: [],
       },
     });
   });
@@ -186,14 +216,14 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
   await expect(chart.getByText('04/09/2026', { exact: true })).toHaveCount(1);
   const expenseBar = chart.getByTestId('daily-expense-bar');
   await expect(expenseBar).toHaveCount(1);
-  await expect(expenseBar).toHaveCSS('background-color', 'rgb(201, 0, 28)');
+  await expect(expenseBar).toHaveCSS('background-color', 'rgb(166, 31, 43)');
   await expect(expenseBar).toHaveAttribute('title', /04\/09\/2026 — saída: R\$ 75,00/);
   const reports = page.getByRole('region', { name: 'Indicadores gerenciais' });
   await expect(reports.getByText('Despesas', { exact: true }).locator('..')).toContainText('R$ 75,00');
-  await expect(reports.getByText('Lucro Líquido', { exact: true }).locator('..')).toContainText('R$ 400,00');
+  await expect(reports.getByText('Líquido', { exact: true }).locator('..')).toContainText('R$ 400,00');
   await expect(page.getByText('RECEBIDO NO MÊS').locator('..')).toContainText('R$ 475,00');
 
-  const panel = page.getByRole('heading', { name: 'Receita vs Despesas por dia' }).locator('..');
+  const panel = page.getByRole('heading', { name: 'Entradas, estornos e despesas por dia' }).locator('..');
   const [panelBox, chartBox] = await Promise.all([panel.boundingBox(), chart.boundingBox()]);
   expect(panelBox).not.toBeNull();
   expect(chartBox).not.toBeNull();
@@ -212,21 +242,28 @@ test('seletor de mês troca protagonistas, visão geral e gráfico', async ({ pa
     await route.fulfill({ json: {
       period, total_cents: september ? 91000 : 42000, service_orders_cents: september ? 91000 : 42000,
       quick_entries_cents: 0, paid_orders: 1, average_ticket_cents: september ? 91000 : 42000,
-      discount_cents: 0, outflow_cents: 0, refund_cents: 0, daily: { [`${period}-01`]: september ? 91000 : 42000 }, methods: {}, transactions: [], expenses: [], refunds: [], items: [],
+      discount_cents: 0, expense_cents: september ? 9000 : 4000, refund_cents: september ? 11000 : 3000,
+      net_cents: september ? 71000 : 35000, daily: { [`${period}-01`]: september ? 91000 : 42000 }, daily_expenses: {}, daily_refunds: {}, methods: {}, transactions: [], expenses: [], refunds: [], items: [],
     }});
   });
   await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
   const selector = page.getByLabel('Mês exibido');
+  const summary = page.getByRole('region', { name: 'Resumo financeiro do mês' });
+  const summaryCard = (label: string) => summary.getByText(label, { exact: true }).locator('..');
   await selector.fill('2026-09');
-  await expect(page.getByText('RECEBIDO NO MÊS').locator('..')).toContainText('R$ 910,00');
-  const totals = page.getByRole('region', { name: 'Totais do período' });
-  await expect(totals.getByText('Total Entradas', { exact: true }).locator('..')).toContainText('R$ 910,00');
+  await expect(summaryCard('Recebido no mês')).toContainText('R$ 910,00');
+  await expect(summaryCard('Estornos')).toContainText('R$ 110,00');
+  await expect(summaryCard('Despesas')).toContainText('R$ 90,00');
+  await expect(summaryCard('Líquido')).toContainText('R$ 710,00');
   await page.getByRole('button', { name: 'Relatórios', exact: true }).click();
   await expect(page.getByTestId('daily-revenue-chart').getByText('01/09/2026', { exact: true })).toBeVisible();
   await selector.fill('2026-08');
-  await expect(page.getByText('RECEBIDO NO MÊS').locator('..')).toContainText('R$ 420,00');
+  await expect(summaryCard('Recebido no mês')).toContainText('R$ 420,00');
+  await expect(summaryCard('Estornos')).toContainText('R$ 30,00');
+  await expect(summaryCard('Despesas')).toContainText('R$ 40,00');
+  await expect(summaryCard('Líquido')).toContainText('R$ 350,00');
   await page.getByRole('button', { name: 'Visão Geral', exact: true }).click();
-  await expect(totals.getByText('Total Entradas', { exact: true }).locator('..')).toContainText('R$ 420,00');
+  await expect(summaryCard('Líquido')).toContainText('R$ 350,00');
   await page.getByRole('button', { name: 'Relatórios', exact: true }).click();
   await expect(page.getByTestId('daily-revenue-chart').getByText('01/08/2026', { exact: true })).toBeVisible();
 });
