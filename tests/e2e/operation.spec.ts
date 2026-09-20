@@ -25,6 +25,11 @@ test.describe.serial('fluxo operacional principal', () => {
   });
 
   test('cadastra cliente com fallback manual, CPF válido, edição e links', async ({ page }) => {
+    await page.route('https://viacep.com.br/**', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ erro: true }),
+    }));
     await page.getByRole('button', { name: 'Clientes' }).click();
     await page.getByRole('button', { name: 'Novo cliente' }).click();
     const modal = page.getByTestId('client-modal');
@@ -32,6 +37,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const form = modal.getByTestId('client-form');
     const values: Record<string, string> = { name: 'Cliente E2E', document, phone: '34999998888', postal_code: '99999999', street: 'Rua Manual', number: '10', district: 'Centro', city: 'Araguari', state: 'MG' };
     for (const [name, value] of Object.entries(values)) await form.locator(`[name="${name}"]`).fill(value);
+    await expect(form.getByText('ViaCEP indisponível. Preencha o endereço manualmente.', { exact: true })).toBeVisible();
     await form.getByRole('button', { name: 'Salvar cliente' }).click();
     await expect(page.getByTestId('client-modal')).toHaveCount(0);
     const clientCard = page.locator('.client-list article').filter({ hasText: 'Cliente E2E' });

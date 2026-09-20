@@ -5,6 +5,26 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await page.setViewportSize({ width: 1440, height: 900 });
   await login(page);
 
+  const services = await api(page, '/catalogs/services');
+  expect(services.status).toBe(200);
+  expect(services.body.length).toBeGreaterThan(0);
+  const service = services.body[0];
+
+  const nav = page.locator('aside nav');
+  await nav.getByRole('button', { name: 'Clientes' }).click();
+  await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
+  await expect(page.locator('.clients-react-page')).toBeVisible();
+  await expect(page.locator('.clients-list-panel')).toBeVisible();
+  await expect(page.getByText('Nenhum cliente encontrado.', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('client-modal')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Novo cliente', exact: true }).click();
+  const clientModal = page.getByTestId('client-modal');
+  await expect(clientModal).toBeVisible();
+  await expect(clientModal.getByTestId('client-form')).toBeVisible();
+  await expect(clientModal.getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
+  await clientModal.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(clientModal).toHaveCount(0);
+
   const clientResponse = await api(page, '/clients', 'POST', {
     name: 'Cliente Homologação Final',
     document: uniqueDocument(26090311),
@@ -18,25 +38,6 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
     complement: '',
   });
   expect(clientResponse.status).toBe(201);
-
-  const services = await api(page, '/catalogs/services');
-  expect(services.status).toBe(200);
-  expect(services.body.length).toBeGreaterThan(0);
-  const service = services.body[0];
-
-  const nav = page.locator('aside nav');
-  await nav.getByRole('button', { name: 'Clientes' }).click();
-  await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
-  await expect(page.locator('.clients-react-page')).toBeVisible();
-  await expect(page.locator('.clients-list-panel')).toBeVisible();
-  await expect(page.getByTestId('client-modal')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Novo cliente', exact: true }).click();
-  const clientModal = page.getByTestId('client-modal');
-  await expect(clientModal).toBeVisible();
-  await expect(clientModal.getByTestId('client-form')).toBeVisible();
-  await expect(clientModal.getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
-  await clientModal.getByRole('button', { name: 'Cancelar', exact: true }).click();
-  await expect(clientModal).toHaveCount(0);
 
   await page.locator('aside').getByRole('button', { name: 'Nova OS' }).click();
   const form = page.locator('form.os-form');
