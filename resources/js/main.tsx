@@ -901,6 +901,15 @@ function NewOrder({ done }: any) {
       })
       .catch((e) => setError(e.message));
   }, []);
+  const currentClient = clients.find((c) => c.id === client);
+  const photoPreviews = useMemo(
+    () => photos.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [photos],
+  );
+  useEffect(
+    () => () => photoPreviews.forEach(({ url }) => URL.revokeObjectURL(url)),
+    [photoPreviews],
+  );
   if (quick)
     return (
       <Clients
@@ -913,15 +922,6 @@ function NewOrder({ done }: any) {
         }}
       />
     );
-  const currentClient = clients.find((c) => c.id === client);
-  const photoPreviews = useMemo(
-    () => photos.map((file) => ({ file, url: URL.createObjectURL(file) })),
-    [photos],
-  );
-  useEffect(
-    () => () => photoPreviews.forEach(({ url }) => URL.revokeObjectURL(url)),
-    [photoPreviews],
-  );
   const addPhotos = (files: readonly File[] | null | undefined) => {
     if (!files?.length) return;
     setPhotos((current) => {

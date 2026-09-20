@@ -37,3 +37,24 @@ test('Nova OS pesquisa clientes desde a primeira letra e refina a cada caractere
   await result.click();
   await expect(page.locator('.selected-client-summary')).toContainText('Alpha Busca E2E');
 });
+
+test('cadastro rápido da Nova OS preserva os hooks e aceita somente os campos mínimos', async ({ page }) => {
+  const pageErrors: string[] = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await login(page);
+
+  await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Cadastro rápido', exact: true }).click();
+  const modal = page.getByRole('dialog', { name: 'Novo cliente' });
+  await expect(modal).toBeVisible();
+
+  await modal.getByLabel('Nome / Razão social *').fill('Cliente Rápido E2E');
+  await modal.getByLabel('CPF / CNPJ *').fill(uniqueDocument(20260920));
+  await modal.getByLabel('Telefone *').fill('35999996666');
+  await modal.getByLabel('Endereço *').fill('Rua do Cadastro Rápido');
+  await modal.getByRole('button', { name: 'Salvar cliente' }).click();
+
+  await expect(modal).toHaveCount(0);
+  await expect(page.locator('.selected-client-summary')).toContainText('Cliente Rápido E2E');
+  expect(pageErrors, 'Cadastro rápido não pode disparar React #300 nem outro erro de renderização').toEqual([]);
+});
