@@ -178,7 +178,7 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   const intakeClientField = root.locator('.arl-intake-card .arl-intake-client-field:has(> h3:text-is("Cliente"))');
   await expect(intakeClientField, 'Contrato preservação: a Ficha de entrada deve conter um único bloco de Cliente').toHaveCount(1);
   await expect(intakeClientField.locator('.arl-intake-client-name strong'), 'Contrato preservação: o cliente original deve continuar na Ficha de entrada').toHaveText(originalName);
-  await expect(root.locator('.arl-order-header-identity').getByText(changedEquipment, { exact: true })).toBeVisible();
+  await expect(root.locator('.arl-intake-equipment-field .arl-intake-equipment-name strong')).toHaveText(changedEquipment);
   await expect(root.getByText(changedProblem, { exact: true })).toBeVisible();
 
   await root.getByRole('button', { name: 'Editar', exact: true }).click();

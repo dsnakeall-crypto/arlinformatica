@@ -29,10 +29,11 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(page.locator('.clients-react-page')).toBeVisible();
   await expect(page.locator('.clients-list-panel')).toBeVisible();
-  await expect(page.getByRole('dialog', { name: 'Novo cliente' })).toHaveCount(0);
+  await expect(page.locator('.clients-modal-card')).toHaveCount(0);
   await page.getByRole('button', { name: 'Novo cliente', exact: true }).click();
-  const clientModal = page.getByRole('dialog', { name: 'Novo cliente' });
+  const clientModal = page.locator('.clients-modal-card');
   await expect(clientModal).toBeVisible();
+  await expect(clientModal.locator('form.clients-modal-form')).toBeVisible();
   await expect(clientModal.getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
   await clientModal.getByRole('button', { name: 'Cancelar', exact: true }).click();
   await expect(clientModal).toHaveCount(0);
