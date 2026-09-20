@@ -38,3 +38,36 @@
 - [OK] Cenários Playwright filtrados do Financeiro e inspeção da captura desktop.
 - [PENDENTE] Suítes completas, por instrução expressa deste bloco.
 - [PENDENTE] Push, por instrução expressa deste bloco.
+
+# Checklist final — Bloco C: Produtos e controle de estoque
+
+## Catálogos e produto
+
+- [OK] Serviços e Produtos possuem telas e opções separadas no menu, preservando os registros existentes.
+- [OK] Produto possui nome/descrição, valor de venda, quantidade em estoque e garantia adicional com prazo.
+- [OK] Cadastro de produto não possui custo, lote ou cálculo de margem.
+
+## Regras de estoque
+
+- [OK] Produto é baixado ao ser adicionado à OS e devolvido imediatamente ao reduzir ou remover o item.
+- [OK] Interrupção devolve os produtos antes de apagar os itens ativos e zerar o total da OS.
+- [OK] Orçamento apenas consulta o saldo; não baixa nem reserva estoque.
+- [OK] OS finalizada congela o estoque, inclusive em reabertura administrativa.
+- [OK] Baixa usa transação e bloqueio de linha, impede saldo negativo e informa a quantidade disponível.
+- [OK] Produto zerado permanece cadastrado e indisponível para nova OS; saldo unitário exibe aviso de última unidade.
+- [OK] Entrada de estoque soma ao saldo e registra data, quantidade, motivo, usuário, saldo resultante e vínculo com a OS quando aplicável.
+
+## Seletor da OS
+
+- [OK] Pesquisa conjunta de serviços e produtos foi mantida com botão Produto/Serviço ao lado.
+- [OK] Seletor exibe Serviços e Produtos em colunas no desktop e abas em telas estreitas.
+- [OK] Produtos exibem saldo e quantidade; itens zerados ficam desabilitados na OS.
+- [OK] Lista rápida da abertura continua exclusiva de serviços.
+
+## Validação executada
+
+- [OK] 17 testes PHP focados de estoque, catálogo e fluxo de OS, 176 asserções.
+- [OK] Build de produção com TypeScript e Vite.
+- [OK] 8 cenários Playwright direcionados de catálogo, edição e detalhe da OS.
+- [PENDENTE] Suítes completas, por instrução expressa deste bloco.
+- [PENDENTE] Push, por instrução expressa deste bloco.

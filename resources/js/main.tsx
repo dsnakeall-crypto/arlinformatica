@@ -52,6 +52,7 @@ import ServicesCatalogPage, { ProductsCatalogPage } from "./services-page";
 import ClientsPage from "./clients-page";
 import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
+import ServiceProductSearch from "./service-product-search";
 import {
   OrderPaymentFigures,
 } from "./finance-refund-summary";
@@ -110,6 +111,7 @@ type Catalog = {
   warranty_enabled?: boolean;
   warranty_term?: number | null;
   warranty_unit?: string | null;
+  stock_quantity?: number;
 };
 type Errors = Record<string, string[]>;
 const emptyClient = {
@@ -885,8 +887,7 @@ function NewOrder({ done }: any) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [quick, setQuick] = useState(false),
-    [camera, setCamera] = useState(false),
-    [serviceQuery, setServiceQuery] = useState("");
+    [camera, setCamera] = useState(false);
   useEffect(() => {
     Promise.all([
       api("/clients"),
@@ -928,13 +929,13 @@ function NewOrder({ done }: any) {
     if (!files?.length) return;
     setPhotos((current) => [...current, ...files]);
   };
-  const addItem = (item: Catalog) =>
+  const addItem = (item: Catalog, quantity = 1) =>
     setOrderItems((current) => {
       const found = current.find((x) => x.catalog_id === item.id);
       return found
         ? current.map((x) =>
             x.catalog_id === item.id
-              ? { ...x, quantity: Math.min(999, x.quantity + 1) }
+              ? { ...x, quantity: Math.min(999, x.quantity + quantity) }
               : x,
           )
         : [
@@ -942,7 +943,7 @@ function NewOrder({ done }: any) {
             {
               catalog_id: item.id,
               name: item.name,
-              quantity: 1,
+              quantity,
               price_cents: item.price_cents || 0,
             },
           ];
@@ -1194,32 +1195,10 @@ function NewOrder({ done }: any) {
               Opcional na abertura. Preço e garantia são confirmados pelo
               servidor a partir do catálogo.
             </p>
-            <label className="arl-service-search">
-              <span>⌕</span>
-              <input
-                type="search"
-                placeholder="Pesquisar serviço ou produto…"
-                value={serviceQuery}
-                onChange={(e) => setServiceQuery(e.target.value)}
-              />
-            </label>
+            <ServiceProductSearch items={services as any} ariaLabel="Pesquisar Serviço / Produto na abertura" onSelect={addItem as any} />
             <div className="catalog-pills opening-catalog arl-service-catalog">
               {services
-                .filter((item) =>
-                  serviceQuery
-                    .trim()
-                    .normalize("NFD")
-                    .replace(/[\u0300-\u036f]/g, "")
-                    .toLowerCase()
-                    .split(/\s+/)
-                    .every((term) =>
-                      item.name
-                        .normalize("NFD")
-                        .replace(/[\u0300-\u036f]/g, "")
-                        .toLowerCase()
-                        .includes(term),
-                    ),
-                )
+                .filter((item) => item.category !== "product")
                 .map((item) => (
                   <button
                     type="button"

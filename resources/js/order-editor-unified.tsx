@@ -94,12 +94,12 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
   const equipmentDetailsChanged = equipmentDetails.trim() !== String(order.equipment_details || '').trim();
   const markDirty = () => setDirty(true);
 
-  const addService = (entry: ServiceProductCatalogItem) => {
+  const addService = (entry: ServiceProductCatalogItem, quantity = 1) => {
     markDirty();
     setItems((current) => {
       const found = current.find((row) => row.catalog_id === Number(entry.id));
-      if (found) return current.map((row) => row.catalog_id === Number(entry.id) ? { ...row, quantity: Math.min(999, row.quantity + 1) } : row);
-      return [...current, { catalog_id: Number(entry.id), description: entry.name, quantity: 1, unit_price_cents: Number(entry.price_cents) }];
+      if (found) return current.map((row) => row.catalog_id === Number(entry.id) ? { ...row, quantity: Math.min(999, row.quantity + quantity) } : row);
+      return [...current, { catalog_id: Number(entry.id), description: entry.name, quantity, unit_price_cents: Number(entry.price_cents) }];
     });
   };
 
