@@ -109,6 +109,10 @@ class FinanceRefundBalanceTest extends TestCase
         $row = collect($daily)->firstWhere('id', $refund['financial_transaction_id']);
         $this->assertSame(-1890, $row['effective_cents']);
         $this->assertSame('cash', $row['method']);
+        $this->assertSame('refund', $row['kind']);
+        $this->assertSame('0000001', $row['order_number']);
+        $this->assertSame('Troco faltou do desconto', $row['refund_reason']);
+        $this->assertSame('Master', $row['user_name']);
         $this->assertDatabaseHas('financial_transactions', [
             'id' => $refund['financial_transaction_id'], 'origin' => 'adjustment', 'amount_cents' => 1890,
         ]);
@@ -164,10 +168,12 @@ class FinanceRefundBalanceTest extends TestCase
         $this->getJson('/api/finance/daily?date=2026-09-30')->assertJsonPath('total_cents', -1890);
         $this->getJson('/api/finance/daily?date=2026-10-01')->assertJsonPath('total_cents', 0);
         $this->getJson('/api/finance/month?period=2026-08')
-            ->assertJsonPath('total_cents', 13000)->assertJsonPath('refund_cents', 0)->assertJsonPath('outflow_cents', 0);
+            ->assertJsonPath('total_cents', 13000)->assertJsonPath('refund_cents', 0)->assertJsonMissingPath('outflow_cents');
         $this->getJson('/api/finance/month?period=2026-09')
             ->assertJsonPath('total_cents', 0)->assertJsonPath('refund_cents', 1890)
-            ->assertJsonPath('outflow_cents', 1890)->assertJsonPath('daily_expenses.2026-09-30', 1890);
+            ->assertJsonPath('daily_expenses.2026-09-30', null)
+            ->assertJsonPath('daily_refunds.2026-09-30', 1890)
+            ->assertJsonMissingPath('outflow_cents');
     }
 
     private function pay(int $amount, string $key, string $method = 'pix')

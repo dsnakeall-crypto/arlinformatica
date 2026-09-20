@@ -8,6 +8,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class FinanceExpensesTest extends TestCase
@@ -57,6 +58,16 @@ class FinanceExpensesTest extends TestCase
         $this->getJson('/api/finance/month?period=2026-08')->assertOk()
             ->assertJsonPath('expense_cents', 1200)
             ->assertJsonMissing(['description' => 'Álcool isopropílico']);
+        $daily = $this->getJson('/api/finance/daily?date=2026-09-09')->assertOk()
+            ->assertJsonPath('total_cents', 16500)->json('transactions');
+        $dailyExpense = collect($daily)->firstWhere('kind', 'expense');
+        $this->assertSame('usage_material', $dailyExpense['category']);
+        $this->assertSame('Master', $dailyExpense['user_name']);
+        $this->assertSame(-3500, $dailyExpense['effective_cents']);
+        Storage::fake('local');
+        $report = $this->postJson('/api/finance/reports', ['period' => '2026-09'])
+            ->assertCreated()->json();
+        Storage::disk('local')->assertExists("documents/finance/2026-09-r{$report['revision']}.pdf");
         $this->assertDatabaseHas('audit_logs', ['action' => 'finance.expense_created', 'subject_id' => $expense['id']]);
     }
 
@@ -133,10 +144,10 @@ class FinanceExpensesTest extends TestCase
         $this->getJson('/api/finance/month?period=2026-09')
             ->assertJsonPath('total_cents', 15000)
             ->assertJsonPath('refund_cents', 10000)
-            ->assertJsonPath('outflow_cents', 10000)
             ->assertJsonPath('net_cents', 5000)
             ->assertJsonPath('methods.pix.entry_cents', 15000)
-            ->assertJsonPath('methods.pix.outflow_cents', 10000);
+            ->assertJsonPath('methods.pix.outflow_cents', 10000)
+            ->assertJsonMissingPath('outflow_cents');
         $this->getJson("/api/orders/$order/audit-history")->assertJsonFragment(['action' => 'Estorno da OS']);
     }
 

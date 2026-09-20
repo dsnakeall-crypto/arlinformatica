@@ -166,8 +166,8 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
       json: {
         period: '2026-09', total_cents: 47500, service_orders_cents: 47500,
         quick_entries_cents: 0, paid_orders: 3, average_ticket_cents: 15833,
-        discount_cents: 0, expense_cents: 7500, outflow_cents: 7500, refund_cents: 0, daily: { '2026-09-03': 15000, '2026-09-04': 32500 },
-        daily_expenses: { '2026-09-04': 7500 }, expenses: [], refunds: [], methods: {}, transactions: [], items: [],
+        discount_cents: 0, expense_cents: 7500, refund_cents: 0, net_cents: 40000, daily: { '2026-09-03': 15000, '2026-09-04': 32500 },
+        daily_expenses: { '2026-09-04': 7500 }, daily_refunds: {}, expenses: [], refunds: [], methods: {}, transactions: [], items: [],
       },
     });
   });
@@ -186,14 +186,14 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
   await expect(chart.getByText('04/09/2026', { exact: true })).toHaveCount(1);
   const expenseBar = chart.getByTestId('daily-expense-bar');
   await expect(expenseBar).toHaveCount(1);
-  await expect(expenseBar).toHaveCSS('background-color', 'rgb(201, 0, 28)');
+  await expect(expenseBar).toHaveCSS('background-color', 'rgb(166, 31, 43)');
   await expect(expenseBar).toHaveAttribute('title', /04\/09\/2026 — saída: R\$ 75,00/);
   const reports = page.getByRole('region', { name: 'Indicadores gerenciais' });
   await expect(reports.getByText('Despesas', { exact: true }).locator('..')).toContainText('R$ 75,00');
-  await expect(reports.getByText('Lucro Líquido', { exact: true }).locator('..')).toContainText('R$ 400,00');
+  await expect(reports.getByText('Líquido', { exact: true }).locator('..')).toContainText('R$ 400,00');
   await expect(page.getByText('RECEBIDO NO MÊS').locator('..')).toContainText('R$ 475,00');
 
-  const panel = page.getByRole('heading', { name: 'Receita vs Despesas por dia' }).locator('..');
+  const panel = page.getByRole('heading', { name: 'Entradas, estornos e despesas por dia' }).locator('..');
   const [panelBox, chartBox] = await Promise.all([panel.boundingBox(), chart.boundingBox()]);
   expect(panelBox).not.toBeNull();
   expect(chartBox).not.toBeNull();
@@ -212,7 +212,7 @@ test('seletor de mês troca protagonistas, visão geral e gráfico', async ({ pa
     await route.fulfill({ json: {
       period, total_cents: september ? 91000 : 42000, service_orders_cents: september ? 91000 : 42000,
       quick_entries_cents: 0, paid_orders: 1, average_ticket_cents: september ? 91000 : 42000,
-      discount_cents: 0, outflow_cents: 0, refund_cents: 0, daily: { [`${period}-01`]: september ? 91000 : 42000 }, methods: {}, transactions: [], expenses: [], refunds: [], items: [],
+      discount_cents: 0, expense_cents: 0, refund_cents: 0, net_cents: september ? 91000 : 42000, daily: { [`${period}-01`]: september ? 91000 : 42000 }, daily_expenses: {}, daily_refunds: {}, methods: {}, transactions: [], expenses: [], refunds: [], items: [],
     }});
   });
   await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
