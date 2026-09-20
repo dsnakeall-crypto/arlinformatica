@@ -46,7 +46,7 @@ class NavigationSummaryTest extends TestCase
         ServiceOrder::create([
             'number' => '0000803', 'client_id' => $client, 'equipment_type_id' => $equipment,
             'attendance_type' => 'bench', 'status' => 'completed', 'reported_problem' => 'Concluída',
-            'received_at' => now()->subDays(3), 'completed_at' => now()->subDays(2),
+            'received_at' => now()->subDays(9), 'completed_at' => now()->subDays(8),
             'result' => 'repair_completed', 'created_by' => $user->id,
         ]);
 
