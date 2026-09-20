@@ -106,6 +106,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/settings', [SettingsController::class, 'update']);
         Route::post('/settings/logo', [SettingsController::class, 'logo']);
         Route::post('/settings/signature', [SettingsController::class, 'signature']);
+        Route::delete('/settings/signature', [SettingsController::class, 'destroySignature']);
         Route::get('/post-sales/settings', [PostSaleController::class, 'settings']);
         Route::put('/post-sales/settings', [PostSaleController::class, 'updateSettings']);
     });

@@ -3602,6 +3602,7 @@ function SettingsPage({ role }: any) {
   const [section, setSection] = useState("company");
   const [logo, setLogo] = useState<File | null>(null);
   const [signature, setSignature] = useState<File | null>(null);
+  const [removingSignature, setRemovingSignature] = useState(false);
   useEffect(() => {
     api("/settings")
       .then((settings: any) => setData(formatCompanySettings(settings)))
@@ -3652,6 +3653,21 @@ function SettingsPage({ role }: any) {
     if (e.target.name === "phone") value = masks.phone(value);
     if (e.target.name === "postal_code") value = masks.cep(value);
     setData({ ...data, [e.target.name]: value });
+  };
+  const removeSignature = async () => {
+    if (!window.confirm("Remover a assinatura técnica cadastrada? Os PDFs futuros serão emitidos sem a imagem.")) return;
+    setRemovingSignature(true);
+    setMessage("");
+    try {
+      await api("/settings/signature", { method: "DELETE" });
+      setData((current: any) => ({ ...current, technical_signature_configured: false }));
+      setSignature(null);
+      setMessage("Assinatura técnica removida.");
+    } catch (error: any) {
+      setMessage(error.message || "Não foi possível remover a assinatura técnica.");
+    } finally {
+      setRemovingSignature(false);
+    }
   };
   const tabs = [
     ["company", "Empresa", "▣"],
@@ -3808,7 +3824,15 @@ function SettingsPage({ role }: any) {
                   onChange={(e) => setSignature(e.target.files?.[0] || null)}
                 />
               </label>
-              {data.technical_signature_configured && !signature && <img className="technical-signature-preview" src="/api/settings/signature" alt="Assinatura técnica cadastrada"/>}
+              {data.technical_signature_configured && !signature && (
+                <div className="technical-signature-current">
+                  <img className="technical-signature-preview" src="/api/settings/signature" alt="Assinatura técnica cadastrada"/>
+                  <button type="button" disabled={removingSignature} onClick={() => void removeSignature()}>
+                    <Trash2 aria-hidden="true"/>
+                    {removingSignature ? "Removendo…" : "Remover assinatura técnica"}
+                  </button>
+                </div>
+              )}
             </>
           )}
           {section === "documents" && (

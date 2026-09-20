@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Audit;
 use App\Services\CompanySettings;
 use App\Services\LogoProcessor;
 use App\Services\SignatureProcessor;
@@ -128,5 +129,29 @@ class SettingsController extends Controller
         abort_unless($path, 404);
 
         return Storage::disk('local')->response($path, 'assinatura-tecnica.png', ['Content-Type' => 'image/png']);
+    }
+
+    public function destroySignature(Request $request, Audit $audit): JsonResponse
+    {
+        abort_unless(in_array($request->user()->role->name, ['Master', 'Administrador']), 403);
+        $path = DB::table('settings')->where('key', 'technical_signature')->value('value');
+
+        DB::transaction(function () use ($audit, $path, $request) {
+            DB::table('settings')->where('key', 'technical_signature')->delete();
+            $audit->record(
+                $request,
+                'settings.signature_removed',
+                'settings',
+                null,
+                ['configured' => filled($path)],
+                ['configured' => false],
+            );
+        });
+
+        if ($path) {
+            Storage::disk('local')->delete($path);
+        }
+
+        return response()->json(['configured' => false]);
     }
 }

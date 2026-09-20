@@ -27,15 +27,20 @@ final class SignatureProcessor
 
         for ($y = 0; $y < $height; $y++) {
             for ($x = 0; $x < $width; $x++) {
-                $rgba = imagecolorat($source, $x, $y);
-                $r = ($rgba >> 16) & 0xFF;
-                $g = ($rgba >> 8) & 0xFF;
-                $b = $rgba & 0xFF;
+                $rgba = imagecolorsforindex($source, imagecolorat($source, $x, $y));
+                $r = $rgba['red'];
+                $g = $rgba['green'];
+                $b = $rgba['blue'];
+                $sourceAlpha = $rgba['alpha'];
+                if ($sourceAlpha >= 127) {
+                    continue;
+                }
                 $darkness = 255 - min($r, $g, $b);
                 if ($darkness < 12) {
                     continue;
                 }
-                $alpha = $darkness >= 55 ? 0 : (int) round(127 * (1 - (($darkness - 12) / 43)));
+                $whiteRemovalAlpha = $darkness >= 55 ? 0 : (int) round(127 * (1 - (($darkness - 12) / 43)));
+                $alpha = max($sourceAlpha, $whiteRemovalAlpha);
                 imagesetpixel($transparent, $x, $y, imagecolorallocatealpha($transparent, $r, $g, $b, max(0, min(127, $alpha))));
                 $minX = min($minX, $x);
                 $minY = min($minY, $y);
