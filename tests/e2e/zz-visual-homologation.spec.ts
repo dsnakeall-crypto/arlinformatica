@@ -118,7 +118,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await newOrderForm.locator('.opening-catalog button').first().click();
   await expect(newOrderForm.locator('.opening-item')).toHaveCount(1);
   await expect(page.getByPlaceholder('Buscar por nome, telefone ou CPF/CNPJ')).toBeVisible();
-  await expect(page.getByPlaceholder('Pesquisar serviço ou produto…')).toBeVisible();
+  await expect(page.getByPlaceholder('Pesquisar serviço ou produto')).toBeVisible();
   await expect(page.getByRole('button', { name: /Usar câmera/ })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/03-nova-os-desktop.png', fullPage: true });
 
@@ -185,8 +185,12 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.screenshot({ path: 'visual-artifacts/06-pos-venda-desktop.png', fullPage: true });
 
   await nav.getByRole('button', { name: 'Serviços' }).click();
-  await expect(page.getByRole('heading', { name: 'Serviços e Produtos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Serviços', exact: true })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/07-servicos-desktop.png', fullPage: true });
+
+  await nav.getByRole('button', { name: 'Produtos' }).click();
+  await expect(page.getByRole('heading', { name: 'Produtos', exact: true })).toBeVisible();
+  await page.screenshot({ path: 'visual-artifacts/07-produtos-desktop.png', fullPage: true });
 
   await nav.getByRole('button', { name: 'Configurações' }).click();
   await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();

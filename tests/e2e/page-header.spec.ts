@@ -8,7 +8,8 @@ const screens = [
   ['Clientes', 'Gestão de Clientes'],
   ['Financeiro', 'Financeiro'],
   ['Pós-Venda', 'Pós-Venda & Reputação'],
-  ['Serviços', 'Serviços e Produtos'],
+  ['Serviços', 'Serviços'],
+  ['Produtos', 'Produtos'],
   ['Usuários', 'Usuários e Permissões'],
   ['Configurações', 'Configurações'],
 ] as const;

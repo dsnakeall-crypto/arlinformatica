@@ -62,8 +62,9 @@ const groups = [
     name: 'operacionais',
     destinations: [
       ['Financeiro', 'Financeiro'],
-      ['Pós-Venda', 'Pós-Venda'],
-      ['Serviços', 'Serviços e Produtos'],
+      ['Pós-Venda', /^Pós-Venda/],
+      ['Serviços', 'Serviços'],
+      ['Produtos', 'Produtos'],
     ],
   },
   {
@@ -84,7 +85,9 @@ for (const group of groups) {
     for (const [menu, heading] of group.destinations) {
       await openOrder(page, orderNumber);
       await sidebar.getByRole('button', { name: menu, exact: true }).click();
-      const destination = page.getByRole('heading', { name: heading });
+      const destination = typeof heading === 'string'
+        ? page.getByRole('heading', { name: heading, exact: true })
+        : page.getByRole('heading', { name: heading });
       await expect(destination).toBeVisible();
       await assertOrderArtifactsGone(page, orderNumber);
     }
