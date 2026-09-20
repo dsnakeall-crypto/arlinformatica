@@ -256,7 +256,7 @@ function ClientForm({ onSaved, onCancel, client }: any) {
     }
   };
   return (
-    <form className="form-card" data-testid="client-modal" onSubmit={submit}>
+  <form className="form-card" onSubmit={submit}>
       <h2>
         <Users /> {client ? "Editar cliente" : "Novo cliente"}
       </h2>
