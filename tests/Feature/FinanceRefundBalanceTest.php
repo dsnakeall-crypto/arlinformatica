@@ -124,6 +124,24 @@ class FinanceRefundBalanceTest extends TestCase
         $this->getJson('/api/finance/daily?date=2026-09-12')->assertJsonPath('total_cents', 700);
     }
 
+    public function test_refund_method_is_independent_from_original_payment_method(): void
+    {
+        $this->pay(13000, 'debit-payment', 'debit')->assertCreated();
+        $this->postJson("/api/orders/{$this->order->id}/refunds", [
+            'amount_cents' => 3000, 'method' => 'pix', 'reason' => 'Devolução combinada com o cliente',
+        ])->assertCreated()->assertJsonPath('method', 'pix');
+
+        $this->assertDatabaseHas('payments', [
+            'service_order_id' => $this->order->id, 'amount_cents' => 13000, 'method' => 'debit',
+        ]);
+        $this->assertDatabaseHas('service_order_refunds', [
+            'service_order_id' => $this->order->id, 'amount_cents' => 3000, 'method' => 'pix',
+        ]);
+        $this->postJson("/api/orders/{$this->order->id}/refunds", [
+            'amount_cents' => 100, 'method' => 'debit', 'reason' => 'Forma não permitida',
+        ])->assertUnprocessable();
+    }
+
     public function test_refund_is_an_outflow_on_its_local_day_and_does_not_rewrite_the_payment_month(): void
     {
         CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-08-20 15:00:00', 'UTC'));
@@ -139,10 +157,10 @@ class FinanceRefundBalanceTest extends TestCase
             ->assertJsonPath('outflow_cents', 1890)->assertJsonPath('daily_expenses.2026-09-30', 1890);
     }
 
-    private function pay(int $amount, string $key)
+    private function pay(int $amount, string $key, string $method = 'pix')
     {
         return $this->postJson("/api/orders/{$this->order->id}/payment", [
-            'amount_cents' => $amount, 'method' => 'pix', 'idempotency_key' => $key,
+            'amount_cents' => $amount, 'method' => $method, 'idempotency_key' => $key,
         ]);
     }
 

@@ -231,7 +231,7 @@ class FinanceController extends Controller
         $data = $request->validate([
             'amount_cents' => ['required', 'integer', 'min:1'],
             'reason' => ['required', 'string', 'min:3', 'max:1000'],
-            'method' => ['required', Rule::in(['pix', 'cash', 'debit', 'credit', 'transfer', 'other'])],
+            'method' => ['required', Rule::in(['pix', 'cash'])],
         ]);
         $refund = DB::transaction(function () use ($request, $order, $data) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
