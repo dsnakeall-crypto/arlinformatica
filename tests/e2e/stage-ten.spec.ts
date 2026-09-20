@@ -242,21 +242,28 @@ test('seletor de mês troca protagonistas, visão geral e gráfico', async ({ pa
     await route.fulfill({ json: {
       period, total_cents: september ? 91000 : 42000, service_orders_cents: september ? 91000 : 42000,
       quick_entries_cents: 0, paid_orders: 1, average_ticket_cents: september ? 91000 : 42000,
-      discount_cents: 0, expense_cents: 0, refund_cents: 0, net_cents: september ? 91000 : 42000, daily: { [`${period}-01`]: september ? 91000 : 42000 }, daily_expenses: {}, daily_refunds: {}, methods: {}, transactions: [], expenses: [], refunds: [], items: [],
+      discount_cents: 0, expense_cents: september ? 9000 : 4000, refund_cents: september ? 11000 : 3000,
+      net_cents: september ? 71000 : 35000, daily: { [`${period}-01`]: september ? 91000 : 42000 }, daily_expenses: {}, daily_refunds: {}, methods: {}, transactions: [], expenses: [], refunds: [], items: [],
     }});
   });
   await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
   const selector = page.getByLabel('Mês exibido');
+  const summary = page.getByRole('region', { name: 'Resumo financeiro do mês' });
+  const summaryCard = (label: string) => summary.getByText(label, { exact: true }).locator('..');
   await selector.fill('2026-09');
-  await expect(page.getByText('RECEBIDO NO MÊS').locator('..')).toContainText('R$ 910,00');
-  const totals = page.getByRole('region', { name: 'Totais do período' });
-  await expect(totals.getByText('Total Entradas', { exact: true }).locator('..')).toContainText('R$ 910,00');
+  await expect(summaryCard('Recebido no mês')).toContainText('R$ 910,00');
+  await expect(summaryCard('Estornos')).toContainText('R$ 110,00');
+  await expect(summaryCard('Despesas')).toContainText('R$ 90,00');
+  await expect(summaryCard('Líquido')).toContainText('R$ 710,00');
   await page.getByRole('button', { name: 'Relatórios', exact: true }).click();
   await expect(page.getByTestId('daily-revenue-chart').getByText('01/09/2026', { exact: true })).toBeVisible();
   await selector.fill('2026-08');
-  await expect(page.getByText('RECEBIDO NO MÊS').locator('..')).toContainText('R$ 420,00');
+  await expect(summaryCard('Recebido no mês')).toContainText('R$ 420,00');
+  await expect(summaryCard('Estornos')).toContainText('R$ 30,00');
+  await expect(summaryCard('Despesas')).toContainText('R$ 40,00');
+  await expect(summaryCard('Líquido')).toContainText('R$ 350,00');
   await page.getByRole('button', { name: 'Visão Geral', exact: true }).click();
-  await expect(totals.getByText('Total Entradas', { exact: true }).locator('..')).toContainText('R$ 420,00');
+  await expect(summaryCard('Líquido')).toContainText('R$ 350,00');
   await page.getByRole('button', { name: 'Relatórios', exact: true }).click();
   await expect(page.getByTestId('daily-revenue-chart').getByText('01/08/2026', { exact: true })).toBeVisible();
 });
