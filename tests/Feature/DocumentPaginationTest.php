@@ -11,9 +11,14 @@ class DocumentPaginationTest extends TestCase
     {
         $pdf = Pdf::loadView('documents.final', $this->documentData(1))->setPaper('a4');
         $pdf->render();
+        $html = view('documents.final', $this->documentData(1))->render();
 
         $this->assertSame(1, $pdf->getDomPDF()->getCanvas()->get_page_count());
-        $this->assertStringContainsString('official-letterhead', view('documents.final', $this->documentData(1))->render());
+        $this->assertStringContainsString('official-letterhead', $html);
+        $this->assertStringContainsString('.dates-line{width:100%;table-layout:fixed', $html);
+        $this->assertStringContainsString('.two-column{width:calc(100% + 10px);table-layout:fixed', $html);
+        $this->assertStringContainsString('class="grand-total-row"', $html);
+        $this->assertStringContainsString('background:#FFF3BF;border-top:1px solid #C9001C', $html);
     }
 
     public function test_long_final_document_uses_multiple_pages(): void
