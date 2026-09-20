@@ -10,18 +10,30 @@ use Illuminate\Validation\Rule;
 
 class CatalogController extends Controller
 {
-    private const TABLES = ['equipment' => 'equipment_types', 'manufacturers' => 'manufacturers', 'services' => 'service_catalog'];
+    private const TABLES = [
+        'equipment' => 'equipment_types',
+        'manufacturers' => 'manufacturers',
+        'services' => 'service_catalog',
+        'products' => 'service_catalog',
+        'items' => 'service_catalog',
+    ];
 
     public function index(Request $request, string $catalog): JsonResponse
     {
         $table = self::TABLES[$catalog] ?? abort(404);
         $query = DB::table($table);
-        if ($catalog === 'services') {
+        if (in_array($catalog, ['services', 'products', 'items'], true)) {
             $query->select($table.'.*')->selectSub(function ($usage) use ($table) {
                 $usage->from('service_order_items')
                     ->selectRaw('COUNT(DISTINCT service_order_id)')
                     ->whereColumn('service_order_items.catalog_id', $table.'.id');
             }, 'usage_count');
+
+            if ($catalog === 'services') {
+                $query->where(fn ($services) => $services->where('category', 'service')->orWhereNull('category'));
+            } elseif ($catalog === 'products') {
+                $query->where('category', 'product');
+            }
         }
         $query->orderBy('name');
         if ($request->boolean('active', true)) {
@@ -37,13 +49,17 @@ class CatalogController extends Controller
     public function store(Request $request, string $catalog, Audit $audit): JsonResponse
     {
         $table = self::TABLES[$catalog] ?? abort(404);
+        abort_unless(in_array($catalog, ['equipment', 'manufacturers', 'services', 'products'], true), 404);
         $rules = ['name' => ['required', 'string', 'max:255', Rule::unique($table)], 'active' => 'boolean'];
-        if ($catalog === 'services') {
-            $rules += ['category' => 'nullable|in:service,product', 'price_cents' => 'required|integer|min:0', 'warranty_enabled' => 'boolean', 'warranty_term' => 'nullable|integer|min:1', 'warranty_unit' => 'nullable|in:days,months,years'];
+        if (in_array($catalog, ['services', 'products'], true)) {
+            $rules += ['price_cents' => 'required|integer|min:0', 'warranty_enabled' => 'boolean', 'warranty_term' => 'nullable|integer|min:1', 'warranty_unit' => 'nullable|in:days,months,years'];
         }
         $this->addWarrantyRules($rules, $catalog);
         $data = $request->validate($rules);
         $this->validateWarranty($data, $catalog);
+        if (in_array($catalog, ['services', 'products'], true)) {
+            $data['category'] = $catalog === 'products' ? 'product' : 'service';
+        }
         $id = DB::table($table)->insertGetId($data + ['active' => true, 'created_at' => now(), 'updated_at' => now()]);
         $record = DB::table($table)->find($id);
         $audit->record($request, 'catalog.created', $table, $id, null, $record);
@@ -54,8 +70,15 @@ class CatalogController extends Controller
     public function update(Request $request, string $catalog, int $id, Audit $audit): JsonResponse
     {
         $table = self::TABLES[$catalog] ?? abort(404);
-        abort_unless(DB::table($table)->where('id', $id)->exists(), 404);
-        $rules = ['name' => ['sometimes', 'string', 'max:255', Rule::unique($table)->ignore($id)], 'active' => 'sometimes|boolean', 'category' => 'sometimes|nullable|in:service,product', 'price_cents' => 'sometimes|integer|min:0'];
+        abort_unless(in_array($catalog, ['equipment', 'manufacturers', 'services', 'products'], true), 404);
+        $recordQuery = DB::table($table)->where('id', $id);
+        if ($catalog === 'services') {
+            $recordQuery->where(fn ($services) => $services->where('category', 'service')->orWhereNull('category'));
+        } elseif ($catalog === 'products') {
+            $recordQuery->where('category', 'product');
+        }
+        abort_unless($recordQuery->exists(), 404);
+        $rules = ['name' => ['sometimes', 'string', 'max:255', Rule::unique($table)->ignore($id)], 'active' => 'sometimes|boolean', 'price_cents' => 'sometimes|integer|min:0'];
         $this->addWarrantyRules($rules, $catalog, true);
         $data = $request->validate($rules);
         $this->validateWarranty($data, $catalog);
@@ -95,7 +118,7 @@ class CatalogController extends Controller
 
     private function addWarrantyRules(array &$rules, string $catalog, bool $sometimes = false): void
     {
-        if ($catalog === 'services') {
+        if (in_array($catalog, ['services', 'products'], true)) {
             $prefix = $sometimes ? 'sometimes|' : '';
             $rules += ['warranty_enabled' => $prefix.'boolean', 'warranty_term' => $prefix.'nullable|integer|min:1|max:9999', 'warranty_unit' => $prefix.'nullable|in:days,months,years'];
         }
@@ -103,7 +126,7 @@ class CatalogController extends Controller
 
     private function validateWarranty(array $data, string $catalog): void
     {
-        if ($catalog === 'services' && ($data['warranty_enabled'] ?? false)) {
+        if (in_array($catalog, ['services', 'products'], true) && ($data['warranty_enabled'] ?? false)) {
             validator($data, ['warranty_term' => 'required|integer|min:1', 'warranty_unit' => 'required|in:days,months,years'])->validate();
         }
     }

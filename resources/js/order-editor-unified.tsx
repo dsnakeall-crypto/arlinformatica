@@ -55,7 +55,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
       try {
         const nextOrder = await api(`/orders/${orderId}`);
         const [serviceRows, documents] = await Promise.all([
-          api('/catalogs/services'),
+          api('/catalogs/items'),
           api(`/orders/${orderId}/documents`),
         ]);
         if (!active) return;

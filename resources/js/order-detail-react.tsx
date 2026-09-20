@@ -189,7 +189,7 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [dirty, setDirty] = useState(false);
-  useEffect(() => { void api('/catalogs/services').then((rows) => setCatalog(Array.isArray(rows) ? rows.filter((row: any) => row.active !== false) : [])); }, [order.id]);
+  useEffect(() => { void api('/catalogs/items').then((rows) => setCatalog(Array.isArray(rows) ? rows.filter((row: any) => row.active !== false) : [])); }, [order.id]);
   useEffect(() => {
     setItems((order.items || []).filter((row: any) => !row.finalization_id && row.catalog_id).map((row: any) => ({ catalog_id: Number(row.catalog_id), description: row.description, quantity: Number(row.quantity), unit_price_cents: Number(row.unit_price_cents) })));
     setDirty(false);
@@ -254,7 +254,7 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
   const [list, setList] = useState<any[]>([]), [open, setOpen] = useState(false), [validity, setValidity] = useState(7), [catalog, setCatalog] = useState<ServiceProductCatalogItem[]>([]), [items, setItems] = useState<any[]>([]), [error, setError] = useState('');
   const [diagnosis, setDiagnosis] = useState(''), [proposal, setProposal] = useState(''), [observation, setObservation] = useState('');
   const load = () => api(`/orders/${order.id}/budgets`).then(setList);
-  useEffect(() => { void load(); void Promise.all([api('/operational-settings'), api('/catalogs/services')]).then(([settings, services]) => { setValidity(+settings.budget_validity_days || 7); setCatalog(services); }).catch(() => undefined); }, [order.id]);
+  useEffect(() => { void load(); void Promise.all([api('/operational-settings'), api('/catalogs/items')]).then(([settings, services]) => { setValidity(+settings.budget_validity_days || 7); setCatalog(services); }).catch(() => undefined); }, [order.id]);
   useEffect(() => { if (openSignal && !isFinalized) setOpen(true); }, [openSignal, isFinalized]);
   const add = (entry: ServiceProductCatalogItem) => setItems((current) => { const found = current.find((row) => row.catalog_id === entry.id); return found ? current.map((row) => row === found ? { ...row, quantity: row.quantity + 1 } : row) : [...current, { catalog_id: entry.id, description: entry.name, quantity: 1, unit_price_cents: entry.price_cents, warranty_enabled: !!entry.warranty_enabled, warranty_term: entry.warranty_term, warranty_unit: entry.warranty_unit }]; });
   const submit = async (e: FormEvent) => {
@@ -324,7 +324,7 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
 function FinalizationBox({ order, reload, openSignal = 0, finalReport, setFinalReport, onShare, persistPendingChanges, onFinalReportDirty }: any) {
   const seeded = (sourceOrder = order) => (sourceOrder.items || []).filter((row: any) => !row.finalization_id).map((row: any) => { let warranty = row.warranty_snapshot; if (typeof warranty === 'string') try { warranty = JSON.parse(warranty); } catch { warranty = null; } return { catalog_id: row.catalog_id, description: row.description, quantity: row.quantity, unit_price_cents: row.unit_price_cents, warranty_enabled: !!warranty, warranty_term: warranty?.term, warranty_unit: warranty?.unit, warranty_description: warranty?.description }; });
   const [open, setOpen] = useState(false), [result, setResult] = useState('repair_completed'), [other, setOther] = useState(''), [discount, setDiscount] = useState('0'), [items, setItems] = useState<any[]>(seeded), [catalog, setCatalog] = useState<any[]>([]), [budgets, setBudgets] = useState<any[]>([]), [sourceBudgetId, setSourceBudgetId] = useState<number | null>(null), [showItemWarranties, setShowItemWarranties] = useState(false), [isPaid, setIsPaid] = useState(false), [paymentMethod, setPaymentMethod] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false);
-  const loadLists = () => Promise.all([api('/catalogs/services'), api(`/orders/${order.id}/budgets`)]).then(([services, budgetRows]) => { setCatalog(services); setBudgets(budgetRows); });
+  const loadLists = () => Promise.all([api('/catalogs/items'), api(`/orders/${order.id}/budgets`)]).then(([services, budgetRows]) => { setCatalog(services); setBudgets(budgetRows); });
   const openFinalization = async () => {
     setBusy(true); setError('');
     try {

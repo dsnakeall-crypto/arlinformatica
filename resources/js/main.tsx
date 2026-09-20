@@ -48,7 +48,7 @@ import "../css/app.css";
 import "../css/homologation.css";
 import "../css/arl-ui-system.css";
 import "../css/action-icons.css";
-import ServicesCatalogPage from "./services-page";
+import ServicesCatalogPage, { ProductsCatalogPage } from "./services-page";
 import ClientsPage from "./clients-page";
 import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
@@ -66,6 +66,7 @@ type Page =
   | "post-sale"
   | "settings"
   | "services"
+  | "products"
   | "users";
 type Client = {
   id: number;
@@ -890,7 +891,7 @@ function NewOrder({ done }: any) {
     Promise.all([
       api("/clients"),
       api("/catalogs/equipment"),
-      api("/catalogs/services"),
+      api("/catalogs/items"),
     ])
       .then(([c, e, s]) => {
         setClients(c.data);
@@ -1327,7 +1328,7 @@ function FinalizationBox({ order, reload }: any) {
     [busy, setBusy] = useState(false);
   useEffect(() => {
     Promise.all([
-      api("/catalogs/services"),
+      api("/catalogs/items"),
       api(`/orders/${order.id}/budgets`),
     ]).then(([c, b]) => {
       setCatalog(c);
@@ -4971,6 +4972,7 @@ function App() {
       "post-sale": "post-sale",
       settings: "settings",
       services: "services",
+      products: "products",
       users: "users",
     } as Record<string, Page>
   )[location.pathname.replace(/^\//, "")];
@@ -5031,7 +5033,7 @@ function App() {
   const roleAllowed = (p: Page) =>
     p === "users"
       ? me?.role === "Master"
-      : ["finance", "services", "settings"].includes(p)
+      : ["finance", "services", "products", "settings"].includes(p)
         ? me?.role === "Master" || me?.role === "Administrador"
         : true;
   useEffect(() => {
@@ -5054,6 +5056,7 @@ function App() {
       items: [
         ["Clientes", "clients", Users],
         ["Serviços", "services", Box],
+        ["Produtos", "products", PackageSearch],
       ],
     },
     {
@@ -5274,6 +5277,8 @@ function App() {
           <PostSalePage />
         ) : page === "services" ? (
           <ServicesCatalogPage />
+        ) : page === "products" ? (
+          <ProductsCatalogPage />
         ) : page === "users" ? (
           <UsersAdmin />
         ) : page === "settings" ? (

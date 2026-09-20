@@ -19,7 +19,6 @@ type ServiceItem = {
 type Draft = {
   name: string;
   price: string;
-  category: 'service' | 'product';
   warranty_enabled: boolean;
   warranty_term: number;
   warranty_unit: 'days' | 'months' | 'years';
@@ -28,7 +27,6 @@ type Draft = {
 const emptyDraft = (): Draft => ({
   name: '',
   price: '0,00',
-  category: 'service',
   warranty_enabled: false,
   warranty_term: 30,
   warranty_unit: 'days',
@@ -71,7 +69,7 @@ function unitLabel(unit: ServiceItem['warranty_unit']) {
   return 'dias';
 }
 
-function TypeIcon({ category }: { category: ServiceItem['category'] | Draft['category'] }) {
+function TypeIcon({ category }: { category: ServiceItem['category'] }) {
   return category === 'product' ? <Box aria-hidden="true" /> : <Wrench aria-hidden="true" />;
 }
 
@@ -85,7 +83,10 @@ function recency(item: ServiceItem) {
   return Number.isFinite(timestamp) ? timestamp : item.id;
 }
 
-export default function ServicesCatalogPage() {
+type CatalogKind = 'services' | 'products';
+
+function CatalogPage({ kind }: { kind: CatalogKind }) {
+  const product = kind === 'products';
   const [items, setItems] = useState<ServiceItem[]>([]);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [edit, setEdit] = useState<(Draft & { id: number }) | null>(null);
@@ -99,7 +100,7 @@ export default function ServicesCatalogPage() {
     setLoading(true);
     setError('');
     try {
-      setItems(await api('/catalogs/services?active=0'));
+      setItems(await api(`/catalogs/${kind}?active=0`));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Não foi possível carregar o catálogo.');
     } finally {
@@ -109,7 +110,7 @@ export default function ServicesCatalogPage() {
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [kind]);
 
   const topThree = useMemo(
     () => [...items]
@@ -123,9 +124,8 @@ export default function ServicesCatalogPage() {
     const term = query.trim().toLocaleLowerCase('pt-BR');
     if (!term) return items;
     return items.filter((item) => {
-      const category = item.category === 'product' ? 'produto' : 'serviço';
       const state = item.active ? 'ativo' : 'inativo';
-      return `${item.name} ${category} ${state}`.toLocaleLowerCase('pt-BR').includes(term);
+      return `${item.name} ${state}`.toLocaleLowerCase('pt-BR').includes(term);
     });
   }, [items, query]);
 
@@ -136,7 +136,6 @@ export default function ServicesCatalogPage() {
     return {
       name: source.name.trim(),
       price_cents: price,
-      category: source.category,
       warranty_enabled: source.warranty_enabled,
       warranty_term: source.warranty_enabled ? source.warranty_term : null,
       warranty_unit: source.warranty_enabled ? source.warranty_unit : null,
@@ -149,9 +148,9 @@ export default function ServicesCatalogPage() {
     setError('');
     setMessage('');
     try {
-      await api('/catalogs/services', { method: 'POST', body: JSON.stringify({ ...payload(draft), active: true }) });
+      await api(`/catalogs/${kind}`, { method: 'POST', body: JSON.stringify({ ...payload(draft), active: true }) });
       setDraft(emptyDraft());
-      setMessage('Serviço ou produto cadastrado com sucesso.');
+      setMessage(`${product ? 'Produto' : 'Serviço'} cadastrado com sucesso.`);
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Não foi possível cadastrar.');
@@ -167,7 +166,7 @@ export default function ServicesCatalogPage() {
     setError('');
     setMessage('');
     try {
-      await api(`/catalogs/services/${edit.id}`, { method: 'PATCH', body: JSON.stringify(payload(edit)) });
+      await api(`/catalogs/${kind}/${edit.id}`, { method: 'PATCH', body: JSON.stringify(payload(edit)) });
       setEdit(null);
       setMessage('Alterações salvas. O histórico das OS anteriores permanece preservado.');
       await load();
@@ -183,7 +182,7 @@ export default function ServicesCatalogPage() {
     setError('');
     setMessage('');
     try {
-      await api(`/catalogs/services/${item.id}`, { method: 'PATCH', body: JSON.stringify({ active: !item.active }) });
+      await api(`/catalogs/${kind}/${item.id}`, { method: 'PATCH', body: JSON.stringify({ active: !item.active }) });
       setMessage(item.active
         ? 'Item desativado. Ele não aparecerá em novas OS, mas continua preservado no histórico.'
         : 'Item reativado e disponível novamente para novas OS.');
@@ -199,14 +198,16 @@ export default function ServicesCatalogPage() {
     id: item.id,
     name: item.name,
     price: (item.price_cents / 100).toFixed(2).replace('.', ','),
-    category: item.category === 'product' ? 'product' : 'service',
     warranty_enabled: Boolean(item.warranty_enabled),
     warranty_term: item.warranty_term || 30,
     warranty_unit: item.warranty_unit || 'days',
   });
 
-  return <div className="services-page" data-testid="services-page">
-    <PageHeader eyebrow="CATÁLOGO ARL" title="Serviços e Produtos" description="Cadastre, organize e consulte os itens usados nas ordens de serviço." icon={Box}/>
+  const singular = product ? 'produto' : 'serviço';
+  const plural = product ? 'produtos' : 'serviços';
+
+  return <div className="services-page" data-testid={product ? 'products-page' : 'services-page'}>
+    <PageHeader eyebrow="CATÁLOGO ARL" title={product ? 'Produtos' : 'Serviços'} description={`Cadastre, organize e consulte os ${plural} usados nas ordens de serviço.`} icon={product ? Box : Wrench}/>
 
     {(error || message) && <div className={error ? 'alert services-feedback' : 'notice services-feedback'} role="status">
       {error || message}
@@ -216,26 +217,19 @@ export default function ServicesCatalogPage() {
       <div className="services-section-heading">
         <span className="services-heading-icon"><Plus aria-hidden="true" /></span>
         <div>
-          <h2>Novo serviço ou produto</h2>
-          <p>Preencha as informações para adicionar um novo item ao catálogo.</p>
+          <h2>Novo {singular}</h2>
+          <p>Preencha as informações para adicionar um novo {singular} ao catálogo.</p>
         </div>
       </div>
 
       <div className="services-create-grid">
         <label className="services-field services-name-field">
           <span>Nome / descrição</span>
-          <input aria-label="Nome ou descrição do serviço" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Nome / descrição" />
+          <input aria-label={`Nome ou descrição do ${singular}`} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Nome / descrição" />
         </label>
         <label className="services-field">
           <span>Valor (R$)</span>
           <div className="services-money-input"><b>R$</b><input aria-label="Valor em R$" inputMode="decimal" value={draft.price} onChange={(event) => setDraft({ ...draft, price: event.target.value })} /></div>
-        </label>
-        <label className="services-field">
-          <span>Tipo</span>
-          <select aria-label="Tipo do item" value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value as Draft['category'] })}>
-            <option value="service">Serviço</option>
-            <option value="product">Produto</option>
-          </select>
         </label>
         <button className="primary services-add" disabled={busy}><Plus aria-hidden="true" />{busy ? 'Salvando…' : 'Adicionar'}</button>
       </div>
@@ -254,30 +248,30 @@ export default function ServicesCatalogPage() {
 
     <section className="services-most-used" aria-labelledby="services-most-used-title">
       <div className="services-list-heading">
-        <div><h2 id="services-most-used-title">Mais usados</h2><p>Os três itens mais presentes em OS; sem histórico suficiente, entram os cadastros mais recentes.</p></div>
+        <div><h2 id="services-most-used-title">Mais usados</h2><p>Os três {plural} mais presentes em OS; sem histórico suficiente, entram os cadastros mais recentes.</p></div>
       </div>
       <div className="services-most-used-grid">
         {topThree.length ? topThree.map((item, index) => <article className="services-top-card" data-testid="service-top-card" key={item.id}>
           <span className="services-rank">#{index + 1}</span>
-          <span className={`services-type-icon ${item.category === 'product' ? 'product' : 'service'}`}><TypeIcon category={item.category} /></span>
-          <div><b>{item.name}</b><small>{item.category === 'product' ? 'Produto' : 'Serviço'} · {usage(item)} {usage(item) === 1 ? 'OS' : 'OS'}</small></div>
+          <span className={`services-type-icon ${product ? 'product' : 'service'}`}><TypeIcon category={product ? 'product' : 'service'} /></span>
+          <div><b>{item.name}</b><small>{product ? 'Produto' : 'Serviço'} · {usage(item)} OS</small></div>
           <strong>{money(item.price_cents)}</strong>
-        </article>) : <div className="services-empty">Cadastre o primeiro serviço ou produto para começar.</div>}
+        </article>) : <div className="services-empty">Cadastre o primeiro {singular} para começar.</div>}
       </div>
     </section>
 
     <section className="services-list-card">
       <div className="services-list-heading">
-        <div><h2>Serviços cadastrados</h2><p>{items.length} {items.length === 1 ? 'item cadastrado' : 'itens cadastrados'} no catálogo.</p></div>
-        <label className="services-search"><Search aria-hidden="true" /><input aria-label="Pesquisar serviços e produtos" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar serviço ou produto" /></label>
+        <div><h2>{product ? 'Produtos cadastrados' : 'Serviços cadastrados'}</h2><p>{items.length} {items.length === 1 ? `${singular} cadastrado` : `${plural} cadastrados`} no catálogo.</p></div>
+        <label className="services-search"><Search aria-hidden="true" /><input aria-label={`Pesquisar ${plural}`} type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Pesquisar ${singular}`} /></label>
       </div>
 
       {loading ? <div className="services-empty">Carregando catálogo…</div> : !visible.length ? <div className="services-empty">Nenhum item encontrado para esta pesquisa.</div> : <div className="services-list" data-testid="services-list">
         {visible.map((item) => <article className={`services-row${item.active ? '' : ' inactive'}`} key={item.id}>
-          <span className={`services-type-icon ${item.category === 'product' ? 'product' : 'service'}`}><TypeIcon category={item.category} /></span>
+          <span className={`services-type-icon ${product ? 'product' : 'service'}`}><TypeIcon category={product ? 'product' : 'service'} /></span>
           <div className="services-row-main">
             <b>{item.name}</b>
-            <small><span className={`services-state ${item.active ? 'active' : 'inactive'}`}>{item.active ? 'Ativo' : 'Inativo'}</span> · {money(item.price_cents)} · {item.category === 'product' ? 'Produto' : 'Serviço'}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ''}</small>
+            <small><span className={`services-state ${item.active ? 'active' : 'inactive'}`}>{item.active ? 'Ativo' : 'Inativo'}</span> · {money(item.price_cents)} · {product ? 'Produto' : 'Serviço'}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ''}</small>
           </div>
           <span className="services-usage"><b>{usage(item)}</b><small>uso em OS</small></span>
           <div className="services-row-actions">
@@ -288,17 +282,24 @@ export default function ServicesCatalogPage() {
       </div>}
     </section>
 
-    {edit && <div className="modal services-modal" role="dialog" aria-modal="true" aria-label="Editar serviço ou produto">
+    {edit && <div className="modal services-modal" role="dialog" aria-modal="true" aria-label={`Editar ${singular}`}>
       <form className="modal-card services-edit-card" onSubmit={saveEdit}>
         <button type="button" className="modal-close" aria-label="Fechar edição" onClick={() => setEdit(null)}><X aria-hidden="true" /></button>
-        <div className="services-section-heading"><span className="services-heading-icon"><Pencil aria-hidden="true" /></span><div><h2>Editar serviço ou produto</h2><p>Alterações futuras não modificam o histórico das OS já abertas.</p></div></div>
+        <div className="services-section-heading"><span className="services-heading-icon"><Pencil aria-hidden="true" /></span><div><h2>Editar {singular}</h2><p>Alterações futuras não modificam o histórico das OS já abertas.</p></div></div>
         <label className="services-field"><span>Nome / descrição</span><input value={edit.name} onChange={(event) => setEdit({ ...edit, name: event.target.value })} /></label>
         <label className="services-field"><span>Valor (R$)</span><input inputMode="decimal" value={edit.price} onChange={(event) => setEdit({ ...edit, price: event.target.value })} /></label>
-        <label className="services-field"><span>Tipo</span><select value={edit.category} onChange={(event) => setEdit({ ...edit, category: event.target.value as Draft['category'] })}><option value="service">Serviço</option><option value="product">Produto</option></select></label>
         <label className="services-warranty-toggle compact"><input type="checkbox" checked={edit.warranty_enabled} onChange={(event) => setEdit({ ...edit, warranty_enabled: event.target.checked })} /><span><ShieldCheck aria-hidden="true" /><b>Garantia adicional</b></span></label>
         {edit.warranty_enabled && <div className="services-edit-warranty"><label className="services-field"><span>Duração</span><input type="number" min="1" max="9999" value={edit.warranty_term} onChange={(event) => setEdit({ ...edit, warranty_term: Number(event.target.value) || 1 })} /></label><label className="services-field"><span>Unidade</span><select value={edit.warranty_unit} onChange={(event) => setEdit({ ...edit, warranty_unit: event.target.value as Draft['warranty_unit'] })}><option value="days">Dias</option><option value="months">Meses</option><option value="years">Anos</option></select></label></div>}
         <div className="actions"><button type="button" onClick={() => setEdit(null)}>Cancelar</button><button className="primary" disabled={busy}><CheckCircle2 aria-hidden="true" />{busy ? 'Salvando…' : 'Salvar alterações'}</button></div>
       </form>
     </div>}
   </div>;
+}
+
+export default function ServicesCatalogPage() {
+  return <CatalogPage kind="services"/>;
+}
+
+export function ProductsCatalogPage() {
+  return <CatalogPage kind="products"/>;
 }
