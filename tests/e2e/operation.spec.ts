@@ -74,6 +74,7 @@ test.describe.serial('fluxo operacional principal', () => {
 
   test('gera e aprova orçamento da OS', async ({ page }) => {
     await page.getByRole('button', { name: 'Ordens' }).click();
+    await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
@@ -129,6 +130,7 @@ test.describe.serial('fluxo operacional principal', () => {
 
   test('finaliza OS usando o orçamento aprovado', async ({ page }) => {
     await page.getByRole('button', { name: 'Ordens' }).click();
+    await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
@@ -183,6 +185,7 @@ test.describe.serial('fluxo operacional principal', () => {
 
   test('registra pagamento parcial e valida A Receber', async ({ page }) => {
     await page.getByRole('button', { name: 'Ordens' }).click();
+    await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
@@ -250,7 +253,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await finalModal.getByLabel('Valor unitário de Formatação E2E').fill('140,00');
     await finalModal.locator('textarea').fill('Valor corrigido e equipamento reconferido.');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
-    await expect(page.locator('.status-picker select')).toHaveValue('completed');
+    await expect(page.locator('.status-picker select')).toHaveValue('paid');
     const documents = await api(page, `/orders/${orderId}/documents`);
     expect(documents.body.some((document: any) => document.type === 'final' && document.revision === 2)).toBe(true);
     expect(documents.body.filter((document: any) => document.type === 'budget' && document.revision === 2), 'A outra Revisão 2 é o orçamento histórico, não uma duplicata do fechamento').toHaveLength(1);

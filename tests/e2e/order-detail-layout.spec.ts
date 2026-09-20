@@ -40,6 +40,7 @@ async function createOrder(page: Page) {
 
 async function openOrder(page: Page, clientName: string, number: string, equipmentDescription: string, equipmentDetails: string) {
   await page.getByRole('button', { name: 'Ordens' }).click();
+  await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
   const row = page.locator('.order-row').filter({ hasText: clientName });
   await expect(row).toBeVisible();
   await expect(row.locator('.order-device')).toHaveText(equipmentDescription);

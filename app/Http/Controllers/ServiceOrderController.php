@@ -74,7 +74,9 @@ class ServiceOrderController extends Controller
 
         $orders = $q->paginate($perPage);
         $orders->getCollection()->transform(function (ServiceOrder $order) {
-            $order->setAttribute('display_status', $this->displayStatus($order, (int) $order->paid_cents));
+            $paidCents = (int) $order->paid_cents;
+            $order->setAttribute('paid_cents', $paidCents);
+            $order->setAttribute('display_status', $this->displayStatus($order, $paidCents));
 
             return $order;
         });

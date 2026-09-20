@@ -27,7 +27,7 @@ async function fixture(page: Page) {
   return { client: client.body, orders };
 }
 
-test('Mesa redireciona e as quatro abas React são a única fonte do filtro de Ordens', async ({ page }) => {
+test('Mesa redireciona e as cinco abas React são a única fonte do filtro de Ordens', async ({ page }) => {
   await login(page);
   const { client, orders } = await fixture(page);
   await expect(page.locator('aside').getByRole('button', { name: 'Mesa de Chamados' })).toHaveCount(0);
@@ -39,7 +39,7 @@ test('Mesa redireciona e as quatro abas React são a única fonte do filtro de O
   await page.locator('aside').getByRole('button', { name: 'Ordens' }).click();
   await page.getByPlaceholder('Número da OS ou nome do cliente…').fill(client.name);
   const tabs = page.getByRole('tablist', { name: 'Filtrar ordens' });
-  await expect(tabs.getByRole('button')).toHaveText(['Todas', 'Em Andamento', 'Finalizadas', 'Interrompidas']);
+  await expect(tabs.getByRole('button')).toHaveText(['Em Andamento', 'Aguardando PGTO', 'Finalizadas', 'Interrompidas', 'Todas']);
   const orderTable = page.locator('.orders-order-list');
   await expect(orderTable.locator('thead th')).toHaveText(['# OS', 'CLIENTE', 'DISPOSITIVO', 'STATUS', 'RELATO', 'VALOR', 'AÇÕES']);
   const analysisRow = page.locator('.order-row').filter({ hasText: `#${orders[0].number}` });
@@ -47,9 +47,6 @@ test('Mesa redireciona e as quatro abas React são a única fonte do filtro de O
   await expect(analysisRow.locator('.order-client-report')).toHaveAttribute('title', 'Teste analysis');
   await expect(analysisRow.locator('.order-value-pending')).toHaveText('A orçar');
   await expect(analysisRow.getByRole('button', { name: 'Ver OS' })).toBeVisible();
-  const completedRow = page.locator('.order-row').filter({ hasText: `#${orders[1].number}` });
-  await expect(completedRow.locator('.order-value strong')).toHaveText('R$ 0,00');
-  await expect(completedRow.locator('.order-value small')).not.toBeEmpty();
   const alignment = await orderTable.evaluate((element) => {
     const centers = (selector: string) => Array.from(element.querySelectorAll(selector)).map((cell) => {
       const rect = cell.getBoundingClientRect();
@@ -62,7 +59,7 @@ test('Mesa redireciona e as quatro abas React são a única fonte do filtro de O
   alignment.row.forEach((center, index) => expect(Math.abs(center - alignment.header[index])).toBe(0));
   const rows = page.locator('.orders-order-list tbody .order-row');
   for (const [label, tab, indices] of [
-    ['Todas', 'all', [0, 1, 2]], ['Em Andamento', 'progress', [0]], ['Finalizadas', 'finalized', [1, 2]], ['Interrompidas', 'interrupted', [2]], ['Todas', 'all', [0, 1, 2]],
+    ['Todas', 'all', [0, 1, 2]], ['Em Andamento', 'progress', [0]], ['Aguardando PGTO', 'awaiting_payment', []], ['Finalizadas', 'finalized', [1]], ['Interrompidas', 'interrupted', [2]], ['Todas', 'all', [0, 1, 2]],
   ] as const) {
     await tabs.getByRole('button', { name: label, exact: true }).click();
     await expect(rows).toHaveCount(indices.length);
@@ -70,6 +67,9 @@ test('Mesa redireciona e as quatro abas React são a única fonte do filtro de O
     expect(requests.some(url => url.searchParams.get('tab') === tab)).toBe(true);
     await expect(page.locator('.arl-finalized-toggle')).toHaveCount(0);
   }
+  const completedRow = page.locator('.order-row').filter({ hasText: `#${orders[1].number}` });
+  await expect(completedRow.locator('.order-value strong')).toHaveText('R$ 0,00');
+  await expect(completedRow.locator('.order-value small')).not.toBeEmpty();
   expect(requests.every(url => !url.searchParams.has('finalized'))).toBe(true);
 });
 
@@ -98,6 +98,7 @@ test('lápis da lista abre edição completa ou o fluxo existente de reabertura'
   const beforeDocuments = await api(page, `/orders/${orders[1].id}/documents`);
   await page.goto('/orders');
   await page.getByPlaceholder('Número da OS ou nome do cliente…').fill(client.name);
+  await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Finalizadas', exact: true }).click();
   await page.locator('.order-row').filter({ hasText: `#${orders[1].number}` }).getByRole('button', { name: 'Reabrir como garantia' }).click();
   const reopen = page.getByRole('dialog', { name: `Reabrir OS #${orders[1].number}` });
   await expect(reopen).toBeVisible();

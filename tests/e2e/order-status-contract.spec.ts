@@ -88,8 +88,8 @@ for (const [index, status] of statuses.entries()) {
       expect(persisted.body.completed_at, 'Interrupção deve preencher a data de fechamento').toBeTruthy();
       expect(persisted.body.total_cents, 'Interrupção deve zerar o total').toBe(0);
       expect(persisted.body.items, 'Interrupção deve remover os serviços da OS').toEqual([]);
-      const finalized = await api(page, `/orders?tab=finalized&q=${encodeURIComponent(clientName)}`);
-      expect(finalized.body.data.some((row: any) => row.id === order.id), 'OS interrompida deve ficar junto das finalizadas').toBe(true);
+      const interrupted = await api(page, `/orders?tab=interrupted&q=${encodeURIComponent(clientName)}`);
+      expect(interrupted.body.data.some((row: any) => row.id === order.id), 'OS interrompida deve ficar na aba Interrompidas').toBe(true);
       const reopened = await api(page, `/orders/${order.id}/reopen`, 'POST', { note: 'Tentativa proibida pelo contrato E2E.' });
       expect(reopened.status, 'Backend deve recusar reabertura de OS interrompida').toBe(422);
     }
@@ -104,8 +104,15 @@ for (const [index, status] of statuses.entries()) {
     const tabs = page.getByRole('tablist', { name: 'Filtrar ordens' });
     await expect(tabs.getByRole('button', { name: 'Todas', exact: true })).toBeVisible();
     await expect(tabs.getByRole('button', { name: 'Em Andamento', exact: true })).toBeVisible();
+    await expect(tabs.getByRole('button', { name: 'Aguardando PGTO', exact: true })).toBeVisible();
     await expect(tabs.getByRole('button', { name: 'Finalizadas', exact: true })).toBeVisible();
     await expect(tabs.getByRole('button', { name: 'Interrompidas', exact: true })).toBeVisible();
+
+    if (status.code === 'completed') {
+      await tabs.getByRole('button', { name: 'Finalizadas', exact: true }).click();
+    } else if (status.code === 'interrupted') {
+      await tabs.getByRole('button', { name: 'Interrompidas', exact: true }).click();
+    }
 
     const search = page.getByPlaceholder('Número da OS ou nome do cliente…');
     const dashboardResponse = page.waitForResponse((response) => {
@@ -121,20 +128,22 @@ for (const [index, status] of statuses.entries()) {
       await expect(dashboardRow.getByText('Interrompida', { exact: true })).toBeVisible();
     }
     const rowStatus = dashboardRow.getByLabel(new RegExp(`Status da OS`));
-    await expect(rowStatus.locator('option:checked'), `Lista mentiu sobre o estado ${status.code}`).toHaveText(status.code === 'completed' ? 'Concluído' : status.code === 'waiting_part' ? 'Aguardando Peça' : status.label);
+    await expect(rowStatus.locator('option:checked'), `Lista mentiu sobre o estado ${status.code}`).toHaveText(status.code === 'completed' ? 'Pago' : status.code === 'waiting_part' ? 'Aguardando Peça' : status.label);
     if (!['completed', 'interrupted'].includes(status.code)) {
       await expect(rowStatus.locator('option[value="completed"]')).toHaveCount(0);
       await expect(rowStatus.locator('option[value="paid"]')).toHaveCount(0);
     } else if (status.code === 'completed') {
-      await expect(rowStatus.locator('option[value="paid"]'), 'PAGO só pode aparecer quando existe valor pendente').toHaveCount(0);
+      await expect(rowStatus.locator('option[value="paid"]')).toHaveText('Pago');
     }
     await dashboardRow.getByRole('button', { name: 'Ver OS' }).click();
 
     const root = page.locator('[data-arl-order-detail-react="1"]');
     await expect(root, `Detalhe React não abriu para ${status.label}`).toHaveCount(1);
     const picker = root.locator('.status-picker select');
-    await expect(picker, `Seletor do detalhe não persistiu ${status.code}`).toHaveValue(status.code);
-    await expect(picker.locator('option:checked'), `Seletor do detalhe exibiu rótulo errado para ${status.code}`).toHaveText(status.label);
+    const detailStatus = status.code === 'completed' ? 'paid' : status.code;
+    const detailLabel = status.code === 'completed' ? 'Pago' : status.label;
+    await expect(picker, `Seletor do detalhe não persistiu ${detailStatus}`).toHaveValue(detailStatus);
+    await expect(picker.locator('option:checked'), `Seletor do detalhe exibiu rótulo errado para ${detailStatus}`).toHaveText(detailLabel);
     if (status.code === 'interrupted') {
       await expect(picker).toBeDisabled();
       await expect(root.getByText('Interrompida', { exact: true })).toBeVisible();
@@ -199,6 +208,7 @@ test('OS concluída sem pagamento mostra Aguardando PGTO e exige forma para vira
   expect(finalized.order.display_status).toBe('awaiting_payment');
 
   await page.getByRole('button', { name: 'Ordens' }).click();
+  await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Aguardando PGTO', exact: true }).click();
   await page.getByPlaceholder('Número da OS ou nome do cliente…').fill(clientName);
   const row = page.locator('.orders-order-list .order-row').filter({ hasText: clientName });
   await expect(row).toBeVisible();
@@ -216,7 +226,10 @@ test('OS concluída sem pagamento mostra Aguardando PGTO e exige forma para vira
   await modal.getByRole('button', { name: 'Confirmar pagamento' }).click();
   expect((await paidResponse).status()).toBe(200);
   await expect(modal).toHaveCount(0);
-  await expect(row.getByLabel(`Status da OS ${order.number}`).locator('option:checked')).toHaveText('Pago');
+  await expect(row).toHaveCount(0);
+  await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Finalizadas', exact: true }).click();
+  const paidRow = page.locator('.orders-order-list .order-row').filter({ hasText: clientName });
+  await expect(paidRow.getByLabel(`Status da OS ${order.number}`).locator('option:checked')).toHaveText('Pago');
 
   const persisted = await api(page, `/orders/${order.id}`);
   expect(persisted.body.display_status).toBe('paid');
