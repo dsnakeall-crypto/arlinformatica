@@ -1,0 +1,39 @@
+.order-actions a,
+.order-actions button,
+.clients-react-page .clients-actions a,
+.clients-react-page .clients-actions button:not(.clients-select) {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.order-actions a,
+.order-actions button {
+  min-width: 34px;
+  min-height: 34px;
+}
+
+.clients-react-page .clients-actions a,
+.clients-react-page .clients-actions button:not(.clients-select) {
+  min-width: 36px !important;
+  min-height: 36px !important;
+}
+
+.clients-action-eye,
+.arl-lucide-eye svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+  color: currentColor;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+@media (max-width: 760px) {
+  .clients-react-page .clients-actions a,
+  .clients-react-page .clients-actions button:not(.clients-select) {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}

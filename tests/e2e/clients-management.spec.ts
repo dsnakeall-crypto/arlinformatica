@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
-test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa os cinco ícones oficiais', async ({ page }) => {
+test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa ícones oficiais com olho Lucide', async ({ page }) => {
   await login(page);
 
   const zulu = await api(page, '/clients', 'POST', {
@@ -77,10 +77,10 @@ test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa os ci
   expect(actionSources).toEqual([
     '/arl-assets/icons/icon-whatsapp.png',
     '/arl-assets/icons/icon-maps.png',
-    '/arl-assets/icons/icon-visualizar.png',
     '/arl-assets/icons/icon-editar.png',
     '/arl-assets/icons/icon-lixeira.png',
   ]);
+  await expect(rows.first().getByRole('button', { name: 'Visualizar' }).locator('svg.lucide-eye')).toBeVisible();
 
   await search.fill('Pagina E2E');
   await expect(rows).toHaveCount(12);

@@ -28,8 +28,10 @@ const statusLabels: Record<string, string> = {
   in_service: 'Em Serviço',
 };
 
-const whatsappIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.5L3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 20.5 11.7Z"/><path d="M8.2 8.7c.8 3 3.2 5.4 6.2 6.2"/></svg>';
-const mapsIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+const actionIcons = {
+  whatsapp: '/arl-assets/icons/icon-whatsapp.png',
+  maps: '/arl-assets/icons/icon-maps.png',
+} as const;
 
 function isEffectiveMobile() {
   return document.documentElement.dataset.layout === 'mobile';
@@ -72,7 +74,15 @@ function actionLink(kind: 'whatsapp' | 'maps', url: string, clientName: string) 
   link.target = '_blank';
   link.rel = 'noreferrer';
   link.setAttribute('aria-label', `${kind === 'whatsapp' ? 'Abrir WhatsApp' : 'Abrir Google Maps'} de ${clientName}`);
-  link.innerHTML = kind === 'whatsapp' ? whatsappIcon : mapsIcon;
+  const icon = document.createElement('img');
+  icon.src = actionIcons[kind];
+  icon.alt = '';
+  icon.setAttribute('aria-hidden', 'true');
+  icon.style.width = '23px';
+  icon.style.height = '23px';
+  icon.style.objectFit = 'contain';
+  icon.style.display = 'block';
+  link.append(icon);
   if (!url) {
     link.classList.add('disabled');
     link.removeAttribute('target');

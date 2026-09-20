@@ -93,10 +93,10 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await waitForOfficialIcons(page, [
     '/arl-assets/icons/icon-whatsapp.png',
     '/arl-assets/icons/icon-maps.png',
-    '/arl-assets/icons/icon-visualizar.png',
     '/arl-assets/icons/icon-editar.png',
     '/arl-assets/icons/icon-lixeira.png',
   ]);
+  await expect(page.getByRole('button', { name: 'Visualizar' }).locator('svg.lucide-eye')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-lista-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Novo cliente' }).click();
   const clientModal = page.getByRole('dialog', { name: 'Novo cliente' });
@@ -204,10 +204,10 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await waitForOfficialIcons(page, [
     '/arl-assets/icons/icon-whatsapp.png',
     '/arl-assets/icons/icon-maps.png',
-    '/arl-assets/icons/icon-visualizar.png',
     '/arl-assets/icons/icon-editar.png',
     '/arl-assets/icons/icon-lixeira.png',
   ]);
+  await expect(page.getByRole('button', { name: 'Visualizar' }).locator('svg.lucide-eye')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-mobile.png', fullPage: true });
 
   await page.getByRole('button', { name: 'Novo cliente' }).click();

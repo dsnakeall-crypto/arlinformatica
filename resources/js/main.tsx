@@ -41,6 +41,7 @@ import {
 import "../css/app.css";
 import "../css/homologation.css";
 import "../css/arl-ui-system.css";
+import "../css/action-icons.css";
 import ServicesCatalogPage from "./services-page";
 import ClientsPage from "./clients-page";
 import OrderDetailPage from "./order-detail-page";

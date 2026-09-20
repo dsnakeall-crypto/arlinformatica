@@ -1,3 +1,6 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { Eye } from 'lucide-react';
 import { reactPageActive, reactOwnedSelector } from './react-ownership';
 export {};
 
@@ -20,7 +23,6 @@ const LEGACY_LABELS: Record<string, string> = {
 const ICONS = {
   whatsapp: '/arl-assets/icons/icon-whatsapp.png',
   maps: '/arl-assets/icons/icon-maps.png',
-  visualizar: '/arl-assets/icons/icon-visualizar.png',
   editar: '/arl-assets/icons/icon-editar.png',
   lixeira: '/arl-assets/icons/icon-lixeira.png',
 } as const;
@@ -92,6 +94,17 @@ function setVisualIcon(action: HTMLElement, kind: keyof typeof ICONS) {
   action.prepend(exactIcon(kind));
 }
 
+function setEyeIcon(action: HTMLElement) {
+  if (action.dataset.arlExactIcon === 'eye' && action.querySelector('.arl-lucide-eye')) return;
+
+  action.dataset.arlExactIcon = 'eye';
+  qa<HTMLElement>('.arl-exact-action-icon,.arl-action-icon,.arl-dashboard-icon,.arl-external-icon,.arl-quick-icon,svg', action).forEach((item) => item.remove());
+  const host = document.createElement('span');
+  host.className = 'arl-lucide-eye';
+  action.prepend(host);
+  createRoot(host).render(React.createElement(Eye, { 'aria-hidden': true }));
+}
+
 function syncExactIcons() {
   qa<HTMLElement>('.client-list .contact-links a,.client-list .contact-links button,.dashboard-contact,.dashboard-address,.arl-order-mini-action,.dashboard-row:not(.head) button,.order-row:not(.head) button,.arl-client-delete,.arl-order-delete').forEach((action) => {
     if (action.closest(reactOwnedSelector) || action.closest('[data-arl-clients-react="1"]') || action.closest('[data-arl-order-detail-react="1"]')) return;
@@ -99,7 +112,7 @@ function syncExactIcons() {
     if (action.classList.contains('arl-client-delete') || action.classList.contains('arl-order-delete') || /Excluir/i.test(label)) return setVisualIcon(action, 'lixeira');
     if (action.classList.contains('dashboard-contact') || /WhatsApp/i.test(label)) return setVisualIcon(action, 'whatsapp');
     if (action.classList.contains('dashboard-address') || /Maps|Google Maps/i.test(label)) return setVisualIcon(action, 'maps');
-    if (/Visualizar|Ver OS/i.test(label)) return setVisualIcon(action, 'visualizar');
+    if (/Visualizar|Ver OS/i.test(label)) return setEyeIcon(action);
     if (/Editar/i.test(label)) return setVisualIcon(action, 'editar');
   });
 }

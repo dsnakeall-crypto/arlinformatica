@@ -1,5 +1,5 @@
 import React,{FormEvent,useEffect,useMemo,useState}from'react';
-import{ArrowLeft,ChevronLeft,ChevronRight,FileText,MapPin,Phone,Plus,Search,Users,X}from'lucide-react';
+import{ArrowLeft,ChevronLeft,ChevronRight,Eye,FileText,MapPin,Phone,Plus,Search,Users,X}from'lucide-react';
 import'../css/clients-page.css';
 import PageHeader from './page-header';
 
@@ -9,7 +9,7 @@ type Props={quick?:boolean;onSelected?:(client:Client)=>void;openOrder?:(id:numb
 type OrderItem={id?:number;description:string;quantity:number;unit_price_cents:number;subtotal_cents:number};
 type ClientOrder={id:number;number:string;status:string;received_at:string;equipment_description?:string|null;reported_problem:string;result?:string|null;discount_cents?:number;total_cents?:number;items?:OrderItem[];documents?:Array<{revision:number;type:string}>;budgets?:Array<{id:number;revision:number;status:string;total_cents:number}>};
 
-const ICONS={whatsapp:'/arl-assets/icons/icon-whatsapp.png',maps:'/arl-assets/icons/icon-maps.png',visualizar:'/arl-assets/icons/icon-visualizar.png',editar:'/arl-assets/icons/icon-editar.png',lixeira:'/arl-assets/icons/icon-lixeira.png'} as const;
+const ICONS={whatsapp:'/arl-assets/icons/icon-whatsapp.png',maps:'/arl-assets/icons/icon-maps.png',editar:'/arl-assets/icons/icon-editar.png',lixeira:'/arl-assets/icons/icon-lixeira.png'} as const;
 const emptyClient={name:'',document:'',phone:'',postal_code:'',street:'',number:'',district:'',city:'',state:'',complement:''};
 const status:Record<string,string>={analysis:'Em Análise',waiting_part:'Aguardando Peça',in_service:'Em Serviço',completed:'Concluído',interrupted:'Interrompido'};
 const csrf=()=>document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content??'';
@@ -20,7 +20,7 @@ const normalized=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]
 const money=(cents=0)=>`R$ ${(cents/100).toFixed(2).replace('.',',')}`;
 
 function Field({label,name,value,onChange,error,required=false}:any){return <label className="field"><span>{label}{required&&' *'}</span><input name={name} value={value} onChange={onChange}/>{error&&<small>{error}</small>}</label>}
-function ActionIcon({kind}:{kind:keyof typeof ICONS}){return <img className="clients-action-icon" src={ICONS[kind]} alt="" aria-hidden="true"/>}
+function ActionIcon({kind}:{kind:keyof typeof ICONS|'visualizar'}){return kind==='visualizar'?<Eye className="clients-action-eye" aria-hidden="true"/>:<img className="clients-action-icon" src={ICONS[kind]} alt="" aria-hidden="true"/>}
 
 function ClientModal({client,onSaved,onCancel}:{client?:Client|null;onSaved:(client:Client)=>void;onCancel:()=>void}){
  const[data,setData]=useState<any>(client?{...client}:emptyClient),[errors,setErrors]=useState<Errors>({}),[busy,setBusy]=useState(false),[cepNote,setCepNote]=useState('');
