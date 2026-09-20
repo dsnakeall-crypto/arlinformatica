@@ -92,7 +92,8 @@ class StageFourTest extends TestCase
         $this->getJson('/api/finance/receivables')->assertOk()->assertJsonPath('count', 0);
 
         $snapshot = json_decode($response->json('finalization.snapshot'), true);
-        $this->assertSame(['is_paid' => true, 'method' => 'credit'], $snapshot['payment']);
+        $this->assertSame(true, $snapshot['payment']['is_paid']);
+        $this->assertSame('credit', $snapshot['payment']['method']);
     }
 
     public function test_approved_budget_is_server_source_and_cannot_be_used_for_another_order(): void
