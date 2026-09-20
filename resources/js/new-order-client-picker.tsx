@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 
-const phone = (value: string) => value.replace(/\D/g, '').replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
-const documentLabel = (value: string) => {
-  const n = value.replace(/\D/g, '');
+const digits = (value: unknown) => typeof value === 'string' ? value.replace(/\D/g, '') : '';
+const phone = (value: unknown) => digits(value).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
+const documentLabel = (value: unknown) => {
+  const n = digits(value);
   return n.length <= 11 ? n.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2') : n.replace(/(\d{2})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
 };
 

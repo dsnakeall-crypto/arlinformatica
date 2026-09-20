@@ -89,16 +89,22 @@ class StageSevenTest extends TestCase
         ]);
     }
 
-    public function test_client_edit_is_audited_without_changing_order_snapshot(): void
+    public function test_client_edit_is_audited_updates_open_snapshot_and_preserves_completed_snapshot(): void
     {
         $master = $this->user('Master', 'master');
         $client = $this->client();
-        $order = $this->order($master, $client);
-        DB::table('service_order_snapshots')->insert(['service_order_id' => $order->id, 'client' => json_encode($client->toArray()), 'company' => '{}', 'equipment' => '{}', 'term_text' => 'Termo', 'created_at' => now(), 'updated_at' => now()]);
+        $openOrder = $this->order($master, $client);
+        $completedOrder = $this->order($master, $client);
+        $completedOrder->forceFill(['status' => 'completed', 'completed_at' => now()])->save();
+        foreach ([$openOrder, $completedOrder] as $order) {
+            DB::table('service_order_snapshots')->insert(['service_order_id' => $order->id, 'client' => json_encode($client->toArray()), 'company' => '{}', 'equipment' => '{}', 'term_text' => 'Termo', 'created_at' => now(), 'updated_at' => now()]);
+        }
         $payload = $client->only(['name', 'document', 'phone', 'postal_code', 'street', 'number', 'district', 'city', 'state', 'complement']);
         $this->actingAs($master)->putJson("/api/clients/{$client->id}", [...$payload, 'name' => 'Nome Atual'])->assertOk();
-        $snapshot = json_decode(DB::table('service_order_snapshots')->where('service_order_id', $order->id)->value('client'), true);
-        $this->assertSame('Cliente Histórico', $snapshot['name']);
+        $openSnapshot = json_decode(DB::table('service_order_snapshots')->where('service_order_id', $openOrder->id)->value('client'), true);
+        $completedSnapshot = json_decode(DB::table('service_order_snapshots')->where('service_order_id', $completedOrder->id)->value('client'), true);
+        $this->assertSame('Nome Atual', $openSnapshot['name']);
+        $this->assertSame('Cliente Histórico', $completedSnapshot['name']);
         $this->assertDatabaseHas('audit_logs', ['action' => 'client.updated', 'subject_id' => $client->id]);
     }
 

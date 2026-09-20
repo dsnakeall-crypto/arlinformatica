@@ -49,6 +49,8 @@ test('Ver OS React possui uma única raiz e blocos funcionais sem duplicação l
   const { clientName, order } = await createActiveOrder(page, 1);
   const root = await openOrder(page, clientName, order.number);
   await expect(root.getByRole('heading', { name: 'Serviços / Produtos', exact: true })).toBeVisible();
+  await expect(root.getByRole('button', { name: 'Editar ficha', exact: true })).toHaveCount(0);
+  await expect(root.locator('.status-picker')).toHaveCount(0);
 
   const cardinality = await root.evaluate((node) => ({
     detailGrid: node.querySelectorAll('.detail-grid').length,
@@ -121,9 +123,12 @@ test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PA
   await expect(modal.locator('.money')).toContainText(`Total ${itemTotal}`);
   await addedItem.getByRole('button', { name: `Remover ${service.name}`, exact: true }).click();
   await expect(modal.locator('[data-finalization-item="true"]')).toHaveCount(0);
-  await modal.getByRole('button', { name: 'Adicionar serviços', exact: true }).click();
-  const completeList = modal.getByRole('list', { name: 'Todos os serviços e produtos ativos' });
+  await modal.getByRole('button', { name: 'Produto/Serviço', exact: true }).click();
+  const completeList = page.getByRole('dialog', { name: 'Selecionar Produto ou Serviço' });
+  await expect(completeList.getByRole('heading', { name: 'Serviços', exact: true })).toBeVisible();
+  await expect(completeList.getByRole('heading', { name: 'Produtos', exact: true })).toBeVisible();
   await expect(completeList.getByRole('button', { name: `Adicionar ${service.name}`, exact: true })).toBeVisible();
+  await completeList.getByRole('button', { name: 'Fechar seletor' }).click();
   await modal.locator('.modal-close').click();
 
   await panel.fill('Rascunho B alterado depois de fechar');

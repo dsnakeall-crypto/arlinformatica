@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\ServiceOrder;
+use App\Services\InventoryService;
 use App\Services\NotificationService;
+use App\Services\PostSaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class ServiceOrderMaintenanceController extends Controller
 {
-    public function update(Request $request, ServiceOrder $order): JsonResponse
+    public function update(Request $request, ServiceOrder $order, InventoryService $inventory): JsonResponse
     {
         $data = $request->validate([
             'client_id' => ['sometimes', 'required', 'integer', 'exists:clients,id'],
@@ -59,25 +61,15 @@ class ServiceOrderMaintenanceController extends Controller
         $checklist = array_key_exists('checklist', $data)
             ? $this->resolveChecklist($order, $data['checklist'])
             : null;
-        $items = array_key_exists('items', $data)
-            ? $this->resolveItems($data['items'])
-            : null;
-
-        if ($items !== null) {
-            $subtotal = (int) collect($items)->sum('subtotal_cents');
-            $paid = $this->paidCentsForOrder($order);
-            if ($paid > $subtotal) {
-                throw ValidationException::withMessages([
-                    'items' => 'O total dos serviços não pode ficar abaixo do valor já recebido. Corrija primeiro o pagamento ou mantenha serviços suficientes para cobrir o valor pago.',
-                ]);
-            }
-        }
+        $items = array_key_exists('items', $data) ? $data['items'] : null;
 
         $order->load(['client', 'checklists', 'items', 'snapshot']);
         $before = $this->auditState($order);
         $termIssued = $this->termIssued($order);
 
-        DB::transaction(function () use ($request, $order, $data, $before, $newClient, $checklist, $items, $termIssued) {
+        DB::transaction(function () use ($request, $order, $data, $before, $newClient, $checklist, $items, $termIssued, $inventory) {
+            ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $order->refresh();
             $scalar = [];
             foreach (['client_id', 'equipment_description', 'equipment_details', 'attendance_type', 'reported_problem', 'intake_condition', 'final_report'] as $field) {
                 if (! array_key_exists($field, $data)) {
@@ -106,9 +98,21 @@ class ServiceOrderMaintenanceController extends Controller
             }
 
             if ($items !== null) {
+                $items = $inventory->syncActiveOrderItems(
+                    $order,
+                    $items,
+                    $request->user()->id,
+                    'Alteração dos produtos da OS '.$order->number,
+                );
+                $subtotal = (int) collect($items)->sum('subtotal_cents');
+                $paid = $this->paidCentsForOrder($order);
+                if ($paid > $subtotal) {
+                    throw ValidationException::withMessages([
+                        'items' => 'O total dos serviços não pode ficar abaixo do valor já recebido. Corrija primeiro o pagamento ou mantenha serviços suficientes para cobrir o valor pago.',
+                    ]);
+                }
                 $order->items()->whereNull('finalization_id')->delete();
                 $order->items()->createMany($items);
-                $subtotal = (int) collect($items)->sum('subtotal_cents');
                 $order->forceFill([
                     'subtotal_cents' => $subtotal,
                     'total_cents' => $subtotal,
@@ -150,7 +154,7 @@ class ServiceOrderMaintenanceController extends Controller
         return response()->json($order->fresh()->load(['client', 'checklists', 'items', 'photos', 'histories.user:id,name', 'snapshot']));
     }
 
-    public function destroy(Request $request, ServiceOrder $order, NotificationService $notifications): JsonResponse
+    public function destroy(Request $request, ServiceOrder $order, NotificationService $notifications, InventoryService $inventory): JsonResponse
     {
         abort_if(
             DB::table('payments')->where('service_order_id', $order->id)->exists(),
@@ -171,7 +175,13 @@ class ServiceOrderMaintenanceController extends Controller
             ->where('active', true)
             ->pluck('id');
 
-        DB::transaction(function () use ($request, $order, $before) {
+        DB::transaction(function () use ($request, $order, $before, $inventory) {
+            ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $inventory->returnActiveOrderProducts(
+                $order,
+                $request->user()->id,
+                'Devolução por remoção administrativa da OS '.$order->number,
+            );
             $order->delete();
             DB::table('post_sale_cycles')
                 ->where('service_order_id', $order->id)
@@ -228,13 +238,24 @@ class ServiceOrderMaintenanceController extends Controller
                 DB::table('service_order_items')->insert([
                     'service_order_id' => $locked->id, 'finalization_id' => null, 'catalog_id' => $item->catalog_id,
                     'source_budget_id' => null, 'description' => $item->description, 'quantity' => $item->quantity,
+                    'stock_applied_quantity' => 0,
                     'unit_price_cents' => $item->unit_price_cents, 'subtotal_cents' => $item->subtotal_cents,
                     'warranty_snapshot' => $item->warranty_snapshot, 'created_at' => now(), 'updated_at' => now(),
                 ]);
             }
 
             $before = ['status' => $locked->status, 'total_cents' => (int) $locked->total_cents, 'completed_at' => $locked->completed_at];
-            $locked->update(['status' => 'analysis', 'completed_at' => null, 'archived' => false]);
+            $locked->forceFill(['status' => 'analysis', 'completed_at' => null, 'archived' => false])->save();
+            $cycleIds = DB::table('post_sale_cycles')->where('service_order_id', $locked->id)->where('active', true)->pluck('id');
+            DB::table('post_sale_cycles')->whereIn('id', $cycleIds)->update([
+                'active' => false,
+                'archived_at' => now(),
+                'archive_reason' => PostSaleService::REOPENED_REASON,
+                'updated_at' => now(),
+            ]);
+            foreach ($cycleIds as $cycleId) {
+                DB::table('notifications')->where('deduplication_key', "post-sale:{$cycleId}")->update(['active' => false, 'read_at' => now(), 'updated_at' => now()]);
+            }
             DB::table('status_history')->insert(['service_order_id' => $locked->id, 'from_status' => 'completed', 'to_status' => 'analysis', 'user_id' => $request->user()->id, 'created_at' => now()]);
             DB::table('audit_logs')->insert([
                 'user_id' => $request->user()->id,
@@ -281,40 +302,6 @@ class ServiceOrderMaintenanceController extends Controller
             return [
                 'label' => $template->label,
                 'note' => $template->allows_note ? $note : null,
-            ];
-        })->values()->all();
-    }
-
-    private function resolveItems(array $requested): array
-    {
-        if ($requested === []) {
-            return [];
-        }
-
-        $grouped = collect($requested)->groupBy('catalog_id')->mapWithKeys(function ($rows, $catalogId) {
-            $quantity = (int) $rows->sum('quantity');
-            abort_if($quantity > 999, 422, 'A quantidade de um serviço não pode ultrapassar 999.');
-
-            return [(int) $catalogId => $quantity];
-        });
-        $catalogs = DB::table('service_catalog')->whereIn('id', $grouped->keys())->where('active', true)->get()->keyBy('id');
-        abort_unless($catalogs->count() === $grouped->count(), 422, 'Um serviço selecionado não está mais disponível.');
-
-        return $grouped->map(function (int $quantity, int $catalogId) use ($catalogs) {
-            $catalog = $catalogs->get($catalogId);
-            $warranty = $catalog->warranty_enabled ? [
-                'enabled' => true,
-                'term' => (int) $catalog->warranty_term,
-                'unit' => $catalog->warranty_unit,
-            ] : null;
-
-            return [
-                'catalog_id' => $catalog->id,
-                'description' => $catalog->name,
-                'quantity' => $quantity,
-                'unit_price_cents' => (int) $catalog->price_cents,
-                'subtotal_cents' => $quantity * (int) $catalog->price_cents,
-                'warranty_snapshot' => $warranty ? json_encode($warranty) : null,
             ];
         })->values()->all();
     }

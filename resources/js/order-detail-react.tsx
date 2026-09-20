@@ -10,7 +10,6 @@ type Props = { reopenOnLoad?: boolean; id: number; back: () => void; onEdit?: ()
 type ApiError = Error & { errors?: Record<string, string[]> };
 type PaymentSummary = { total_cents: number; paid_cents: number; balance_cents: number; collectible_balance_cents: number; status: 'unpaid' | 'partial' | 'paid'; payments: any[]; refunded_cents: number; refundable_cents: number; refunds: any[] };
 
-type FinalShare = { url: string; expires_at: string; revision: number };
 // Registro preservado para futura reativação; a navegação de PDFs permanece no botão PDF's.
 const SHOW_ORDER_RECORD = false;
 
@@ -31,15 +30,15 @@ const api = async (url: string, options: RequestInit = {}) => {
   return body;
 };
 
-const digits = (value: string) => value.replace(/\D/g, '');
+const digits = (value: unknown) => typeof value === 'string' ? value.replace(/\D/g, '') : '';
 const masks = {
-  document: (value: string) => {
+  document: (value: unknown) => {
     const n = digits(value).slice(0, 14);
     return n.length <= 11
       ? n.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2')
       : n.replace(/(\d{2})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
   },
-  phone: (value: string) => digits(value).slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2'),
+  phone: (value: unknown) => digits(value).slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2'),
 };
 
 const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
@@ -189,7 +188,7 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [dirty, setDirty] = useState(false);
-  useEffect(() => { void api('/catalogs/services').then((rows) => setCatalog(Array.isArray(rows) ? rows.filter((row: any) => row.active !== false) : [])); }, [order.id]);
+  useEffect(() => { void api('/catalogs/items').then((rows) => setCatalog(Array.isArray(rows) ? rows.filter((row: any) => row.active !== false) : [])); }, [order.id]);
   useEffect(() => {
     setItems((order.items || []).filter((row: any) => !row.finalization_id && row.catalog_id).map((row: any) => ({ catalog_id: Number(row.catalog_id), description: row.description, quantity: Number(row.quantity), unit_price_cents: Number(row.unit_price_cents) })));
     setDirty(false);
@@ -203,9 +202,9 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
     setDirty(true);
     onDirtyChange?.(true);
   };
-  const add = (entry: ServiceProductCatalogItem) => changeItems((current) => {
+  const add = (entry: ServiceProductCatalogItem, quantity = 1) => changeItems((current) => {
     const found = current.find((row) => row.catalog_id === Number(entry.id));
-    return found ? current.map((row) => row.catalog_id === Number(entry.id) ? { ...row, quantity: Math.min(999, row.quantity + 1) } : row) : [...current, { catalog_id: Number(entry.id), description: entry.name, quantity: 1, unit_price_cents: Number(entry.price_cents) }];
+    return found ? current.map((row) => row.catalog_id === Number(entry.id) ? { ...row, quantity: Math.min(999, row.quantity + quantity) } : row) : [...current, { catalog_id: Number(entry.id), description: entry.name, quantity, unit_price_cents: Number(entry.price_cents) }];
   });
   const persist = async (notify = false) => {
     if (!dirty) {
@@ -254,9 +253,9 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
   const [list, setList] = useState<any[]>([]), [open, setOpen] = useState(false), [validity, setValidity] = useState(7), [catalog, setCatalog] = useState<ServiceProductCatalogItem[]>([]), [items, setItems] = useState<any[]>([]), [error, setError] = useState('');
   const [diagnosis, setDiagnosis] = useState(''), [proposal, setProposal] = useState(''), [observation, setObservation] = useState('');
   const load = () => api(`/orders/${order.id}/budgets`).then(setList);
-  useEffect(() => { void load(); void Promise.all([api('/operational-settings'), api('/catalogs/services')]).then(([settings, services]) => { setValidity(+settings.budget_validity_days || 7); setCatalog(services); }).catch(() => undefined); }, [order.id]);
+  useEffect(() => { void load(); void Promise.all([api('/operational-settings'), api('/catalogs/items')]).then(([settings, services]) => { setValidity(+settings.budget_validity_days || 7); setCatalog(services); }).catch(() => undefined); }, [order.id]);
   useEffect(() => { if (openSignal && !isFinalized) setOpen(true); }, [openSignal, isFinalized]);
-  const add = (entry: ServiceProductCatalogItem) => setItems((current) => { const found = current.find((row) => row.catalog_id === entry.id); return found ? current.map((row) => row === found ? { ...row, quantity: row.quantity + 1 } : row) : [...current, { catalog_id: entry.id, description: entry.name, quantity: 1, unit_price_cents: entry.price_cents, warranty_enabled: !!entry.warranty_enabled, warranty_term: entry.warranty_term, warranty_unit: entry.warranty_unit }]; });
+  const add = (entry: ServiceProductCatalogItem, quantity = 1) => setItems((current) => { const found = current.find((row) => row.catalog_id === entry.id); return found ? current.map((row) => row === found ? { ...row, quantity: Math.min(999, row.quantity + quantity) } : row) : [...current, { catalog_id: entry.id, description: entry.name, quantity, unit_price_cents: entry.price_cents, warranty_enabled: !!entry.warranty_enabled, warranty_term: entry.warranty_term, warranty_unit: entry.warranty_unit }]; });
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setError('');
     if (!items.length) { setError('Adicione ao menos um serviço ou produto do catálogo.'); return; }
@@ -274,7 +273,7 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
     catch (e: any) { setError(e.message); }
   };
   return <section className="wide"><div className="section-title"><h2>Orçamentos</h2>{!isFinalized && <button className="primary" data-arl-quick-source="budget" onClick={() => setOpen(true)}><Plus/>Gerar orçamento</button>}</div>
-    {open && <div className="modal"><form className="modal-card budget-form" role="dialog" aria-modal="true" aria-label="Gerar orçamento" onSubmit={submit}><button type="button" className="modal-close" aria-label="Fechar orçamento" onClick={() => setOpen(false)}><X/></button><h1>Gerar orçamento</h1><label className="field"><span>Diagnóstico</span><textarea required value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}/></label><label className="field"><span>Serviço proposto</span><textarea required value={proposal} onChange={(e) => setProposal(e.target.value)}/></label><TextField label="Validade (dias)" value={validity} onChange={(e: any) => setValidity(+e.target.value)} required/><ServiceProductSearch items={catalog} ariaLabel="Buscar serviço ou produto para o orçamento" onSelect={add}/><div className="arl-od-lines">{items.map((row, index) => <div className="finish-item" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, quantity: Math.max(1, +e.target.value || 1) } : item))}/><input aria-label={`Valor unitário de ${row.description}`} value={(row.unit_price_cents / 100).toFixed(2).replace('.', ',')} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, unit_price_cents: Math.max(0, Math.round(Number(e.target.value.replace(',', '.')) * 100) || 0) } : item))}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))}>Remover</button></div>)}</div><label className="field"><span>Observação (opcional)</span><textarea value={observation} onChange={(e) => setObservation(e.target.value)}/></label><strong>Total: {money(items.reduce((sum, row) => sum + row.quantity * row.unit_price_cents, 0))}</strong>{error && <div className="alert">{error}</div>}<div className="actions"><button type="button" onClick={() => setOpen(false)}>Cancelar</button><button className="primary">Salvar e gerar PDF</button></div></form></div>}
+    {open && <div className="modal"><form className="modal-card budget-form" role="dialog" aria-modal="true" aria-label="Gerar orçamento" onSubmit={submit}><button type="button" className="modal-close" aria-label="Fechar orçamento" onClick={() => setOpen(false)}><X/></button><h1>Gerar orçamento</h1><label className="field"><span>Diagnóstico</span><textarea required value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}/></label><label className="field"><span>Serviço proposto</span><textarea required value={proposal} onChange={(e) => setProposal(e.target.value)}/></label><TextField label="Validade (dias)" value={validity} onChange={(e: any) => setValidity(+e.target.value)} required/><ServiceProductSearch items={catalog} ariaLabel="Buscar serviço ou produto para o orçamento" onSelect={add} context="budget"/><div className="arl-od-lines">{items.map((row, index) => <div className="finish-item" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, quantity: Math.max(1, +e.target.value || 1) } : item))}/><input aria-label={`Valor unitário de ${row.description}`} value={(row.unit_price_cents / 100).toFixed(2).replace('.', ',')} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, unit_price_cents: Math.max(0, Math.round(Number(e.target.value.replace(',', '.')) * 100) || 0) } : item))}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))}>Remover</button></div>)}</div><label className="field"><span>Observação (opcional)</span><textarea value={observation} onChange={(e) => setObservation(e.target.value)}/></label><strong>Total: {money(items.reduce((sum, row) => sum + row.quantity * row.unit_price_cents, 0))}</strong>{error && <div className="alert">{error}</div>}<div className="actions"><button type="button" onClick={() => setOpen(false)}>Cancelar</button><button className="primary">Salvar e gerar PDF</button></div></form></div>}
     {error && !open && <div className="alert">{error}</div>}{list.length ? list.map((budget) => <p key={budget.id}>Revisão {budget.revision} · {budget.status} · R$ {(budget.total_cents / 100).toFixed(2)} · <a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/budgets/${budget.revision}/pdf`}>Abrir PDF</a> {!isFinalized && budget.status === 'draft' && <button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'sent' }) }).then(load)}>Marcar enviado</button>}{!isFinalized && budget.status === 'sent' && <><button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'approved' }) }).then(load)}>Aprovar orçamento</button><button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'refused' }) }).then(load)}>Recusar</button></>}{!isFinalized && ['Master', 'Administrador'].includes(role) && !budget.used_in_finalization && <button type="button" onClick={() => void remove(budget)}>Excluir orçamento</button>}</p>) : <p>Nenhum orçamento criado.</p>}
   </section>;
 }
@@ -321,10 +320,10 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
   </section>;
 }
 
-function FinalizationBox({ order, reload, openSignal = 0, finalReport, setFinalReport, onShare, persistPendingChanges, onFinalReportDirty }: any) {
+function FinalizationBox({ order, reload, openSignal = 0, finalReport, setFinalReport, persistPendingChanges, onFinalReportDirty }: any) {
   const seeded = (sourceOrder = order) => (sourceOrder.items || []).filter((row: any) => !row.finalization_id).map((row: any) => { let warranty = row.warranty_snapshot; if (typeof warranty === 'string') try { warranty = JSON.parse(warranty); } catch { warranty = null; } return { catalog_id: row.catalog_id, description: row.description, quantity: row.quantity, unit_price_cents: row.unit_price_cents, warranty_enabled: !!warranty, warranty_term: warranty?.term, warranty_unit: warranty?.unit, warranty_description: warranty?.description }; });
   const [open, setOpen] = useState(false), [result, setResult] = useState('repair_completed'), [other, setOther] = useState(''), [discount, setDiscount] = useState('0'), [items, setItems] = useState<any[]>(seeded), [catalog, setCatalog] = useState<any[]>([]), [budgets, setBudgets] = useState<any[]>([]), [sourceBudgetId, setSourceBudgetId] = useState<number | null>(null), [showItemWarranties, setShowItemWarranties] = useState(false), [isPaid, setIsPaid] = useState(false), [paymentMethod, setPaymentMethod] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false);
-  const loadLists = () => Promise.all([api('/catalogs/services'), api(`/orders/${order.id}/budgets`)]).then(([services, budgetRows]) => { setCatalog(services); setBudgets(budgetRows); });
+  const loadLists = () => Promise.all([api('/catalogs/items'), api(`/orders/${order.id}/budgets`)]).then(([services, budgetRows]) => { setCatalog(services); setBudgets(budgetRows); });
   const openFinalization = async () => {
     setBusy(true); setError('');
     try {
@@ -345,13 +344,13 @@ function FinalizationBox({ order, reload, openSignal = 0, finalReport, setFinalR
   const approved = budgets.find((row) => row.status === 'approved');
   const budgetItems = approved ? approved.items.map((row: any) => { let warranty = row.warranty_snapshot; if (typeof warranty === 'string') try { warranty = JSON.parse(warranty); } catch { warranty = null; } return { catalog_id: row.catalog_id, description: row.description, quantity: row.quantity, unit_price_cents: row.unit_price_cents, warranty_enabled: !!warranty, warranty_term: warranty?.term, warranty_unit: warranty?.unit }; }) : [];
   const shownItems = sourceBudgetId ? budgetItems : items, subtotal = shownItems.reduce((sum: number, row: any) => sum + row.quantity * row.unit_price_cents, 0), disc = Math.round(Number(discount.replace(',', '.')) * 100), total = Math.max(0, subtotal - disc);
-  const add = (entry: ServiceProductCatalogItem) => {
+  const add = (entry: ServiceProductCatalogItem, quantity = 1) => {
     setSourceBudgetId(null);
     setItems((current) => {
       const found = current.find((row) => row.catalog_id === entry.id);
       return found
-        ? current.map((row) => row === found ? { ...row, quantity: Math.min(999, row.quantity + 1) } : row)
-        : [...current, { catalog_id: entry.id, description: entry.name, quantity: 1, unit_price_cents: entry.price_cents, warranty_enabled: !!entry.warranty_enabled, warranty_term: entry.warranty_term, warranty_unit: entry.warranty_unit }];
+        ? current.map((row) => row === found ? { ...row, quantity: Math.min(999, row.quantity + quantity) } : row)
+        : [...current, { catalog_id: entry.id, description: entry.name, quantity, unit_price_cents: entry.price_cents, warranty_enabled: !!entry.warranty_enabled, warranty_term: entry.warranty_term, warranty_unit: entry.warranty_unit }];
     });
   };
   const finish = async () => {
@@ -362,13 +361,11 @@ function FinalizationBox({ order, reload, openSignal = 0, finalReport, setFinalR
       const payload: any = { result, result_other: other, technical_report: finalReport.trim(), discount_cents: disc, approved_budget_id: sourceBudgetId, photo_ids: (order.photos || []).map((row: any) => row.id), show_item_warranties: showItemWarranties, is_paid: isPaid, payment_method: isPaid ? paymentMethod : null };
       if (!sourceBudgetId) payload.items = items;
       await api(`/orders/${order.id}/finalize`, { method: 'POST', body: JSON.stringify(payload) });
-      const share = await api(`/orders/${order.id}/final-share`).catch(() => null);
-      if (share?.url) onShare(share);
       setOpen(false); await reload();
     } catch (e: any) { setError(Object.values(e.errors || {}).flat()[0] as string || e.message); } finally { setBusy(false); }
   };
   return <>{!open && error && <div className="alert arl-finalization-error">{error}</div>}
-    {open && <div className="modal"><div className="modal-card arl-finalization" role="dialog" aria-modal="true" aria-label="FINALIZAÇÃO DA OS"><button type="button" className="modal-close" aria-label="Fechar finalização" onClick={() => setOpen(false)}><X aria-hidden="true"/></button><h1>FINALIZAÇÃO DA OS</h1><label className="field"><span>Resultado do atendimento *</span><select value={result} onChange={(e) => setResult(e.target.value)}><option value="repair_completed">Reparo realizado</option><option value="irreparable">Equipamento sem possibilidade de reparo</option><option value="client_cancelled">Cliente desistiu/cancelou</option><option value="economically_unviable">Reparo economicamente inviável</option><option value="no_fault">Sem defeito constatado</option><option value="other">Outro</option></select></label>{result === 'other' && <TextField label="Descreva o outro resultado" value={other} onChange={(e: any) => setOther(e.target.value)} required/>}<label className="field"><span>LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO {result !== 'repair_completed' ? '*' : ''}</span><textarea value={finalReport} onChange={(e) => { setFinalReport(e.target.value); onFinalReportDirty?.(true); }}/></label><div className="section-title"><h2>Serviços da OS</h2>{approved && <button type="button" onClick={() => setSourceBudgetId(approved.id)}>USAR ITENS DO ORÇAMENTO APROVADO</button>}</div><div className="notice arl-final-note">A finalização pode usar os serviços cadastrados na OS ou os itens de um orçamento aprovado selecionado.</div>{sourceBudgetId && <div className="notice">Itens vinculados ao orçamento aprovado. Preço, quantidade e garantia serão lidos diretamente do servidor. <button type="button" onClick={() => setSourceBudgetId(null)}>Usar itens manuais</button></div>}{!sourceBudgetId && <ServiceProductSearch items={catalog} ariaLabel="Pesquisar Serviço / Produto na finalização" onSelect={add} showBrowseAll/>}<div className="arl-finalization-items">{shownItems.map((row: any, index: number) => <div className="finish-item" data-finalization-item="true" key={`${row.catalog_id}-${index}`}><input aria-label={`Descrição do item ${index + 1}`} disabled={!!sourceBudgetId} value={row.description} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, description: e.target.value } : item))}/><input aria-label={`Quantidade de ${row.description}`} disabled={!!sourceBudgetId} type="number" min="1" max="999" value={row.quantity} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, quantity: Math.max(1, Math.min(999, Number(e.target.value) || 1)) } : item))}/><input aria-label={`Valor unitário de ${row.description}`} disabled={!!sourceBudgetId} value={(row.unit_price_cents / 100).toFixed(2)} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, unit_price_cents: Math.max(0, Math.round(Number(e.target.value.replace(',', '.')) * 100) || 0) } : item))}/><span>{money(row.quantity * row.unit_price_cents)}</span>{!sourceBudgetId && <button type="button" className="arl-finalization-remove" aria-label={`Remover ${row.description}`} onClick={() => setItems(items.filter((_, i) => i !== index))}><X aria-hidden="true"/></button>}</div>)}</div><div className="arl-finalization-options"><label className="arl-finalization-warranty-toggle"><input type="checkbox" checked={showItemWarranties} onChange={(event) => setShowItemWarranties(event.target.checked)}/><span>Mostrar garantia dos serviços no PDF</span></label><label className="arl-finalization-payment-toggle"><input type="checkbox" checked={isPaid} onChange={(event) => { setIsPaid(event.target.checked); if (!event.target.checked) setPaymentMethod(''); }}/><span>OS já foi paga</span></label>{isPaid && <label className="field arl-finalization-payment-method"><span>Forma de pagamento *</span><select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)} required><option value="">Selecione</option><option value="cash">Dinheiro</option><option value="pix">Pix</option><option value="credit">Cartão de crédito</option><option value="debit">Cartão de débito</option></select></label>}</div><div className="money"><span>Subtotal <b>{money(subtotal)}</b></span><label>Desconto (R$)<input value={discount} onChange={(e) => setDiscount(e.target.value)}/></label><strong>Total {money(total)}</strong></div>{error && <div className="alert">{error}</div>}<div className="actions"><button type="button" onClick={() => setOpen(false)}>Cancelar</button><button type="button" className="primary" disabled={busy} onClick={finish}>{busy ? 'Finalizando…' : 'Salvar e concluir OS'}</button></div></div></div>}
+    {open && <div className="modal"><div className="modal-card arl-finalization" role="dialog" aria-modal="true" aria-label="FINALIZAÇÃO DA OS"><button type="button" className="modal-close" aria-label="Fechar finalização" onClick={() => setOpen(false)}><X aria-hidden="true"/></button><h1>FINALIZAÇÃO DA OS</h1><label className="field"><span>Resultado do atendimento *</span><select value={result} onChange={(e) => setResult(e.target.value)}><option value="repair_completed">Reparo realizado</option><option value="irreparable">Equipamento sem possibilidade de reparo</option><option value="client_cancelled">Cliente desistiu/cancelou</option><option value="economically_unviable">Reparo economicamente inviável</option><option value="no_fault">Sem defeito constatado</option><option value="other">Outro</option></select></label>{result === 'other' && <TextField label="Descreva o outro resultado" value={other} onChange={(e: any) => setOther(e.target.value)} required/>}<label className="field"><span>LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO {result !== 'repair_completed' ? '*' : ''}</span><textarea value={finalReport} onChange={(e) => { setFinalReport(e.target.value); onFinalReportDirty?.(true); }}/></label><div className="section-title"><h2>Serviços da OS</h2>{approved && <button type="button" onClick={() => setSourceBudgetId(approved.id)}>USAR ITENS DO ORÇAMENTO APROVADO</button>}</div><div className="notice arl-final-note">A finalização pode usar os serviços cadastrados na OS ou os itens de um orçamento aprovado selecionado.</div>{sourceBudgetId && <div className="notice">Itens vinculados ao orçamento aprovado. Preço, quantidade e garantia serão lidos diretamente do servidor. <button type="button" onClick={() => setSourceBudgetId(null)}>Usar itens manuais</button></div>}{!sourceBudgetId && <ServiceProductSearch items={catalog} ariaLabel="Pesquisar Serviço / Produto na finalização" onSelect={add} showBrowseAll/>}<div className="arl-finalization-items">{shownItems.map((row: any, index: number) => <div className="finish-item" data-finalization-item="true" key={`${row.catalog_id}-${index}`}><input aria-label={`Descrição do item ${index + 1}`} disabled={!!sourceBudgetId} value={row.description} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, description: e.target.value } : item))}/><input aria-label={`Quantidade de ${row.description}`} disabled={!!sourceBudgetId} type="number" min="1" max="999" value={row.quantity} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, quantity: Math.max(1, Math.min(999, Number(e.target.value) || 1)) } : item))}/><input aria-label={`Valor unitário de ${row.description}`} disabled={!!sourceBudgetId} value={(row.unit_price_cents / 100).toFixed(2)} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, unit_price_cents: Math.max(0, Math.round(Number(e.target.value.replace(',', '.')) * 100) || 0) } : item))}/><span>{money(row.quantity * row.unit_price_cents)}</span>{!sourceBudgetId && <button type="button" className="arl-finalization-remove" aria-label={`Remover ${row.description}`} onClick={() => setItems(items.filter((_, i) => i !== index))}><X aria-hidden="true"/></button>}</div>)}</div><div className="arl-finalization-options"><label className="arl-finalization-warranty-toggle"><input type="checkbox" checked={showItemWarranties} onChange={(event) => setShowItemWarranties(event.target.checked)}/><span>Mostrar Garantia Serviço/Produto</span></label><label className="arl-finalization-payment-toggle"><input type="checkbox" checked={isPaid} onChange={(event) => { setIsPaid(event.target.checked); if (!event.target.checked) setPaymentMethod(''); }}/><span>OS já foi paga</span></label>{isPaid && <label className="field arl-finalization-payment-method"><span>Forma de pagamento *</span><select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)} required><option value="">Selecione</option><option value="cash">Dinheiro</option><option value="pix">Pix</option><option value="credit">Cartão de crédito</option><option value="debit">Cartão de débito</option></select></label>}</div><div className="money"><span>Subtotal <b>{money(subtotal)}</b></span><label>Desconto (R$)<input value={discount} onChange={(e) => setDiscount(e.target.value)}/></label><strong>Total {money(total)}</strong></div>{error && <div className="alert">{error}</div>}<div className="actions"><button type="button" onClick={() => setOpen(false)}>Cancelar</button><button type="button" className="primary" disabled={busy} onClick={finish}>{busy ? 'Finalizando…' : 'Salvar e concluir OS'}</button></div></div></div>}
   </>;
 }
 
@@ -386,16 +383,62 @@ function DocumentsBox({ order, embedded = false }: any) {
   return embedded ? <div className="arl-record-documents">{content}</div> : <section className="wide"><h2>Documentos</h2>{content}</section>;
 }
 
-function FinalShareCard({ order, share, onClose }: { order: any; share: FinalShare; onClose: () => void }) {
-  const phone = digits(order.client?.phone || ''); const full = phone.startsWith('55') ? phone : `55${phone}`;
-  const message = [`Olá, ${order.client?.name || 'cliente'} 👋`, `Seu Equipamento está pronto da OS ${order.number}! 🎉`, '📋 Detalhes do Serviço:', `- Valor: ${money(order.total_cents || 0)}`, '💳 Formas de Pagamento:', '- PIX (Chave): 35988285777', '- Cartão: (Com taxas inclusas)', '- Dinheiro: (Favor trazer trocado)', '⚠️ A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.', 'Agradecemos pela preferência! 😊'].join('\n');
-  const whatsapp = full ? `https://wa.me/${full}?text=${encodeURIComponent(message)}` : '';
-  return <div className="arl-final-share-host"><section className="arl-final-share-card" role="status" aria-label="Compartilhar fechamento da OS"><h2>OS #{order.number} finalizada</h2><p>O PDF Final está pronto. O link abaixo expira em 48 horas; o PDF original continua preservado no histórico.</p><div className="arl-final-share-actions"><a target="_blank" rel="noreferrer" href={share.url}>Abrir PDF</a>{whatsapp && <a className="whatsapp" target="_blank" rel="noreferrer" href={whatsapp} onClick={(e) => { e.preventDefault(); if (window.confirm('Deseja abrir o WhatsApp para enviar a mensagem de finalização desta OS?')) window.open(whatsapp, '_blank', 'noopener'); }}>Enviar PDF pelo WhatsApp</a>}<button type="button" onClick={onClose}>Fechar</button></div></section></div>;
+function finalWhatsappMessage(order: any, pdfUrl: string) {
+  return [
+    `Olá, ${order.client?.name || 'cliente'}`,
+    '',
+    `Seu equipamento está pronto (${order.number}).`,
+    '',
+    '💵 Detalhes do Serviço no link abaixo',
+    pdfUrl,
+    '',
+    '',
+    `- Valor: ${money(order.total_cents || 0)}`,
+    '',
+    '💳 Formas de Pagamento: ',
+    '',
+    '- PIX (Chave): 35988285777 ',
+    '- Cartão (com taxas) ',
+    '- Dinheiro (favor trazer trocado)',
+    '',
+    '🚚 A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.',
+    '',
+    'Agradecemos pela preferência!',
+  ].join('\n');
+}
+
+function FinalShareCard({ order }: { order: any }) {
+  const [busy, setBusy] = useState(false);
+  const [shareError, setShareError] = useState('');
+  const prepare = async (kind: 'pdf' | 'whatsapp') => {
+    const target = window.open('about:blank', '_blank');
+    setBusy(true);
+    setShareError('');
+    try {
+      const freshShare = await api(`/orders/${order.id}/final-share`);
+      const destination = kind === 'pdf'
+        ? freshShare.url
+        : (() => {
+            const phone = digits(order.client?.phone || '');
+            const full = phone.startsWith('55') ? phone : `55${phone}`;
+            if (!full) throw new Error('O cliente não possui telefone para WhatsApp.');
+            return `https://wa.me/${full}?text=${encodeURIComponent(finalWhatsappMessage(order, freshShare.url))}`;
+          })();
+      if (target) target.location.href = destination;
+      else window.location.href = destination;
+    } catch (reason: any) {
+      target?.close();
+      setShareError(reason.message || 'Não foi possível gerar o link do PDF.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return <div className="arl-final-share-host"><section className="arl-final-share-card" role="status" aria-label="Compartilhar fechamento da OS"><h2>OS #{order.number} finalizada</h2><p>O PDF Final está pronto. Um link novo, válido por 48 horas, será criado somente quando você escolher uma ação.</p>{shareError && <p className="alert">{shareError}</p>}<div className="arl-final-share-actions"><button type="button" disabled={busy} onClick={() => void prepare('pdf')}>Abrir PDF</button><button type="button" className="whatsapp" disabled={busy} onClick={() => void prepare('whatsapp')}>Enviar PDF pelo WhatsApp</button></div></section></div>;
 }
 
 export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLoad = false, onEdit, onDirtyChange, onOpenClientHistory }: Props & { readOnly?: boolean }) {
-  const [order, setOrder] = useState<any>(), [role, setRole] = useState<string | null>(null), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [reopenOpen, setReopenOpen] = useState(false), [reopenNote, setReopenNote] = useState(''), [interruptOpen, setInterruptOpen] = useState(false), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [servicesDirty, setServicesDirty] = useState(false), [finalReportDirty, setFinalReportDirty] = useState(false), [share, setShare] = useState<FinalShare | null>(null), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false), [pdfActionsOpen, setPdfActionsOpen] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null), statusSelect = useRef<HTMLSelectElement>(null), pendingServicesSave = useRef<null | (() => Promise<any>)>(null);
+  const [order, setOrder] = useState<any>(), [role, setRole] = useState<string | null>(null), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [reopenOpen, setReopenOpen] = useState(false), [reopenNote, setReopenNote] = useState(''), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [servicesDirty, setServicesDirty] = useState(false), [finalReportDirty, setFinalReportDirty] = useState(false), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false), [pdfActionsOpen, setPdfActionsOpen] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null), pendingServicesSave = useRef<null | (() => Promise<any>)>(null);
   const load = async () => { try { const next = await api(`/orders/${id}`); setOrder(next); if (!finalReportDirty) setFinalReport(next.final_report || (next.status === 'completed' ? next.technical_report || '' : '')); setError(''); } catch (e: any) { setError(e.message); } };
   useEffect(() => {
     setRole(null);
@@ -411,7 +454,8 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
   }, [reopenOnLoad, order?.id, order?.status, role]);
 
   if (error) return <div className="state error">{error}</div>; if (!order || role === null) return <div className="state">Carregando OS…</div>;
-  const immutable = Boolean(order.archived || ['completed', 'interrupted'].includes(order.status));
+  const operational = ['analysis', 'waiting_part', 'in_service'].includes(order.status);
+  const immutable = !operational;
   const interrupted = order.status === 'interrupted';
   const reopened = isReopenedOrder(order);
   const persistPendingChanges = async () => {
@@ -425,18 +469,8 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     }
     return persistedOrder;
   };
-  const uploadFiles = async (files?: readonly File[] | null) => { if (!files?.length) return; try { for (const file of files) { const form = new FormData(); form.append('photo', file); await api(`/orders/${order.id}/photos`, { method: 'POST', body: form }); } await load(); } catch (e: any) { setError(e.message); } };
-  const changeStatus = async (value: string) => {
-    if (value === 'completed') { setFinalSignal((x) => x + 1); return; }
-    if (value === 'interrupted') { setInterruptOpen(true); return; }
-    try { await api(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: value }) }); await load(); } catch (e: any) { window.alert(e.message); await load(); }
-  };
-  const shownStatus = order.display_status || (order.archived ? 'paid' : order.status);
-  const activeStatusOptions = [['analysis', 'Em Análise'], ['waiting_part', 'Aguardando Peça'], ['in_service', 'Em Serviço'], ['interrupted', 'Interrompido'], ['completed', 'Finalizado']];
+  const uploadFiles = async (files?: readonly File[] | null) => { if (!files?.length) return; const available = Math.max(0, 5 - (order.photos?.length || 0)); if (files.length > available) window.alert('Cada OS aceita no máximo 5 fotos. As fotos excedentes não serão enviadas.'); if (available === 0) return; try { for (const file of files.slice(0, available)) { const form = new FormData(); form.append('photo', file); await api(`/orders/${order.id}/photos`, { method: 'POST', body: form }); } await load(); } catch (e: any) { setError(e.message); } };
   const canAdminister = ['Master', 'Administrador'].includes(role);
-  const statusOptions = role === 'Funcionário'
-    ? activeStatusOptions.filter(([value]) => !['completed', 'interrupted'].includes(value))
-    : order.archived ? [['paid', 'Pago']] : shownStatus === 'awaiting_payment' ? [['awaiting_payment', 'Aguardando PGTO']] : order.status === 'completed' ? [['completed', 'Finalizado'], ['paid', 'Pago']] : interrupted ? [['interrupted', 'Interrompido']] : activeStatusOptions;
   const editOrder = () => onEdit ? onEdit() : setEditOpen(true);
   const finalMessage = [`Olá, ${order.client?.name || 'cliente'} 👋`, `Seu Equipamento está pronto da OS ${order.number}! 🎉`, '📋 Detalhes do Serviço:', `- Valor: ${money(order.total_cents || 0)}`, '💳 Formas de Pagamento:', '- PIX (Chave): 35988285777', '- Cartão: (Com taxas inclusas)', '- Dinheiro: (Favor trazer trocado)', '⚠️ A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.', 'Agradecemos pela preferência! 😊'].join('\n');
   const shareFinalReport = async () => {
@@ -470,7 +504,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
   const mapsAddress = [order.client?.street, order.client?.number, order.client?.district, order.client?.city, order.client?.state].filter(Boolean).join(', ');
   const mapsUrl = order.mobile_actions?.maps_url || (mapsAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsAddress)}` : '');
   if (readOnly) return <div data-arl-order-detail-react="1" data-mobile-read-only="1" className="arl-mobile-read-only">
-    <header className="arl-mobile-read-only-header"><button type="button" onClick={back} aria-label="Voltar para OS abertas">←</button><div><span>ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}{interrupted&&<span className="arl-reopened-marker arl-interrupted-marker arl-order-reopened-marker">Interrompida</span>}</div></header>
+    <header className="arl-mobile-read-only-header"><button type="button" className="arl-back-button" onClick={back} aria-label="Voltar para OS abertas">←</button><div><span>ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}{interrupted&&<span className="arl-reopened-marker arl-interrupted-marker arl-order-reopened-marker">Interrompida</span>}</div></header>
     <div className="arl-read-only-banner">Somente leitura · edite pelo PC</div>
     <div className="arl-mobile-read-only-actions">{openingWhatsapp && <a href={openingWhatsapp} target="_blank" rel="noreferrer">WhatsApp</a>}{mapsUrl && <a href={mapsUrl} target="_blank" rel="noreferrer">Rota</a>}</div>
     <details className="arl-opening-call"><summary>PDF's e Reaberturas OS</summary><div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div></details>
@@ -490,8 +524,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     <header className="arl-order-sticky-header">
       <div className="arl-order-header-main">
         <button type="button" className="arl-order-back" onClick={back}>← Voltar</button>
-        <div className="arl-order-header-identity"><span className="arl-eyebrow">ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}{interrupted&&<span className="arl-reopened-marker arl-interrupted-marker arl-order-reopened-marker">Interrompida</span>}<div className="arl-order-header-meta"><span className="arl-order-client-link"><strong>{order.client.name}</strong></span><span>{order.equipment_description || 'Equipamento não informado'}</span><span>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</span></div></div>
-        <label className={`status-picker status-${shownStatus}`}><span>Status</span><select ref={statusSelect} value={shownStatus} disabled={order.archived || interrupted || shownStatus === 'awaiting_payment'} onChange={(e) => void changeStatus(e.target.value)}>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <div className="arl-order-header-identity"><span className="arl-eyebrow">ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}{interrupted&&<span className="arl-reopened-marker arl-interrupted-marker arl-order-reopened-marker">Interrompida</span>}</div>
       </div>
       <div className="arl-order-quick-actions arl-order-header-actions">
         {onOpenClientHistory && <button type="button" data-order-action="history" onClick={() => onOpenClientHistory(order.client.id)}><History aria-hidden="true"/><span>Histórico</span></button>}
@@ -504,7 +537,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     </header>
     <ol className="arl-order-stage-rail" aria-label="Etapas da Ordem de Serviço">{stages.map((stage, index) => { const state = stageState(index); return <li key={stage} data-stage-state={state} className={`arl-order-stage ${state}`} aria-current={state === 'current' ? 'step' : undefined}><span>{index + 1}</span><b>{stage}</b></li>; })}</ol>
     <section className="panel arl-intake-card" aria-labelledby="arl-intake-title">
-      <div className="section-title arl-intake-title"><div><span className="arl-eyebrow">ENTRADA</span><h2 id="arl-intake-title">Ficha de entrada</h2></div>{!immutable&&<button type="button" className="arl-od-btn" onClick={editOrder}><Pencil/><span>Editar ficha</span></button>}</div>
+      <div className="section-title arl-intake-title"><div><span className="arl-eyebrow">ENTRADA</span><h2 id="arl-intake-title">Ficha de entrada</h2></div></div>
       <div className="arl-intake-dates"><span><b>Entrada</b> {formatOptionalDate(order.received_at)}</span><i aria-hidden="true">|</i><span><b>Saída</b> {['completed', 'interrupted'].includes(order.status) ? formatOptionalDate(order.completed_at) : 'Em aberto'}</span></div>
       <div className="arl-intake-grid">
         <section className="arl-intake-field arl-intake-client-field"><h3>Cliente</h3><div className="arl-intake-client-info"><p className="arl-intake-client-name"><strong>{order.client.name}</strong></p><p className="arl-intake-client-phone"><Phone aria-hidden="true"/>{masks.phone(order.client.phone)}</p><p className="arl-intake-client-address"><MapPin aria-hidden="true"/><span>{[`${order.client.street || ''}${order.client.number ? `, ${order.client.number}` : ''}`, order.client.district, [order.client.city, order.client.state].filter(Boolean).join('/')].filter(Boolean).join(' — ')}</span></p><p className="arl-intake-client-document">{masks.document(order.client.document)}</p></div></section>
@@ -512,7 +545,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
         <section className="arl-intake-field"><h3>Problema relatado</h3><p>{order.reported_problem}</p></section>
         <section className={`arl-intake-field ${!order.intake_condition ? 'arl-checklist-ok' : ''}`}><h3>Estado físico na entrada</h3><p className={!order.intake_condition ? 'ok' : undefined}>{order.intake_condition || 'Equipamento aparentemente 100% sem avarias'}</p></section>
       </div>
-        <section className="arl-intake-photos"><h3>Fotos</h3><div><div className="arl-order-photo-tools"><label>↑ Enviar foto<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => { const selectedPhotos = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ''; void uploadFiles(selectedPhotos); }}/></label><button type="button" className="arl-camera-button" onClick={() => setCamera(true)}>◉ Usar câmera</button></div><div className="photos">{order.photos?.length ? order.photos.map((photo: any) => <img key={photo.id} src={`/api/orders/${order.id}/photos/${photo.id}`} alt={`Foto ${photo.id} da OS`}/>) : <p>Nenhuma foto anexada.</p>}</div></div></section>
+        <section className="arl-intake-photos"><h3>Fotos</h3><div><div className="arl-order-photo-tools"><label>↑ Enviar foto<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => { const selectedPhotos = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ''; void uploadFiles(selectedPhotos); }}/></label><button type="button" className="arl-camera-button" onClick={() => setCamera(true)}>◉ Usar câmera</button></div><div className="photos">{order.photos?.length ? order.photos.map((photo: any) => <a key={photo.id} href={`/api/orders/${order.id}/photos/${photo.id}`} target="_blank" rel="noreferrer"><img src={`/api/orders/${order.id}/photos/${photo.id}`} alt={`Foto ${photo.id} da OS`}/></a>) : <p>Nenhuma foto anexada.</p>}</div></div></section>
     </section>
     <div className="detail-grid arl-order-detail arl-order-workflow">
       {immutable && order.items?.length > 0 && <section className="wide order-items-summary"><h2>Serviços / Produtos da OS</h2>{order.items.map((item: any) => <div className="order-item-line" key={item.id}><div><b>{item.description}</b><small>{item.quantity} × {money(item.unit_price_cents)}</small></div><strong>{money(item.subtotal_cents)}</strong></div>)}</section>}
@@ -521,7 +554,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
       {interrupted && <section className="wide arl-interruption-note"><h2>Interrupção</h2><p><strong>Motivo:</strong> {order.interruption_reason || order.technical_report}</p><p><strong>O que já foi feito:</strong> {order.interruption_work_done}</p></section>}
       <BudgetBox order={order} role={role} openSignal={budgetSignal}/>
       {canAdminister && <PaymentBox order={order} role={role} openSignal={paymentSignal} onSummary={setPaymentSummary}/>}
-      {canAdminister && <FinalizationBox order={order} reload={load} openSignal={finalSignal} finalReport={finalReport} setFinalReport={setFinalReport} onShare={setShare} persistPendingChanges={persistPendingChanges} onFinalReportDirty={setFinalReportDirty}/>}
+      {canAdminister && <FinalizationBox order={order} reload={load} openSignal={finalSignal} finalReport={finalReport} setFinalReport={setFinalReport} persistPendingChanges={persistPendingChanges} onFinalReportDirty={setFinalReportDirty}/>}
       {SHOW_ORDER_RECORD && <section className="wide arl-order-record"><div className="section-title"><div><span className="arl-eyebrow">REGISTRO</span><h2>Registro da OS</h2><p>Históricos e documentos preservados, recolhidos por padrão.</p></div></div>
         <details className="arl-record-accordion"><summary>Histórico de status</summary><div className="arl-record-body">{order.histories.map((history: any, index: number) => <p key={history.id || index}>{statusLabel[history.to_status] || history.to_status} · {new Date(history.created_at).toLocaleString('pt-BR')} · {history.user?.name}{history.reason ? ` · Motivo: ${history.reason}` : ''}</p>)}</div></details>
         <OrderAuditHistory orderId={order.id}/>
@@ -530,9 +563,8 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     </div>
     {editOpen && (immutable ? <ImmutableModal order={order} onClose={() => setEditOpen(false)}/> : <EditOrderModal order={order} onClose={() => setEditOpen(false)} onSaved={async () => { setEditOpen(false); await load(); }}/>) }
     {reopenOpen && <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Reabrir OS #${order.number}`}><h2>Reabrir OS #{order.number}</h2><p>A mesma OS voltará para Em Análise. A finalização e o PDF atuais permanecerão no histórico.</p><label>Motivo da reabertura<textarea value={reopenNote} onChange={(event) => setReopenNote(event.target.value)}/></label><div className="arl-od-actions"><button type="button" onClick={() => setReopenOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={async () => { if (!reopenNote.trim()) return; await api(`/orders/${order.id}/reopen`, { method: 'POST', body: JSON.stringify({ note: reopenNote.trim() }) }); setReopenOpen(false); await load(); }}>Confirmar reabertura</button></div></section></div>}
-    {interruptOpen && <InterruptionModal order={order} onClose={() => setInterruptOpen(false)} onSaved={async () => { setInterruptOpen(false); await load(); }}/>} 
     {photoChoice && <PhotoChoice onClose={() => setPhotoChoice(false)} onUpload={() => { setPhotoChoice(false); fileInput.current?.click(); }} onCamera={() => { setPhotoChoice(false); setCamera(true); }}/>} 
     {camera && <CameraModal onClose={() => setCamera(false)} onFile={(file) => { setCamera(false); void uploadFiles([file]); }}/>}
-    {share && <FinalShareCard order={order} share={share} onClose={() => setShare(null)}/>} 
+    {order.status === 'completed' && <FinalShareCard order={order}/>} 
   </div>;
 }

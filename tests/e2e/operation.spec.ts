@@ -25,15 +25,22 @@ test.describe.serial('fluxo operacional principal', () => {
   });
 
   test('cadastra cliente com fallback manual, CPF válido, edição e links', async ({ page }) => {
+    await page.route('https://viacep.com.br/**', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ erro: true }),
+    }));
     await page.getByRole('button', { name: 'Clientes' }).click();
     await page.getByRole('button', { name: 'Novo cliente' }).click();
-    const modal = page.getByRole('dialog', { name: 'Novo cliente' });
+    const modal = page.getByTestId('client-modal');
     await expect(modal).toBeVisible();
-    const form = modal.locator('form');
+    const form = modal.getByTestId('client-form');
     const values: Record<string, string> = { name: 'Cliente E2E', document, phone: '34999998888', postal_code: '99999999', street: 'Rua Manual', number: '10', district: 'Centro', city: 'Araguari', state: 'MG' };
     for (const [name, value] of Object.entries(values)) await form.locator(`[name="${name}"]`).fill(value);
+    await expect(form.getByText('ViaCEP indisponível. Preencha o endereço manualmente.', { exact: true })).toBeVisible();
     await form.getByRole('button', { name: 'Salvar cliente' }).click();
-    await expect(page.getByRole('dialog', { name: 'Novo cliente' })).toHaveCount(0);
+    await expect(page.getByTestId('client-modal')).toHaveCount(0);
+    await page.getByPlaceholder(/Nome, telefone/).fill('Cliente E2E');
     const clientCard = page.locator('.client-list article').filter({ hasText: 'Cliente E2E' });
     await expect(clientCard).toBeVisible();
     await expect(clientCard.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', /wa\.me|whatsapp/);
@@ -60,7 +67,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.locator('input[type=file]').setInputFiles({ name: 'equipamento.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
     await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
     await expect(page.getByText('Notebook não liga durante homologação')).toBeVisible();
-    await expect(page.locator('.arl-order-header-identity').getByText(manualEquipment, { exact: true })).toBeVisible();
+    await expect(page.locator('.arl-intake-equipment-field').getByText(manualEquipment, { exact: true })).toBeVisible();
     const orders = await api(page, '/orders?q=Cliente%20E2E');
     orderId = orders.body.data[0].id;
     orderNumber = orders.body.data[0].number;
@@ -77,7 +84,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
-    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}`, exact: true })).toBeVisible();
     await expect(page.getByText('Pagamento ainda não registrado.', { exact: true })).toBeVisible();
     await expect(page.locator('[data-order-action="payment"]')).toHaveCount(0);
     await expect(page.getByText(/NaN|Invalid Date/)).toHaveCount(0);
@@ -133,27 +140,26 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
-    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
-    const statusSelect = page.locator('.status-picker select');
-    await expect(statusSelect.locator('option[value="in_service"]'), 'Fluxo operacional deve manter Em Serviço como opção válida').toHaveText('Em Serviço');
-    await statusSelect.selectOption('in_service');
-    await statusSelect.selectOption('waiting_part');
-    await statusSelect.selectOption('analysis');
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}`, exact: true })).toBeVisible();
+    await expect(page.locator('.status-picker')).toHaveCount(0);
+    for (const nextStatus of ['in_service', 'waiting_part', 'analysis']) {
+      const changed = await api(page, `/orders/${orderId}/status`, 'PATCH', { status: nextStatus });
+      expect(changed.status).toBe(200);
+    }
     const statusHistory = await api(page, `/orders/${orderId}`);
     expect(statusHistory.body.histories.map((entry: any) => entry.to_status)).toEqual(expect.arrayContaining(['in_service', 'waiting_part', 'analysis']));
-    await statusSelect.selectOption('completed');
+    await page.getByRole('button', { name: 'Concluir', exact: true }).click();
     const finalModal = page.locator('.modal-card').filter({ hasText: 'FINALIZAÇÃO DA OS' });
     await expect(finalModal).toBeVisible();
     await finalModal.getByRole('button', { name: 'USAR ITENS DO ORÇAMENTO APROVADO' }).click();
     await expect(finalModal.getByText(/Itens vinculados ao orçamento aprovado/)).toBeVisible();
     await finalModal.locator('textarea').fill('Equipamento testado e funcionando.');
     const finalizeRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/finalize`) && request.method() === 'POST');
-    const finalShareResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/final-share`) && response.request().method() === 'GET');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
     const finalizePayload = (await finalizeRequestPromise).postDataJSON();
     expect(finalizePayload.approved_budget_id).toBeTruthy();
     expect(finalizePayload).not.toHaveProperty('items');
-    await expect(statusSelect).toHaveValue('awaiting_payment');
+    await expect(page.getByRole('status', { name: 'Compartilhar fechamento da OS' })).toBeVisible();
     const documents = await api(page, `/orders/${orderId}/documents`);
     expect(documents.body.some((document: any) => document.type === 'final')).toBe(true);
     const finalizedResponse = await page.request.get(`/api/orders/${orderId}`);
@@ -169,13 +175,20 @@ test.describe.serial('fluxo operacional principal', () => {
     const blockedBudget = await api(page, `/orders/${orderId}/budgets`, 'POST', {});
     expect(blockedBudget.status).toBe(409);
     expect(blockedBudget.body?.message).toBe('Não é possível criar orçamento para uma OS fechada.');
+    const finalShareResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/final-share`) && response.request().method() === 'GET');
+    const popupPromise = page.context().waitForEvent('page');
+    await page.getByRole('status', { name: 'Compartilhar fechamento da OS' }).getByRole('button', { name: 'Enviar PDF pelo WhatsApp' }).click();
+    const whatsappPage = await popupPromise;
+    await expect.poll(() => whatsappPage.url()).toMatch(/api\.whatsapp\.com\/send/);
     const finalShareResponse = await finalShareResponsePromise;
     expect(finalShareResponse.status()).toBe(200);
     const finalShare = await finalShareResponse.json();
     expect(finalShare.url).toContain(`/share/orders/${orderId}/final/1`);
-    const whatsappHref = await page.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' }).getAttribute('href');
-    expect(whatsappHref).toMatch(/wa\.me/);
-    expect(decodeURIComponent(whatsappHref || '')).not.toContain('Acesse o PDF da Ordem de Serviço aqui');
+    const whatsappHref = whatsappPage.url();
+    const whatsappText = decodeURIComponent(new URL(whatsappHref).searchParams.get('text') || '');
+    expect(whatsappText).toContain(finalShare.url);
+    expect(whatsappText).toContain('Detalhes do Serviço no link abaixo');
+    await whatsappPage.close();
     await page.reload();
     const documentMenu = page.locator('.arl-opening-call');
     await documentMenu.getByRole('button', { name: "PDF's", exact: true }).click();
@@ -188,7 +201,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
-    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}`, exact: true })).toBeVisible();
     await expect(page.locator('[data-order-action="payment"]')).toBeVisible();
     await page.locator('[data-order-action="payment"]').click();
     const paymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
@@ -238,22 +251,29 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(paid.status).toBe('paid');
   });
 
-  test('reabre a mesma OS, finaliza nova revisão e ajusta cobrança', async ({ page }) => {
+  test('reabre a mesma OS e preserva o recebimento antigo ao reduzir o total', async ({ page }) => {
     await page.goto(`/orders/${orderId}`);
-    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}`, exact: true })).toBeVisible();
     const menu = page.locator('.arl-opening-call');
     await menu.getByRole('button', { name: "PDF's", exact: true }).click();
     await menu.getByRole('button', { name: 'Reabrir OS' }).click();
     const reopen = page.getByRole('dialog', { name: `Reabrir OS #${orderNumber}` });
     await reopen.locator('textarea').fill('Correção do valor cobrado após conferência.');
     await reopen.getByRole('button', { name: 'Confirmar reabertura' }).click();
-    await expect(page.locator('.status-picker select')).toHaveValue('analysis');
+    await expect(page.locator('.status-picker')).toHaveCount(0);
+    await expect(page.getByText('Reaberta', { exact: true })).toBeVisible();
+    const reopenedOrder = await api(page, `/orders/${orderId}`);
+    expect(reopenedOrder.body.status).toBe('analysis');
     await page.getByRole('button', { name: 'Concluir', exact: true }).click();
     const finalModal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
     await finalModal.getByLabel('Valor unitário de Formatação E2E').fill('140,00');
     await finalModal.locator('textarea').fill('Valor corrigido e equipamento reconferido.');
+    const refinalizationResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/finalize`) && response.request().method() === 'POST');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
-    await expect(page.locator('.status-picker select')).toHaveValue('paid');
+    expect((await refinalizationResponsePromise).status()).toBe(201);
+    const refinalizedOrder = await api(page, `/orders/${orderId}`);
+    expect(refinalizedOrder.body.status).toBe('completed');
+    expect(refinalizedOrder.body.display_status).toBe('paid');
     const documents = await api(page, `/orders/${orderId}/documents`);
     expect(documents.body.some((document: any) => document.type === 'final' && document.revision === 2)).toBe(true);
     expect(documents.body.filter((document: any) => document.type === 'budget' && document.revision === 2), 'A outra Revisão 2 é o orçamento histórico, não uma duplicata do fechamento').toHaveLength(1);
@@ -262,14 +282,16 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(reopenAudit).toBeTruthy();
     expect(reopenAudit.changes).toContain('Motivo: Correção do valor cobrado após conferência.');
     const auditChanges = audit.body.flatMap((entry: any) => entry.changes);
-    expect(auditChanges).toEqual(expect.arrayContaining(['Valor alterado de R$ 150,00 para R$ 140,00', 'Ajuste de cobrança registrado no financeiro para esta OS.']));
+    expect(auditChanges).toContain('Valor alterado de R$ 150,00 para R$ 140,00');
+    expect(auditChanges).not.toContain('Ajuste de cobrança registrado no financeiro para esta OS.');
     const payments = await api(page, `/orders/${orderId}/payments`);
-    expect(payments.body.paid_cents).toBe(14000);
+    expect(payments.body.paid_cents).toBe(15000);
+    expect(payments.body.balance_cents).toBe(0);
     const daily = await api(page, '/finance/daily');
-    expect(daily.body.transactions.filter((row: any) => row.order_number === orderNumber).reduce((sum: number, row: any) => sum + row.effective_cents, 0)).toBe(14000);
+    expect(daily.body.transactions.filter((row: any) => row.order_number === orderNumber).reduce((sum: number, row: any) => sum + row.effective_cents, 0)).toBe(15000);
   });
 
-  test('histórico do cliente e pós-venda aparecem imediatamente, mas ficam bloqueados por 24h', async ({ page }) => {
+  test('histórico do cliente e pós-venda aparecem imediatamente, mas ficam bloqueados por 7 dias', async ({ page }) => {
     await page.getByRole('button', { name: 'Clientes' }).click();
     await page.getByLabel('Buscar clientes').fill('Cliente E2E');
     const clientCard = page.locator('.client-list article').filter({ hasText: 'Cliente E2E' });
@@ -291,7 +313,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(lockedRow).toBeVisible();
     await expect(lockedRow).toHaveCSS('width', '200px');
     await expect(page.locator('.post-sale-grid')).toHaveCSS('justify-content', 'start');
-    await expect(lockedRow.locator('.post-sale-state-waiting')).toContainText('Disponível após 24 horas');
+    await expect(lockedRow.locator('.post-sale-state-waiting')).toContainText(/Disponível após \d+ horas/);
     const lockedActions = lockedRow.locator('.post-sale-action[aria-disabled="true"]');
     await expect(lockedActions).toHaveCount(2);
     for (let i = 0; i < 2; i += 1) {

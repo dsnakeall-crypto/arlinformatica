@@ -58,10 +58,10 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   const header = root.locator('.arl-order-sticky-header');
   await expect(header).toBeVisible();
   expect(await header.evaluate((node) => getComputedStyle(node).position), 'Cabeçalho da OS deve permanecer sticky durante a rolagem').toBe('sticky');
-  await expect(header.getByText(clientName, { exact: true })).toBeVisible();
-  await expect(header.getByText(equipmentDescription, { exact: true })).toBeVisible();
+  await expect(header.getByText(clientName, { exact: true })).toHaveCount(0);
+  await expect(header.getByText(equipmentDescription, { exact: true })).toHaveCount(0);
   await expect(header.getByText(equipmentDetails, { exact: true })).toHaveCount(0);
-  await expect(header.locator('.status-picker')).toBeVisible();
+  await expect(header.locator('.status-picker')).toHaveCount(0);
   await expect(header.getByRole('button', { name: 'Histórico', exact: true })).toBeVisible();
   await expect(header.getByRole('button', { name: 'Editar', exact: true })).toBeVisible();
   await expect(header.getByRole('button', { name: 'Orçamento', exact: true })).toBeVisible();
@@ -104,7 +104,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   expect(clearedEquipmentDetails.status, JSON.stringify(clearedEquipmentDetails.body)).toBe(200);
   await page.reload();
   await expect(intake.locator('.arl-intake-equipment-details').getByText('Não informado', { exact: true })).toBeVisible();
-  await expect(intake.getByRole('button', { name: 'Editar ficha' })).toBeVisible();
+  await expect(intake.getByRole('button', { name: 'Editar ficha' })).toHaveCount(0);
   await expect(intake.locator('.arl-order-photo-tools label')).toContainText('Enviar foto');
   await expect(intake.getByRole('button', { name: '◉ Usar câmera' })).toBeVisible();
   await expect(intake.getByText('Nenhuma foto anexada.', { exact: true })).toBeVisible();

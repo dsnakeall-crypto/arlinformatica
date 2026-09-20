@@ -7,7 +7,7 @@ declare global{interface Window{__arlOrderDetailState?:any}}
 
 const csrf=()=>document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content??'';
 const api=async(url:string,options:RequestInit={})=>{const r=await fetch('/api'+url,{credentials:'same-origin',...options,headers:{Accept:'application/json',...(options.body?{'Content-Type':'application/json'}:{}),...(csrf()?{'X-CSRF-TOKEN':csrf()}:{}) ,...options.headers}});const b=await r.json().catch(()=>({message:'Resposta inválida.'}));if(!r.ok)throw new Error(b.message||'Não foi possível concluir.');return b};
-const digits=(v:string)=>v.replace(/\D/g,'');
+const digits=(v:unknown)=>typeof v==='string'?v.replace(/\D/g,''):'';
 const esc=(v:string)=>v.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c));
 const trash='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg>';
 const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';

@@ -43,15 +43,17 @@ import {
   CalendarDays,
   CircleDollarSign,
   ReceiptText,
+  FileSignature,
 } from "lucide-react";
 import "../css/app.css";
 import "../css/homologation.css";
 import "../css/arl-ui-system.css";
 import "../css/action-icons.css";
-import ServicesCatalogPage from "./services-page";
+import ServicesCatalogPage, { ProductsCatalogPage } from "./services-page";
 import ClientsPage from "./clients-page";
 import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
+import ServiceProductSearch from "./service-product-search";
 import {
   OrderPaymentFigures,
 } from "./finance-refund-summary";
@@ -66,6 +68,7 @@ type Page =
   | "post-sale"
   | "settings"
   | "services"
+  | "products"
   | "users";
 type Client = {
   id: number;
@@ -109,6 +112,7 @@ type Catalog = {
   warranty_enabled?: boolean;
   warranty_term?: number | null;
   warranty_unit?: string | null;
+  stock_quantity?: number;
 };
 type Errors = Record<string, string[]>;
 const emptyClient = {
@@ -149,9 +153,11 @@ const api = async (url: string, options: RequestInit = {}) => {
     );
   return json;
 };
+const digits = (value: unknown) =>
+  typeof value === "string" ? value.replace(/\D/g, "") : "";
 const masks = {
-  document: (v: string) => {
-    const n = v.replace(/\D/g, "").slice(0, 14);
+  document: (v: unknown) => {
+    const n = digits(v).slice(0, 14);
     return n.length <= 11
       ? n
           .replace(/(\d{3})(\d)/, "$1.$2")
@@ -163,15 +169,13 @@ const masks = {
           .replace(/(\d{3})(\d)/, "$1/$2")
           .replace(/(\d{4})(\d)/, "$1-$2");
   },
-  phone: (v: string) =>
-    v
-      .replace(/\D/g, "")
+  phone: (v: unknown) =>
+    digits(v)
       .slice(0, 11)
       .replace(/^(\d{2})(\d)/, "($1) $2")
       .replace(/(\d{5})(\d)/, "$1-$2"),
-  cep: (v: string) =>
-    v
-      .replace(/\D/g, "")
+  cep: (v: unknown) =>
+    digits(v)
       .slice(0, 8)
       .replace(/(\d{5})(\d)/, "$1-$2"),
 };
@@ -212,7 +216,7 @@ function ClientForm({ onSaved, onCancel, client }: any) {
     setData({ ...data, [e.target.name]: v });
   };
   const lookup = async () => {
-    const cep = data.postal_code.replace(/\D/g, "");
+    const cep = digits(data.postal_code);
     if (cep.length !== 8) return;
     setCepNote("Consultando CEP…");
     try {
@@ -240,8 +244,8 @@ function ClientForm({ onSaved, onCancel, client }: any) {
         method: client ? "PUT" : "POST",
         body: JSON.stringify({
           ...data,
-          document: data.document.replace(/\D/g, ""),
-          postal_code: data.postal_code.replace(/\D/g, ""),
+          document: digits(data.document),
+          postal_code: digits(data.postal_code),
         }),
       });
       onSaved(saved);
@@ -252,7 +256,7 @@ function ClientForm({ onSaved, onCancel, client }: any) {
     }
   };
   return (
-    <form className="form-card" onSubmit={submit}>
+  <form className="form-card" onSubmit={submit}>
       <h2>
         <Users /> {client ? "Editar cliente" : "Novo cliente"}
       </h2>
@@ -283,7 +287,7 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           required
         />
         <label className="field">
-          <span>CEP *</span>
+          <span>CEP</span>
           <input
             name="postal_code"
             value={data.postal_code}
@@ -306,7 +310,6 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           value={data.number}
           onChange={change}
           error={errors.number?.[0]}
-          required
         />
         <Field
           label="Bairro"
@@ -314,7 +317,6 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           value={data.district}
           onChange={change}
           error={errors.district?.[0]}
-          required
         />
         <Field
           label="Cidade"
@@ -322,7 +324,6 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           value={data.city}
           onChange={change}
           error={errors.city?.[0]}
-          required
         />
         <Field
           label="Estado"
@@ -330,7 +331,6 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           value={data.state}
           onChange={change}
           error={errors.state?.[0]}
-          required
         />
         <Field
           label="Complemento"
@@ -359,7 +359,7 @@ function ClientHistory({ id, onClose, openOrder }: any) {
   const c = data.client;
   return (
     <>
-      <button onClick={onClose}>← Voltar aos clientes</button>
+      <button className="arl-back-button" onClick={onClose}>← Voltar aos clientes</button>
       <div className="title">
         <div>
           <h1>{c.name}</h1>
@@ -884,13 +884,12 @@ function NewOrder({ done }: any) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [quick, setQuick] = useState(false),
-    [camera, setCamera] = useState(false),
-    [serviceQuery, setServiceQuery] = useState("");
+    [camera, setCamera] = useState(false);
   useEffect(() => {
     Promise.all([
       api("/clients"),
       api("/catalogs/equipment"),
-      api("/catalogs/services"),
+      api("/catalogs/items"),
     ])
       .then(([c, e, s]) => {
         setClients(c.data);
@@ -902,6 +901,15 @@ function NewOrder({ done }: any) {
       })
       .catch((e) => setError(e.message));
   }, []);
+  const currentClient = clients.find((c) => c.id === client);
+  const photoPreviews = useMemo(
+    () => photos.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [photos],
+  );
+  useEffect(
+    () => () => photoPreviews.forEach(({ url }) => URL.revokeObjectURL(url)),
+    [photoPreviews],
+  );
   if (quick)
     return (
       <Clients
@@ -914,26 +922,21 @@ function NewOrder({ done }: any) {
         }}
       />
     );
-  const currentClient = clients.find((c) => c.id === client);
-  const photoPreviews = useMemo(
-    () => photos.map((file) => ({ file, url: URL.createObjectURL(file) })),
-    [photos],
-  );
-  useEffect(
-    () => () => photoPreviews.forEach(({ url }) => URL.revokeObjectURL(url)),
-    [photoPreviews],
-  );
   const addPhotos = (files: readonly File[] | null | undefined) => {
     if (!files?.length) return;
-    setPhotos((current) => [...current, ...files]);
+    setPhotos((current) => {
+      const available = Math.max(0, 5 - current.length);
+      if (files.length > available) window.alert("Cada OS aceita no máximo 5 fotos. As fotos excedentes não foram adicionadas.");
+      return [...current, ...files.slice(0, available)];
+    });
   };
-  const addItem = (item: Catalog) =>
+  const addItem = (item: Catalog, quantity = 1) =>
     setOrderItems((current) => {
       const found = current.find((x) => x.catalog_id === item.id);
       return found
         ? current.map((x) =>
             x.catalog_id === item.id
-              ? { ...x, quantity: Math.min(999, x.quantity + 1) }
+              ? { ...x, quantity: Math.min(999, x.quantity + quantity) }
               : x,
           )
         : [
@@ -941,7 +944,7 @@ function NewOrder({ done }: any) {
             {
               catalog_id: item.id,
               name: item.name,
-              quantity: 1,
+              quantity,
               price_cents: item.price_cents || 0,
             },
           ];
@@ -1193,32 +1196,10 @@ function NewOrder({ done }: any) {
               Opcional na abertura. Preço e garantia são confirmados pelo
               servidor a partir do catálogo.
             </p>
-            <label className="arl-service-search">
-              <span>⌕</span>
-              <input
-                type="search"
-                placeholder="Pesquisar serviço ou produto…"
-                value={serviceQuery}
-                onChange={(e) => setServiceQuery(e.target.value)}
-              />
-            </label>
+            <ServiceProductSearch items={services as any} ariaLabel="Pesquisar Serviço / Produto na abertura" onSelect={addItem as any} />
             <div className="catalog-pills opening-catalog arl-service-catalog">
               {services
-                .filter((item) =>
-                  serviceQuery
-                    .trim()
-                    .normalize("NFD")
-                    .replace(/[\u0300-\u036f]/g, "")
-                    .toLowerCase()
-                    .split(/\s+/)
-                    .every((term) =>
-                      item.name
-                        .normalize("NFD")
-                        .replace(/[\u0300-\u036f]/g, "")
-                        .toLowerCase()
-                        .includes(term),
-                    ),
-                )
+                .filter((item) => item.category !== "product")
                 .map((item) => (
                   <button
                     type="button"
@@ -1327,7 +1308,7 @@ function FinalizationBox({ order, reload }: any) {
     [busy, setBusy] = useState(false);
   useEffect(() => {
     Promise.all([
-      api("/catalogs/services"),
+      api("/catalogs/items"),
       api(`/orders/${order.id}/budgets`),
     ]).then(([c, b]) => {
       setCatalog(c);
@@ -3062,7 +3043,7 @@ function OrderView({ id, back }: any) {
   };
   return (
     <>
-      <button onClick={back}>← Voltar</button>
+      <button className="arl-back-button" onClick={back}>← Voltar</button>
       <div className="title">
         <div>
           <h1>OS #{o.number}</h1>
@@ -3174,7 +3155,7 @@ function OrderView({ id, back }: any) {
           <div className="photos">
             {o.photos.length ? (
               o.photos.map((p: any) => (
-                <img src={`/api/orders/${o.id}/photos/${p.id}`} />
+                <a key={p.id} href={`/api/orders/${o.id}/photos/${p.id}`} target="_blank" rel="noreferrer"><img src={`/api/orders/${o.id}/photos/${p.id}`} alt={`Foto ${p.id} da OS`} /></a>
               ))
             ) : (
               <p>Nenhuma foto anexada.</p>
@@ -3586,6 +3567,7 @@ function SettingsPage({ role }: any) {
   const [message, setMessage] = useState("");
   const [section, setSection] = useState("company");
   const [logo, setLogo] = useState<File | null>(null);
+  const [signature, setSignature] = useState<File | null>(null);
   useEffect(() => {
     api("/settings")
       .then((settings: any) => setData(formatCompanySettings(settings)))
@@ -3608,6 +3590,13 @@ function SettingsPage({ role }: any) {
         const fd = new FormData();
         fd.append("logo", logo);
         await api("/settings/logo", { method: "POST", body: fd });
+      }
+      if (signature) {
+        const fd = new FormData();
+        fd.append("signature", signature);
+        await api("/settings/signature", { method: "POST", body: fd });
+        setData((current: any) => ({ ...current, technical_signature_configured: true }));
+        setSignature(null);
       }
       setMessage(
         "Configurações salvas com segurança. Documentos antigos permanecem preservados.",
@@ -3769,6 +3758,22 @@ function SettingsPage({ role }: any) {
                   onChange={(e) => setLogo(e.target.files?.[0] || null)}
                 />
               </label>
+              <label className="upload">
+                <FileSignature />
+                <span>
+                  {signature
+                    ? signature.name
+                    : data.technical_signature_configured
+                      ? "Substituir assinatura técnica"
+                      : "Enviar assinatura técnica (fundo branco será removido)"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => setSignature(e.target.files?.[0] || null)}
+                />
+              </label>
+              {data.technical_signature_configured && !signature && <img className="technical-signature-preview" src="/api/settings/signature" alt="Assinatura técnica cadastrada"/>}
             </>
           )}
           {section === "documents" && (
@@ -4971,6 +4976,7 @@ function App() {
       "post-sale": "post-sale",
       settings: "settings",
       services: "services",
+      products: "products",
       users: "users",
     } as Record<string, Page>
   )[location.pathname.replace(/^\//, "")];
@@ -5031,7 +5037,7 @@ function App() {
   const roleAllowed = (p: Page) =>
     p === "users"
       ? me?.role === "Master"
-      : ["finance", "services", "settings"].includes(p)
+      : ["finance", "services", "products", "settings"].includes(p)
         ? me?.role === "Master" || me?.role === "Administrador"
         : true;
   useEffect(() => {
@@ -5054,6 +5060,7 @@ function App() {
       items: [
         ["Clientes", "clients", Users],
         ["Serviços", "services", Box],
+        ["Produtos", "products", PackageSearch],
       ],
     },
     {
@@ -5274,6 +5281,8 @@ function App() {
           <PostSalePage />
         ) : page === "services" ? (
           <ServicesCatalogPage />
+        ) : page === "products" ? (
+          <ProductsCatalogPage />
         ) : page === "users" ? (
           <UsersAdmin />
         ) : page === "settings" ? (

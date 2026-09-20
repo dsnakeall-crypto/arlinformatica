@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ServiceOrder;
 use App\Services\CompanySettings;
 use App\Services\DocumentService;
+use App\Services\InventoryService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class FinalizationController extends Controller
 {
     private const RESULTS = ['repair_completed', 'irreparable', 'client_cancelled', 'economically_unviable', 'no_fault', 'other'];
 
-    public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents): JsonResponse
+    public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents, InventoryService $inventory): JsonResponse
     {
         abort_if($order->status === 'completed', 409, 'A OS já possui uma finalização imutável.');
         abort_if($order->status === 'interrupted', 409, 'Uma OS interrompida já está fechada e não pode ser finalizada nem reaberta.');
@@ -72,6 +73,11 @@ class FinalizationController extends Controller
         $total = max(0, $subtotal - (int) $data['discount_cents']);
         $resultLabel = $this->resultLabel($data['result'], $data['result_other'] ?? null);
         $company = $settings->snapshot();
+        $signaturePath = $company['technical_signature'] ?? null;
+        $technicalSignature = $signaturePath && Storage::disk('local')->exists($signaturePath)
+            ? ['mime' => 'image/png', 'data' => base64_encode(Storage::disk('local')->get($signaturePath))]
+            : null;
+        unset($company['technical_signature']);
         $order->load(['client', 'snapshot', 'checklists', 'photos']);
         $photos = $order->photos->whereIn('id', $data['photo_ids'] ?? [])->map(function ($photo) {
             return ['id' => $photo->id, 'mime' => $photo->mime, 'data' => base64_encode(Storage::disk($photo->disk)->get($photo->path))];
@@ -82,24 +88,36 @@ class FinalizationController extends Controller
         if ($isPaid && $total <= 0) {
             throw ValidationException::withMessages(['is_paid' => 'Não é possível registrar pagamento para uma OS com total zerado.']);
         }
-        $snapshot = ['company' => $company, 'order' => $order->toArray(), 'result_label' => $resultLabel, 'photos' => $photos, 'show_item_warranties' => $showItemWarranties, 'payment' => ['is_paid' => $isPaid, 'method' => $paymentMethod]];
-        $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot, $isPaid, $paymentMethod) {
+        $snapshot = ['company' => $company, 'order' => $order->toArray(), 'result_label' => $resultLabel, 'photos' => $photos, 'technical_signature' => $technicalSignature, 'show_item_warranties' => $showItemWarranties, 'payment' => ['is_paid' => $isPaid, 'method' => $paymentMethod]];
+        $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot, $isPaid, $paymentMethod, $inventory) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             abort_if(in_array($locked->status, ['completed', 'interrupted'], true), 409, 'A OS já foi fechada e não pode ser finalizada.');
+            $inventory->applyFinalOrderProducts($locked, $data['items'], $request->user()->id);
             $previous = DB::table('service_order_finalizations')->where('service_order_id', $order->id)->orderByDesc('revision')->first();
             $revision = ((int) ($previous->revision ?? 0)) + 1;
             $id = DB::table('service_order_finalizations')->insertGetId(['service_order_id' => $order->id, 'revision' => $revision, 'result' => $data['result'], 'result_other' => $data['result_other'] ?? null, 'technical_report' => $data['technical_report'] ?? null, 'subtotal_cents' => $subtotal, 'discount_cents' => $data['discount_cents'], 'total_cents' => $total, 'snapshot' => json_encode($snapshot), 'completed_by' => $request->user()->id, 'completed_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
             DB::table('service_order_items')->where('service_order_id', $order->id)->whereNull('finalization_id')->delete();
             foreach ($data['items'] as $item) {
                 $warranty = ! empty($item['warranty_enabled']) ? ['enabled' => true, 'term' => (int) $item['warranty_term'], 'unit' => $item['warranty_unit'], 'description' => $item['warranty_description'] ?? null] : null;
-                DB::table('service_order_items')->insert(['service_order_id' => $order->id, 'finalization_id' => $id, 'catalog_id' => $item['catalog_id'] ?? null, 'source_budget_id' => $data['approved_budget_id'] ?? null, 'description' => $item['description'], 'quantity' => $item['quantity'], 'unit_price_cents' => $item['unit_price_cents'], 'subtotal_cents' => $item['quantity'] * $item['unit_price_cents'], 'warranty_snapshot' => $warranty ? json_encode($warranty) : null, 'created_at' => now(), 'updated_at' => now()]);
+                DB::table('service_order_items')->insert(['service_order_id' => $order->id, 'finalization_id' => $id, 'catalog_id' => $item['catalog_id'] ?? null, 'source_budget_id' => $data['approved_budget_id'] ?? null, 'description' => $item['description'], 'quantity' => $item['quantity'], 'stock_applied_quantity' => 0, 'unit_price_cents' => $item['unit_price_cents'], 'subtotal_cents' => $item['quantity'] * $item['unit_price_cents'], 'warranty_snapshot' => $warranty ? json_encode($warranty) : null, 'created_at' => now(), 'updated_at' => now()]);
             }
-            $before = $order->status;
-            $order->update(['status' => 'completed', 'completed_at' => now(), 'result' => $data['result'], 'technical_report' => $data['technical_report'] ?? null, 'subtotal_cents' => $subtotal, 'discount_cents' => $data['discount_cents'], 'total_cents' => $total]);
+            $before = $locked->status;
+            $paidBeforeRefinalization = $this->paidCentsForOrder($locked);
+            $hasPreviousPayments = DB::table('payments')->where('service_order_id', $locked->id)->exists();
+            $settledByPreviousPayments = $hasPreviousPayments && $paidBeforeRefinalization >= $total;
+            $locked->forceFill([
+                'status' => 'completed',
+                'completed_at' => now(),
+                'result' => $data['result'],
+                'technical_report' => $data['technical_report'] ?? null,
+                'subtotal_cents' => $subtotal,
+                'discount_cents' => $data['discount_cents'],
+                'total_cents' => $total,
+                'archived' => $settledByPreviousPayments,
+            ])->save();
             DB::table('status_history')->insert(['service_order_id' => $order->id, 'from_status' => $before, 'to_status' => 'completed', 'user_id' => $request->user()->id, 'created_at' => now()]);
-            $financialAdjustment = $this->adjustPaidAmountAfterRefinalization($request, $order, $total, $previous);
-            $paymentId = $isPaid ? $this->registerFinalizationPayment($request, $order, $total, (string) $paymentMethod, $revision) : null;
-            DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'service_order.finalized', 'subject_type' => 'service_order', 'subject_id' => $order->id, 'before' => $previous ? json_encode(['revision' => $previous->revision, 'result' => $previous->result, 'total_cents' => $previous->total_cents]) : null, 'after' => json_encode(['finalization_id' => $id, 'revision' => $revision, 'result' => $data['result'], 'total_cents' => $total, 'previous_total_cents' => $previous ? (int) $previous->total_cents : null, 'financial_adjustment_id' => $financialAdjustment, 'payment_id' => $paymentId, 'approved_budget_id' => $data['approved_budget_id'] ?? null]), 'ip_address' => $request->ip(), 'created_at' => now()]);
+            $paymentId = $isPaid ? $this->registerFinalizationPayment($request, $locked, $total, (string) $paymentMethod, $revision) : null;
+            DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'service_order.finalized', 'subject_type' => 'service_order', 'subject_id' => $order->id, 'before' => $previous ? json_encode(['revision' => $previous->revision, 'result' => $previous->result, 'total_cents' => $previous->total_cents]) : null, 'after' => json_encode(['finalization_id' => $id, 'revision' => $revision, 'result' => $data['result'], 'total_cents' => $total, 'previous_total_cents' => $previous ? (int) $previous->total_cents : null, 'paid_cents_before_refinalization' => $paidBeforeRefinalization, 'settled_by_previous_payments' => $settledByPreviousPayments, 'payment_id' => $paymentId, 'approved_budget_id' => $data['approved_budget_id'] ?? null]), 'ip_address' => $request->ip(), 'created_at' => now()]);
 
             return DB::table('service_order_finalizations')->find($id);
         });
@@ -107,11 +125,14 @@ class FinalizationController extends Controller
         $documentOrder = $order->fresh()->load(['client', 'snapshot', 'checklists']);
         $documentOrderData = $documentOrder->toArray();
         $documentOrderData['intake_condition'] = $documentOrder->intake_condition;
-        $documents->issue($documentOrder, 'final', ['company' => $company, 'order' => $documentOrderData, 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos, 'show_item_warranties' => $showItemWarranties], $request->user()->id, (int) $finalization->revision);
+        $documents->issue($documentOrder, 'final', ['company' => $company, 'order' => $documentOrderData, 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos, 'technical_signature' => $technicalSignature, 'show_item_warranties' => $showItemWarranties], $request->user()->id, (int) $finalization->revision);
 
         $freshOrder = $order->fresh();
         $orderPayload = $freshOrder->toArray();
-        $orderPayload['display_status'] = $freshOrder->archived ? 'paid' : ($freshOrder->status === 'completed' && (int) $freshOrder->total_cents > 0 ? 'awaiting_payment' : $freshOrder->status);
+        $paidCents = $this->paidCentsForOrder($freshOrder);
+        $orderPayload['display_status'] = $freshOrder->status === 'completed'
+            ? ($paidCents >= (int) $freshOrder->total_cents ? 'paid' : 'awaiting_payment')
+            : $freshOrder->status;
 
         return response()->json(['order' => $orderPayload, 'finalization' => $finalization], 201);
     }
@@ -150,32 +171,20 @@ class FinalizationController extends Controller
         return $paymentId;
     }
 
-    private function adjustPaidAmountAfterRefinalization(Request $request, ServiceOrder $order, int $newTotal, ?object $previous): ?int
+    private function paidCentsForOrder(ServiceOrder $order): int
     {
-        if (! $previous || (int) $previous->total_cents === $newTotal) {
-            return null;
-        }
+        $latest = DB::table('financial_adjustments')
+            ->select('transaction_id', DB::raw('MAX(id) as adjustment_id'))
+            ->groupBy('transaction_id');
 
-        $transactions = DB::table('financial_transactions as ft')->join('payments as p', 'p.id', '=', 'ft.payment_id')->where('p.service_order_id', $order->id)->orderBy('ft.id')->get(['ft.id', 'ft.amount_cents']);
-        if ($transactions->isEmpty()) {
-            return null;
-        }
-
-        $effective = $transactions->sum(function ($row) {
-            return (int) (DB::table('financial_adjustments')->where('transaction_id', $row->id)->latest('id')->value('new_cents') ?? $row->amount_cents);
-        });
-        if ($effective <= $newTotal) {
-            return null;
-        }
-
-        $last = $transactions->last();
-        $previousEffective = (int) (DB::table('financial_adjustments')->where('transaction_id', $last->id)->latest('id')->value('new_cents') ?? $last->amount_cents);
-        $newEffective = max(0, $previousEffective - ($effective - $newTotal));
-        $reason = "Ajuste de cobrança da OS {$order->number}: nova finalização revisou o total de R$ ".number_format((int) $previous->total_cents / 100, 2, ',', '.').' para R$ '.number_format($newTotal / 100, 2, ',', '.');
-        $id = DB::table('financial_adjustments')->insertGetId(['transaction_id' => $last->id, 'previous_cents' => $previousEffective, 'new_cents' => $newEffective, 'reason' => $reason, 'user_id' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
-        DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'finance.adjusted_after_refinalization', 'subject_type' => 'financial_transaction', 'subject_id' => $last->id, 'before' => json_encode(['amount_cents' => $previousEffective, 'service_order_id' => $order->id]), 'after' => json_encode(['amount_cents' => $newEffective, 'service_order_id' => $order->id, 'reason' => $reason]), 'ip_address' => $request->ip(), 'created_at' => now()]);
-
-        return $id;
+        return (int) (DB::table('financial_transactions as ft')
+            ->join('payments as p', 'p.id', '=', 'ft.payment_id')
+            ->leftJoinSub($latest, 'latest_adjustment', 'latest_adjustment.transaction_id', '=', 'ft.id')
+            ->leftJoin('financial_adjustments as adjustment', 'adjustment.id', '=', 'latest_adjustment.adjustment_id')
+            ->where('p.service_order_id', $order->id)
+            ->where('ft.origin', 'service_order')
+            ->selectRaw('COALESCE(SUM(COALESCE(adjustment.new_cents, ft.amount_cents)), 0) as paid_cents')
+            ->value('paid_cents') ?? 0);
     }
 
     private function resultLabel(string $result, ?string $other): string

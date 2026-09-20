@@ -60,7 +60,19 @@ class ClientController extends Controller
     {
         $before = $client->toArray();
         $data = $this->validated($r, $client->id);
-        $client->update($data);
+        DB::transaction(function () use ($client, $data) {
+            $client->update($data);
+            $snapshot = $client->fresh()->toArray();
+            $openOrderIds = DB::table('service_orders')
+                ->where('client_id', $client->id)
+                ->whereNotIn('status', ['completed', 'interrupted'])
+                ->whereNull('deleted_at')
+                ->pluck('id');
+
+            DB::table('service_order_snapshots')
+                ->whereIn('service_order_id', $openOrderIds)
+                ->update(['client' => json_encode($snapshot), 'updated_at' => now()]);
+        });
         $audit->record($r, 'client.updated', Client::class, $client->id, $before, $client->fresh()->toArray());
 
         return response()->json($client->fresh());
@@ -123,9 +135,9 @@ class ClientController extends Controller
             if (! DocumentValidator::valid($v)) {
                 $fail('CPF/CNPJ inválido.');
             }
-        }], 'phone' => 'required|string|max:20', 'postal_code' => 'required|string|size:8', 'street' => 'required|string|max:255', 'number' => 'required|string|max:30', 'district' => 'required|string|max:255', 'city' => 'required|string|max:255', 'state' => 'required|string|size:2', 'complement' => 'nullable|string|max:255']);
+        }], 'phone' => 'required|string|max:20', 'postal_code' => 'nullable|string|size:8', 'street' => 'required|string|max:255', 'number' => 'nullable|string|max:30', 'district' => 'nullable|string|max:255', 'city' => 'nullable|string|max:255', 'state' => 'nullable|string|size:2', 'complement' => 'nullable|string|max:255']);
         $data['document'] = DocumentValidator::normalize($data['document']);
-        $data['postal_code'] = preg_replace('/\D/', '', $data['postal_code']);
+        $data['postal_code'] = filled($data['postal_code'] ?? null) ? preg_replace('/\D/', '', $data['postal_code']) : null;
         validator($data, ['document' => Rule::unique('clients', 'document')->ignore($ignore)])->validate();
 
         return $data;

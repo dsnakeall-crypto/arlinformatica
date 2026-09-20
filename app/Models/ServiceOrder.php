@@ -17,7 +17,7 @@ class ServiceOrder extends Model
 
     protected function casts(): array
     {
-        return ['received_at' => 'datetime', 'completed_at' => 'datetime'];
+        return ['received_at' => 'datetime', 'completed_at' => 'datetime', 'archived' => 'boolean'];
     }
 
     public function client(): BelongsTo

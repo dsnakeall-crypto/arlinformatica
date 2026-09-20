@@ -45,6 +45,29 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   const service = services.body?.find((row: any) => row.name === 'Formatação E2E') ?? services.body?.[0];
   expect(equipmentType).toBeTruthy();
   expect(service).toBeTruthy();
+  const availableProduct = await api(page, '/catalogs/products', 'POST', {
+    name: `SSD Seletor ${suffix}`,
+    price_cents: 32000,
+    stock_quantity: 2,
+    warranty_enabled: true,
+    warranty_term: 12,
+    warranty_unit: 'months',
+  });
+  const unavailableProduct = await api(page, '/catalogs/products', 'POST', {
+    name: `Produto sem estoque ${suffix}`,
+    price_cents: 10000,
+    stock_quantity: 0,
+    warranty_enabled: false,
+  });
+  expect(availableProduct.status, JSON.stringify(availableProduct.body)).toBe(201);
+  expect(unavailableProduct.status, JSON.stringify(unavailableProduct.body)).toBe(201);
+
+  await page.locator('aside').getByRole('button', { name: 'Nova OS', exact: true }).click();
+  await expect(page.locator('.opening-catalog button').filter({ hasText: availableProduct.body.name }), 'A lista rápida deve continuar exclusiva de serviços').toHaveCount(0);
+  await page.getByRole('button', { name: 'Produto/Serviço', exact: true }).click();
+  const openingPicker = page.getByRole('dialog', { name: 'Selecionar Produto ou Serviço' });
+  await expect(openingPicker.getByText(availableProduct.body.name, { exact: true })).toBeVisible();
+  await openingPicker.getByRole('button', { name: 'Fechar seletor' }).click();
 
   const created = await api(page, '/orders', 'POST', {
     client_id: original.body.id,
@@ -81,6 +104,24 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   await expect(dialog.getByLabel('Estado físico na entrada')).toHaveValue('Risco superficial na tampa');
   await expect(dialog.getByText('Checklist', { exact: true })).toHaveCount(0);
   await expect(dialog.getByText('Serviços / Produtos', { exact: true })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Produto/Serviço', exact: true }).click();
+  let picker = page.getByRole('dialog', { name: 'Selecionar Produto ou Serviço' });
+  await expect(picker.getByRole('heading', { name: 'Serviços', exact: true })).toBeVisible();
+  await expect(picker.getByRole('heading', { name: 'Produtos', exact: true })).toBeVisible();
+  await expect(picker.getByText('Disponível: 2', { exact: false })).toBeVisible();
+  await expect(picker.getByRole('button', { name: `Sem estoque: ${unavailableProduct.body.name}` })).toBeDisabled();
+  await picker.getByLabel(`Quantidade de ${availableProduct.body.name} no seletor`).fill('2');
+  await picker.getByRole('button', { name: `Adicionar ${availableProduct.body.name}` }).click();
+  await expect(dialog.getByLabel(`Quantidade no editor de ${availableProduct.body.name}`)).toHaveValue('2');
+
+  await dialog.getByRole('button', { name: 'Produto/Serviço', exact: true }).click();
+  picker = page.getByRole('dialog', { name: 'Selecionar Produto ou Serviço' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(picker.getByRole('tab', { name: 'Serviços' })).toHaveAttribute('aria-selected', 'true');
+  await picker.getByRole('tab', { name: 'Produtos' }).click();
+  await expect(picker.getByRole('tab', { name: 'Produtos' })).toHaveAttribute('aria-selected', 'true');
+  await picker.getByRole('button', { name: 'Fechar seletor' }).click();
+  await page.setViewportSize({ width: 1280, height: 720 });
 
   const serviceSearch = dialog.getByLabel('Pesquisar Serviço / Produto no editor');
   await serviceSearch.fill(service.name);
@@ -137,7 +178,7 @@ test('Editar OS usa um editor único e preserva o cliente enquanto corrige os de
   const intakeClientField = root.locator('.arl-intake-card .arl-intake-client-field:has(> h3:text-is("Cliente"))');
   await expect(intakeClientField, 'Contrato preservação: a Ficha de entrada deve conter um único bloco de Cliente').toHaveCount(1);
   await expect(intakeClientField.locator('.arl-intake-client-name strong'), 'Contrato preservação: o cliente original deve continuar na Ficha de entrada').toHaveText(originalName);
-  await expect(root.locator('.arl-order-header-identity').getByText(changedEquipment, { exact: true })).toBeVisible();
+  await expect(root.locator('.arl-intake-equipment-field .arl-intake-equipment-name strong')).toHaveText(changedEquipment);
   await expect(root.getByText(changedProblem, { exact: true })).toBeVisible();
 
   await root.getByRole('button', { name: 'Editar', exact: true }).click();

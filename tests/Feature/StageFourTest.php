@@ -80,7 +80,7 @@ class StageFourTest extends TestCase
         $response = $this->finalize([...$payload, 'payment_method' => 'credit'])
             ->assertCreated()
             ->assertJsonPath('order.status', 'completed')
-            ->assertJsonPath('order.archived', 1)
+            ->assertJsonPath('order.archived', true)
             ->assertJsonPath('order.display_status', 'paid');
 
         $this->assertDatabaseHas('payments', ['service_order_id' => $this->order->id, 'amount_cents' => 19000, 'method' => 'credit']);

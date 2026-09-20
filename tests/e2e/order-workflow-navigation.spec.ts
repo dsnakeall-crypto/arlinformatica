@@ -83,7 +83,14 @@ test('lápis da lista abre edição completa ou o fluxo existente de reabertura'
   await expect(editor.getByLabel('Cliente da OS')).toHaveCount(0);
   await expect(editor).not.toContainText('Cliente, equipamento, atendimento, relato, checklist e serviços são salvos juntos nesta OS');
   await expect(editor.locator('.arl-unified-editor-close')).toHaveCSS('border-radius', '50%');
-  await expect(editor.locator('.arl-unified-editor-fields textarea').first()).toHaveCSS('background-color', 'rgb(250, 250, 251)');
+  await expect(editor.locator('textarea').first()).toHaveCSS('background-color', 'rgb(250, 250, 251)');
+  const editorGeometry = await editor.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+    viewportWidth: window.innerWidth,
+  }));
+  expect(editorGeometry.clientWidth).toBeGreaterThanOrEqual(editorGeometry.viewportWidth * 0.88);
+  expect(editorGeometry.scrollWidth).toBe(editorGeometry.clientWidth);
   await expect(editor.getByLabel('Equipamento')).toBeVisible();
   await expect(editor.getByText('Serviços / Produtos', { exact: true })).toBeVisible();
   await expect(page.locator('.arl-maintenance-modal')).toHaveCount(0);
@@ -124,6 +131,9 @@ test('lápis da lista abre edição completa ou o fluxo existente de reabertura'
   const reopenedRoot = page.locator('[data-arl-order-detail-react="1"]');
   await expect(reopenedRoot.getByText('Reaberta', { exact: true }), 'Contrato visual: a OS reaberta deve ser identificável no detalhe').toBeVisible();
   await expect(reopenedRoot.locator('.contact-links.external-actions')).toHaveCount(0);
+  for (const action of ['history', 'edit', 'budget', 'pdf', 'finalize']) {
+    await expect(reopenedRoot.locator(`[data-order-action="${action}"]`), `Ação ${action} deve continuar disponível após reabrir`).toBeVisible();
+  }
   await reopenedRoot.getByRole('button', { name: 'Editar', exact: true }).click();
   const reopenedEditor = page.getByRole('dialog', { name: `Editar OS #${orders[1].number}` });
   await expect(reopenedEditor.getByLabel('Cliente da OS')).toHaveCount(0);

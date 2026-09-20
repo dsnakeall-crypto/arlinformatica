@@ -96,11 +96,13 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
     '/arl-assets/icons/icon-editar.png',
     '/arl-assets/icons/icon-lixeira.png',
   ]);
-  await expect(page.getByRole('button', { name: 'Visualizar' }).locator('svg.lucide-eye')).toBeVisible();
+  const visualClientRow = page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' });
+  await expect(visualClientRow.getByRole('button', { name: 'Visualizar' }).locator('svg.clients-action-eye')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-lista-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Novo cliente' }).click();
-  const clientModal = page.getByRole('dialog', { name: 'Novo cliente' });
+  const clientModal = page.locator('.clients-modal-card');
   await expect(clientModal).toBeVisible();
+  await expect(clientModal.locator('form.clients-modal-form')).toBeVisible();
   await expect(clientModal.getByRole('heading', { name: 'Novo cliente' })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-cadastro-desktop.png', fullPage: true });
   await clientModal.getByRole('button', { name: 'Cancelar' }).click();
@@ -118,7 +120,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await newOrderForm.locator('.opening-catalog button').first().click();
   await expect(newOrderForm.locator('.opening-item')).toHaveCount(1);
   await expect(page.getByPlaceholder('Buscar por nome, telefone ou CPF/CNPJ')).toBeVisible();
-  await expect(page.getByPlaceholder('Pesquisar serviço ou produto…')).toBeVisible();
+  await expect(page.getByPlaceholder('Pesquisar serviço ou produto')).toBeVisible();
   await expect(page.getByRole('button', { name: /Usar câmera/ })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/03-nova-os-desktop.png', fullPage: true });
 
@@ -161,8 +163,10 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   expect(finalization.status).toBe(201);
   const finalShare = page.getByRole('status', { name: 'Compartilhar fechamento da OS' });
   await expect(finalShare).toBeVisible();
-  await finalShare.getByRole('button', { name: 'Fechar', exact: true }).click();
-  await expect(finalShare).toHaveCount(0);
+  await expect(finalShare.getByRole('button', { name: 'Fechar', exact: true })).toHaveCount(0);
+  // O card não oferece fechamento; removemos somente a sobreposição visual para
+  // que as capturas subsequentes representem as telas de clientes e mobile.
+  await finalShare.evaluate((card) => card.parentElement?.remove());
 
   const pdf = await page.context().request.get(`/api/orders/${orderResponse.body.id}/final/1/pdf`);
   expect(pdf.ok()).toBeTruthy();
@@ -185,8 +189,12 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.screenshot({ path: 'visual-artifacts/06-pos-venda-desktop.png', fullPage: true });
 
   await nav.getByRole('button', { name: 'Serviços' }).click();
-  await expect(page.getByRole('heading', { name: 'Serviços e Produtos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Serviços', exact: true })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/07-servicos-desktop.png', fullPage: true });
+
+  await nav.getByRole('button', { name: 'Produtos' }).click();
+  await expect(page.getByRole('heading', { name: 'Produtos', exact: true })).toBeVisible();
+  await page.screenshot({ path: 'visual-artifacts/07-produtos-desktop.png', fullPage: true });
 
   await nav.getByRole('button', { name: 'Configurações' }).click();
   await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();
@@ -207,12 +215,13 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
     '/arl-assets/icons/icon-editar.png',
     '/arl-assets/icons/icon-lixeira.png',
   ]);
-  await expect(page.getByRole('button', { name: 'Visualizar' }).locator('svg.lucide-eye')).toBeVisible();
+  await expect(page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' }).getByRole('button', { name: 'Visualizar' }).locator('svg.clients-action-eye')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-mobile.png', fullPage: true });
 
   await page.getByRole('button', { name: 'Novo cliente' }).click();
-  const mobileClientModal = page.getByRole('dialog', { name: 'Novo cliente' });
+  const mobileClientModal = page.locator('.clients-modal-card');
   await expect(mobileClientModal).toBeVisible();
+  await expect(mobileClientModal.locator('form.clients-modal-form')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-cadastro-mobile.png', fullPage: true });
   await mobileClientModal.getByRole('button', { name: 'Cancelar' }).click();
   await expect(mobileClientModal).toHaveCount(0);

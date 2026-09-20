@@ -100,4 +100,77 @@ class ServiceCatalogUsageTest extends TestCase
             $this->assertSame('days', $warranty['unit']);
         }
     }
+
+    public function test_services_and_products_are_listed_separately_without_recreating_existing_records(): void
+    {
+        $user = User::create([
+            'role_id' => Role::where('name', 'Master')->value('id'),
+            'name' => 'Master Catálogos Separados',
+            'login' => 'catalog-split-master',
+            'password' => 'Senha#Forte123',
+            'active' => true,
+        ]);
+        $serviceId = DB::table('service_catalog')->insertGetId([
+            'name' => 'Limpeza técnica', 'category' => 'service', 'price_cents' => 9000,
+            'warranty_enabled' => false, 'active' => true, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $productId = DB::table('service_catalog')->insertGetId([
+            'name' => 'SSD já cadastrado', 'category' => 'product', 'price_cents' => 35000,
+            'warranty_enabled' => false, 'active' => true, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $this->actingAs($user);
+
+        $services = collect($this->getJson('/api/catalogs/services')->assertOk()->json());
+        $products = collect($this->getJson('/api/catalogs/products')->assertOk()->json());
+        $items = collect($this->getJson('/api/catalogs/items')->assertOk()->json());
+
+        $this->assertTrue($services->contains('id', $serviceId));
+        $this->assertFalse($services->contains('id', $productId));
+        $this->assertTrue($products->contains('id', $productId));
+        $this->assertFalse($products->contains('id', $serviceId));
+        $this->assertTrue($items->contains('id', $serviceId));
+        $this->assertTrue($items->contains('id', $productId));
+        $this->assertDatabaseHas('service_catalog', ['id' => $productId, 'category' => 'product']);
+    }
+
+    public function test_product_creation_persists_sale_price_stock_and_warranty_without_cost(): void
+    {
+        $user = User::create([
+            'role_id' => Role::where('name', 'Master')->value('id'),
+            'name' => 'Master Produto',
+            'login' => 'catalog-product-master',
+            'password' => 'Senha#Forte123',
+            'active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/catalogs/products', [
+            'name' => 'SSD 1 TB',
+            'price_cents' => 42000,
+            'stock_quantity' => 10,
+            'warranty_enabled' => true,
+            'warranty_term' => 12,
+            'warranty_unit' => 'months',
+        ])->assertCreated();
+
+        $response->assertJsonPath('category', 'product')
+            ->assertJsonPath('price_cents', 42000)
+            ->assertJsonPath('stock_quantity', 10)
+            ->assertJsonMissingPath('cost_cents');
+        $this->assertDatabaseHas('service_catalog', [
+            'name' => 'SSD 1 TB',
+            'category' => 'product',
+            'price_cents' => 42000,
+            'stock_quantity' => 10,
+            'warranty_term' => 12,
+            'warranty_unit' => 'months',
+        ]);
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id' => $response->json('id'),
+            'type' => 'entry',
+            'quantity' => 10,
+            'balance_after' => 10,
+            'reason' => 'Saldo inicial do cadastro do produto',
+        ]);
+    }
 }

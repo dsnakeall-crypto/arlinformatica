@@ -12,9 +12,9 @@ type ClientHit = {
 };
 
 const csrf = () => document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
-const digits = (value: string) => value.replace(/\D/g, '');
-const maskPhone = (value: string) => digits(value).slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
-const formatDocument = (value: string) => {
+const digits = (value: unknown) => typeof value === 'string' ? value.replace(/\D/g, '') : '';
+const maskPhone = (value: unknown) => digits(value).slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
+const formatDocument = (value: unknown) => {
     const n = digits(value).slice(0, 14);
     return n.length <= 11
         ? n.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2')

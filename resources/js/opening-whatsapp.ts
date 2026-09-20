@@ -6,7 +6,7 @@ type OpeningContext = { number: string; clientName: string; phone: string; intak
 
 let pendingOpening: OpeningContext | null = null;
 
-const digits = (value: string) => value.replace(/\D/g, '');
+const digits = (value: unknown) => typeof value === 'string' ? value.replace(/\D/g, '') : '';
 const q = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const qa = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => Array.from(root.querySelectorAll<T>(selector));
 const hide = (element: HTMLElement | null | undefined) => {

@@ -30,7 +30,7 @@ async function finalizeThroughUi(page: Page, order: { id: number; number: string
 
   const share = page.getByRole('status', { name: 'Compartilhar fechamento da OS' });
   await expect(share).toBeVisible();
-  await share.getByRole('button', { name: 'Fechar' }).click();
+  await expect(share.getByRole('button', { name: 'Fechar' })).toHaveCount(0);
 }
 
 test('histórico do cliente exibe equipamento e somente descontos aplicados, com ida e volta pela OS', async ({ page }) => {
