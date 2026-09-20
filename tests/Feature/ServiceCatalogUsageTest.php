@@ -133,4 +133,37 @@ class ServiceCatalogUsageTest extends TestCase
         $this->assertTrue($items->contains('id', $productId));
         $this->assertDatabaseHas('service_catalog', ['id' => $productId, 'category' => 'product']);
     }
+
+    public function test_product_creation_persists_sale_price_stock_and_warranty_without_cost(): void
+    {
+        $user = User::create([
+            'role_id' => Role::where('name', 'Master')->value('id'),
+            'name' => 'Master Produto',
+            'login' => 'catalog-product-master',
+            'password' => 'Senha#Forte123',
+            'active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/catalogs/products', [
+            'name' => 'SSD 1 TB',
+            'price_cents' => 42000,
+            'stock_quantity' => 10,
+            'warranty_enabled' => true,
+            'warranty_term' => 12,
+            'warranty_unit' => 'months',
+        ])->assertCreated();
+
+        $response->assertJsonPath('category', 'product')
+            ->assertJsonPath('price_cents', 42000)
+            ->assertJsonPath('stock_quantity', 10)
+            ->assertJsonMissingPath('cost_cents');
+        $this->assertDatabaseHas('service_catalog', [
+            'name' => 'SSD 1 TB',
+            'category' => 'product',
+            'price_cents' => 42000,
+            'stock_quantity' => 10,
+            'warranty_term' => 12,
+            'warranty_unit' => 'months',
+        ]);
+    }
 }

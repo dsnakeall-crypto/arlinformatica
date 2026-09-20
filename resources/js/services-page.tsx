@@ -8,6 +8,7 @@ type ServiceItem = {
   name: string;
   category: 'service' | 'product' | null;
   price_cents: number;
+  stock_quantity: number;
   warranty_enabled: boolean;
   warranty_term: number | null;
   warranty_unit: 'days' | 'months' | 'years' | null;
@@ -19,6 +20,7 @@ type ServiceItem = {
 type Draft = {
   name: string;
   price: string;
+  stock_quantity: number;
   warranty_enabled: boolean;
   warranty_term: number;
   warranty_unit: 'days' | 'months' | 'years';
@@ -27,6 +29,7 @@ type Draft = {
 const emptyDraft = (): Draft => ({
   name: '',
   price: '0,00',
+  stock_quantity: 0,
   warranty_enabled: false,
   warranty_term: 30,
   warranty_unit: 'days',
@@ -136,6 +139,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
     return {
       name: source.name.trim(),
       price_cents: price,
+      ...(product ? { stock_quantity: Math.max(0, Math.floor(source.stock_quantity || 0)) } : {}),
       warranty_enabled: source.warranty_enabled,
       warranty_term: source.warranty_enabled ? source.warranty_term : null,
       warranty_unit: source.warranty_enabled ? source.warranty_unit : null,
@@ -198,6 +202,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
     id: item.id,
     name: item.name,
     price: (item.price_cents / 100).toFixed(2).replace('.', ','),
+    stock_quantity: Number(item.stock_quantity || 0),
     warranty_enabled: Boolean(item.warranty_enabled),
     warranty_term: item.warranty_term || 30,
     warranty_unit: item.warranty_unit || 'days',
@@ -231,6 +236,10 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
           <span>Valor (R$)</span>
           <div className="services-money-input"><b>R$</b><input aria-label="Valor em R$" inputMode="decimal" value={draft.price} onChange={(event) => setDraft({ ...draft, price: event.target.value })} /></div>
         </label>
+        {product && <label className="services-field">
+          <span>Quantidade em estoque</span>
+          <input aria-label="Quantidade inicial em estoque" type="number" min="0" step="1" value={draft.stock_quantity} onChange={(event) => setDraft({ ...draft, stock_quantity: Math.max(0, Number(event.target.value) || 0) })} />
+        </label>}
         <button className="primary services-add" disabled={busy}><Plus aria-hidden="true" />{busy ? 'Salvando…' : 'Adicionar'}</button>
       </div>
 
@@ -271,7 +280,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
           <span className={`services-type-icon ${product ? 'product' : 'service'}`}><TypeIcon category={product ? 'product' : 'service'} /></span>
           <div className="services-row-main">
             <b>{item.name}</b>
-            <small><span className={`services-state ${item.active ? 'active' : 'inactive'}`}>{item.active ? 'Ativo' : 'Inativo'}</span> · {money(item.price_cents)} · {product ? 'Produto' : 'Serviço'}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ''}</small>
+            <small><span className={`services-state ${item.active ? 'active' : 'inactive'}`}>{item.active ? 'Ativo' : 'Inativo'}</span> · {money(item.price_cents)} · {product ? `Produto · Estoque: ${item.stock_quantity}` : 'Serviço'}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ''}</small>
           </div>
           <span className="services-usage"><b>{usage(item)}</b><small>uso em OS</small></span>
           <div className="services-row-actions">
@@ -288,6 +297,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
         <div className="services-section-heading"><span className="services-heading-icon"><Pencil aria-hidden="true" /></span><div><h2>Editar {singular}</h2><p>Alterações futuras não modificam o histórico das OS já abertas.</p></div></div>
         <label className="services-field"><span>Nome / descrição</span><input value={edit.name} onChange={(event) => setEdit({ ...edit, name: event.target.value })} /></label>
         <label className="services-field"><span>Valor (R$)</span><input inputMode="decimal" value={edit.price} onChange={(event) => setEdit({ ...edit, price: event.target.value })} /></label>
+        {product && <label className="services-field"><span>Quantidade em estoque</span><input aria-label="Quantidade atual em estoque" type="number" value={edit.stock_quantity} readOnly /><small>Use a ação de entrada de estoque para acrescentar unidades.</small></label>}
         <label className="services-warranty-toggle compact"><input type="checkbox" checked={edit.warranty_enabled} onChange={(event) => setEdit({ ...edit, warranty_enabled: event.target.checked })} /><span><ShieldCheck aria-hidden="true" /><b>Garantia adicional</b></span></label>
         {edit.warranty_enabled && <div className="services-edit-warranty"><label className="services-field"><span>Duração</span><input type="number" min="1" max="9999" value={edit.warranty_term} onChange={(event) => setEdit({ ...edit, warranty_term: Number(event.target.value) || 1 })} /></label><label className="services-field"><span>Unidade</span><select value={edit.warranty_unit} onChange={(event) => setEdit({ ...edit, warranty_unit: event.target.value as Draft['warranty_unit'] })}><option value="days">Dias</option><option value="months">Meses</option><option value="years">Anos</option></select></label></div>}
         <div className="actions"><button type="button" onClick={() => setEdit(null)}>Cancelar</button><button className="primary" disabled={busy}><CheckCircle2 aria-hidden="true" />{busy ? 'Salvando…' : 'Salvar alterações'}</button></div>

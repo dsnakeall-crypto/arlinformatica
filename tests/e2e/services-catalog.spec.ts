@@ -33,12 +33,14 @@ test('catálogos de serviços e produtos são separados e preservam produtos exi
   const itemName = `Produto E2E Catálogo ${Date.now()}`;
   await page.getByLabel('Nome ou descrição do produto').fill(itemName);
   await page.getByLabel('Valor em R$').fill('79,90');
+  await page.getByLabel('Quantidade inicial em estoque').fill('4');
   await page.getByRole('button', { name: 'Adicionar', exact: true }).click();
 
   let row = page.locator('.services-row').filter({ hasText: itemName });
   await expect(row).toBeVisible();
   await expect(row).toContainText('Produto');
   await expect(row).toContainText('R$ 79,90');
+  await expect(row).toContainText('Estoque: 4');
 
   await row.getByRole('button', { name: 'Editar', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Editar produto' });

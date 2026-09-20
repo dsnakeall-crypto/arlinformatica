@@ -54,6 +54,9 @@ class CatalogController extends Controller
         if (in_array($catalog, ['services', 'products'], true)) {
             $rules += ['price_cents' => 'required|integer|min:0', 'warranty_enabled' => 'boolean', 'warranty_term' => 'nullable|integer|min:1', 'warranty_unit' => 'nullable|in:days,months,years'];
         }
+        if ($catalog === 'products') {
+            $rules['stock_quantity'] = 'required|integer|min:0|max:4294967295';
+        }
         $this->addWarrantyRules($rules, $catalog);
         $data = $request->validate($rules);
         $this->validateWarranty($data, $catalog);
