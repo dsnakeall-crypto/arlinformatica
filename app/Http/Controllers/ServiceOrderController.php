@@ -38,7 +38,7 @@ class ServiceOrderController extends Controller
             $q->where('archived', $r->boolean('finalized'));
         }
         if ($requestedStatus === 'paid') {
-            $q->where('archived', true);
+            $q->where('status', 'completed')->where('archived', true);
         }
         match ($tab) {
             'progress' => $q->whereIn('status', ['analysis', 'waiting_part', 'in_service']),
@@ -472,10 +472,6 @@ class ServiceOrderController extends Controller
 
     private function displayStatus(ServiceOrder $order, int $paidCents): string
     {
-        if ($order->archived) {
-            return 'paid';
-        }
-
         if ($order->status === 'completed') {
             return $paidCents >= (int) $order->total_cents ? 'paid' : 'awaiting_payment';
         }

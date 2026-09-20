@@ -131,7 +131,7 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
   const whatsappPagePromise = page.context().waitForEvent('page');
   await share.getByRole('button', { name: 'Enviar PDF pelo WhatsApp' }).click();
   const whatsappPage = await whatsappPagePromise;
-  await whatsappPage.waitForURL(/wa\.me\//);
+  await expect.poll(() => whatsappPage.url()).toMatch(/api\.whatsapp\.com\/send/);
   const whatsappText = decodeURIComponent(new URL(whatsappPage.url()).searchParams.get('text') ?? '');
   expect(whatsappText).toContain(`- Valor: ${expectedMoney}`);
   expect(whatsappText).toContain('/share/orders/');

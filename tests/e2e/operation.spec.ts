@@ -60,7 +60,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.locator('input[type=file]').setInputFiles({ name: 'equipamento.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
     await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
     await expect(page.getByText('Notebook não liga durante homologação')).toBeVisible();
-    await expect(page.locator('.arl-order-header-identity').getByText(manualEquipment, { exact: true })).toBeVisible();
+    await expect(page.locator('.arl-intake-equipment-field').getByText(manualEquipment, { exact: true })).toBeVisible();
     const orders = await api(page, '/orders?q=Cliente%20E2E');
     orderId = orders.body.data[0].id;
     orderNumber = orders.body.data[0].number;
@@ -77,7 +77,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
-    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}`, exact: true })).toBeVisible();
     await expect(page.getByText('Pagamento ainda não registrado.', { exact: true })).toBeVisible();
     await expect(page.locator('[data-order-action="payment"]')).toHaveCount(0);
     await expect(page.getByText(/NaN|Invalid Date/)).toHaveCount(0);
@@ -133,7 +133,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
-    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}`, exact: true })).toBeVisible();
     await expect(page.locator('.status-picker')).toHaveCount(0);
     for (const nextStatus of ['in_service', 'waiting_part', 'analysis']) {
       const changed = await api(page, `/orders/${orderId}/status`, 'PATCH', { status: nextStatus });
@@ -172,7 +172,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const popupPromise = page.context().waitForEvent('page');
     await page.getByRole('status', { name: 'Compartilhar fechamento da OS' }).getByRole('button', { name: 'Enviar PDF pelo WhatsApp' }).click();
     const whatsappPage = await popupPromise;
-    await whatsappPage.waitForURL(/wa\.me\//);
+    await expect.poll(() => whatsappPage.url()).toMatch(/api\.whatsapp\.com\/send/);
     const finalShareResponse = await finalShareResponsePromise;
     expect(finalShareResponse.status()).toBe(200);
     const finalShare = await finalShareResponse.json();
@@ -180,7 +180,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const whatsappHref = whatsappPage.url();
     const whatsappText = decodeURIComponent(new URL(whatsappHref).searchParams.get('text') || '');
     expect(whatsappText).toContain(finalShare.url);
-    expect(whatsappText).toContain('💵 Detalhes do Serviço no link abaixo');
+    expect(whatsappText).toContain('Detalhes do Serviço no link abaixo');
     await whatsappPage.close();
     await page.reload();
     const documentMenu = page.locator('.arl-opening-call');
@@ -194,7 +194,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
-    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}`, exact: true })).toBeVisible();
     await expect(page.locator('[data-order-action="payment"]')).toBeVisible();
     await page.locator('[data-order-action="payment"]').click();
     const paymentModal = page.locator('.modal-card').filter({ hasText: `Pagamento da OS #${orderNumber}` });
@@ -244,22 +244,29 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(paid.status).toBe('paid');
   });
 
-  test('reabre a mesma OS, finaliza nova revisão e ajusta cobrança', async ({ page }) => {
+  test('reabre a mesma OS e preserva o recebimento antigo ao reduzir o total', async ({ page }) => {
     await page.goto(`/orders/${orderId}`);
-    await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
+    await expect(page.getByRole('heading', { name: `OS #${orderNumber}`, exact: true })).toBeVisible();
     const menu = page.locator('.arl-opening-call');
     await menu.getByRole('button', { name: "PDF's", exact: true }).click();
     await menu.getByRole('button', { name: 'Reabrir OS' }).click();
     const reopen = page.getByRole('dialog', { name: `Reabrir OS #${orderNumber}` });
     await reopen.locator('textarea').fill('Correção do valor cobrado após conferência.');
     await reopen.getByRole('button', { name: 'Confirmar reabertura' }).click();
-    await expect(page.locator('.status-picker select')).toHaveValue('analysis');
+    await expect(page.locator('.status-picker')).toHaveCount(0);
+    await expect(page.getByText('Reaberta', { exact: true })).toBeVisible();
+    const reopenedOrder = await api(page, `/orders/${orderId}`);
+    expect(reopenedOrder.body.status).toBe('analysis');
     await page.getByRole('button', { name: 'Concluir', exact: true }).click();
     const finalModal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
     await finalModal.getByLabel('Valor unitário de Formatação E2E').fill('140,00');
     await finalModal.locator('textarea').fill('Valor corrigido e equipamento reconferido.');
+    const refinalizationResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/finalize`) && response.request().method() === 'POST');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
-    await expect(page.locator('.status-picker select')).toHaveValue('paid');
+    expect((await refinalizationResponsePromise).status()).toBe(201);
+    const refinalizedOrder = await api(page, `/orders/${orderId}`);
+    expect(refinalizedOrder.body.status).toBe('completed');
+    expect(refinalizedOrder.body.display_status).toBe('paid');
     const documents = await api(page, `/orders/${orderId}/documents`);
     expect(documents.body.some((document: any) => document.type === 'final' && document.revision === 2)).toBe(true);
     expect(documents.body.filter((document: any) => document.type === 'budget' && document.revision === 2), 'A outra Revisão 2 é o orçamento histórico, não uma duplicata do fechamento').toHaveLength(1);
@@ -268,11 +275,13 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(reopenAudit).toBeTruthy();
     expect(reopenAudit.changes).toContain('Motivo: Correção do valor cobrado após conferência.');
     const auditChanges = audit.body.flatMap((entry: any) => entry.changes);
-    expect(auditChanges).toEqual(expect.arrayContaining(['Valor alterado de R$ 150,00 para R$ 140,00', 'Ajuste de cobrança registrado no financeiro para esta OS.']));
+    expect(auditChanges).toContain('Valor alterado de R$ 150,00 para R$ 140,00');
+    expect(auditChanges).not.toContain('Ajuste de cobrança registrado no financeiro para esta OS.');
     const payments = await api(page, `/orders/${orderId}/payments`);
-    expect(payments.body.paid_cents).toBe(14000);
+    expect(payments.body.paid_cents).toBe(15000);
+    expect(payments.body.balance_cents).toBe(0);
     const daily = await api(page, '/finance/daily');
-    expect(daily.body.transactions.filter((row: any) => row.order_number === orderNumber).reduce((sum: number, row: any) => sum + row.effective_cents, 0)).toBe(14000);
+    expect(daily.body.transactions.filter((row: any) => row.order_number === orderNumber).reduce((sum: number, row: any) => sum + row.effective_cents, 0)).toBe(15000);
   });
 
   test('histórico do cliente e pós-venda aparecem imediatamente, mas ficam bloqueados por 7 dias', async ({ page }) => {

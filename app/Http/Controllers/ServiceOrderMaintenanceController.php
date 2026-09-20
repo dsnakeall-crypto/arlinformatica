@@ -245,7 +245,7 @@ class ServiceOrderMaintenanceController extends Controller
             }
 
             $before = ['status' => $locked->status, 'total_cents' => (int) $locked->total_cents, 'completed_at' => $locked->completed_at];
-            $locked->update(['status' => 'analysis', 'completed_at' => null, 'archived' => false]);
+            $locked->forceFill(['status' => 'analysis', 'completed_at' => null, 'archived' => false])->save();
             $cycleIds = DB::table('post_sale_cycles')->where('service_order_id', $locked->id)->where('active', true)->pluck('id');
             DB::table('post_sale_cycles')->whereIn('id', $cycleIds)->update([
                 'active' => false,
