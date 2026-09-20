@@ -159,6 +159,36 @@ test('Financeiro carrega o mês no topo e reaproveita os dados na aba mensal', a
   expect(monthRequests).toHaveLength(2);
 });
 
+test('Movimentações usa botões para preservar os cinco filtros do lançamento', async ({ page }) => {
+  await login(page);
+  await page.route('**/api/finance/month?period=*', async (route) => {
+    await route.fulfill({ json: {
+      period: '2026-09', total_cents: 10000, service_orders_cents: 7000, service_orders_net_cents: 6000,
+      quick_entries_cents: 3000, paid_orders: 1, average_ticket_cents: 7000, discount_cents: 0,
+      expense_cents: 1200, refund_cents: 1000, net_cents: 7800, daily: {}, daily_expenses: {}, daily_refunds: {}, methods: {}, items: [],
+      transactions: [
+        { id: 1, origin: 'service_order', order_number: '0000100', description: 'OS 0000100', occurred_at: '2026-09-10T12:00:00Z', user_name: 'Master', amount_cents: 7000, effective_cents: 7000 },
+        { id: 2, origin: 'quick_entry', description: 'Serviço rápido não cadastrado', occurred_at: '2026-09-10T13:00:00Z', user_name: 'Master', amount_cents: 3000, effective_cents: 3000 },
+      ],
+      expenses: [{ id: 3, spent_on: '2026-09-10', description: 'Pasta térmica', category: 'usage_material', user_name: 'Master', amount_cents: 1200 }],
+      refunds: [{ id: 4, order_number: '0000100', description: 'Estorno da OS 0000100', reason: 'Desconto concedido', refunded_at: '2026-09-10T14:00:00Z', user_name: 'Master', method: 'pix', amount_cents: 1000 }],
+    }});
+  });
+
+  await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
+  await page.getByRole('button', { name: 'Movimentações', exact: true }).click();
+
+  const filters = page.locator('.finance-movement-filters');
+  await expect(filters.getByRole('button')).toHaveText(['Todos', 'Entradas', 'Saídas', 'Despesas', 'Estornos']);
+  await expect(filters.getByRole('button', { name: 'Todos', exact: true })).toHaveClass(/active/);
+  await expect(page.getByLabel('Grupo de lançamentos').locator('select')).toHaveCount(0);
+
+  await filters.getByRole('button', { name: 'Despesas', exact: true }).click();
+  await expect(filters.getByRole('button', { name: 'Despesas', exact: true })).toHaveClass(/active/);
+  await expect(page.locator('.finance-movements .transaction')).toHaveCount(1);
+  await expect(page.locator('.finance-movements .transaction')).toContainText('Pasta térmica');
+});
+
 test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vazar do card', async ({ page }) => {
   await login(page);
   await page.route('**/api/finance/month?period=*', async (route) => {

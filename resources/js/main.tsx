@@ -2624,17 +2624,24 @@ function FinancePage({ role, openOrder }: any) {
                     : "Todas as movimentações"}
               </p>
             </div>
-            <select
-              aria-label="Grupo de lançamentos"
-              value={moveFilter}
-              onChange={(e) => setMoveFilter(e.target.value)}
-            >
-              <option value="all">Todos</option>
-              <option value="entries">Entradas</option>
-              <option value="outflows">Saídas</option>
-              <option value="expense">Despesas</option>
-              <option value="refund">Estornos</option>
-            </select>
+          </div>
+          <div className="finance-tabs finance-movement-filters" aria-label="Grupo de lançamentos">
+            {[
+              ["all", "Todos"],
+              ["entries", "Entradas"],
+              ["outflows", "Saídas"],
+              ["expense", "Despesas"],
+              ["refund", "Estornos"],
+            ].map(([value, label]) => (
+              <button
+                type="button"
+                key={value}
+                className={moveFilter === value ? "active" : ""}
+                onClick={() => setMoveFilter(value)}
+              >
+                {label}
+              </button>
+            ))}
           </div>
           {movementRows.length ? (
             movementRows.map((t: any) => (
