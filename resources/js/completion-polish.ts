@@ -39,7 +39,7 @@ function installStyles() {
   style.textContent = `
     .arl-exact-action-icon{width:22px;height:22px;object-fit:contain;display:block;flex:0 0 auto}
     .dashboard-address .arl-exact-action-icon,.arl-order-mini-action .arl-exact-action-icon,.arl-client-delete .arl-exact-action-icon,.arl-order-delete .arl-exact-action-icon{width:20px;height:20px}
-    .arl-final-share-host{position:fixed;right:18px;bottom:18px;z-index:19;pointer-events:none;width:min(390px,calc(100vw - 28px))}
+    .arl-final-share-host{position:fixed;right:18px;bottom:18px;z-index:200;pointer-events:none;width:min(390px,calc(100vw - 28px))}
     .arl-final-share-card{pointer-events:auto;background:#fff;border:1px solid #e3dfe1;border-radius:16px;padding:16px;box-shadow:0 20px 55px rgba(15,10,12,.24);display:grid;gap:10px}
     .arl-final-share-card h2{margin:0;font-size:17px}.arl-final-share-card p{margin:0;color:#666d78;font-size:12px;line-height:1.5}
     .arl-final-share-actions{display:flex;gap:8px;flex-wrap:wrap}.arl-final-share-actions a,.arl-final-share-actions button{min-height:37px;border:1px solid #ddd;border-radius:9px;background:#fff;padding:7px 11px;font-size:12px;font-weight:800;text-decoration:none;color:#30343a;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
@@ -136,59 +136,69 @@ function money(cents = 0) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
 }
 
-function showFinalShare(order: FinalOrder, share: FinalShare) {
+function finalMessage(order: FinalOrder, pdfUrl: string) {
+  return [
+    `Olá, ${order.client?.name || 'cliente'}`,
+    '',
+    `Seu equipamento está pronto (${order.number}).`,
+    '',
+    '💵 Detalhes do Serviço no link abaixo',
+    pdfUrl,
+    '',
+    '',
+    `- Valor: ${money(order.total_cents || 0)}`,
+    '',
+    '💳 Formas de Pagamento: ',
+    '',
+    '- PIX (Chave): 35988285777 ',
+    '- Cartão (com taxas) ',
+    '- Dinheiro (favor trazer trocado)',
+    '',
+    '🚚 A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.',
+    '',
+    'Agradecemos pela preferência!',
+  ].join('\n');
+}
+
+function showFinalShare(order: FinalOrder) {
   document.querySelector('.arl-final-share-host')?.remove();
   const host = document.createElement('div');
   host.className = 'arl-final-share-host';
-  const clientName = order.client?.name || 'cliente';
-  const message = [
-    `Olá, ${clientName} 👋`,
-    `Seu Equipamento está pronto da OS ${order.number}! 🎉`,
-    '📋 Detalhes do Serviço:',
-    `- Valor: ${money(order.total_cents || 0)}`,
-    '💳 Formas de Pagamento:',
-    '- PIX (Chave): 35988285777',
-    '- Cartão: (Com taxas inclusas)',
-    '- Dinheiro: (Favor trazer trocado)',
-    '⚠️ A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.',
-    'Agradecemos pela preferência! 😊',
-  ].join('\n');
-  const whatsapp = whatsappUrl(order.client?.phone || '', message);
   host.innerHTML = `<section class="arl-final-share-card" role="status" aria-label="Compartilhar fechamento da OS">
     <h2>OS #${order.number} finalizada</h2>
-    <p>O PDF Final está pronto. O link abaixo expira em 48 horas; o PDF original continua preservado no histórico.</p>
+    <p>O PDF Final está pronto. Um link novo, válido por 48 horas, será criado somente quando você escolher uma ação.</p>
     <div class="arl-final-share-actions">
-      <a data-final-pdf target="_blank" rel="noreferrer">Abrir PDF</a>
-      ${whatsapp ? '<a class="whatsapp" data-final-whatsapp target="_blank" rel="noreferrer">Enviar PDF pelo WhatsApp</a>' : ''}
-      <button type="button" data-final-close>Fechar</button>
+      <button type="button" data-final-pdf>Abrir PDF</button>
+      <button type="button" class="whatsapp" data-final-whatsapp>Enviar PDF pelo WhatsApp</button>
     </div>
   </section>`;
-  q<HTMLAnchorElement>('[data-final-pdf]', host)!.href = share.url;
-  const whatsappLink = q<HTMLAnchorElement>('[data-final-whatsapp]', host);
-  if (whatsappLink) {
-    whatsappLink.href = whatsapp;
-    whatsappLink.prepend(exactIcon('whatsapp'));
-    whatsappLink.addEventListener('click', (event) => {
-      event.preventDefault();
-      if (!window.confirm('Deseja abrir o WhatsApp para enviar a mensagem de finalização desta OS?')) return;
-      window.open(whatsapp, '_blank', 'noopener');
-    });
-  }
-  q<HTMLButtonElement>('[data-final-close]', host)?.addEventListener('click', () => host.remove());
+  const prepare = async (kind: 'pdf' | 'whatsapp') => {
+    const target = window.open('about:blank', '_blank');
+    try {
+      const response = await fetch(`/api/orders/${order.id}/final-share`, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error('Não foi possível gerar o link do PDF.');
+      const share = await response.json() as FinalShare;
+      const destination = kind === 'pdf' ? share.url : whatsappUrl(order.client?.phone || '', finalMessage(order, share.url));
+      if (!destination) throw new Error('O cliente não possui telefone para WhatsApp.');
+      if (target) target.location.href = destination;
+      else window.location.href = destination;
+    } catch {
+      target?.close();
+    }
+  };
+  q<HTMLButtonElement>('[data-final-pdf]', host)?.addEventListener('click', () => void prepare('pdf'));
+  const whatsappButton = q<HTMLButtonElement>('[data-final-whatsapp]', host);
+  whatsappButton?.prepend(exactIcon('whatsapp'));
+  whatsappButton?.addEventListener('click', () => void prepare('whatsapp'));
   document.body.append(host);
 }
 
 async function prepareFinalShare(orderId: string) {
   try {
-    const [orderResponse, shareResponse] = await Promise.all([
-      fetch(`/api/orders/${orderId}`, { credentials: 'same-origin', headers: { Accept: 'application/json' } }),
-      fetch(`/api/orders/${orderId}/final-share`, { credentials: 'same-origin', headers: { Accept: 'application/json' } }),
-    ]);
-    if (!orderResponse.ok || !shareResponse.ok) return;
+    const orderResponse = await fetch(`/api/orders/${orderId}`, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+    if (!orderResponse.ok) return;
     const order = await orderResponse.json() as FinalOrder;
-    const share = await shareResponse.json() as FinalShare;
-    if (!share.url) return;
-    showFinalShare(order, share);
+    showFinalShare(order);
   } catch {
   }
 }

@@ -140,22 +140,10 @@ for (const [index, status] of statuses.entries()) {
     const root = page.locator('[data-arl-order-detail-react="1"]');
     await expect(root, `Detalhe React não abriu para ${status.label}`).toHaveCount(1);
     const picker = root.locator('.status-picker select');
-    const detailStatus = status.code === 'completed' ? 'paid' : status.code;
-    const detailLabel = status.code === 'completed' ? 'Pago' : status.label;
-    await expect(picker, `Seletor do detalhe não persistiu ${detailStatus}`).toHaveValue(detailStatus);
-    await expect(picker.locator('option:checked'), `Seletor do detalhe exibiu rótulo errado para ${detailStatus}`).toHaveText(detailLabel);
+    await expect(picker, 'A tela da OS não pode oferecer alteração direta de status').toHaveCount(0);
     if (status.code === 'interrupted') {
-      await expect(picker).toBeDisabled();
       await expect(root.getByText('Interrompida', { exact: true })).toBeVisible();
       await expect(root.getByRole('button', { name: 'Reabrir OS', exact: true })).toHaveCount(0);
-    }
-
-    if (!['completed', 'interrupted'].includes(status.code)) {
-      await expect(picker.locator('option[value="analysis"]')).toHaveText('Em Análise');
-      await expect(picker.locator('option[value="waiting_part"]')).toHaveText('Aguardando Peça');
-      await expect(picker.locator('option[value="in_service"]'), 'Detalhe React perdeu Em Serviço como opção selecionável').toHaveText('Em Serviço');
-      await expect(picker.locator('option[value="interrupted"]')).toHaveText('Interrompido');
-      await expect(picker.locator('option[value="completed"]')).toHaveText('Finalizado');
     }
 
     const history = await api(page, `/orders/${order.id}`);

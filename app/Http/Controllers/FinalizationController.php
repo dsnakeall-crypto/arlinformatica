@@ -73,6 +73,11 @@ class FinalizationController extends Controller
         $total = max(0, $subtotal - (int) $data['discount_cents']);
         $resultLabel = $this->resultLabel($data['result'], $data['result_other'] ?? null);
         $company = $settings->snapshot();
+        $signaturePath = $company['technical_signature'] ?? null;
+        $technicalSignature = $signaturePath && Storage::disk('local')->exists($signaturePath)
+            ? ['mime' => 'image/png', 'data' => base64_encode(Storage::disk('local')->get($signaturePath))]
+            : null;
+        unset($company['technical_signature']);
         $order->load(['client', 'snapshot', 'checklists', 'photos']);
         $photos = $order->photos->whereIn('id', $data['photo_ids'] ?? [])->map(function ($photo) {
             return ['id' => $photo->id, 'mime' => $photo->mime, 'data' => base64_encode(Storage::disk($photo->disk)->get($photo->path))];
@@ -83,7 +88,7 @@ class FinalizationController extends Controller
         if ($isPaid && $total <= 0) {
             throw ValidationException::withMessages(['is_paid' => 'Não é possível registrar pagamento para uma OS com total zerado.']);
         }
-        $snapshot = ['company' => $company, 'order' => $order->toArray(), 'result_label' => $resultLabel, 'photos' => $photos, 'show_item_warranties' => $showItemWarranties, 'payment' => ['is_paid' => $isPaid, 'method' => $paymentMethod]];
+        $snapshot = ['company' => $company, 'order' => $order->toArray(), 'result_label' => $resultLabel, 'photos' => $photos, 'technical_signature' => $technicalSignature, 'show_item_warranties' => $showItemWarranties, 'payment' => ['is_paid' => $isPaid, 'method' => $paymentMethod]];
         $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot, $isPaid, $paymentMethod, $inventory) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             abort_if(in_array($locked->status, ['completed', 'interrupted'], true), 409, 'A OS já foi fechada e não pode ser finalizada.');
@@ -109,7 +114,7 @@ class FinalizationController extends Controller
         $documentOrder = $order->fresh()->load(['client', 'snapshot', 'checklists']);
         $documentOrderData = $documentOrder->toArray();
         $documentOrderData['intake_condition'] = $documentOrder->intake_condition;
-        $documents->issue($documentOrder, 'final', ['company' => $company, 'order' => $documentOrderData, 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos, 'show_item_warranties' => $showItemWarranties], $request->user()->id, (int) $finalization->revision);
+        $documents->issue($documentOrder, 'final', ['company' => $company, 'order' => $documentOrderData, 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos, 'technical_signature' => $technicalSignature, 'show_item_warranties' => $showItemWarranties], $request->user()->id, (int) $finalization->revision);
 
         $freshOrder = $order->fresh();
         $orderPayload = $freshOrder->toArray();

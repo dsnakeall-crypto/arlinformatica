@@ -161,6 +161,9 @@ class ServiceOrderController extends Controller
     {
         $order->load(['client', 'checklists', 'items', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']);
         $payload = $order->toArray();
+        if (in_array($order->status, ['completed', 'interrupted'], true) && is_array($order->snapshot?->client)) {
+            $payload['client'] = $order->snapshot->client;
+        }
         $payload['display_status'] = $this->displayStatus($order, $this->paidCentsForOrder($order));
         $payload['reopened'] = $order->histories->contains(fn ($history) => $history->from_status === 'completed' && $history->to_status === 'analysis');
         $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;
@@ -189,11 +192,24 @@ class ServiceOrderController extends Controller
     public function uploadPhoto(Request $request, ServiceOrder $order, PhotoOptimizer $optimizer): JsonResponse
     {
         $request->validate(['photo' => 'required|file|max:15360']);
-        $data = $optimizer->optimize($request->file('photo'));
-        $path = 'orders/'.$order->id.'/'.str()->uuid().'.webp';
-        Storage::disk('local')->put($path, $data);
-        [$width, $height] = getimagesizefromstring($data);
-        $photo = $order->photos()->create(['disk' => 'local', 'path' => $path, 'mime' => 'image/webp', 'bytes' => strlen($data), 'width' => $width, 'height' => $height, 'uploaded_by' => $request->user()->id]);
+        $path = null;
+        try {
+            $photo = DB::transaction(function () use ($request, $order, $optimizer, &$path) {
+                ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+                abort_if($order->photos()->count() >= 5, 422, 'Esta OS já possui o limite de 5 fotos. Remova uma foto antes de enviar outra.');
+                $data = $optimizer->optimize($request->file('photo'));
+                $path = 'orders/'.$order->id.'/'.str()->uuid().'.webp';
+                Storage::disk('local')->put($path, $data);
+                [$width, $height] = getimagesizefromstring($data);
+
+                return $order->photos()->create(['disk' => 'local', 'path' => $path, 'mime' => 'image/webp', 'bytes' => strlen($data), 'width' => $width, 'height' => $height, 'uploaded_by' => $request->user()->id]);
+            });
+        } catch (\Throwable $exception) {
+            if ($path) {
+                Storage::disk('local')->delete($path);
+            }
+            throw $exception;
+        }
 
         return response()->json($photo, 201);
     }

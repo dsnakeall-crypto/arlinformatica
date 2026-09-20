@@ -134,26 +134,25 @@ test.describe.serial('fluxo operacional principal', () => {
     const orderRow = page.locator('.order-row').filter({ hasText: 'Cliente E2E' });
     await orderRow.getByRole('button', { name: 'Ver OS' }).click();
     await expect(page.getByRole('heading', { name: `OS #${orderNumber}` })).toBeVisible();
-    const statusSelect = page.locator('.status-picker select');
-    await expect(statusSelect.locator('option[value="in_service"]'), 'Fluxo operacional deve manter Em Serviço como opção válida').toHaveText('Em Serviço');
-    await statusSelect.selectOption('in_service');
-    await statusSelect.selectOption('waiting_part');
-    await statusSelect.selectOption('analysis');
+    await expect(page.locator('.status-picker')).toHaveCount(0);
+    for (const nextStatus of ['in_service', 'waiting_part', 'analysis']) {
+      const changed = await api(page, `/orders/${orderId}/status`, 'PATCH', { status: nextStatus });
+      expect(changed.status).toBe(200);
+    }
     const statusHistory = await api(page, `/orders/${orderId}`);
     expect(statusHistory.body.histories.map((entry: any) => entry.to_status)).toEqual(expect.arrayContaining(['in_service', 'waiting_part', 'analysis']));
-    await statusSelect.selectOption('completed');
+    await page.getByRole('button', { name: 'Concluir', exact: true }).click();
     const finalModal = page.locator('.modal-card').filter({ hasText: 'FINALIZAÇÃO DA OS' });
     await expect(finalModal).toBeVisible();
     await finalModal.getByRole('button', { name: 'USAR ITENS DO ORÇAMENTO APROVADO' }).click();
     await expect(finalModal.getByText(/Itens vinculados ao orçamento aprovado/)).toBeVisible();
     await finalModal.locator('textarea').fill('Equipamento testado e funcionando.');
     const finalizeRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/finalize`) && request.method() === 'POST');
-    const finalShareResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/final-share`) && response.request().method() === 'GET');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
     const finalizePayload = (await finalizeRequestPromise).postDataJSON();
     expect(finalizePayload.approved_budget_id).toBeTruthy();
     expect(finalizePayload).not.toHaveProperty('items');
-    await expect(statusSelect).toHaveValue('awaiting_payment');
+    await expect(page.getByRole('status', { name: 'Compartilhar fechamento da OS' })).toBeVisible();
     const documents = await api(page, `/orders/${orderId}/documents`);
     expect(documents.body.some((document: any) => document.type === 'final')).toBe(true);
     const finalizedResponse = await page.request.get(`/api/orders/${orderId}`);
@@ -169,13 +168,20 @@ test.describe.serial('fluxo operacional principal', () => {
     const blockedBudget = await api(page, `/orders/${orderId}/budgets`, 'POST', {});
     expect(blockedBudget.status).toBe(409);
     expect(blockedBudget.body?.message).toBe('Não é possível criar orçamento para uma OS fechada.');
+    const finalShareResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/final-share`) && response.request().method() === 'GET');
+    const popupPromise = page.context().waitForEvent('page');
+    await page.getByRole('status', { name: 'Compartilhar fechamento da OS' }).getByRole('button', { name: 'Enviar PDF pelo WhatsApp' }).click();
+    const whatsappPage = await popupPromise;
+    await whatsappPage.waitForURL(/wa\.me\//);
     const finalShareResponse = await finalShareResponsePromise;
     expect(finalShareResponse.status()).toBe(200);
     const finalShare = await finalShareResponse.json();
     expect(finalShare.url).toContain(`/share/orders/${orderId}/final/1`);
-    const whatsappHref = await page.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' }).getAttribute('href');
-    expect(whatsappHref).toMatch(/wa\.me/);
-    expect(decodeURIComponent(whatsappHref || '')).not.toContain('Acesse o PDF da Ordem de Serviço aqui');
+    const whatsappHref = whatsappPage.url();
+    const whatsappText = decodeURIComponent(new URL(whatsappHref).searchParams.get('text') || '');
+    expect(whatsappText).toContain(finalShare.url);
+    expect(whatsappText).toContain('💵 Detalhes do Serviço no link abaixo');
+    await whatsappPage.close();
     await page.reload();
     const documentMenu = page.locator('.arl-opening-call');
     await documentMenu.getByRole('button', { name: "PDF's", exact: true }).click();
@@ -269,7 +275,7 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(daily.body.transactions.filter((row: any) => row.order_number === orderNumber).reduce((sum: number, row: any) => sum + row.effective_cents, 0)).toBe(14000);
   });
 
-  test('histórico do cliente e pós-venda aparecem imediatamente, mas ficam bloqueados por 24h', async ({ page }) => {
+  test('histórico do cliente e pós-venda aparecem imediatamente, mas ficam bloqueados por 7 dias', async ({ page }) => {
     await page.getByRole('button', { name: 'Clientes' }).click();
     await page.getByLabel('Buscar clientes').fill('Cliente E2E');
     const clientCard = page.locator('.client-list article').filter({ hasText: 'Cliente E2E' });
@@ -291,7 +297,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(lockedRow).toBeVisible();
     await expect(lockedRow).toHaveCSS('width', '200px');
     await expect(page.locator('.post-sale-grid')).toHaveCSS('justify-content', 'start');
-    await expect(lockedRow.locator('.post-sale-state-waiting')).toContainText('Disponível após 24 horas');
+    await expect(lockedRow.locator('.post-sale-state-waiting')).toContainText(/Disponível após \d+ horas/);
     const lockedActions = lockedRow.locator('.post-sale-action[aria-disabled="true"]');
     await expect(lockedActions).toHaveCount(2);
     for (let i = 0; i < 2; i += 1) {

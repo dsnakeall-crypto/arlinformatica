@@ -40,6 +40,7 @@
  .clients-list-panel .client-list article.clients-row{grid-template-columns:auto minmax(145px,1fr) 1px auto 1px minmax(190px,1fr) auto}.clients-list-panel .clients-row>.clients-separator:last-of-type{display:none}
  .clients-actions a,.clients-actions button:not(.clients-select){width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important}.clients-action-icon{width:19px;height:19px}
 }
+.clients-back{min-height:40px!important;border:1px solid var(--arl-primary)!important;border-radius:10px!important;background:var(--arl-primary-soft)!important;padding:8px 13px!important;color:var(--arl-primary-dark)!important;font-weight:900!important;box-shadow:0 5px 13px var(--arl-primary-shadow)}
 @media(max-width:760px){
  .clients-toolbar{grid-template-columns:1fr auto;padding:10px 12px;gap:9px}.clients-search{grid-column:1/-1}.clients-pagination{justify-content:flex-start}.clients-page-size{justify-content:flex-end}.clients-sort{grid-column:1/-1;grid-template-columns:auto minmax(0,1fr);justify-content:stretch}
  .clients-list-panel .client-list{padding:8px;gap:8px}

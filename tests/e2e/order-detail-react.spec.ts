@@ -49,6 +49,8 @@ test('Ver OS React possui uma única raiz e blocos funcionais sem duplicação l
   const { clientName, order } = await createActiveOrder(page, 1);
   const root = await openOrder(page, clientName, order.number);
   await expect(root.getByRole('heading', { name: 'Serviços / Produtos', exact: true })).toBeVisible();
+  await expect(root.getByRole('button', { name: 'Editar ficha', exact: true })).toHaveCount(0);
+  await expect(root.locator('.status-picker')).toHaveCount(0);
 
   const cardinality = await root.evaluate((node) => ({
     detailGrid: node.querySelectorAll('.detail-grid').length,

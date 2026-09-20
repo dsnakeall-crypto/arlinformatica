@@ -43,6 +43,7 @@ import {
   CalendarDays,
   CircleDollarSign,
   ReceiptText,
+  FileSignature,
 } from "lucide-react";
 import "../css/app.css";
 import "../css/homologation.css";
@@ -286,7 +287,7 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           required
         />
         <label className="field">
-          <span>CEP *</span>
+          <span>CEP</span>
           <input
             name="postal_code"
             value={data.postal_code}
@@ -309,7 +310,6 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           value={data.number}
           onChange={change}
           error={errors.number?.[0]}
-          required
         />
         <Field
           label="Bairro"
@@ -317,7 +317,6 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           value={data.district}
           onChange={change}
           error={errors.district?.[0]}
-          required
         />
         <Field
           label="Cidade"
@@ -325,7 +324,6 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           value={data.city}
           onChange={change}
           error={errors.city?.[0]}
-          required
         />
         <Field
           label="Estado"
@@ -333,7 +331,6 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           value={data.state}
           onChange={change}
           error={errors.state?.[0]}
-          required
         />
         <Field
           label="Complemento"
@@ -362,7 +359,7 @@ function ClientHistory({ id, onClose, openOrder }: any) {
   const c = data.client;
   return (
     <>
-      <button onClick={onClose}>← Voltar aos clientes</button>
+      <button className="arl-back-button" onClick={onClose}>← Voltar aos clientes</button>
       <div className="title">
         <div>
           <h1>{c.name}</h1>
@@ -927,7 +924,11 @@ function NewOrder({ done }: any) {
   );
   const addPhotos = (files: readonly File[] | null | undefined) => {
     if (!files?.length) return;
-    setPhotos((current) => [...current, ...files]);
+    setPhotos((current) => {
+      const available = Math.max(0, 5 - current.length);
+      if (files.length > available) window.alert("Cada OS aceita no máximo 5 fotos. As fotos excedentes não foram adicionadas.");
+      return [...current, ...files.slice(0, available)];
+    });
   };
   const addItem = (item: Catalog, quantity = 1) =>
     setOrderItems((current) => {
@@ -3042,7 +3043,7 @@ function OrderView({ id, back }: any) {
   };
   return (
     <>
-      <button onClick={back}>← Voltar</button>
+      <button className="arl-back-button" onClick={back}>← Voltar</button>
       <div className="title">
         <div>
           <h1>OS #{o.number}</h1>
@@ -3154,7 +3155,7 @@ function OrderView({ id, back }: any) {
           <div className="photos">
             {o.photos.length ? (
               o.photos.map((p: any) => (
-                <img src={`/api/orders/${o.id}/photos/${p.id}`} />
+                <a key={p.id} href={`/api/orders/${o.id}/photos/${p.id}`} target="_blank" rel="noreferrer"><img src={`/api/orders/${o.id}/photos/${p.id}`} alt={`Foto ${p.id} da OS`} /></a>
               ))
             ) : (
               <p>Nenhuma foto anexada.</p>
@@ -3566,6 +3567,7 @@ function SettingsPage({ role }: any) {
   const [message, setMessage] = useState("");
   const [section, setSection] = useState("company");
   const [logo, setLogo] = useState<File | null>(null);
+  const [signature, setSignature] = useState<File | null>(null);
   useEffect(() => {
     api("/settings")
       .then((settings: any) => setData(formatCompanySettings(settings)))
@@ -3588,6 +3590,13 @@ function SettingsPage({ role }: any) {
         const fd = new FormData();
         fd.append("logo", logo);
         await api("/settings/logo", { method: "POST", body: fd });
+      }
+      if (signature) {
+        const fd = new FormData();
+        fd.append("signature", signature);
+        await api("/settings/signature", { method: "POST", body: fd });
+        setData((current: any) => ({ ...current, technical_signature_configured: true }));
+        setSignature(null);
       }
       setMessage(
         "Configurações salvas com segurança. Documentos antigos permanecem preservados.",
@@ -3749,6 +3758,22 @@ function SettingsPage({ role }: any) {
                   onChange={(e) => setLogo(e.target.files?.[0] || null)}
                 />
               </label>
+              <label className="upload">
+                <FileSignature />
+                <span>
+                  {signature
+                    ? signature.name
+                    : data.technical_signature_configured
+                      ? "Substituir assinatura técnica"
+                      : "Enviar assinatura técnica (fundo branco será removido)"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => setSignature(e.target.files?.[0] || null)}
+                />
+              </label>
+              {data.technical_signature_configured && !signature && <img className="technical-signature-preview" src="/api/settings/signature" alt="Assinatura técnica cadastrada"/>}
             </>
           )}
           {section === "documents" && (

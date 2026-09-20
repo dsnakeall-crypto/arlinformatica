@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\ServiceOrder;
 use App\Services\InventoryService;
 use App\Services\NotificationService;
+use App\Services\PostSaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -245,6 +246,16 @@ class ServiceOrderMaintenanceController extends Controller
 
             $before = ['status' => $locked->status, 'total_cents' => (int) $locked->total_cents, 'completed_at' => $locked->completed_at];
             $locked->update(['status' => 'analysis', 'completed_at' => null, 'archived' => false]);
+            $cycleIds = DB::table('post_sale_cycles')->where('service_order_id', $locked->id)->where('active', true)->pluck('id');
+            DB::table('post_sale_cycles')->whereIn('id', $cycleIds)->update([
+                'active' => false,
+                'archived_at' => now(),
+                'archive_reason' => PostSaleService::REOPENED_REASON,
+                'updated_at' => now(),
+            ]);
+            foreach ($cycleIds as $cycleId) {
+                DB::table('notifications')->where('deduplication_key', "post-sale:{$cycleId}")->update(['active' => false, 'read_at' => now(), 'updated_at' => now()]);
+            }
             DB::table('status_history')->insert(['service_order_id' => $locked->id, 'from_status' => 'completed', 'to_status' => 'analysis', 'user_id' => $request->user()->id, 'created_at' => now()]);
             DB::table('audit_logs')->insert([
                 'user_id' => $request->user()->id,

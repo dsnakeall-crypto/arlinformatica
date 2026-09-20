@@ -24,6 +24,8 @@ class CompanySettings
     {
         $values = array_replace(self::DEFAULTS, DB::table('settings')->pluck('value', 'key')->all());
         unset($values['layout_mode']);
+        $values['technical_signature_configured'] = filled($values['technical_signature'] ?? null);
+        unset($values['technical_signature']);
         $values['term_text'] = (string) DB::table('versioned_templates')->where('type', 'term')->where('active', true)->latest('version')->value('body');
 
         return $values;
@@ -42,6 +44,7 @@ class CompanySettings
     {
         $values = $this->all();
         $values['logo'] = DB::table('settings')->where('key', 'logo_budget')->value('value');
+        $values['technical_signature'] = DB::table('settings')->where('key', 'technical_signature')->value('value');
 
         return $values;
     }

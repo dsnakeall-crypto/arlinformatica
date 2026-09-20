@@ -116,15 +116,24 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
   const share = page.getByRole('status', { name: 'Compartilhar fechamento da OS' });
   await expect(share).toBeVisible();
 
-  const pdfHref = await share.getByRole('link', { name: 'Abrir PDF' }).getAttribute('href');
-  expect(pdfHref).toBeTruthy();
-  const pdfResponse = await page.request.get(pdfHref!);
+  const shareResponsePromise = page.waitForResponse((response) => new URL(response.url()).pathname === `/api/orders/${order.id}/final-share`);
+  const pdfPagePromise = page.context().waitForEvent('page');
+  await share.getByRole('button', { name: 'Abrir PDF' }).click();
+  const shareResponse = await shareResponsePromise;
+  const generatedShare = await shareResponse.json();
+  const pdfPage = await pdfPagePromise;
+  await pdfPage.close();
+  const pdfResponse = await page.request.get(generatedShare.url);
   expect(pdfResponse.status()).toBe(200);
   expect(pdfResponse.headers()['content-type']).toContain('application/pdf');
   expect((await pdfResponse.body()).byteLength).toBeGreaterThan(1000);
 
-  const whatsappHref = await share.getByRole('link', { name: 'Enviar PDF pelo WhatsApp' }).getAttribute('href');
-  expect(whatsappHref).toBeTruthy();
-  const whatsappText = decodeURIComponent(new URL(whatsappHref!).searchParams.get('text') ?? '');
+  const whatsappPagePromise = page.context().waitForEvent('page');
+  await share.getByRole('button', { name: 'Enviar PDF pelo WhatsApp' }).click();
+  const whatsappPage = await whatsappPagePromise;
+  await whatsappPage.waitForURL(/wa\.me\//);
+  const whatsappText = decodeURIComponent(new URL(whatsappPage.url()).searchParams.get('text') ?? '');
   expect(whatsappText).toContain(`- Valor: ${expectedMoney}`);
+  expect(whatsappText).toContain('/share/orders/');
+  await whatsappPage.close();
 });

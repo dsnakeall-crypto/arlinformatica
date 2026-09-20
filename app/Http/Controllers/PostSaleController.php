@@ -30,6 +30,8 @@ class PostSaleController extends Controller
             ->join('clients', 'clients.id', '=', 'cycles.client_id')
             ->where('cycles.active', true)
             ->whereNull('orders.deleted_at')
+            ->where('orders.status', 'completed')
+            ->whereNotNull('orders.completed_at')
             ->select('cycles.id', 'cycles.eligible_at', 'orders.number', 'clients.name', 'clients.phone')
             ->orderBy('cycles.eligible_at')
             ->get();
@@ -39,7 +41,7 @@ class PostSaleController extends Controller
             $eligibleAt = Carbon::parse($row->eligible_at, config('app.timezone'));
             $row->available = now()->greaterThanOrEqualTo($eligibleAt);
             // SQL datetime values have no timezone. Include the offset so browsers
-            // calculate the remaining 24 hours from the same instant as Laravel.
+            // calculate the remaining seven days from the same instant as Laravel.
             $row->eligible_at = $eligibleAt->toIso8601String();
             $row->actions = $actions->get($row->id, collect())->mapWithKeys(fn ($action) => [$action->type => ['id' => $action->id, 'confirmed_at' => $action->confirmed_at]])->all();
             $row->messages = collect(PostSaleService::ACTIONS)->mapWithKeys(fn ($type) => [$type => $this->message($type)])->all();
@@ -73,7 +75,7 @@ class PostSaleController extends Controller
         abort_unless(in_array($type, PostSaleService::ACTIONS, true), 404);
         $record = DB::table('post_sale_cycles as cycles')->join('clients', 'clients.id', '=', 'cycles.client_id')->where('cycles.id', $cycle)->where('cycles.active', true)->select('cycles.*', 'clients.name')->first();
         abort_unless($record, 404);
-        abort_if(now()->lessThan($record->eligible_at), 409, 'O Pós-Venda desta OS será liberado 24 horas após a conclusão.');
+        abort_if(now()->lessThan($record->eligible_at), 409, 'O Pós-Venda desta OS será liberado 7 dias após a conclusão.');
         $message = $this->message($type);
         $updated = DB::table('post_sale_actions')->where('cycle_id', $cycle)->where('type', $type)->whereNull('confirmed_at')->update(['confirmed_at' => now(), 'confirmed_by' => $request->user()->id, 'message_snapshot' => $message, 'updated_at' => now()]);
         abort_unless($updated === 1, 409, 'Esta mensagem já foi confirmada como enviada.');

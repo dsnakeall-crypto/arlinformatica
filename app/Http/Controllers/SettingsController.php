@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\CompanySettings;
 use App\Services\LogoProcessor;
+use App\Services\SignatureProcessor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -103,5 +104,29 @@ class SettingsController extends Controller
         abort_unless($path, 404);
 
         return Storage::disk('local')->response($path, "logo-$variant.webp", ['Content-Type' => 'image/webp']);
+    }
+
+    public function signature(Request $request, SignatureProcessor $processor): JsonResponse
+    {
+        abort_unless(in_array($request->user()->role->name, ['Master', 'Administrador']), 403);
+        $request->validate(['signature' => 'required|image|mimes:png,jpg,jpeg,webp|max:8192']);
+        $data = $processor->process($request->file('signature'));
+        $path = 'company/signatures/'.str()->uuid().'.png';
+        Storage::disk('local')->put($path, $data);
+        $previous = DB::table('settings')->where('key', 'technical_signature')->value('value');
+        DB::table('settings')->updateOrInsert(['key' => 'technical_signature'], ['value' => $path, 'type' => 'private_file', 'created_at' => now(), 'updated_at' => now()]);
+        if ($previous && $previous !== $path) {
+            Storage::disk('local')->delete($previous);
+        }
+
+        return response()->json(['configured' => true], 201);
+    }
+
+    public function signatureFile()
+    {
+        $path = DB::table('settings')->where('key', 'technical_signature')->value('value');
+        abort_unless($path, 404);
+
+        return Storage::disk('local')->response($path, 'assinatura-tecnica.png', ['Content-Type' => 'image/png']);
     }
 }

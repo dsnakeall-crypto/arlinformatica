@@ -161,8 +161,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   expect(finalization.status).toBe(201);
   const finalShare = page.getByRole('status', { name: 'Compartilhar fechamento da OS' });
   await expect(finalShare).toBeVisible();
-  await finalShare.getByRole('button', { name: 'Fechar', exact: true }).click();
-  await expect(finalShare).toHaveCount(0);
+  await expect(finalShare.getByRole('button', { name: 'Fechar', exact: true })).toHaveCount(0);
 
   const pdf = await page.context().request.get(`/api/orders/${orderResponse.body.id}/final/1/pdf`);
   expect(pdf.ok()).toBeTruthy();
