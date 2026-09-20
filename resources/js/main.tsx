@@ -3311,8 +3311,38 @@ function InfrastructureSettings({ section }: { section: string }) {
   const create = async () => {
     setMessage("Criando backup…");
     try {
-      await api("/backups", { method: "POST", body: "{}" });
-      setMessage("Backup criado e verificado.");
+      const token = document.querySelector<HTMLMetaElement>(
+        'meta[name="csrf-token"]',
+      )?.content;
+      const response = await fetch("/api/backups/manual-download", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/zip, application/json",
+          ...(token ? { "X-CSRF-TOKEN": token } : {}),
+        },
+      });
+      if (!response.ok) {
+        const error = await response
+          .json()
+          .catch(() => ({ message: "Não foi possível gerar o backup." }));
+        throw new Error(error.message || "Não foi possível gerar o backup.");
+      }
+      const blob = await response.blob();
+      if (!blob.size) throw new Error("O arquivo de backup foi gerado vazio.");
+      const disposition = response.headers.get("content-disposition") || "";
+      const filename =
+        disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)/i)?.[1] ||
+        `backup-arl-${new Date().toISOString().replace(/[:.]/g, "-")}.zip`;
+      const href = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = href;
+      anchor.download = decodeURIComponent(filename);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(href);
+      setMessage("Backup gerado, baixado e removido do servidor.");
       load();
     } catch (e: any) {
       setMessage(e.message);
@@ -3407,24 +3437,7 @@ function InfrastructureSettings({ section }: { section: string }) {
                 <option value="monthly">Mensal</option>
               </select>
             </label>
-            <label>
-              Retenção{" "}
-              <input
-                type="number"
-                min="1"
-                max="365"
-                value={backups.automatic.retention}
-                onChange={(e) =>
-                  setBackups({
-                    ...backups,
-                    automatic: {
-                      ...backups.automatic,
-                      retention: +e.target.value,
-                    },
-                  })
-                }
-              />
-            </label>
+            <span>Retenção fixa: 2 arquivos mais recentes</span>
             <button
               onClick={async () => {
                 await api("/backups/automatic", {
@@ -3480,6 +3493,17 @@ function InfrastructureSettings({ section }: { section: string }) {
                 }}
               >
                 RESTAURAR
+              </button>
+              <button
+                disabled={b.protected || b.status === "creating"}
+                onClick={async () => {
+                  if (!window.confirm(`Apagar o backup ${b.filename}?`)) return;
+                  await api(`/backups/${b.id}`, { method: "DELETE" });
+                  setMessage("Backup removido do servidor.");
+                  load();
+                }}
+              >
+                APAGAR
               </button>
             </article>
           ))}

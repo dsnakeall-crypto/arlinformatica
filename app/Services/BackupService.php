@@ -15,6 +15,8 @@ use ZipArchive;
 
 class BackupService
 {
+    public const AUTOMATIC_RETENTION = 2;
+
     private const EXCLUDED_TABLES = ['backups', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'sessions', 'password_reset_tokens'];
 
     public function create(?User $user = null, string $kind = 'manual', bool $protected = false): Backup
@@ -55,8 +57,12 @@ class BackupService
             $archive = "$work/$filename";
             $this->zipDirectory($work, $archive, $filename);
             $path = config('backup.directory')."/$filename";
-            Storage::disk(config('backup.disk'))->put($path, File::get($archive));
-            $backup->update(['path' => $path, 'sha256' => hash_file('sha256', $archive), 'bytes' => filesize($archive), 'manifest' => $manifest, 'status' => 'ready']);
+            $disk = Storage::disk(config('backup.disk'));
+            $written = $disk->put($path, File::get($archive));
+            throw_unless($written && $disk->exists($path), RuntimeException::class, 'O arquivo de backup não foi gravado no servidor.');
+            $storedBytes = $disk->size($path);
+            throw_unless($storedBytes > 0, RuntimeException::class, 'O arquivo de backup foi gerado vazio.');
+            $backup->update(['path' => $path, 'sha256' => hash_file('sha256', $archive), 'bytes' => $storedBytes, 'manifest' => $manifest, 'status' => 'ready']);
             $this->audit($user, $kind === 'automatic' ? 'backup.automatic_created' : 'backup.created', $backup->id, ['bytes' => $backup->bytes, 'sha256' => $backup->sha256]);
 
             return $backup->fresh();
@@ -161,7 +167,7 @@ class BackupService
 
     public function applyRetention(): int
     {
-        $eligible = Backup::where('kind', 'automatic')->where('protected', false)->where('status', 'ready')->latest()->get()->slice($this->automaticSettings()['retention']);
+        $eligible = Backup::where('kind', 'automatic')->where('status', 'ready')->latest('id')->get()->slice(self::AUTOMATIC_RETENTION);
         foreach ($eligible as $backup) {
             Storage::disk(config('backup.disk'))->delete($backup->path);
             $backup->delete();
@@ -172,18 +178,18 @@ class BackupService
 
     public function automaticSettings(): array
     {
-        $values = DB::table('settings')->whereIn('key', ['backup_automatic', 'backup_frequency', 'backup_retention'])->pluck('value', 'key');
+        $values = DB::table('settings')->whereIn('key', ['backup_automatic', 'backup_frequency'])->pluck('value', 'key');
 
         return [
             'enabled' => filter_var($values['backup_automatic'] ?? config('backup.automatic'), FILTER_VALIDATE_BOOL),
             'frequency' => in_array($values['backup_frequency'] ?? null, ['daily', 'weekly', 'monthly'], true) ? $values['backup_frequency'] : config('backup.frequency'),
-            'retention' => max(1, (int) ($values['backup_retention'] ?? config('backup.retention'))),
+            'retention' => self::AUTOMATIC_RETENTION,
         ];
     }
 
     public function saveAutomaticSettings(array $settings): void
     {
-        foreach (['backup_automatic' => $settings['enabled'] ? '1' : '0', 'backup_frequency' => $settings['frequency'], 'backup_retention' => (string) $settings['retention']] as $key => $value) {
+        foreach (['backup_automatic' => $settings['enabled'] ? '1' : '0', 'backup_frequency' => $settings['frequency'], 'backup_retention' => (string) self::AUTOMATIC_RETENTION] as $key => $value) {
             DB::table('settings')->updateOrInsert(['key' => $key], ['value' => $value, 'created_at' => now(), 'updated_at' => now()]);
         }
     }

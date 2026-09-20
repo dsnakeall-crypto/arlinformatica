@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/photos/{photo}', [StorageController::class, 'destroy']);
         Route::get('/backups', [BackupController::class, 'index']);
         Route::put('/backups/automatic', [BackupController::class, 'updateAutomatic']);
+        Route::post('/backups/manual-download', [BackupController::class, 'manualDownload'])->middleware('throttle:2,10');
         Route::post('/backups', [BackupController::class, 'store'])->middleware('throttle:2,10');
         Route::post('/backups/upload', [BackupController::class, 'upload'])->middleware('throttle:2,10');
         Route::get('/backups/{backup}/download', [BackupController::class, 'download']);
