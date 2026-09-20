@@ -14,8 +14,8 @@ const emptyClient={name:'',document:'',phone:'',postal_code:'',street:'',number:
 const status:Record<string,string>={analysis:'Em Análise',waiting_part:'Aguardando Peça',in_service:'Em Serviço',completed:'Concluído',interrupted:'Interrompido'};
 const csrf=()=>document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content??'';
 const api=async(url:string,options:RequestInit={})=>{const r=await fetch('/api'+url,{credentials:'same-origin',...options,headers:{Accept:'application/json',...(options.body instanceof FormData?{}:{'Content-Type':'application/json'}),...(csrf()?{'X-CSRF-TOKEN':csrf()}:{}),...options.headers}});const json=await r.json().catch(()=>({message:'Resposta inválida do servidor.'}));if(!r.ok)throw Object.assign(new Error(json.message||'Não foi possível concluir.'),{errors:json.errors});return json};
-const digits=(value:string)=>value.replace(/\D/g,'');
-const masks={document:(v:string)=>{const n=digits(v).slice(0,14);return n.length<=11?n.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'):n.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d)/,'$1-$2')},phone:(v:string)=>digits(v).slice(0,11).replace(/^(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2'),cep:(v:string)=>digits(v).slice(0,8).replace(/(\d{5})(\d)/,'$1-$2')};
+const digits=(value:unknown)=>typeof value==='string'?value.replace(/\D/g,''):'';
+const masks={document:(v:unknown)=>{const n=digits(v).slice(0,14);return n.length<=11?n.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'):n.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d)/,'$1-$2')},phone:(v:unknown)=>digits(v).slice(0,11).replace(/^(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2'),cep:(v:unknown)=>digits(v).slice(0,8).replace(/(\d{5})(\d)/,'$1-$2')};
 const normalized=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
 const money=(cents=0)=>`R$ ${(cents/100).toFixed(2).replace('.',',')}`;
 

@@ -30,15 +30,15 @@ const api = async (url: string, options: RequestInit = {}) => {
   return body;
 };
 
-const digits = (value: string) => value.replace(/\D/g, '');
+const digits = (value: unknown) => typeof value === 'string' ? value.replace(/\D/g, '') : '';
 const masks = {
-  document: (value: string) => {
+  document: (value: unknown) => {
     const n = digits(value).slice(0, 14);
     return n.length <= 11
       ? n.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2')
       : n.replace(/(\d{2})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
   },
-  phone: (value: string) => digits(value).slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2'),
+  phone: (value: unknown) => digits(value).slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2'),
 };
 
 const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;

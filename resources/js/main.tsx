@@ -153,9 +153,11 @@ const api = async (url: string, options: RequestInit = {}) => {
     );
   return json;
 };
+const digits = (value: unknown) =>
+  typeof value === "string" ? value.replace(/\D/g, "") : "";
 const masks = {
-  document: (v: string) => {
-    const n = v.replace(/\D/g, "").slice(0, 14);
+  document: (v: unknown) => {
+    const n = digits(v).slice(0, 14);
     return n.length <= 11
       ? n
           .replace(/(\d{3})(\d)/, "$1.$2")
@@ -167,15 +169,13 @@ const masks = {
           .replace(/(\d{3})(\d)/, "$1/$2")
           .replace(/(\d{4})(\d)/, "$1-$2");
   },
-  phone: (v: string) =>
-    v
-      .replace(/\D/g, "")
+  phone: (v: unknown) =>
+    digits(v)
       .slice(0, 11)
       .replace(/^(\d{2})(\d)/, "($1) $2")
       .replace(/(\d{5})(\d)/, "$1-$2"),
-  cep: (v: string) =>
-    v
-      .replace(/\D/g, "")
+  cep: (v: unknown) =>
+    digits(v)
       .slice(0, 8)
       .replace(/(\d{5})(\d)/, "$1-$2"),
 };
@@ -216,7 +216,7 @@ function ClientForm({ onSaved, onCancel, client }: any) {
     setData({ ...data, [e.target.name]: v });
   };
   const lookup = async () => {
-    const cep = data.postal_code.replace(/\D/g, "");
+    const cep = digits(data.postal_code);
     if (cep.length !== 8) return;
     setCepNote("Consultando CEP…");
     try {
@@ -244,8 +244,8 @@ function ClientForm({ onSaved, onCancel, client }: any) {
         method: client ? "PUT" : "POST",
         body: JSON.stringify({
           ...data,
-          document: data.document.replace(/\D/g, ""),
-          postal_code: data.postal_code.replace(/\D/g, ""),
+          document: digits(data.document),
+          postal_code: digits(data.postal_code),
         }),
       });
       onSaved(saved);
