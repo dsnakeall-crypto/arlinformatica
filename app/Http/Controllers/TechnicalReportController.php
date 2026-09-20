@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
 
 class TechnicalReportController extends Controller
 {
+    private const FEATURE_ENABLED = false;
+
     public function index(ServiceOrder $order): JsonResponse
     {
         return response()->json(DB::table('technical_reports')->leftJoin('technical_report_templates', 'technical_report_templates.id', '=', 'technical_reports.template_id')->where('service_order_id', $order->id)->select('technical_reports.*', 'technical_report_templates.name as template_name', 'technical_report_templates.kind')->orderByDesc('revision')->get());
@@ -19,6 +21,7 @@ class TechnicalReportController extends Controller
 
     public function store(Request $request, ServiceOrder $order): JsonResponse
     {
+        abort_unless(self::FEATURE_ENABLED, 410, 'A emissão de laudos técnicos está desativada. Use o Laudo Final da OS.');
         $data = $this->validated($request);
         $template = DB::table('technical_report_templates')->where('id', $data['template_id'])->where('active', true)->first();
         abort_unless($template, 422, 'Selecione um modelo ativo.');
@@ -31,6 +34,7 @@ class TechnicalReportController extends Controller
 
     public function update(Request $request, ServiceOrder $order, int $revision): JsonResponse
     {
+        abort_unless(self::FEATURE_ENABLED, 410, 'A edição de laudos técnicos está desativada. Use o Laudo Final da OS.');
         $report = $this->find($order, $revision);
         abort_if($report->status === 'issued', 409, 'Uma revisão emitida não pode ser alterada. Crie uma nova revisão.');
         $data = $this->validated($request);
@@ -41,6 +45,7 @@ class TechnicalReportController extends Controller
 
     public function issue(Request $request, ServiceOrder $order, int $revision, CompanySettings $settings, DocumentService $documents): JsonResponse
     {
+        abort_unless(self::FEATURE_ENABLED, 410, 'A emissão de laudos técnicos está desativada. Use o Laudo Final da OS.');
         $report = $this->find($order, $revision);
         abort_if($report->status === 'issued', 409, 'Esta revisão já foi emitida e permanece imutável.');
         $content = json_decode($report->content, true);

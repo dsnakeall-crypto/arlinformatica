@@ -11,17 +11,29 @@ Este roteiro serve para KingHost, outro *shared hosting* ou VPS. Limites de disc
 
 ## 2. Gerar e enviar a release
 
-O GitHub é a fonte oficial. O workflow manual **Preparar release** gera um artefato com manifesto, commit, `vendor` e `public/build`, sem `.env`, banco ou arquivos privados. Há três opções seguras:
+O GitHub é a fonte oficial. A CI da PR valida o backend em SQLite e também executa a suíte PHP contra MySQL 8 para reduzir diferenças em relação à produção. O workflow manual **Preparar release** só monta o artefato depois de passar Pint, testes PHP, auditoria Composer das dependências de runtime, auditoria npm para vulnerabilidades altas/críticas de runtime, TypeScript, build e Playwright E2E com `retries: 0`.
+
+Depois das validações, o workflow reinstala o `vendor` com `--no-dev --optimize-autoloader`, verifica os requisitos de plataforma do Composer e gera o pacote com manifesto e arquivo `.sha256`. O pacote não inclui `.env`, banco, arquivos privados, `node_modules`, testes nem relatórios do Playwright.
+
+Antes de enviar o arquivo à hospedagem, valide sua integridade no ambiente onde ele foi baixado:
+
+```bash
+sha256sum -c arl-informatica-<commit>.tar.gz.sha256
+```
+
+Há três opções seguras:
 
 - Git/SSH disponível: faça checkout do commit/tag de release em uma pasta nova;
-- CI: gere um pacote de release sem `.env`, `.git`, `node_modules`, testes nem arquivos privados, mas com `public/build`, código, migrations e `vendor` quando Composer não existir no servidor;
+- CI: use o pacote de release já construído e validado pelo workflow;
 - sem Git/SSH: envie esse mesmo pacote pronto por SFTP/FTP. Não use o PC como fonte definitiva nem envie arquivos privados da produção.
 
-Em ambiente com rede, execute:
+Em ambiente com rede, se for necessário reconstruir o pacote fora do workflow oficial, execute:
 
 ```bash
 composer install --no-dev --prefer-dist --optimize-autoloader
+composer check-platform-reqs --no-dev
 npm ci
+npm audit --omit=dev --audit-level=high
 npm run typecheck
 npm run build
 ```
@@ -44,12 +56,15 @@ DB_PORT=3306
 DB_DATABASE=...
 DB_USERNAME=...
 DB_PASSWORD=...
+DB_TIMEZONE=+00:00
 QUEUE_CONNECTION=sync
 BACKUP_AUTOMATIC=true
 BACKUP_FREQUENCY=daily
 BACKUP_RETENTION=7
 BACKUP_MAX_UPLOAD_KB=512000
 ```
+
+Mantenha `DB_TIMEZONE=+00:00` em produção. A conexão MySQL usa essa variável para fixar a sessão em UTC, garantindo que os campos `TIMESTAMP` financeiros sejam gravados e consultados no mesmo fuso mesmo que o provedor altere o timezone padrão do servidor. `APP_TIMEZONE` permanece `America/Sao_Paulo` para os limites do caixa e a apresentação das datas locais.
 
 `QUEUE_CONNECTION=sync` evita depender de Supervisor. Ajuste o limite de backup à capacidade real e confira `upload_max_filesize` e `post_max_size`; ambos precisam aceitar o mesmo tamanho. Dê escrita ao usuário PHP somente em `storage/` e `bootstrap/cache/`. Fotos, PDFs e backups permanecem no disco privado; `storage:link` não deve publicá-los.
 
@@ -92,3 +107,7 @@ Nunca envie a chave privada ao frontend/API/Git. Confirme `/manifest.webmanifest
 5. Teste login, banco, migrations, escrita privada, fotos, PDFs, backup, heartbeat, HTTPS, PWA e Push no Diagnóstico.
 
 Se falhar, preserve logs e o backup de segurança, volte o código ao release/commit anterior e reverta migration somente quando ela tiver um `down()` comprovadamente seguro. Para perda/corrupção de dados, valide o manifesto antes de restaurar pela interface; a restauração cria outro backup de segurança. Nunca apague o banco atual antes de possuir cópia verificada.
+
+## Configuração automática persistida
+
+As variáveis `BACKUP_*` são apenas defaults de instalação. Depois do primeiro acesso, o Master configura ativação, frequência e retenção em **Configurações > Backup e Restauração**; os valores ficam na tabela `settings`, são auditados e lidos por `schedule:run`. A interface nunca altera `.env` e continua compatível com cron de hospedagem compartilhada.
