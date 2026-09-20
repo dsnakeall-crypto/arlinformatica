@@ -221,7 +221,7 @@ test('OS concluída sem pagamento mostra Aguardando PGTO e exige forma para vira
 
   const persisted = await api(page, `/orders/${order.id}`);
   expect(persisted.body.display_status).toBe('paid');
-  expect(persisted.body.archived).toBe(1);
+  expect(persisted.body.archived).toBe(true);
   const payments = await api(page, `/orders/${order.id}/payments`);
   expect(payments.body.paid_cents).toBe(service.price_cents);
   expect(payments.body.balance_cents).toBe(0);
