@@ -215,22 +215,22 @@ class ServiceOrderWorkflowTest extends TestCase
 
         $this->patchJson("/api/orders/{$order->id}/status", ['status' => 'paid'])
             ->assertOk()
-            ->assertJsonPath('archived', 1)
+            ->assertJsonPath('archived', true)
             ->assertJsonPath('display_status', 'paid');
 
         // Sem filtro, a rota representa a aba Todas: o histórico inclui OS pagas/arquivadas.
         $this->getJson('/api/orders')
             ->assertOk()
-            ->assertJsonFragment(['id' => $order->id, 'archived' => 1]);
+            ->assertJsonFragment(['id' => $order->id, 'archived' => true]);
 
         // As abas operacionais continuam excluindo a OS arquivada.
         $this->getJson('/api/orders?tab=progress')->assertOk()->assertJsonMissing(['id' => $order->id]);
         $this->getJson('/api/orders?tab=interrupted')->assertOk()->assertJsonMissing(['id' => $order->id]);
-        $this->getJson('/api/orders?tab=finalized')->assertOk()->assertJsonFragment(['id' => $order->id, 'archived' => 1]);
+        $this->getJson('/api/orders?tab=finalized')->assertOk()->assertJsonFragment(['id' => $order->id, 'archived' => true]);
 
         $this->getJson('/api/orders?finalized=1')
             ->assertOk()
-            ->assertJsonFragment(['id' => $order->id, 'archived' => 1]);
+            ->assertJsonFragment(['id' => $order->id, 'archived' => true]);
 
         $this->assertDatabaseHas('status_history', [
             'service_order_id' => $order->id,
@@ -268,7 +268,7 @@ class ServiceOrderWorkflowTest extends TestCase
 
         $this->patchJson("/api/orders/{$order->id}/status", ['status' => 'paid', 'payment_method' => 'debit'])
             ->assertOk()
-            ->assertJsonPath('archived', 1)
+            ->assertJsonPath('archived', true)
             ->assertJsonPath('display_status', 'paid');
 
         $this->assertDatabaseHas('payments', ['service_order_id' => $order->id, 'amount_cents' => 12500, 'method' => 'debit']);

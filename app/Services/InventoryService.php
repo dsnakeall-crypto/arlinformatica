@@ -125,6 +125,30 @@ class InventoryService
         })->values()->all();
     }
 
+    /**
+     * Apply the product delta selected in the finalization while its transaction is open.
+     * Services and free-text items do not participate in stock control.
+     */
+    public function applyFinalOrderProducts(ServiceOrder $order, array $finalItems, int $userId): void
+    {
+        $productIds = DB::table('service_catalog')
+            ->where('category', 'product')
+            ->whereIn('id', collect($finalItems)->pluck('catalog_id')->filter())
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id);
+        $products = collect($finalItems)
+            ->filter(fn ($item) => isset($item['catalog_id']) && $productIds->contains((int) $item['catalog_id']))
+            ->values()
+            ->all();
+
+        $this->syncActiveOrderItems(
+            $order,
+            $products,
+            $userId,
+            'Ajuste automático dos produtos na finalização da OS '.$order->number,
+        );
+    }
+
     public function returnActiveOrderProducts(ServiceOrder $order, int $userId, string $reason): void
     {
         $items = DB::table('service_order_items')
@@ -155,31 +179,6 @@ class InventoryService
             $balance = (int) $product->stock_quantity + $quantity;
             DB::table('service_catalog')->where('id', $product->id)->update(['stock_quantity' => $balance, 'updated_at' => now()]);
             $this->record((int) $product->id, $order->id, $userId, 'order_return', $quantity, $balance, $reason);
-        }
-    }
-
-    public function assertFinalProductsAlreadyApplied(ServiceOrder $order, array $finalItems): void
-    {
-        $productIds = DB::table('service_catalog')
-            ->where('category', 'product')
-            ->whereIn('id', collect($finalItems)->pluck('catalog_id')->filter())
-            ->pluck('id');
-        $final = collect($finalItems)->whereIn('catalog_id', $productIds)->groupBy('catalog_id')->map(fn ($rows) => (int) $rows->sum('quantity'))->sortKeys();
-        $active = DB::table('service_order_items')
-            ->join('service_catalog', 'service_catalog.id', '=', 'service_order_items.catalog_id')
-            ->where('service_order_items.service_order_id', $order->id)
-            ->whereNull('service_order_items.finalization_id')
-            ->where('service_catalog.category', 'product')
-            ->select('service_order_items.catalog_id', DB::raw('SUM(service_order_items.quantity) as quantity'))
-            ->groupBy('service_order_items.catalog_id')
-            ->pluck('quantity', 'catalog_id')
-            ->map(fn ($quantity) => (int) $quantity)
-            ->sortKeys();
-
-        if ($final->all() !== $active->all()) {
-            throw ValidationException::withMessages([
-                'items' => 'Os produtos da finalização devem ser salvos na OS antes de concluir, para que a baixa ocorra no momento correto.',
-            ]);
         }
     }
 

@@ -454,7 +454,8 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
   }, [reopenOnLoad, order?.id, order?.status, role]);
 
   if (error) return <div className="state error">{error}</div>; if (!order || role === null) return <div className="state">Carregando OS…</div>;
-  const immutable = Boolean(order.archived || ['completed', 'interrupted'].includes(order.status));
+  const operational = ['analysis', 'waiting_part', 'in_service'].includes(order.status);
+  const immutable = !operational;
   const interrupted = order.status === 'interrupted';
   const reopened = isReopenedOrder(order);
   const persistPendingChanges = async () => {

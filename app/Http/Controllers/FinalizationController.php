@@ -92,7 +92,7 @@ class FinalizationController extends Controller
         $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot, $isPaid, $paymentMethod, $inventory) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             abort_if(in_array($locked->status, ['completed', 'interrupted'], true), 409, 'A OS já foi fechada e não pode ser finalizada.');
-            $inventory->assertFinalProductsAlreadyApplied($locked, $data['items']);
+            $inventory->applyFinalOrderProducts($locked, $data['items'], $request->user()->id);
             $previous = DB::table('service_order_finalizations')->where('service_order_id', $order->id)->orderByDesc('revision')->first();
             $revision = ((int) ($previous->revision ?? 0)) + 1;
             $id = DB::table('service_order_finalizations')->insertGetId(['service_order_id' => $order->id, 'revision' => $revision, 'result' => $data['result'], 'result_other' => $data['result_other'] ?? null, 'technical_report' => $data['technical_report'] ?? null, 'subtotal_cents' => $subtotal, 'discount_cents' => $data['discount_cents'], 'total_cents' => $total, 'snapshot' => json_encode($snapshot), 'completed_by' => $request->user()->id, 'completed_at' => now(), 'created_at' => now(), 'updated_at' => now()]);

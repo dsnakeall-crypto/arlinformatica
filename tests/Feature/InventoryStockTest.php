@@ -161,7 +161,7 @@ class InventoryStockTest extends TestCase
         $this->assertSame(1, DB::table('stock_movements')->where('product_id', $product)->count());
     }
 
-    public function test_finalization_cannot_bypass_the_add_to_order_stock_debit(): void
+    public function test_product_added_only_during_finalization_is_debited_once_and_order_is_completed(): void
     {
         $product = $this->product(2);
         $order = $this->postJson('/api/orders', $this->orderPayload())->assertCreated()->json();
@@ -178,11 +178,18 @@ class InventoryStockTest extends TestCase
                 'unit_price_cents' => 25000,
                 'warranty_enabled' => false,
             ]],
-        ])->assertUnprocessable()
-            ->assertJsonPath('errors.items.0', 'Os produtos da finalização devem ser salvos na OS antes de concluir, para que a baixa ocorra no momento correto.');
+        ])->assertCreated()
+            ->assertJsonPath('order.status', 'completed');
 
-        $this->assertSame(2, (int) DB::table('service_catalog')->where('id', $product)->value('stock_quantity'));
-        $this->assertDatabaseCount('stock_movements', 0);
+        $this->assertSame(1, (int) DB::table('service_catalog')->where('id', $product)->value('stock_quantity'));
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id' => $product,
+            'service_order_id' => $order['id'],
+            'type' => 'order_out',
+            'quantity' => 1,
+            'balance_after' => 1,
+        ]);
+        $this->assertSame(1, DB::table('stock_movements')->where('product_id', $product)->count());
     }
 
     public function test_stock_entry_adds_to_current_balance_and_records_reason(): void
