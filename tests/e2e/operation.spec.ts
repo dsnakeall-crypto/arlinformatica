@@ -59,7 +59,9 @@ test.describe.serial('fluxo operacional principal', () => {
     const manualEquipment = 'Notebook Dell Inspiron 15 + carregador + mouse';
     await page.getByLabel('Equipamento *').fill(manualEquipment);
     await page.getByRole('button', { name: 'ATENDIMENTO EXTERNO' }).click();
-    await page.getByLabel('Problema relatado *').fill('Notebook não liga durante homologação');
+    const reportedProblem = page.getByLabel('Problema relatado *');
+    await expect(reportedProblem).toHaveAttribute('spellcheck', 'true');
+    await reportedProblem.fill('Notebook não liga durante homologação');
     const intakeCondition = 'Carcaça trincada no canto esquerdo e marcas de queda';
     const intakeField = page.getByLabel('Estado físico do equipamento na entrada');
     await expect(intakeField).toHaveAttribute('spellcheck', 'true');

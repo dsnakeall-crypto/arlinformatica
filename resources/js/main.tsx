@@ -192,14 +192,14 @@ const serializeCompanySettings = (data: any) => ({
   phone: String(data.phone || "").replace(/\D/g, ""),
   postal_code: String(data.postal_code || "").replace(/\D/g, ""),
 });
-function Field({ label, name, value, onChange, error, required = false }: any) {
+function Field({ label, name, value, onChange, error, required = false, spellCheck = false }: any) {
   return (
     <label className="field">
       <span>
         {label}
         {required && " *"}
       </span>
-      <input name={name} value={value} onChange={onChange} />
+      <input name={name} value={value} onChange={onChange} spellCheck={spellCheck} />
       {error && <small>{error}</small>}
     </label>
   );
@@ -2032,6 +2032,7 @@ function QuickEntry({ open, onClose, onSaved }: any) {
           label="Descrição curta (opcional)"
           value={description}
           onChange={(e: any) => setDescription(e.target.value)}
+          spellCheck
         />
         <Field
           label="Valor recebido (R$)"
@@ -2129,6 +2130,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
           value={description}
           onChange={(e: any) => setDescription(e.target.value)}
           required
+          spellCheck
         />
         <Field
           label="Valor (R$)"
@@ -4968,6 +4970,22 @@ function App() {
     document.documentElement.dataset.layout = layout;
     localStorage.setItem("arl-layout-mode", layout);
   }, [layout]);
+  useEffect(() => {
+    const enableNativeSpellcheck = (root: ParentNode) => {
+      if (root instanceof HTMLTextAreaElement) root.spellcheck = true;
+      root.querySelectorAll<HTMLTextAreaElement>("textarea").forEach((field) => {
+        field.spellcheck = true;
+      });
+    };
+    enableNativeSpellcheck(document);
+    const observer = new MutationObserver((entries) => {
+      entries.forEach((entry) => entry.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) enableNativeSpellcheck(node);
+      }));
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
   useEffect(
     () =>
       localStorage.setItem("arl-sidebar-collapsed", String(sidebarCollapsed)),
