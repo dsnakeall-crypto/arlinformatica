@@ -279,4 +279,32 @@ class ServiceOrderWorkflowTest extends TestCase
         $this->getJson('/api/orders?tab=awaiting_payment')->assertOk()->assertJsonMissing(['id' => $order->id]);
         $this->getJson('/api/orders?tab=finalized')->assertOk()->assertJsonFragment(['id' => $order->id, 'display_status' => 'paid']);
     }
+
+    public function test_fully_paid_completed_order_uses_paid_badge_without_being_archived(): void
+    {
+        $user = $this->master();
+        $order = $this->order($user);
+        $order->forceFill([
+            'status' => 'completed',
+            'completed_at' => now(),
+            'result' => 'repair_completed',
+            'subtotal_cents' => 84000,
+            'total_cents' => 84000,
+        ])->save();
+
+        $this->postJson("/api/orders/{$order->id}/payment", [
+            'amount_cents' => 84000,
+            'method' => 'pix',
+            'idempotency_key' => 'workflow-paid-badge-unarchived',
+        ])->assertCreated();
+
+        $this->assertFalse((bool) $order->fresh()->archived);
+        $this->getJson('/api/orders?tab=finalized')
+            ->assertOk()
+            ->assertJsonFragment([
+                'id' => $order->id,
+                'paid_cents' => 84000,
+                'display_status' => 'paid',
+            ]);
+    }
 }

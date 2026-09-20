@@ -472,8 +472,8 @@ class ServiceOrderController extends Controller
             return 'paid';
         }
 
-        if ($order->status === 'completed' && (int) $order->total_cents > $paidCents) {
-            return 'awaiting_payment';
+        if ($order->status === 'completed') {
+            return $paidCents >= (int) $order->total_cents ? 'paid' : 'awaiting_payment';
         }
 
         return $order->status;
