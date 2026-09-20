@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Backup;
 use App\Models\Client;
 use App\Models\Role;
 use App\Models\User;
@@ -39,6 +40,16 @@ class StageEightTest extends TestCase
         $this->actingAs($admin)->postJson("/api/backups/{$backup['id']}/restore", ['confirmation' => 'RESTAURAR BACKUP'])->assertForbidden();
         $this->actingAs($master)->get("/api/backups/{$backup['id']}/download")->assertOk();
         $this->get('/api/backups/999999/download')->assertNotFound();
+    }
+
+    public function test_manual_backup_is_downloaded_and_not_kept_on_server(): void
+    {
+        $master = $this->user('Master', 'master');
+
+        $response = $this->actingAs($master)->post('/api/backups/manual-download');
+
+        $response->assertOk()->assertDownload();
+        $this->assertDatabaseMissing('backups', ['kind' => 'manual']);
     }
 
     public function test_backup_has_manifest_checksums_records_private_files_and_no_env(): void
@@ -129,12 +140,12 @@ class StageEightTest extends TestCase
     public function test_automatic_retention_and_scheduler_heartbeat(): void
     {
         $master = $this->user('Master', 'master');
-        config(['backup.retention' => 1]);
         app(BackupService::class)->create($master, 'automatic');
         app(BackupService::class)->create($master, 'automatic');
-        $protected = app(BackupService::class)->create($master, 'automatic', true);
+        $latest = app(BackupService::class)->create($master, 'automatic', true);
         $this->assertSame(1, app(BackupService::class)->applyRetention());
-        $this->assertDatabaseHas('backups', ['id' => $protected->id]);
+        $this->assertDatabaseHas('backups', ['id' => $latest->id]);
+        $this->assertSame(2, Backup::where('kind', 'automatic')->count());
         $this->artisan('scheduler:heartbeat')->assertSuccessful();
         $this->assertDatabaseHas('settings', ['key' => 'scheduler_heartbeat_at']);
     }
@@ -142,8 +153,8 @@ class StageEightTest extends TestCase
     public function test_master_can_persist_automatic_backup_configuration_with_audit(): void
     {
         $master = $this->user('Master', 'master');
-        $this->actingAs($master)->putJson('/api/backups/automatic', ['enabled' => true, 'frequency' => 'weekly', 'retention' => 12])
-            ->assertOk()->assertJson(['enabled' => true, 'frequency' => 'weekly', 'retention' => 12]);
+        $this->actingAs($master)->putJson('/api/backups/automatic', ['enabled' => true, 'frequency' => 'weekly'])
+            ->assertOk()->assertJson(['enabled' => true, 'frequency' => 'weekly', 'retention' => 2]);
         $this->assertDatabaseHas('settings', ['key' => 'backup_frequency', 'value' => 'weekly']);
         $this->assertDatabaseHas('audit_logs', ['action' => 'backup.automatic_settings_updated']);
     }

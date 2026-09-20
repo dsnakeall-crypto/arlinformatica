@@ -103,8 +103,8 @@ test('configurações exibe somente as sete abas permitidas em uma linha', async
 
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
   const tabs = page.locator('.arl-settings-tab');
-  await expect(tabs).toHaveCount(7);
-  await expect(tabs.locator('b')).toHaveText(['Empresa', 'Identidade', 'Documentos', 'Notificações', 'Backup', 'Sistema', 'Armazenamento']);
+  await expect(tabs).toHaveCount(8);
+  await expect(tabs.locator('b')).toHaveText(['Empresa', 'Identidade', 'Documentos', 'Notificações', 'Backup', 'Zeramento', 'Sistema', 'Armazenamento']);
   const tops = await tabs.evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
   expect(new Set(tops).size).toBe(1);
   for (const hidden of ['orders', 'messages', 'finance']) {
