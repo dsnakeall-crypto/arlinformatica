@@ -51,6 +51,7 @@ class FinanceExpensesTest extends TestCase
             ->assertJsonPath('total_cents', 20000)
             ->assertJsonPath('quick_entries_cents', 20000)
             ->assertJsonPath('expense_cents', 3500)
+            ->assertJsonPath('net_cents', 16500)
             ->assertJsonPath('daily_expenses.2026-09-09', 3500)
             ->assertJsonCount(1, 'expenses');
         $this->getJson('/api/finance/month?period=2026-08')->assertOk()
@@ -129,7 +130,13 @@ class FinanceExpensesTest extends TestCase
 
         $this->assertDatabaseHas('service_orders', ['id' => $order, 'total_cents' => 15000]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'service_order.refund_created', 'subject_type' => 'service_order', 'subject_id' => $order]);
-        $this->getJson('/api/finance/month?period=2026-09')->assertJsonPath('refund_cents', 10000)->assertJsonPath('outflow_cents', 10000);
+        $this->getJson('/api/finance/month?period=2026-09')
+            ->assertJsonPath('total_cents', 15000)
+            ->assertJsonPath('refund_cents', 10000)
+            ->assertJsonPath('outflow_cents', 10000)
+            ->assertJsonPath('net_cents', 5000)
+            ->assertJsonPath('methods.pix.entry_cents', 15000)
+            ->assertJsonPath('methods.pix.outflow_cents', 10000);
         $this->getJson("/api/orders/$order/audit-history")->assertJsonFragment(['action' => 'Estorno da OS']);
     }
 

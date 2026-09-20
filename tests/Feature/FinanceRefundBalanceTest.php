@@ -137,6 +137,19 @@ class FinanceRefundBalanceTest extends TestCase
         $this->assertDatabaseHas('service_order_refunds', [
             'service_order_id' => $this->order->id, 'amount_cents' => 3000, 'method' => 'pix',
         ]);
+        $this->postJson('/api/finance/expenses', [
+            'spent_on' => '2026-09-12', 'description' => 'Material da bancada',
+            'category' => 'usage_material', 'amount_cents' => 1200,
+        ])->assertCreated();
+        $this->getJson('/api/finance/month?period=2026-09')->assertOk()
+            ->assertJsonPath('total_cents', 13000)
+            ->assertJsonPath('refund_cents', 3000)
+            ->assertJsonPath('expense_cents', 1200)
+            ->assertJsonPath('net_cents', 8800)
+            ->assertJsonPath('methods.debit.entry_cents', 13000)
+            ->assertJsonPath('methods.debit.outflow_cents', 0)
+            ->assertJsonPath('methods.pix.entry_cents', 0)
+            ->assertJsonPath('methods.pix.outflow_cents', 3000);
         $this->postJson("/api/orders/{$this->order->id}/refunds", [
             'amount_cents' => 100, 'method' => 'debit', 'reason' => 'Forma não permitida',
         ])->assertUnprocessable();

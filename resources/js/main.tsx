@@ -37,6 +37,10 @@ import {
   EllipsisVertical,
   Star,
   Instagram,
+  BarChart3,
+  CalendarDays,
+  CircleDollarSign,
+  ReceiptText,
 } from "lucide-react";
 import "../css/app.css";
 import "../css/homologation.css";
@@ -48,7 +52,6 @@ import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
 import {
   OrderPaymentFigures,
-  MonthlyRefundNote,
 } from "./finance-refund-summary";
 import { FinanceDate } from "./finance-date";
 type Page =
@@ -2307,13 +2310,14 @@ function FinancePage({ role, openOrder }: any) {
   if (loading) return <div className="state">Carregando financeiro real…</div>;
   if (error) return <div className="state error">{error}</div>;
   const canReport = role === "Master" || role === "Administrador";
-  const tabs = [
-    ["overview", "Visão Geral"],
-    ["daily", "Caixa Diário"],
-    ["moves", "Movimentações"],
-    ["receivables", "A Receber"],
-    ["month", "Mensal"],
-    ...(canReport ? [["reports", "Relatórios"]] : []),
+  const tabs: [string, string, React.ComponentType<any>][] = [
+    ["overview", "Visão Geral", LayoutDashboard],
+    ["daily", "Caixa Diário", Clock3],
+    ["moves", "Movimentações", ReceiptText],
+    ["receivables", "A Receber", CircleDollarSign],
+    ["month", "Mensal", CalendarDays],
+    ...(canReport ? [["reports", "Relatórios", BarChart3] as [string, string, React.ComponentType<any>]] : []),
+    ["expenses", "Despesas", Wallet],
   ];
   const issue = async () => {
     const d = await api("/finance/reports", {
@@ -2343,9 +2347,10 @@ function FinancePage({ role, openOrder }: any) {
     };
   });
   const received = month?.total_cents || 0,
-    spent = month?.outflow_cents || 0,
-    remaining = received - spent,
-    moved = received + spent;
+    refunded = month?.refund_cents || 0,
+    expenses = month?.expense_cents || 0,
+    remaining = month?.net_cents ?? received - refunded - expenses,
+    receivedAfterRefunds = received - refunded;
   const percentage = (value: number, total = received) =>
     total > 0 ? Math.round((value / total) * 100) : 0;
   const compare = (value: number, old: number) =>
@@ -2359,6 +2364,8 @@ function FinancePage({ role, openOrder }: any) {
     ["pix", "Pix", Landmark],
     ["credit", "Cartão de crédito", CreditCard],
     ["debit", "Cartão de débito", CreditCard],
+    ["transfer", "Transferência", Landmark],
+    ["other", "Outro", Wallet],
   ] as const;
   const openMoves = (filter: string) => {
     setMoveFilter(filter);
@@ -2427,24 +2434,30 @@ function FinancePage({ role, openOrder }: any) {
           </>
         }
       />
-      <section className="finance-main-hero" aria-label="Recebido no mês">
-        <small>RECEBIDO NO MÊS</small>
-        <strong>{monthLoading ? "…" : money(received)}</strong>
-        {!monthLoading && (
-          <MonthlyRefundNote
-            received={received}
-            refunded={month?.refund_cents || 0}
-          />
-        )}
+      <section className="finance-main-hero" aria-label="Resumo financeiro do mês">
+        {[
+          ["Recebido no mês", received, "inflow"],
+          ["Estornos", refunded, "outflow"],
+          ["Despesas", expenses, "outflow"],
+          ["Líquido", remaining, "net"],
+        ].map(([label, value, kind]: any) => (
+          <article className={kind} key={label}>
+            <small>{label}</small>
+            <strong>{monthLoading ? "…" : money(value)}</strong>
+          </article>
+        ))}
         <span>{period.split("-").reverse().join("/")}</span>
       </section>
-      <div className="finance-tabs">
-        {tabs.map(([v, l]) => (
+      <div className="finance-tabs" role="tablist" aria-label="Seções do Financeiro">
+        {tabs.map(([v, l, Icon]) => (
           <button
             key={v}
             className={tab === v ? "active" : ""}
             onClick={() => setTab(v)}
+            role="tab"
+            aria-selected={tab === v}
           >
+            <Icon aria-hidden="true" />
             {l}
           </button>
         ))}
@@ -2463,8 +2476,11 @@ function FinancePage({ role, openOrder }: any) {
             <h2 id="payment-method-title">Formas de pagamento</h2>
             <div className="payment-method-grid">
               {methods.map(([key, label, Icon]) => {
-                const value = month?.methods?.[key]?.total_cents || 0,
-                  pct = percentage(value);
+                const method = month?.methods?.[key] || {},
+                  entry = method.entry_cents || 0,
+                  outflow = method.outflow_cents || 0,
+                  net = method.net_cents ?? entry - outflow,
+                  pct = percentage(net, remaining);
                 return (
                   <article key={key}>
                     <div className={`method-icon ${key}`}>
@@ -2472,11 +2488,12 @@ function FinancePage({ role, openOrder }: any) {
                     </div>
                     <div>
                       <small>{label}</small>
-                      <strong>{money(value)}</strong>
+                      <strong className="amount-positive">Entrada {money(entry)}</strong>
+                      <b className="amount-negative">Saída − {money(outflow)}</b>
                       <div className="percent-track">
-                        <i style={{ width: `${pct}%` }} />
+                        <i style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
                       </div>
-                      <span>{pct}% do total</span>
+                      <span>{pct}% do líquido</span>
                     </div>
                   </article>
                 );
@@ -2489,20 +2506,20 @@ function FinancePage({ role, openOrder }: any) {
           >
             <h2 id="origin-title">De onde vêm as entradas</h2>
             {[
-              ["Serviços/OS", month?.service_orders_cents || 0, "orders"],
+              ["Serviços/OS após estornos", month?.service_orders_net_cents || 0, "orders"],
               ["Entrada Rápida", month?.quick_entries_cents || 0, "quick"],
             ].map(([label, value, key]: any) => (
               <article key={key}>
                 <div>
                   <b>{label}</b>
                   <span>
-                    {money(value)} · {percentage(value)}%
+                    {money(value)} · {percentage(value, receivedAfterRefunds)}%
                   </span>
                 </div>
                 <div className="origin-track">
                   <i
                     className={key}
-                    style={{ width: `${percentage(value)}%` }}
+                    style={{ width: `${Math.max(0, Math.min(100, percentage(value, receivedAfterRefunds)))}%` }}
                   />
                 </div>
               </article>
@@ -2513,11 +2530,11 @@ function FinancePage({ role, openOrder }: any) {
             aria-label="Totais do período"
           >
             {[
-              ["Total Entradas", received, "entries"],
-              ["Total Saídas", spent, "outflows"],
-              ["Total Movimentado", moved, "all"],
+              ["Entradas brutas", received, "entries", "positive"],
+              ["Estornos", refunded, "refund", "negative"],
+              ["Despesas", expenses, "expense", "negative"],
             ].map(([label, value, filter]: any) => (
-              <article key={label}>
+              <article className={filter === "entries" ? "positive" : "negative"} key={label}>
                 <small>{label}</small>
                 <strong>{money(value)}</strong>
                 <button onClick={() => openMoves(filter)}>
@@ -2703,29 +2720,22 @@ function FinancePage({ role, openOrder }: any) {
             aria-label="Indicadores gerenciais"
           >
             {[
-              ["Receita", received, previous?.total_cents || 0],
-              ["Despesas", spent, previous?.outflow_cents || 0],
+              ["Recebido", received, previous?.total_cents || 0],
+              ["Estornos", refunded, previous?.refund_cents || 0],
+              ["Despesas", expenses, previous?.expense_cents || 0],
               [
-                "Lucro Líquido",
+                "Líquido",
                 remaining,
-                (previous?.total_cents || 0) - (previous?.outflow_cents || 0),
-              ],
-              [
-                "Margem",
-                received ? Math.round((remaining / received) * 100) : 0,
-                previous?.total_cents
-                  ? Math.round(
-                      ((previous.total_cents - previous.outflow_cents) /
-                        previous.total_cents) *
-                        100,
-                    )
-                  : 0,
+                previous?.net_cents ??
+                  (previous?.total_cents || 0) -
+                    (previous?.refund_cents || 0) -
+                    (previous?.expense_cents || 0),
               ],
             ].map(([label, value, old]: any) => (
               <article key={label}>
                 <small>{label}</small>
                 <strong>
-                  {label === "Margem" ? `${value}%` : money(value)}
+                  {money(value)}
                 </strong>
                 <span
                   className={compare(value, old) >= 0 ? "positive" : "negative"}
@@ -2752,6 +2762,26 @@ function FinancePage({ role, openOrder }: any) {
             <button onClick={() => openMoves("refund")}>Ver lançamentos</button>
           </section>
         </>
+      )}
+      {tab === "expenses" && (
+        <section className="panel finance-expenses">
+          <h2>Despesas do mês</h2>
+          <div className="finance-table-wrap">
+            <table className="finance-table">
+              <thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th>Valor</th></tr></thead>
+              <tbody>
+                {month?.expenses?.length ? month.expenses.map((row: any) => (
+                  <tr key={row.id}>
+                    <td>{brazilianDate(row.spent_on)}</td>
+                    <td>{row.category === "merchandise_purchase" ? "Compra de mercadoria" : row.category === "usage_material" ? "Material de uso" : "Sem categoria"}</td>
+                    <td>{row.description}</td>
+                    <td className="amount-negative">− {money(row.amount_cents)}</td>
+                  </tr>
+                )) : <tr><td colSpan={4}>Nenhuma despesa no mês selecionado.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
       <QuickEntry
         open={quick}
