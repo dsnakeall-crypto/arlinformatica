@@ -160,6 +160,10 @@ for (const [index, status] of statuses.entries()) {
         await expect(closedRow.getByText('Interrompida', { exact: true })).toBeVisible();
       } else {
         await expect(closedRow.getByText('Interrompida', { exact: true })).toHaveCount(0);
+        await closedPanel.getByRole('button', { name: 'Ver finalizadas', exact: true }).click();
+        const tabs = page.getByRole('tablist', { name: 'Filtrar ordens' });
+        await expect(tabs.getByRole('button', { name: 'Finalizadas', exact: true })).toHaveClass(/active/);
+        await expect(page).toHaveURL(/\/orders\?tab=finalized$/);
       }
     }
   });

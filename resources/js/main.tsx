@@ -665,11 +665,11 @@ function StatusPaymentModal({ order, onClose, onSaved }: any) {
     </div>
   );
 }
-function Orders({ open, role }: any) {
+function Orders({ open, role, initialTab = "progress" }: any) {
   const [items, setItems] = useState<Order[]>([]),
     [meta, setMeta] = useState<any>({}),
     [q, setQ] = useState(""),
-    [tab, setTab] = useState("progress"),
+    [tab, setTab] = useState(initialTab),
     [page, setPage] = useState(1),
     [perPage, setPerPage] = useState(50),
     [loading, setLoading] = useState(true),
@@ -690,6 +690,10 @@ function Orders({ open, role }: any) {
       .finally(() => setLoading(false));
   };
   useEffect(load, [q, tab, page, perPage]);
+  useEffect(() => {
+    setTab(initialTab);
+    setPage(1);
+  }, [initialTab]);
   const changeStatus = async (o: Order, next: string) => {
     if (next === "interrupted") {
       setInterrupt(o);
@@ -2991,6 +2995,9 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
                 <h2>Fechadas recentemente</h2>
                 <p>OS concluídas e interrompidas desta semana.</p>
               </div>
+              <button type="button" onClick={() => go("orders", undefined, undefined, "finalized")}>
+                Ver finalizadas
+              </button>
             </div>
             <OrderTable
               items={closedItems}
@@ -5014,6 +5021,11 @@ function App() {
     initialOrderId ? "orders" : pathPage || "dashboard",
   );
   const [detail, setDetail] = useState<number | undefined>(initialOrderId);
+  const [ordersTab, setOrdersTab] = useState(() =>
+    new URLSearchParams(location.search).get("tab") === "finalized"
+      ? "finalized"
+      : "progress",
+  );
   const [clientHistoryOrigin, setClientHistoryOrigin] = useState<{
     clientId: number;
     orderId: number;
@@ -5042,9 +5054,10 @@ function App() {
     });
     location.assign("/login");
   };
-  const go = (p: Page, id?: number, action?: "edit" | "reopen") => {
+  const go = (p: Page, id?: number, action?: "edit" | "reopen", ordersInitialTab?: string) => {
     setOrderAction(action);
     if (p === "desk") p = "dashboard";
+    if (p === "orders" && !id) setOrdersTab(ordersInitialTab || "progress");
     setClientHistoryOrigin(undefined);
     setPage(p);
     setDetail(id);
@@ -5052,7 +5065,13 @@ function App() {
     history.replaceState(
       null,
       "",
-      id ? `/orders/${id}` : p === "dashboard" ? "/" : `/${p}`,
+      id
+        ? `/orders/${id}`
+        : p === "dashboard"
+          ? "/"
+          : p === "orders" && ordersInitialTab
+            ? `/orders?tab=${ordersInitialTab}`
+            : `/${p}`,
     );
   };
   useEffect(() => {
@@ -5287,7 +5306,7 @@ function App() {
         ) : page === "dashboard" ? (
           <Dashboard go={go} role={me?.role} mobileLayout={mobileLayout} />
         ) : page === "orders" ? (
-          <Orders open={go} role={me?.role} />
+          <Orders open={go} role={me?.role} initialTab={ordersTab} />
         ) : page === "clients" ? (
           <Clients
             role={me?.role}
