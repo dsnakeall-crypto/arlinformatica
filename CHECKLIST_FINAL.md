@@ -134,3 +134,30 @@
 - [OK] Sintaxe PHP, Pint e TypeScript typecheck.
 - [PENDENTE] Testes PHP e E2E, por instrução expressa deste bloco.
 - [PENDENTE] Push, por instrução expressa deste bloco.
+
+# Checklist final — Bloco F Parte 1: Aparência e texto
+
+## Orçamento e painel
+
+- [OK] Resultado da busca do orçamento possui cantos arredondados e conteúdo alinhado à esquerda junto do ícone.
+- [OK] Ações dos orçamentos possuem espaçamento sem alterar cores, tamanhos, formatos ou rótulos.
+- [OK] Botão Adicionar serviços reutiliza o seletor completo já usado na finalização.
+- [OK] Ver finalizadas abre diretamente a aba Finalizadas das Ordens de Serviço.
+
+## Mobile e texto
+
+- [OK] Modo Mobile/Tablet não exibe o menu hambúrguer e mantém somente OS abertas, Nova OS e Clientes na barra fixa.
+- [OK] Campos de texto livre e descrições usam o corretor ortográfico nativo do navegador ou dispositivo.
+
+## Assinatura técnica
+
+- [OK] Processamento preserva o canal alfa de PNG transparente, com fundo claro na tela e no PDF.
+- [OK] Master e Administrador podem remover a assinatura após confirmação; arquivo, configuração e auditoria são atualizados.
+- [OK] Tela e PDF permanecem funcionais sem assinatura cadastrada.
+
+## Validação executada
+
+- [OK] TypeScript typecheck e build de produção com Vite.
+- [OK] Sintaxe PHP e Pint nos arquivos PHP alterados.
+- [PENDENTE] Testes PHP e E2E, por instrução expressa deste bloco.
+- [PENDENTE] Push, por instrução expressa deste bloco.
