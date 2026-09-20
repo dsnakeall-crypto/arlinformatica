@@ -42,6 +42,14 @@ test('catálogos de serviços e produtos são separados e preservam produtos exi
   await expect(row).toContainText('R$ 79,90');
   await expect(row).toContainText('Estoque: 4');
 
+  await row.getByRole('button', { name: 'Entrada de estoque', exact: true }).click();
+  const stockDialog = page.getByRole('dialog', { name: 'Entrada de estoque' });
+  await stockDialog.getByLabel('Quantidade da entrada').fill('2');
+  await stockDialog.getByLabel('Motivo da entrada').fill('Compra de mercadoria para o teste E2E');
+  await stockDialog.getByRole('button', { name: 'Somar ao estoque', exact: true }).click();
+  row = page.locator('.services-row').filter({ hasText: itemName });
+  await expect(row).toContainText('Estoque: 6');
+
   await row.getByRole('button', { name: 'Editar', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Editar produto' });
   await expect(dialog).toBeVisible();

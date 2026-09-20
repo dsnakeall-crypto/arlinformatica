@@ -37,8 +37,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/catalogs/checklist', [CatalogController::class, 'checklist']);
     Route::get('/catalogs/{catalog}', [CatalogController::class, 'index']);
     Route::middleware('role:Master,Administrador')->group(function () {
+        Route::get('/catalogs/products/{id}/stock-movements', [CatalogController::class, 'stockMovements'])->whereNumber('id');
         Route::post('/catalogs/{catalog}', [CatalogController::class, 'store']);
         Route::patch('/catalogs/{catalog}/{id}', [CatalogController::class, 'update']);
+        Route::post('/catalogs/products/{id}/stock-entries', [CatalogController::class, 'stockEntry'])->whereNumber('id');
         Route::post('/catalogs/checklist/options', [CatalogController::class, 'storeChecklist']);
         Route::patch('/catalogs/checklist/options/{id}', [CatalogController::class, 'updateChecklist']);
         Route::get('/storage/statistics', [StorageController::class, 'statistics']);

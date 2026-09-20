@@ -7,6 +7,7 @@ use App\Models\ServiceOrder;
 use App\Models\StatusHistory;
 use App\Services\CompanySettings;
 use App\Services\ContactLinks;
+use App\Services\InventoryService;
 use App\Services\NotificationService;
 use App\Services\OrderNumber;
 use App\Services\PhotoOptimizer;
@@ -98,7 +99,7 @@ class ServiceOrderController extends Controller
         return response()->json($orders);
     }
 
-    public function store(Request $r, OrderNumber $numbers, NotificationService $notifications): JsonResponse
+    public function store(Request $r, OrderNumber $numbers, NotificationService $notifications, InventoryService $inventory): JsonResponse
     {
         $data = $r->validate([
             'client_id' => 'required|exists:clients,id',
@@ -135,38 +136,18 @@ class ServiceOrderController extends Controller
             return ['label' => $template->label, 'note' => $template->allows_note ? trim($item['note']) : null];
         })->all();
 
-        $requestedItems = collect($data['items'] ?? [])->groupBy('catalog_id')->mapWithKeys(function ($rows, $catalogId) {
-            $quantity = (int) $rows->sum('quantity');
-            abort_if($quantity > 999, 422, 'A quantidade de um item da OS não pode ultrapassar 999.');
-
-            return [(int) $catalogId => $quantity];
-        });
-        $catalogs = DB::table('service_catalog')->whereIn('id', $requestedItems->keys())->where('active', true)->get()->keyBy('id');
-        abort_unless($catalogs->count() === $requestedItems->count(), 422, 'Um serviço ou produto selecionado não está mais disponível.');
-        $data['items'] = $requestedItems->map(function (int $quantity, int $catalogId) use ($catalogs) {
-            $catalog = $catalogs->get($catalogId);
-            $warranty = $catalog->warranty_enabled ? [
-                'enabled' => true,
-                'term' => (int) $catalog->warranty_term,
-                'unit' => $catalog->warranty_unit,
-            ] : null;
-
-            return [
-                'catalog_id' => $catalog->id,
-                'description' => $catalog->name,
-                'quantity' => $quantity,
-                'unit_price_cents' => (int) $catalog->price_cents,
-                'subtotal_cents' => $quantity * (int) $catalog->price_cents,
-                'warranty_snapshot' => $warranty,
-            ];
-        })->values()->all();
-
-        $order = DB::transaction(function () use ($data, $numbers, $r) {
+        $order = DB::transaction(function () use ($data, $numbers, $r, $inventory) {
             $client = Client::findOrFail($data['client_id']);
             $order = ServiceOrder::create([...$data, 'number' => $numbers->next(), 'status' => 'analysis', 'received_at' => now(), 'created_by' => $r->user()->id]);
             $order->histories()->create(['to_status' => 'analysis', 'user_id' => $r->user()->id]);
             $order->checklists()->createMany($data['checklist'] ?? []);
-            $order->items()->createMany($data['items'] ?? []);
+            $items = $inventory->syncActiveOrderItems(
+                $order,
+                $data['items'] ?? [],
+                $r->user()->id,
+                'Produto adicionado na abertura da OS '.$order->number,
+            );
+            $order->items()->createMany($items);
             $order->snapshot()->create(['client' => $client->toArray(), 'company' => $this->companySnapshot(), 'equipment' => ['type_id' => $data['equipment_type_id'], 'manufacturer_id' => $data['manufacturer_id'] ?? null], 'term_text' => $this->term()]);
 
             return $order;
@@ -224,7 +205,7 @@ class ServiceOrderController extends Controller
         return Storage::disk($record->disk)->response($record->path, "OS-{$order->number}-{$record->id}.webp", ['Content-Type' => $record->mime, 'Cache-Control' => 'private, max-age=3600']);
     }
 
-    public function updateStatus(Request $r, ServiceOrder $order): JsonResponse
+    public function updateStatus(Request $r, ServiceOrder $order, InventoryService $inventory): JsonResponse
     {
         $data = $r->validate([
             'status' => 'required|in:analysis,waiting_part,in_service,completed,interrupted,paid',
@@ -326,7 +307,7 @@ class ServiceOrderController extends Controller
         abort_if(in_array($order->status, ['completed', 'interrupted'], true), 422, 'Uma OS fechada não pode voltar ao fluxo por alteração de status.');
 
         if ($data['status'] === 'interrupted') {
-            DB::transaction(function () use ($order, $data, $r) {
+            DB::transaction(function () use ($order, $data, $r, $inventory) {
                 $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
                 abort_if(in_array($locked->status, ['completed', 'interrupted'], true) || $locked->archived, 409, 'Esta OS já está fechada.');
                 abort_if(
@@ -345,6 +326,11 @@ class ServiceOrderController extends Controller
                     'items_count' => DB::table('service_order_items')->where('service_order_id', $locked->id)->whereNull('finalization_id')->count(),
                 ];
 
+                $inventory->returnActiveOrderProducts(
+                    $locked,
+                    $r->user()->id,
+                    'Devolução por interrupção da OS '.$locked->number,
+                );
                 DB::table('service_order_items')->where('service_order_id', $locked->id)->whereNull('finalization_id')->delete();
                 $locked->forceFill([
                     'status' => 'interrupted',

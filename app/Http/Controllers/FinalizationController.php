@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ServiceOrder;
 use App\Services\CompanySettings;
 use App\Services\DocumentService;
+use App\Services\InventoryService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class FinalizationController extends Controller
 {
     private const RESULTS = ['repair_completed', 'irreparable', 'client_cancelled', 'economically_unviable', 'no_fault', 'other'];
 
-    public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents): JsonResponse
+    public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents, InventoryService $inventory): JsonResponse
     {
         abort_if($order->status === 'completed', 409, 'A OS já possui uma finalização imutável.');
         abort_if($order->status === 'interrupted', 409, 'Uma OS interrompida já está fechada e não pode ser finalizada nem reaberta.');
@@ -83,16 +84,17 @@ class FinalizationController extends Controller
             throw ValidationException::withMessages(['is_paid' => 'Não é possível registrar pagamento para uma OS com total zerado.']);
         }
         $snapshot = ['company' => $company, 'order' => $order->toArray(), 'result_label' => $resultLabel, 'photos' => $photos, 'show_item_warranties' => $showItemWarranties, 'payment' => ['is_paid' => $isPaid, 'method' => $paymentMethod]];
-        $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot, $isPaid, $paymentMethod) {
+        $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot, $isPaid, $paymentMethod, $inventory) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             abort_if(in_array($locked->status, ['completed', 'interrupted'], true), 409, 'A OS já foi fechada e não pode ser finalizada.');
+            $inventory->assertFinalProductsAlreadyApplied($locked, $data['items']);
             $previous = DB::table('service_order_finalizations')->where('service_order_id', $order->id)->orderByDesc('revision')->first();
             $revision = ((int) ($previous->revision ?? 0)) + 1;
             $id = DB::table('service_order_finalizations')->insertGetId(['service_order_id' => $order->id, 'revision' => $revision, 'result' => $data['result'], 'result_other' => $data['result_other'] ?? null, 'technical_report' => $data['technical_report'] ?? null, 'subtotal_cents' => $subtotal, 'discount_cents' => $data['discount_cents'], 'total_cents' => $total, 'snapshot' => json_encode($snapshot), 'completed_by' => $request->user()->id, 'completed_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
             DB::table('service_order_items')->where('service_order_id', $order->id)->whereNull('finalization_id')->delete();
             foreach ($data['items'] as $item) {
                 $warranty = ! empty($item['warranty_enabled']) ? ['enabled' => true, 'term' => (int) $item['warranty_term'], 'unit' => $item['warranty_unit'], 'description' => $item['warranty_description'] ?? null] : null;
-                DB::table('service_order_items')->insert(['service_order_id' => $order->id, 'finalization_id' => $id, 'catalog_id' => $item['catalog_id'] ?? null, 'source_budget_id' => $data['approved_budget_id'] ?? null, 'description' => $item['description'], 'quantity' => $item['quantity'], 'unit_price_cents' => $item['unit_price_cents'], 'subtotal_cents' => $item['quantity'] * $item['unit_price_cents'], 'warranty_snapshot' => $warranty ? json_encode($warranty) : null, 'created_at' => now(), 'updated_at' => now()]);
+                DB::table('service_order_items')->insert(['service_order_id' => $order->id, 'finalization_id' => $id, 'catalog_id' => $item['catalog_id'] ?? null, 'source_budget_id' => $data['approved_budget_id'] ?? null, 'description' => $item['description'], 'quantity' => $item['quantity'], 'stock_applied_quantity' => 0, 'unit_price_cents' => $item['unit_price_cents'], 'subtotal_cents' => $item['quantity'] * $item['unit_price_cents'], 'warranty_snapshot' => $warranty ? json_encode($warranty) : null, 'created_at' => now(), 'updated_at' => now()]);
             }
             $before = $order->status;
             $order->update(['status' => 'completed', 'completed_at' => now(), 'result' => $data['result'], 'technical_report' => $data['technical_report'] ?? null, 'subtotal_cents' => $subtotal, 'discount_cents' => $data['discount_cents'], 'total_cents' => $total]);

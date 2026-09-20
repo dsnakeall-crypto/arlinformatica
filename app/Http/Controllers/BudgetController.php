@@ -14,7 +14,7 @@ class BudgetController extends Controller
     public function index(ServiceOrder $order): JsonResponse
     {
         return response()->json(DB::table('budgets')->where('service_order_id', $order->id)->whereNull('deleted_at')->orderByDesc('revision')->get()->map(function ($budget) {
-            $budget->items = DB::table('budget_items')->where('budget_id', $budget->id)->get();
+            $budget->items = $this->itemsWithStock($budget->id);
             $budget->used_in_finalization = DB::table('service_order_items')->where('source_budget_id', $budget->id)->whereNotNull('finalization_id')->exists();
 
             return $budget;
@@ -42,7 +42,7 @@ class BudgetController extends Controller
 
             return DB::table('budgets')->find($id);
         });
-        $items = DB::table('budget_items')->where('budget_id', $budget->id)->get()->map(fn ($x) => (array) $x)->all();
+        $items = $this->itemsWithStock($budget->id)->map(fn ($x) => (array) $x)->all();
         $snapshot = json_decode($budget->snapshot, true);
         $documents->issue($order, 'budget', ['budget' => (array) $budget, 'items' => $items, 'company' => $snapshot['company'], 'order' => $order->load('client')->toArray()], $request->user()->id, $budget->revision);
 
@@ -87,5 +87,23 @@ class BudgetController extends Controller
         });
 
         return response()->json(['deleted' => true]);
+    }
+
+    private function itemsWithStock(int $budgetId)
+    {
+        return DB::table('budget_items')
+            ->leftJoin('service_catalog', 'service_catalog.id', '=', 'budget_items.catalog_id')
+            ->where('budget_items.budget_id', $budgetId)
+            ->orderBy('budget_items.id')
+            ->get([
+                'budget_items.*',
+                'service_catalog.category as catalog_category',
+                'service_catalog.stock_quantity as available_stock',
+            ])
+            ->each(function ($item) {
+                $item->stock_warning = $item->catalog_category === 'product' && (int) $item->available_stock === 0
+                    ? 'Sem estoque'
+                    : null;
+            });
     }
 }

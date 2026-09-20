@@ -165,5 +165,12 @@ class ServiceCatalogUsageTest extends TestCase
             'warranty_term' => 12,
             'warranty_unit' => 'months',
         ]);
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id' => $response->json('id'),
+            'type' => 'entry',
+            'quantity' => 10,
+            'balance_after' => 10,
+            'reason' => 'Saldo inicial do cadastro do produto',
+        ]);
     }
 }

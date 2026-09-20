@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\Audit;
+use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +47,7 @@ class CatalogController extends Controller
         return response()->json($query->get());
     }
 
-    public function store(Request $request, string $catalog, Audit $audit): JsonResponse
+    public function store(Request $request, string $catalog, Audit $audit, InventoryService $inventory): JsonResponse
     {
         $table = self::TABLES[$catalog] ?? abort(404);
         abort_unless(in_array($catalog, ['equipment', 'manufacturers', 'services', 'products'], true), 404);
@@ -63,11 +64,50 @@ class CatalogController extends Controller
         if (in_array($catalog, ['services', 'products'], true)) {
             $data['category'] = $catalog === 'products' ? 'product' : 'service';
         }
-        $id = DB::table($table)->insertGetId($data + ['active' => true, 'created_at' => now(), 'updated_at' => now()]);
-        $record = DB::table($table)->find($id);
-        $audit->record($request, 'catalog.created', $table, $id, null, $record);
+        $initialStock = $catalog === 'products' ? (int) ($data['stock_quantity'] ?? 0) : 0;
+        if ($catalog === 'products') {
+            $data['stock_quantity'] = 0;
+        }
+        $record = DB::transaction(function () use ($data, $table, $catalog, $initialStock, $request, $audit, $inventory) {
+            $id = DB::table($table)->insertGetId($data + ['active' => true, 'created_at' => now(), 'updated_at' => now()]);
+            if ($catalog === 'products' && $initialStock > 0) {
+                $inventory->addStock($id, $initialStock, 'Saldo inicial do cadastro do produto', $request->user()->id);
+            }
+            $created = DB::table($table)->find($id);
+            $audit->record($request, 'catalog.created', $table, $id, null, $created);
+
+            return $created;
+        });
 
         return response()->json($record, 201);
+    }
+
+    public function stockMovements(int $id): JsonResponse
+    {
+        abort_unless(DB::table('service_catalog')->where('id', $id)->where('category', 'product')->exists(), 404);
+
+        return response()->json(DB::table('stock_movements')
+            ->leftJoin('users', 'users.id', '=', 'stock_movements.user_id')
+            ->where('product_id', $id)
+            ->latest('stock_movements.id')
+            ->limit(100)
+            ->get(['stock_movements.*', 'users.name as user_name']));
+    }
+
+    public function stockEntry(Request $request, int $id, InventoryService $inventory): JsonResponse
+    {
+        $data = $request->validate([
+            'quantity' => 'required|integer|min:1|max:4294967295',
+            'reason' => 'required|string|max:500',
+        ]);
+        $record = $inventory->addStock(
+            $id,
+            (int) $data['quantity'],
+            trim($data['reason']),
+            $request->user()->id,
+        );
+
+        return response()->json($record);
     }
 
     public function update(Request $request, string $catalog, int $id, Audit $audit): JsonResponse

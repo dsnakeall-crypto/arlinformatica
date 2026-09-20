@@ -1,6 +1,7 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Ban, Box, CheckCircle2, Pencil, Plus, RotateCcw, Search, ShieldCheck, Wrench, X } from 'lucide-react';
+import { Ban, Box, CheckCircle2, History, PackagePlus, Pencil, Plus, RotateCcw, Search, ShieldCheck, Wrench, X } from 'lucide-react';
 import '../css/services-page.css';
+import '../css/stock-management.css';
 import PageHeader from './page-header';
 
 type ServiceItem = {
@@ -24,6 +25,16 @@ type Draft = {
   warranty_enabled: boolean;
   warranty_term: number;
   warranty_unit: 'days' | 'months' | 'years';
+};
+
+type StockMovement = {
+  id: number;
+  type: 'entry' | 'order_out' | 'order_return';
+  quantity: number;
+  balance_after: number;
+  reason: string;
+  user_name?: string | null;
+  created_at: string;
 };
 
 const emptyDraft = (): Draft => ({
@@ -98,6 +109,8 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [stockEntry, setStockEntry] = useState<{ item: ServiceItem; quantity: number; reason: string } | null>(null);
+  const [stockHistory, setStockHistory] = useState<{ item: ServiceItem; rows: StockMovement[] } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -208,6 +221,40 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
     warranty_unit: item.warranty_unit || 'days',
   });
 
+  const openStockHistory = async (item: ServiceItem) => {
+    setBusy(true);
+    setError('');
+    try {
+      const rows = await api(`/catalogs/products/${item.id}/stock-movements`);
+      setStockHistory({ item, rows });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Não foi possível carregar as movimentações.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveStockEntry = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!stockEntry) return;
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      await api(`/catalogs/products/${stockEntry.item.id}/stock-entries`, {
+        method: 'POST',
+        body: JSON.stringify({ quantity: stockEntry.quantity, reason: stockEntry.reason.trim() }),
+      });
+      setStockEntry(null);
+      setMessage('Entrada de estoque registrada e somada ao saldo atual.');
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Não foi possível registrar a entrada.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const singular = product ? 'produto' : 'serviço';
   const plural = product ? 'produtos' : 'serviços';
 
@@ -280,10 +327,12 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
           <span className={`services-type-icon ${product ? 'product' : 'service'}`}><TypeIcon category={product ? 'product' : 'service'} /></span>
           <div className="services-row-main">
             <b>{item.name}</b>
-            <small><span className={`services-state ${item.active ? 'active' : 'inactive'}`}>{item.active ? 'Ativo' : 'Inativo'}</span> · {money(item.price_cents)} · {product ? `Produto · Estoque: ${item.stock_quantity}` : 'Serviço'}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ''}</small>
+            <small><span className={`services-state ${item.active ? 'active' : 'inactive'}`}>{item.active ? 'Ativo' : 'Inativo'}</span> · {money(item.price_cents)} · {product ? `Produto · Estoque: ${item.stock_quantity}` : 'Serviço'}{product && item.stock_quantity === 1 ? ' · Última unidade em estoque' : ''}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ''}</small>
           </div>
           <span className="services-usage"><b>{usage(item)}</b><small>uso em OS</small></span>
           <div className="services-row-actions">
+            {product && <button type="button" className="services-stock-entry" onClick={() => setStockEntry({ item, quantity: 1, reason: '' })}><PackagePlus aria-hidden="true" />Entrada de estoque</button>}
+            {product && <button type="button" className="services-history" disabled={busy} onClick={() => void openStockHistory(item)}><History aria-hidden="true" />Movimentações</button>}
             <button type="button" className="services-edit" onClick={() => openEdit(item)}><Pencil aria-hidden="true" />Editar</button>
             <button type="button" className={item.active ? 'services-disable' : 'services-reactivate'} disabled={busy} onClick={() => void toggleActive(item)}>{item.active ? <Ban aria-hidden="true" /> : <RotateCcw aria-hidden="true" />}{item.active ? 'Desativar' : 'Reativar'}</button>
           </div>
@@ -302,6 +351,25 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
         {edit.warranty_enabled && <div className="services-edit-warranty"><label className="services-field"><span>Duração</span><input type="number" min="1" max="9999" value={edit.warranty_term} onChange={(event) => setEdit({ ...edit, warranty_term: Number(event.target.value) || 1 })} /></label><label className="services-field"><span>Unidade</span><select value={edit.warranty_unit} onChange={(event) => setEdit({ ...edit, warranty_unit: event.target.value as Draft['warranty_unit'] })}><option value="days">Dias</option><option value="months">Meses</option><option value="years">Anos</option></select></label></div>}
         <div className="actions"><button type="button" onClick={() => setEdit(null)}>Cancelar</button><button className="primary" disabled={busy}><CheckCircle2 aria-hidden="true" />{busy ? 'Salvando…' : 'Salvar alterações'}</button></div>
       </form>
+    </div>}
+
+    {stockEntry && <div className="modal services-modal" role="dialog" aria-modal="true" aria-label="Entrada de estoque">
+      <form className="modal-card services-edit-card" onSubmit={saveStockEntry}>
+        <button type="button" className="modal-close" aria-label="Fechar entrada de estoque" onClick={() => setStockEntry(null)}><X aria-hidden="true" /></button>
+        <div className="services-section-heading"><span className="services-heading-icon"><PackagePlus aria-hidden="true" /></span><div><h2>Entrada de estoque</h2><p>{stockEntry.item.name} · saldo atual: {stockEntry.item.stock_quantity}</p></div></div>
+        <label className="services-field"><span>Quantidade a somar</span><input aria-label="Quantidade da entrada" type="number" min="1" step="1" value={stockEntry.quantity} onChange={(event) => setStockEntry({ ...stockEntry, quantity: Math.max(1, Number(event.target.value) || 1) })} /></label>
+        <label className="services-field"><span>Motivo</span><input aria-label="Motivo da entrada" required maxLength={500} value={stockEntry.reason} onChange={(event) => setStockEntry({ ...stockEntry, reason: event.target.value })} placeholder="Ex.: compra de mercadoria ou brinde recebido" /></label>
+        <div className="actions"><button type="button" onClick={() => setStockEntry(null)}>Cancelar</button><button className="primary" disabled={busy || !stockEntry.reason.trim()}><PackagePlus aria-hidden="true" />{busy ? 'Registrando…' : 'Somar ao estoque'}</button></div>
+      </form>
+    </div>}
+
+    {stockHistory && <div className="modal services-modal" role="dialog" aria-modal="true" aria-label="Movimentações de estoque">
+      <div className="modal-card services-edit-card services-stock-history">
+        <button type="button" className="modal-close" aria-label="Fechar movimentações" onClick={() => setStockHistory(null)}><X aria-hidden="true" /></button>
+        <div className="services-section-heading"><span className="services-heading-icon"><History aria-hidden="true" /></span><div><h2>Movimentações de estoque</h2><p>{stockHistory.item.name}</p></div></div>
+        {stockHistory.rows.length ? <div className="services-stock-history-list">{stockHistory.rows.map((row) => <article key={row.id}><div><b>{row.type === 'entry' ? 'Entrada' : row.type === 'order_out' ? 'Baixa em OS' : 'Devolução de OS'}</b><small>{new Date(row.created_at).toLocaleString('pt-BR')} · {row.user_name || 'Usuário'}</small></div><strong>{row.type === 'order_out' ? '-' : '+'}{row.quantity}</strong><p>{row.reason}</p><small>Saldo após movimento: {row.balance_after}</small></article>)}</div> : <div className="services-empty">Nenhuma movimentação registrada.</div>}
+        <div className="actions"><button type="button" onClick={() => setStockHistory(null)}>Fechar</button></div>
+      </div>
     </div>}
   </div>;
 }
