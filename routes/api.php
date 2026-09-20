@@ -6,6 +6,7 @@ use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientImportController;
+use App\Http\Controllers\DatabaseResetController;
 use App\Http\Controllers\DiagnosticController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FinalizationController;
@@ -62,6 +63,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/backups/{backup}/download', [BackupController::class, 'download']);
         Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware('throttle:2,10');
         Route::delete('/backups/{backup}', [BackupController::class, 'destroy']);
+        Route::get('/database-reset/preview', [DatabaseResetController::class, 'preview']);
+        Route::post('/database-reset/prepare', [DatabaseResetController::class, 'prepare'])->middleware('throttle:2,10');
+        Route::post('/database-reset', [DatabaseResetController::class, 'destroy'])->middleware('throttle:2,10');
         Route::get('/diagnostics', [DiagnosticController::class, 'show']);
         Route::post('/diagnostics/push-test', [DiagnosticController::class, 'testPush'])->middleware('throttle:3,10');
     });

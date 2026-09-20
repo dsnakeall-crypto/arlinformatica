@@ -51,6 +51,7 @@ import "../css/arl-ui-system.css";
 import "../css/action-icons.css";
 import ServicesCatalogPage, { ProductsCatalogPage } from "./services-page";
 import ClientsPage from "./clients-page";
+import DatabaseResetPanel from "./database-reset";
 import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
 import ServiceProductSearch from "./service-product-search";
@@ -3651,6 +3652,7 @@ function SettingsPage({ role }: any) {
     ...(role === "Master"
       ? [
           ["backup", "Backup", "▦"],
+          ["reset", "Zeramento", "⚠"],
           ["system", "Sistema", "⌁"],
         ]
       : []),
@@ -3821,6 +3823,7 @@ function SettingsPage({ role }: any) {
       {role === "Master" && ["backup", "system"].includes(section) && (
         <InfrastructureSettings section={section} />
       )}
+      {role === "Master" && section === "reset" && <DatabaseResetPanel />}
       {section === "storage" && <StorageAdmin role={role} />}
       {section === "notifications" && <PushSettings />}
     </>

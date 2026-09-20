@@ -112,3 +112,25 @@
 - [OK] PDFs curto (1 página) e longo (3 páginas) renderizados com Poppler e inspecionados visualmente página a página.
 - [PENDENTE] Suítes completas, por instrução expressa deste bloco.
 - [PENDENTE] Push, por instrução expressa deste bloco.
+
+# Checklist final — Bloco E: Backup e zeramento
+
+## Backup
+
+- [OK] Backups existentes são listados com ações de baixar e apagar.
+- [OK] Backup manual é validado, entregue para download e removido do servidor após a resposta.
+- [OK] Backup automático mantém somente os dois arquivos mais recentes.
+- [OK] Geração continua em PHP puro, sem subprocessos, e só informa sucesso após validar existência e tamanho do ZIP.
+
+## Zeramento
+
+- [OK] Interface e endpoints estão restritos ao perfil Master.
+- [OK] A confirmação exige backup recente validado, contagens visíveis, senha do Master e a frase exata `ZERAR BANCO`.
+- [OK] Dados operacionais, usuários secundários e arquivos de OS são removidos; configurações, modelos e catálogos estruturais são preservados.
+- [OK] Contador da OS e sequência de clientes voltam ao início, com auditoria preservada para a operação.
+
+## Validação executada
+
+- [OK] Sintaxe PHP, Pint e TypeScript typecheck.
+- [PENDENTE] Testes PHP e E2E, por instrução expressa deste bloco.
+- [PENDENTE] Push, por instrução expressa deste bloco.
