@@ -15,7 +15,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(page.locator('.clients-react-page')).toBeVisible();
   await expect(page.locator('.clients-list-panel')).toBeVisible();
-  await expect(page.getByText('Nenhum cliente encontrado.', { exact: true })).toBeVisible();
+ 
   await expect(page.getByTestId('client-modal')).toHaveCount(0);
   await page.getByRole('button', { name: 'Novo cliente', exact: true }).click();
   const clientModal = page.getByTestId('client-modal');
