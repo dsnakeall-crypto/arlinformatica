@@ -71,3 +71,44 @@
 - [OK] 8 cenários Playwright direcionados de catálogo, edição e detalhe da OS.
 - [PENDENTE] Suítes completas, por instrução expressa deste bloco.
 - [PENDENTE] Push, por instrução expressa deste bloco.
+
+# Checklist final — Bloco D: Tela da OS, regras e PDFs
+
+## Tela da OS e clientes
+
+- [OK] Botões de retorno destacados na ficha da OS e no histórico do cliente, inclusive retorno do histórico para a OS de origem.
+- [OK] Cabeçalho da OS permanece limpo, sem seletor de status e sem ação duplicada de edição da ficha.
+- [OK] Editor unificado da OS possui largura adequada e mantém descrições de serviços legíveis.
+- [OK] Cadastro rápido de cliente na Nova OS funciona apenas com nome, CPF/CNPJ, telefone e endereço.
+- [OK] Ordem aberta acompanha os dados atuais do cliente; ordem concluída preserva o snapshot e os documentos já emitidos.
+- [OK] Limite de cinco fotos aplicado na interface e no backend, com fotos quadradas e arquivo final de até 100 KB.
+
+## Finalização, compartilhamento e regras
+
+- [OK] Aviso de conclusão permanece visível e não bloqueia os modais operacionais da OS.
+- [OK] Link público do PDF final é criado somente ao clicar em abrir ou compartilhar e expira em 48 horas.
+- [OK] Mensagem de WhatsApp usa o PDF final e os dados configurados da empresa.
+- [OK] OS reaberta volta para Em Análise, exibe marcador Reaberta e deixa de aparentar status Pago durante o trabalho.
+- [OK] Refinalização preserva pagamentos e datas anteriores, sem lançamento retroativo de ajuste financeiro.
+- [OK] Se o total refinalizado ficar coberto pelo valor já recebido, a OS volta a Pago; se ficar maior, permanece Aguardando PGTO e cobra apenas o saldo.
+- [OK] Ciclos inconsistentes ou reabertos de pós-venda são ignorados/desativados sem derrubar a listagem.
+
+## PDFs e documentos
+
+- [OK] Papel timbrado A4 repete cabeçalho, marca d'água e rodapé sem cortes em todas as páginas.
+- [OK] PDF final curto permanece com uma página.
+- [OK] PDF final longo pagina a tabela de serviços sem sobreposição ou página vazia artificial.
+- [OK] Campo de assinatura técnica e nomenclatura de garantia estão presentes no fechamento.
+
+## Banco de dados
+
+- [OK] Uma única migration torna opcionais os campos secundários de endereço do cliente.
+
+## Validação executada
+
+- [OK] 25 testes PHP direcionados, 294 asserções.
+- [OK] TypeScript typecheck e build de produção com Vite.
+- [OK] 25 cenários Playwright direcionados para cliente rápido, detalhe/layout, status, quantidade, fluxo operacional, reabertura, financeiro e pós-venda.
+- [OK] PDFs curto (1 página) e longo (3 páginas) renderizados com Poppler e inspecionados visualmente página a página.
+- [PENDENTE] Suítes completas, por instrução expressa deste bloco.
+- [PENDENTE] Push, por instrução expressa deste bloco.
