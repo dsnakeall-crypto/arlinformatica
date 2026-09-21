@@ -85,6 +85,23 @@ test.describe.serial('fluxo operacional principal', () => {
     expect((await page.request.get(`/api/orders/${orderId}/term`)).status()).toBe(200);
   });
 
+  test('Master exclui foto com confirmação e contador atualiza sem recarregar', async ({ page }) => {
+    await page.goto(`/orders/${orderId}`);
+    await expect(page.getByRole('heading', { name: 'Fotos (1/5)' })).toBeVisible();
+    const photo = page.getByRole('button', { name: /Excluir foto/ });
+    await expect(photo).toBeVisible();
+    page.once('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('confirm');
+      expect(dialog.message()).toContain('PDFs já emitidos não serão alterados');
+      await dialog.accept();
+    });
+    await photo.click();
+    await expect(page.getByRole('heading', { name: 'Fotos (0/5)' })).toBeVisible();
+    await expect(page.getByText('Nenhuma foto anexada.', { exact: true })).toBeVisible();
+    const detail = await api(page, `/orders/${orderId}`);
+    expect(detail.body.photos).toHaveLength(0);
+  });
+
   test('gera e aprova orçamento da OS', async ({ page }) => {
     await page.getByRole('button', { name: 'Ordens' }).click();
     await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
