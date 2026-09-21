@@ -5074,6 +5074,8 @@ function App() {
   }>();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [mobileQuickEntry, setMobileQuickEntry] = useState(false);
+  const [mobileLogoutConfirm, setMobileLogoutConfirm] = useState(false);
+  const [mobileLogoutBusy, setMobileLogoutBusy] = useState(false);
   const mobileLayout = layout === "mobile";
   useEffect(() => {
     if (mobileLayout) setMobileMenu(false);
@@ -5308,15 +5310,27 @@ function App() {
                 : "ARL"}
             </strong>
           </div>
-          {mobileLayout && canAdminister && page === "dashboard" && !detail && (
-            <button
-              type="button"
-              className="mobile-quick-entry"
-              aria-label="Abrir Entrada Rápida"
-              onClick={() => setMobileQuickEntry(true)}
-            >
-              <Wallet />
-            </button>
+          {mobileLayout && (
+            <div className="mobile-header-actions">
+              {canAdminister && page === "dashboard" && !detail && (
+                <button
+                  type="button"
+                  className="mobile-quick-entry"
+                  aria-label="Abrir Entrada Rápida"
+                  onClick={() => setMobileQuickEntry(true)}
+                >
+                  <Wallet />
+                </button>
+              )}
+              <button
+                type="button"
+                className="mobile-logout"
+                aria-label="Sair da conta"
+                onClick={() => setMobileLogoutConfirm(true)}
+              >
+                <LogOut />
+              </button>
+            </div>
           )}
           <label className="device-layout">
             Layout{" "}
@@ -5389,6 +5403,20 @@ function App() {
         open={mobileQuickEntry}
         onClose={() => setMobileQuickEntry(false)}
       />
+      {mobileLogoutConfirm && (
+        <div className="modal">
+          <section className="modal-card mobile-logout-confirm" role="dialog" aria-modal="true" aria-label="Confirmar saída">
+            <h1>Deseja realmente sair?</h1>
+            <p>Sua sessão será encerrada neste dispositivo.</p>
+            <div className="actions">
+              <button type="button" disabled={mobileLogoutBusy} onClick={() => setMobileLogoutConfirm(false)}>Cancelar</button>
+              <button type="button" className="primary" disabled={mobileLogoutBusy} onClick={() => { setMobileLogoutBusy(true); void logout(); }}>
+                {mobileLogoutBusy ? "Saindo…" : "Sair"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
