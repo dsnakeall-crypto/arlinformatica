@@ -66,7 +66,7 @@ final class SignatureProcessor
             throw ValidationException::withMessages(['signature' => 'Não foi possível recortar a assinatura.']);
         }
 
-        $scale = min(1, 1000 / imagesx($cropped), 360 / imagesy($cropped));
+        $scale = min(1, 600 / imagesx($cropped), 360 / imagesy($cropped));
         $outputWidth = max(1, (int) round(imagesx($cropped) * $scale));
         $outputHeight = max(1, (int) round(imagesy($cropped) * $scale));
         $output = imagecreatetruecolor($outputWidth, $outputHeight);
