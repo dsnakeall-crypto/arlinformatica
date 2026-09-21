@@ -143,10 +143,10 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     <header className="arl-unified-editor-header"><div className="arl-unified-editor-heading"><span className="arl-unified-editor-icon"><FileText/></span><div><h2>Editar OS #{order.number}</h2><p>Atualize os dados técnicos, o atendimento, o estado físico e os serviços desta OS.</p></div></div><button type="button" className="arl-unified-editor-close" aria-label="Fechar" onClick={close}><X/></button></header>
     <div className="arl-unified-editor-columns">
       <div className="arl-unified-editor-column">
-        <label>Equipamento<textarea aria-label="Equipamento" required maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }}/></label>
-        <label>Fabricante / Modelo / Acessórios<textarea aria-label="Fabricante / Modelo / Acessórios" maxLength={500} value={equipmentDetails} onChange={(event) => { markDirty(); setEquipmentDetails(event.target.value); }}/></label>
+        <label>Equipamento<textarea aria-label="Equipamento" spellCheck={true} required maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }}/></label>
+        <label>Fabricante / Modelo / Acessórios<textarea aria-label="Fabricante / Modelo / Acessórios" spellCheck={true} maxLength={500} value={equipmentDetails} onChange={(event) => { markDirty(); setEquipmentDetails(event.target.value); }}/></label>
         {termIssued && (equipmentChanged || equipmentDetailsChanged) && <div className="notice">O Termo de Recebimento já emitido mantém os dados anteriores do equipamento.</div>}
-        <label>Problema relatado<textarea aria-label="Problema relatado" value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }}/></label>
+        <label>Problema relatado<textarea aria-label="Problema relatado" spellCheck={true} value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }}/></label>
       </div>
       <div className="arl-unified-editor-column">
         <label>Atendimento<select aria-label="Atendimento" value={attendance} onChange={(event) => { markDirty(); setAttendance(event.target.value); }}><option value="bench">Bancada</option><option value="external">Externo</option></select></label>

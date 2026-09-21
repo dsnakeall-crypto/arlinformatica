@@ -22,6 +22,6 @@ export default function TermTextEditor({ value, onChange }: {
     return () => observer.disconnect();
   }, [value]);
 
-  return <textarea ref={ref} data-arl-document-editor="true" name="term_text"
+  return <textarea ref={ref} data-arl-document-editor="true" name="term_text" spellCheck={true}
     style={{ minHeight: 220 }} value={value} onChange={onChange}/>;
 }

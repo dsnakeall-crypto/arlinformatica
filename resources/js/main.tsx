@@ -590,6 +590,7 @@ function InterruptionModal({ order, onClose, onSaved }: any) {
           <span>Motivo *</span>
           <textarea
             aria-label="Motivo da interrupção"
+            spellCheck={true}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             autoFocus
@@ -599,6 +600,7 @@ function InterruptionModal({ order, onClose, onSaved }: any) {
           <span>O que já foi feito no equipamento? *</span>
           <textarea
             aria-label="O que já foi feito no equipamento"
+            spellCheck={true}
             value={workDone}
             onChange={(e) => setWorkDone(e.target.value)}
             placeholder='Se nada foi feito, escreva "Nada".'
@@ -1111,6 +1113,7 @@ function NewOrder({ done }: any) {
                 <span>Problema relatado *</span>
                 <textarea
                   required
+                  spellCheck={true}
                   value={problem}
                   onChange={(e) => setProblem(e.target.value)}
                 />
@@ -1463,6 +1466,7 @@ function FinalizationBox({ order, reload }: any) {
                 {result !== "repair_completed" && "*"}
               </span>
               <textarea
+                spellCheck={true}
                 value={report}
                 onChange={(e) => setReport(e.target.value)}
               />
@@ -1683,6 +1687,7 @@ function ReportBox({ order }: any) {
                 />
               ) : (
                 <textarea
+                  spellCheck={true}
                   value={content[k] || ""}
                   onChange={(e) => set(k, e.target.value)}
                 />
@@ -3247,7 +3252,7 @@ function ReportTemplateSettings() {
       </div>
       <label className="field">
         <span>Orientação do modelo</span>
-        <textarea value={body} onChange={(e) => setBody(e.target.value)} />
+        <textarea spellCheck={true} value={body} onChange={(e) => setBody(e.target.value)} />
       </label>
       <button className="primary" onClick={create}>
         Criar modelo
@@ -3923,6 +3928,7 @@ function BudgetBox({ order }: any) {
             <span>Diagnóstico</span>
             <textarea
               required
+              spellCheck={true}
               value={diagnosis}
               onChange={(e) => setDiagnosis(e.target.value)}
             />
@@ -3931,6 +3937,7 @@ function BudgetBox({ order }: any) {
             <span>Serviço proposto</span>
             <textarea
               required
+              spellCheck={true}
               value={proposal}
               onChange={(e) => setProposal(e.target.value)}
             />
