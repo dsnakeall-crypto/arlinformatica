@@ -18,6 +18,10 @@ test.describe.serial('fluxo operacional principal', () => {
     await modal.locator('label').filter({ hasText: 'Nome' }).locator('input').fill('Funcionário Homologação');
     await modal.locator('label').filter({ hasText: 'Login' }).locator('input').fill('func.homologacao');
     await modal.locator('select').selectOption({ label: 'Funcionário' });
+    await modal.locator('label').filter({ hasText: 'Senha forte' }).locator('input').fill('fraca');
+    await modal.locator('label').filter({ hasText: 'Confirmar senha' }).locator('input').fill('fraca');
+    await modal.getByRole('button', { name: 'Salvar' }).click();
+    await expect(modal.getByRole('alert')).toContainText('A senha precisa conter pelo menos 12 caracteres, uma letra maiúscula, um número, um caractere especial.');
     await modal.locator('label').filter({ hasText: 'Senha forte' }).locator('input').fill(employeePassword);
     await modal.locator('label').filter({ hasText: 'Confirmar senha' }).locator('input').fill(employeePassword);
     await modal.getByRole('button', { name: 'Salvar' }).click();
