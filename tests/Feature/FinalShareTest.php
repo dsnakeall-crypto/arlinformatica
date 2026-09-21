@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -58,7 +59,7 @@ class FinalShareTest extends TestCase
     {
         $url = $this->getJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json('url');
         auth()->logout();
-        $this->get($url)->assertOk()->assertHeader('Content-Type', 'application/pdf')->assertHeader('Cache-Control', 'private, no-store')->assertHeader('Pragma', 'no-cache')->assertHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+        $this->get($url)->assertOk()->assertHeader('Content-Type', 'application/pdf')->assertHeader('Cache-Control', 'no-store, private')->assertHeader('Pragma', 'no-cache')->assertHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
         $this->get($url)->assertOk();
         $stored = DB::table('final_share_tokens')->first();
         $this->assertSame(2, $stored->access_count);
@@ -86,8 +87,10 @@ class FinalShareTest extends TestCase
         $this->get("/share/final/{$this->order->id}")->assertNotFound();
         $this->get("/share/orders/{$this->order->id}/final/1")->assertNotFound();
         $this->get("/share/orders/{$this->order->number}/final/1")->assertNotFound();
-        $this->get("/api/orders/{$this->order->id}/final/1/pdf")->assertRedirect('/login');
-        $this->get("/api/orders/{$this->order->id}/photos/1")->assertRedirect('/login');
+        $this->get("/api/orders/{$this->order->id}/final/1/pdf")->assertUnauthorized();
+        $this->get("/api/orders/{$this->order->id}/photos/1")->assertUnauthorized();
+        Route::middleware('auth')->get('/final-share-web-auth-check', static fn () => response()->noContent());
+        $this->get('/final-share-web-auth-check')->assertRedirect('/login');
     }
 
     public function test_final_pdf_contains_lgpd_processing_notice(): void
