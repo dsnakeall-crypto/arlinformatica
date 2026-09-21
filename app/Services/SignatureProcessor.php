@@ -27,15 +27,20 @@ final class SignatureProcessor
 
         for ($y = 0; $y < $height; $y++) {
             for ($x = 0; $x < $width; $x++) {
-                $rgba = imagecolorat($source, $x, $y);
-                $r = ($rgba >> 16) & 0xFF;
-                $g = ($rgba >> 8) & 0xFF;
-                $b = $rgba & 0xFF;
+                $rgba = imagecolorsforindex($source, imagecolorat($source, $x, $y));
+                $r = $rgba['red'];
+                $g = $rgba['green'];
+                $b = $rgba['blue'];
+                $sourceAlpha = $rgba['alpha'];
+                if ($sourceAlpha >= 127) {
+                    continue;
+                }
                 $darkness = 255 - min($r, $g, $b);
                 if ($darkness < 12) {
                     continue;
                 }
-                $alpha = $darkness >= 55 ? 0 : (int) round(127 * (1 - (($darkness - 12) / 43)));
+                $whiteRemovalAlpha = $darkness >= 55 ? 0 : (int) round(127 * (1 - (($darkness - 12) / 43)));
+                $alpha = max($sourceAlpha, $whiteRemovalAlpha);
                 imagesetpixel($transparent, $x, $y, imagecolorallocatealpha($transparent, $r, $g, $b, max(0, min(127, $alpha))));
                 $minX = min($minX, $x);
                 $minY = min($minY, $y);
@@ -62,13 +67,19 @@ final class SignatureProcessor
         }
 
         $scale = min(1, 1000 / imagesx($cropped), 360 / imagesy($cropped));
-        $output = imagescale($cropped, max(1, (int) round(imagesx($cropped) * $scale)), max(1, (int) round(imagesy($cropped) * $scale)));
-        imagedestroy($cropped);
+        $outputWidth = max(1, (int) round(imagesx($cropped) * $scale));
+        $outputHeight = max(1, (int) round(imagesy($cropped) * $scale));
+        $output = imagecreatetruecolor($outputWidth, $outputHeight);
         if (! $output) {
+            imagedestroy($cropped);
             throw ValidationException::withMessages(['signature' => 'Não foi possível redimensionar a assinatura.']);
         }
 
+        imagealphablending($output, false);
         imagesavealpha($output, true);
+        imagefill($output, 0, 0, imagecolorallocatealpha($output, 0, 0, 0, 127));
+        imagecopyresampled($output, $cropped, 0, 0, 0, 0, $outputWidth, $outputHeight, imagesx($cropped), imagesy($cropped));
+        imagedestroy($cropped);
         ob_start();
         imagepng($output, null, 8);
         $data = (string) ob_get_clean();

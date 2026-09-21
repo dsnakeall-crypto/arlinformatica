@@ -57,8 +57,8 @@ function interruptionDetails(currentReason = '', currentWorkDone = ''): Promise<
     overlay.innerHTML = `<section class="arl-status-modal-card" role="dialog" aria-modal="true" aria-label="Interromper OS">
       <h2>Interromper OS</h2>
       <p class="arl-status-modal-note">A OS será fechada sem lançamento financeiro. Os serviços serão removidos e o total ficará zerado.</p>
-      <label>Motivo da interrupção<textarea data-reason placeholder="Ex.: cliente pediu pausa, aguardando decisão, atendimento suspenso..."></textarea></label>
-      <label>O que já foi feito no equipamento? *<textarea data-work-done placeholder='Se nada foi feito, escreva "Nada".'></textarea></label>
+      <label>Motivo da interrupção<textarea data-reason spellcheck="true" placeholder="Ex.: cliente pediu pausa, aguardando decisão, atendimento suspenso..."></textarea></label>
+      <label>O que já foi feito no equipamento? *<textarea data-work-done spellcheck="true" placeholder='Se nada foi feito, escreva "Nada".'></textarea></label>
       <div class="arl-status-modal-error" data-error></div>
       <div class="arl-status-modal-actions"><button type="button" data-cancel>Cancelar</button><button type="button" class="primary" data-save>Salvar interrupção</button></div>
     </section>`;

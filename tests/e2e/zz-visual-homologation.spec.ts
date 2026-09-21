@@ -136,8 +136,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
-  await page.locator('.menu-toggle').click();
-  await page.locator('aside nav').getByRole('button', { name: 'Painel' }).click();
+  await page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).getByRole('button', { name: 'OS abertas' }).click();
   const mobileHome = page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' });
   await expect(mobileHome).toBeVisible();
   await expect(mobileHome.getByText(`OS #${orderResponse.body.number} · Em Análise`, { exact: true })).toBeVisible();
@@ -203,8 +202,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
-  await page.locator('.menu-toggle').click();
-  await page.locator('aside').getByRole('button', { name: 'Clientes' }).click();
+  await page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await page.getByLabel('Buscar clientes').fill('Cliente Homologação Visual');
   await expect(page.getByText('Cliente Homologação Visual', { exact: true }).first()).toBeVisible();
@@ -234,8 +232,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await expect(mobileHistoryCard.getByRole('link', { name: 'Baixar A4 final · Rev. 1', exact: true })).toHaveAttribute('href', `/api/orders/${orderResponse.body.id}/final/1/pdf`);
   await page.screenshot({ path: 'visual-artifacts/02-clientes-historico-mobile.png', fullPage: true });
 
-  await page.locator('.menu-toggle').click();
-  await page.locator('aside').getByRole('button', { name: 'Nova OS' }).click();
+  await page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).getByRole('button', { name: 'Nova OS' }).click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/03-nova-os-mobile.png', fullPage: true });
 });

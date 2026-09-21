@@ -62,8 +62,10 @@ test('layout oferece dois modos, usa Web/PC por padrão e persiste por dispositi
   await expect(selector).toHaveValue('desktop');
   await expect(selector.locator('option')).toHaveCount(2);
   await expect(selector.locator('option', { hasText: 'Automático' })).toHaveCount(0);
+  await expect(page.getByLabel('Sair da conta')).toHaveCount(0);
   await selector.selectOption('mobile');
   await expect(page.locator('.shell')).toHaveClass(/layout-mobile/);
+  await expect(page.getByLabel('Sair da conta')).toBeVisible();
   await page.reload();
   await expect(selector).toHaveValue('mobile');
   await selector.selectOption('desktop');
@@ -377,12 +379,14 @@ test('logoff encerra a sessão no Web/PC e leva ao login', async ({ page }) => {
   expect((await api(page, '/me')).status).toBe(401);
 });
 
-test('logoff encerra a sessão pelo menu Mobile/Tablet', async ({ page }) => {
+test('logoff encerra a sessão pelo cabeçalho Mobile/Tablet', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.setItem('arl-layout-mode', 'mobile'));
   await login(page);
-  await page.locator('.menu-toggle').click();
-  await page.locator('aside .profile').getByRole('button', { name: 'Sair' }).click();
+  await page.getByLabel('Sair da conta').click();
+  const confirmation = page.getByRole('dialog', { name: 'Confirmar saída' });
+  await expect(confirmation.getByRole('button', { name: 'Cancelar' })).toBeVisible();
+  await confirmation.getByRole('button', { name: 'Sair' }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole('heading', { name: 'Acesso restrito' })).toBeVisible();
 });

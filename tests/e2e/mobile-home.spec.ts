@@ -113,14 +113,12 @@ test('modo Mobile / Tablet ativa a mesma tela inicial mesmo em viewport largo', 
   await expect(page.locator('.arl-mobile-home').getByRole('heading', { name: 'OS abertas' })).toBeVisible();
 });
 
-test('modo Mobile / Tablet preserva destinos autorizados no menu agrupado', async ({ page }) => {
+test('modo Mobile / Tablet exibe somente os três destinos da barra fixa', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('arl-layout-mode', 'mobile'));
   await login(page);
-  await page.goto('/finance');
-  await expect(page).toHaveURL(/\/finance$/);
-  await expect(page.getByRole('heading', { name: 'Financeiro', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Abrir menu' }).click();
-  await expect(page.locator('aside nav').getByRole('button', { name: 'Financeiro' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveCount(0);
+  const bottomBar = page.locator('.arl-global-mobile-nav');
+  await expect(bottomBar.getByRole('button')).toHaveText(['OS abertas', 'Nova OS', 'Clientes']);
 });
 
 test('Web / PC preserva navegação e detalhe completo em viewport estreito', async ({ page }) => {

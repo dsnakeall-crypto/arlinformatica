@@ -59,7 +59,9 @@ test.describe.serial('fluxo operacional principal', () => {
     const manualEquipment = 'Notebook Dell Inspiron 15 + carregador + mouse';
     await page.getByLabel('Equipamento *').fill(manualEquipment);
     await page.getByRole('button', { name: 'ATENDIMENTO EXTERNO' }).click();
-    await page.getByLabel('Problema relatado *').fill('Notebook não liga durante homologação');
+    const reportedProblem = page.getByLabel('Problema relatado *');
+    await expect(reportedProblem).toHaveAttribute('spellcheck', 'true');
+    await reportedProblem.fill('Notebook não liga durante homologação');
     const intakeCondition = 'Carcaça trincada no canto esquerdo e marcas de queda';
     const intakeField = page.getByLabel('Estado físico do equipamento na entrada');
     await expect(intakeField).toHaveAttribute('spellcheck', 'true');
@@ -94,9 +96,15 @@ test.describe.serial('fluxo operacional principal', () => {
     await budgetForm.getByLabel('Diagnóstico').fill('Falha de energia');
     await budgetForm.getByLabel('Serviço proposto').fill('Reparo completo');
     await budgetForm.getByLabel('Validade (dias)').fill('7');
+    await budgetForm.getByRole('button', { name: 'Adicionar serviços' }).click();
+    const catalogPicker = page.getByRole('dialog', { name: 'Selecionar Produto ou Serviço' });
+    await expect(catalogPicker).toBeVisible();
+    await catalogPicker.getByRole('button', { name: 'Fechar seletor' }).click();
     await budgetForm.getByLabel('Buscar serviço ou produto para o orçamento').fill('Formatação');
     const catalogResult = budgetForm.getByRole('button', { name: 'Adicionar Formatação E2E' });
     await expect(catalogResult).toBeVisible();
+    await expect(catalogResult).toHaveCSS('text-align', 'left');
+    expect(parseFloat(await catalogResult.evaluate((element) => getComputedStyle(element).borderRadius))).toBeGreaterThan(0);
     await catalogResult.click();
     const selectedItem = budgetForm.locator('.finish-item').filter({ hasText: 'Formatação' });
     await expect(selectedItem).toBeVisible();

@@ -27,13 +27,9 @@ test('menu agrupa destinos, destaca Nova OS e mostra contadores vindos do backen
 
   await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: 'Abrir menu' }).click();
-  expect(await aside.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
-  const footer = await aside.locator('.profile').boundingBox();
-  const bottomBar = await page.locator('.arl-global-mobile-nav').boundingBox();
-  expect(footer!.y + footer!.height).toBeLessThanOrEqual(bottomBar!.y);
-  for (const groupName of Object.keys(expectedGroups)) await expect(aside.getByRole('heading', { name: groupName, exact: true })).toBeVisible();
-  await expect(aside.getByRole('button', { name: /Ordens/ }).locator('.nav-badge')).toHaveText('7');
+  await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveCount(0);
+  const bottomBar = page.locator('.arl-global-mobile-nav');
+  await expect(bottomBar.getByRole('button')).toHaveText(['OS abertas', 'Nova OS', 'Clientes']);
 });
 
 test('menu recolhe, revela nomes no hover, libera largura e persiste após recarregar', async ({ page }) => {

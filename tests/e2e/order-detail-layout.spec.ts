@@ -124,6 +124,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(workflow.getByRole('heading', { name: 'Laudos técnicos', exact: true }), 'O fluxo reativável de laudos técnicos deve ficar oculto').toHaveCount(0);
   await expect(workflow.getByRole('button', { name: 'GERAR LAUDO TÉCNICO' })).toHaveCount(0);
   await expect(workflow.getByRole('heading', { name: 'Laudo Final', exact: true }), 'O texto livre usado no PDF final deve continuar disponível').toBeVisible();
+  await expect(workflow.locator('.arl-od-report textarea'), 'O laudo final deve manter o corretor ortográfico nativo ativado').toHaveAttribute('spellcheck', 'true');
   await expect(workflow.getByRole('heading', { name: 'Finalização da OS', exact: true }), 'O bloco antigo de finalização não deve permanecer no fim do fluxo').toHaveCount(0);
 
   const paymentCard = workflow.locator('section').filter({ has: page.getByRole('heading', { name: 'Pagamento', exact: true }) }).first();

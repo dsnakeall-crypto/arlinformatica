@@ -69,7 +69,7 @@ function openEdit(order: OrderRow, row: HTMLElement) {
   const overlay = modal(`Editar OS #${order.number}`, `
     <p>Você pode corrigir o tipo de atendimento e o problema relatado. Documentos finais e lançamentos financeiros já emitidos não são alterados.</p>
     <label>Atendimento<select data-attendance><option value="bench">Bancada</option><option value="external">Externo</option></select></label>
-    <label>Problema relatado<textarea data-problem></textarea></label>
+    <label>Problema relatado<textarea data-problem spellcheck="true"></textarea></label>
     <div class="arl-maintenance-actions"><button type="button" data-cancel>Cancelar</button><button type="button" class="primary" data-save>Salvar</button></div>
   `);
   const attendance = overlay.querySelector<HTMLSelectElement>('[data-attendance]')!;

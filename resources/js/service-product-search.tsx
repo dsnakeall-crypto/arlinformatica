@@ -21,6 +21,7 @@ type Props = {
   ariaLabel?: string;
   showBrowseAll?: boolean;
   context?: 'order' | 'budget';
+  browseButtonLabel?: string;
 };
 
 const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
@@ -40,7 +41,7 @@ function ItemDetails({ item }: { item: ServiceProductCatalogItem }) {
   </span>;
 }
 
-export default function ServiceProductSearch({ items, onSelect, ariaLabel = 'Pesquisar Serviço / Produto', showBrowseAll = true, context = 'order' }: Props) {
+export default function ServiceProductSearch({ items, onSelect, ariaLabel = 'Pesquisar Serviço / Produto', showBrowseAll = true, context = 'order', browseButtonLabel = 'Produto/Serviço' }: Props) {
   const [query, setQuery] = useState('');
   const [browseOpen, setBrowseOpen] = useState(false);
   const [tab, setTab] = useState<'service' | 'product'>('service');
@@ -69,7 +70,7 @@ export default function ServiceProductSearch({ items, onSelect, ariaLabel = 'Pes
         <Search aria-hidden="true"/>
         <input type="search" aria-label={ariaLabel} autoComplete="off" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar serviço ou produto"/>
       </label>
-      {showBrowseAll && <button type="button" className="primary arl-service-product-browse" aria-label="Produto/Serviço" aria-expanded={browseOpen} onClick={() => setBrowseOpen(true)}><ListPlus aria-hidden="true"/><span>Produto/Serviço</span></button>}
+      {showBrowseAll && <button type="button" className="primary arl-service-product-browse" aria-label={browseButtonLabel} aria-expanded={browseOpen} onClick={() => setBrowseOpen(true)}><ListPlus aria-hidden="true"/><span>{browseButtonLabel}</span></button>}
     </div>
 
     {query.trim() && <div className="services-list arl-service-product-results" role="list" aria-label="Resultados da busca">

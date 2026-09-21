@@ -192,14 +192,14 @@ const serializeCompanySettings = (data: any) => ({
   phone: String(data.phone || "").replace(/\D/g, ""),
   postal_code: String(data.postal_code || "").replace(/\D/g, ""),
 });
-function Field({ label, name, value, onChange, error, required = false }: any) {
+function Field({ label, name, value, onChange, error, required = false, spellCheck = false }: any) {
   return (
     <label className="field">
       <span>
         {label}
         {required && " *"}
       </span>
-      <input name={name} value={value} onChange={onChange} />
+      <input name={name} value={value} onChange={onChange} spellCheck={spellCheck} />
       {error && <small>{error}</small>}
     </label>
   );
@@ -590,6 +590,7 @@ function InterruptionModal({ order, onClose, onSaved }: any) {
           <span>Motivo *</span>
           <textarea
             aria-label="Motivo da interrupção"
+            spellCheck={true}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             autoFocus
@@ -599,6 +600,7 @@ function InterruptionModal({ order, onClose, onSaved }: any) {
           <span>O que já foi feito no equipamento? *</span>
           <textarea
             aria-label="O que já foi feito no equipamento"
+            spellCheck={true}
             value={workDone}
             onChange={(e) => setWorkDone(e.target.value)}
             placeholder='Se nada foi feito, escreva "Nada".'
@@ -665,11 +667,11 @@ function StatusPaymentModal({ order, onClose, onSaved }: any) {
     </div>
   );
 }
-function Orders({ open, role }: any) {
+function Orders({ open, role, initialTab = "progress" }: any) {
   const [items, setItems] = useState<Order[]>([]),
     [meta, setMeta] = useState<any>({}),
     [q, setQ] = useState(""),
-    [tab, setTab] = useState("progress"),
+    [tab, setTab] = useState(initialTab),
     [page, setPage] = useState(1),
     [perPage, setPerPage] = useState(50),
     [loading, setLoading] = useState(true),
@@ -690,6 +692,10 @@ function Orders({ open, role }: any) {
       .finally(() => setLoading(false));
   };
   useEffect(load, [q, tab, page, perPage]);
+  useEffect(() => {
+    setTab(initialTab);
+    setPage(1);
+  }, [initialTab]);
   const changeStatus = async (o: Order, next: string) => {
     if (next === "interrupted") {
       setInterrupt(o);
@@ -1107,6 +1113,7 @@ function NewOrder({ done }: any) {
                 <span>Problema relatado *</span>
                 <textarea
                   required
+                  spellCheck={true}
                   value={problem}
                   onChange={(e) => setProblem(e.target.value)}
                 />
@@ -1459,6 +1466,7 @@ function FinalizationBox({ order, reload }: any) {
                 {result !== "repair_completed" && "*"}
               </span>
               <textarea
+                spellCheck={true}
                 value={report}
                 onChange={(e) => setReport(e.target.value)}
               />
@@ -1679,6 +1687,7 @@ function ReportBox({ order }: any) {
                 />
               ) : (
                 <textarea
+                  spellCheck={true}
                   value={content[k] || ""}
                   onChange={(e) => set(k, e.target.value)}
                 />
@@ -2028,6 +2037,7 @@ function QuickEntry({ open, onClose, onSaved }: any) {
           label="Descrição curta (opcional)"
           value={description}
           onChange={(e: any) => setDescription(e.target.value)}
+          spellCheck
         />
         <Field
           label="Valor recebido (R$)"
@@ -2125,6 +2135,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
           value={description}
           onChange={(e: any) => setDescription(e.target.value)}
           required
+          spellCheck
         />
         <Field
           label="Valor (R$)"
@@ -2991,6 +3002,9 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
                 <h2>Fechadas recentemente</h2>
                 <p>OS concluídas e interrompidas desta semana.</p>
               </div>
+              <button type="button" onClick={() => go("orders", undefined, undefined, "finalized")}>
+                Ver finalizadas
+              </button>
             </div>
             <OrderTable
               items={closedItems}
@@ -3238,7 +3252,7 @@ function ReportTemplateSettings() {
       </div>
       <label className="field">
         <span>Orientação do modelo</span>
-        <textarea value={body} onChange={(e) => setBody(e.target.value)} />
+        <textarea spellCheck={true} value={body} onChange={(e) => setBody(e.target.value)} />
       </label>
       <button className="primary" onClick={create}>
         Criar modelo
@@ -3593,6 +3607,7 @@ function SettingsPage({ role }: any) {
   const [section, setSection] = useState("company");
   const [logo, setLogo] = useState<File | null>(null);
   const [signature, setSignature] = useState<File | null>(null);
+  const [removingSignature, setRemovingSignature] = useState(false);
   useEffect(() => {
     api("/settings")
       .then((settings: any) => setData(formatCompanySettings(settings)))
@@ -3643,6 +3658,21 @@ function SettingsPage({ role }: any) {
     if (e.target.name === "phone") value = masks.phone(value);
     if (e.target.name === "postal_code") value = masks.cep(value);
     setData({ ...data, [e.target.name]: value });
+  };
+  const removeSignature = async () => {
+    if (!window.confirm("Remover a assinatura técnica cadastrada? Os PDFs futuros serão emitidos sem a imagem.")) return;
+    setRemovingSignature(true);
+    setMessage("");
+    try {
+      await api("/settings/signature", { method: "DELETE" });
+      setData((current: any) => ({ ...current, technical_signature_configured: false }));
+      setSignature(null);
+      setMessage("Assinatura técnica removida.");
+    } catch (error: any) {
+      setMessage(error.message || "Não foi possível remover a assinatura técnica.");
+    } finally {
+      setRemovingSignature(false);
+    }
   };
   const tabs = [
     ["company", "Empresa", "▣"],
@@ -3799,7 +3829,15 @@ function SettingsPage({ role }: any) {
                   onChange={(e) => setSignature(e.target.files?.[0] || null)}
                 />
               </label>
-              {data.technical_signature_configured && !signature && <img className="technical-signature-preview" src="/api/settings/signature" alt="Assinatura técnica cadastrada"/>}
+              {data.technical_signature_configured && !signature && (
+                <div className="technical-signature-current">
+                  <img className="technical-signature-preview" src="/api/settings/signature" alt="Assinatura técnica cadastrada"/>
+                  <button type="button" disabled={removingSignature} onClick={() => void removeSignature()}>
+                    <Trash2 aria-hidden="true"/>
+                    {removingSignature ? "Removendo…" : "Remover assinatura técnica"}
+                  </button>
+                </div>
+              )}
             </>
           )}
           {section === "documents" && (
@@ -3890,6 +3928,7 @@ function BudgetBox({ order }: any) {
             <span>Diagnóstico</span>
             <textarea
               required
+              spellCheck={true}
               value={diagnosis}
               onChange={(e) => setDiagnosis(e.target.value)}
             />
@@ -3898,6 +3937,7 @@ function BudgetBox({ order }: any) {
             <span>Serviço proposto</span>
             <textarea
               required
+              spellCheck={true}
               value={proposal}
               onChange={(e) => setProposal(e.target.value)}
             />
@@ -4961,6 +5001,22 @@ function App() {
     document.documentElement.dataset.layout = layout;
     localStorage.setItem("arl-layout-mode", layout);
   }, [layout]);
+  useEffect(() => {
+    const enableNativeSpellcheck = (root: ParentNode) => {
+      if (root instanceof HTMLTextAreaElement) root.spellcheck = true;
+      root.querySelectorAll<HTMLTextAreaElement>("textarea").forEach((field) => {
+        field.spellcheck = true;
+      });
+    };
+    enableNativeSpellcheck(document);
+    const observer = new MutationObserver((entries) => {
+      entries.forEach((entry) => entry.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) enableNativeSpellcheck(node);
+      }));
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
   useEffect(
     () =>
       localStorage.setItem("arl-sidebar-collapsed", String(sidebarCollapsed)),
@@ -5014,13 +5070,23 @@ function App() {
     initialOrderId ? "orders" : pathPage || "dashboard",
   );
   const [detail, setDetail] = useState<number | undefined>(initialOrderId);
+  const [ordersTab, setOrdersTab] = useState(() =>
+    new URLSearchParams(location.search).get("tab") === "finalized"
+      ? "finalized"
+      : "progress",
+  );
   const [clientHistoryOrigin, setClientHistoryOrigin] = useState<{
     clientId: number;
     orderId: number;
   }>();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [mobileQuickEntry, setMobileQuickEntry] = useState(false);
+  const [mobileLogoutConfirm, setMobileLogoutConfirm] = useState(false);
+  const [mobileLogoutBusy, setMobileLogoutBusy] = useState(false);
   const mobileLayout = layout === "mobile";
+  useEffect(() => {
+    if (mobileLayout) setMobileMenu(false);
+  }, [mobileLayout]);
   const canAdminister = me?.role === "Master" || me?.role === "Administrador";
   const loadNavigationSummary = () =>
     api("/navigation-summary")
@@ -5042,9 +5108,10 @@ function App() {
     });
     location.assign("/login");
   };
-  const go = (p: Page, id?: number, action?: "edit" | "reopen") => {
+  const go = (p: Page, id?: number, action?: "edit" | "reopen", ordersInitialTab?: string) => {
     setOrderAction(action);
     if (p === "desk") p = "dashboard";
+    if (p === "orders" && !id) setOrdersTab(ordersInitialTab || "progress");
     setClientHistoryOrigin(undefined);
     setPage(p);
     setDetail(id);
@@ -5052,7 +5119,13 @@ function App() {
     history.replaceState(
       null,
       "",
-      id ? `/orders/${id}` : p === "dashboard" ? "/" : `/${p}`,
+      id
+        ? `/orders/${id}`
+        : p === "dashboard"
+          ? "/"
+          : p === "orders" && ordersInitialTab
+            ? `/orders?tab=${ordersInitialTab}`
+            : `/${p}`,
     );
   };
   useEffect(() => {
@@ -5228,13 +5301,15 @@ function App() {
         }
       >
         <header className="app-head">
-          <button
-            className="menu-toggle"
-            aria-label="Abrir menu"
-            onClick={() => setMobileMenu(true)}
-          >
-            <Menu />
-          </button>
+          {!mobileLayout && (
+            <button
+              className="menu-toggle"
+              aria-label="Abrir menu"
+              onClick={() => setMobileMenu(true)}
+            >
+              <Menu />
+            </button>
+          )}
           <div className="mobile-logo">
             <strong>
               {mobileLayout && page === "dashboard" && !detail
@@ -5242,15 +5317,27 @@ function App() {
                 : "ARL"}
             </strong>
           </div>
-          {mobileLayout && canAdminister && page === "dashboard" && !detail && (
-            <button
-              type="button"
-              className="mobile-quick-entry"
-              aria-label="Abrir Entrada Rápida"
-              onClick={() => setMobileQuickEntry(true)}
-            >
-              <Wallet />
-            </button>
+          {mobileLayout && (
+            <div className="mobile-header-actions">
+              {canAdminister && page === "dashboard" && !detail && (
+                <button
+                  type="button"
+                  className="mobile-quick-entry"
+                  aria-label="Abrir Entrada Rápida"
+                  onClick={() => setMobileQuickEntry(true)}
+                >
+                  <Wallet />
+                </button>
+              )}
+              <button
+                type="button"
+                className="mobile-logout"
+                aria-label="Sair da conta"
+                onClick={() => setMobileLogoutConfirm(true)}
+              >
+                <LogOut />
+              </button>
+            </div>
           )}
           <label className="device-layout">
             Layout{" "}
@@ -5287,7 +5374,7 @@ function App() {
         ) : page === "dashboard" ? (
           <Dashboard go={go} role={me?.role} mobileLayout={mobileLayout} />
         ) : page === "orders" ? (
-          <Orders open={go} role={me?.role} />
+          <Orders open={go} role={me?.role} initialTab={ordersTab} />
         ) : page === "clients" ? (
           <Clients
             role={me?.role}
@@ -5323,6 +5410,20 @@ function App() {
         open={mobileQuickEntry}
         onClose={() => setMobileQuickEntry(false)}
       />
+      {mobileLogoutConfirm && (
+        <div className="modal">
+          <section className="modal-card mobile-logout-confirm" role="dialog" aria-modal="true" aria-label="Confirmar saída">
+            <h1>Deseja realmente sair?</h1>
+            <p>Sua sessão será encerrada neste dispositivo.</p>
+            <div className="actions">
+              <button type="button" disabled={mobileLogoutBusy} onClick={() => setMobileLogoutConfirm(false)}>Cancelar</button>
+              <button type="button" className="primary" disabled={mobileLogoutBusy} onClick={() => { setMobileLogoutBusy(true); void logout(); }}>
+                {mobileLogoutBusy ? "Saindo…" : "Sair"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

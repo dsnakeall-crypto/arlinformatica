@@ -277,7 +277,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
       <div className="services-create-grid">
         <label className="services-field services-name-field">
           <span>Nome / descrição</span>
-          <input aria-label={`Nome ou descrição do ${singular}`} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Nome / descrição" />
+          <input aria-label={`Nome ou descrição do ${singular}`} spellCheck={true} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Nome / descrição" />
         </label>
         <label className="services-field">
           <span>Valor (R$)</span>
@@ -344,7 +344,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
       <form className="modal-card services-edit-card" onSubmit={saveEdit}>
         <button type="button" className="modal-close" aria-label="Fechar edição" onClick={() => setEdit(null)}><X aria-hidden="true" /></button>
         <div className="services-section-heading"><span className="services-heading-icon"><Pencil aria-hidden="true" /></span><div><h2>Editar {singular}</h2><p>Alterações futuras não modificam o histórico das OS já abertas.</p></div></div>
-        <label className="services-field"><span>Nome / descrição</span><input value={edit.name} onChange={(event) => setEdit({ ...edit, name: event.target.value })} /></label>
+        <label className="services-field"><span>Nome / descrição</span><input spellCheck={true} value={edit.name} onChange={(event) => setEdit({ ...edit, name: event.target.value })} /></label>
         <label className="services-field"><span>Valor (R$)</span><input inputMode="decimal" value={edit.price} onChange={(event) => setEdit({ ...edit, price: event.target.value })} /></label>
         {product && <label className="services-field"><span>Quantidade em estoque</span><input aria-label="Quantidade atual em estoque" type="number" value={edit.stock_quantity} readOnly /><small>Use a ação de entrada de estoque para acrescentar unidades.</small></label>}
         <label className="services-warranty-toggle compact"><input type="checkbox" checked={edit.warranty_enabled} onChange={(event) => setEdit({ ...edit, warranty_enabled: event.target.checked })} /><span><ShieldCheck aria-hidden="true" /><b>Garantia adicional</b></span></label>
@@ -358,7 +358,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
         <button type="button" className="modal-close" aria-label="Fechar entrada de estoque" onClick={() => setStockEntry(null)}><X aria-hidden="true" /></button>
         <div className="services-section-heading"><span className="services-heading-icon"><PackagePlus aria-hidden="true" /></span><div><h2>Entrada de estoque</h2><p>{stockEntry.item.name} · saldo atual: {stockEntry.item.stock_quantity}</p></div></div>
         <label className="services-field"><span>Quantidade a somar</span><input aria-label="Quantidade da entrada" type="number" min="1" step="1" value={stockEntry.quantity} onChange={(event) => setStockEntry({ ...stockEntry, quantity: Math.max(1, Number(event.target.value) || 1) })} /></label>
-        <label className="services-field"><span>Motivo</span><input aria-label="Motivo da entrada" required maxLength={500} value={stockEntry.reason} onChange={(event) => setStockEntry({ ...stockEntry, reason: event.target.value })} placeholder="Ex.: compra de mercadoria ou brinde recebido" /></label>
+        <label className="services-field"><span>Motivo</span><input aria-label="Motivo da entrada" spellCheck={true} required maxLength={500} value={stockEntry.reason} onChange={(event) => setStockEntry({ ...stockEntry, reason: event.target.value })} placeholder="Ex.: compra de mercadoria ou brinde recebido" /></label>
         <div className="actions"><button type="button" onClick={() => setStockEntry(null)}>Cancelar</button><button className="primary" disabled={busy || !stockEntry.reason.trim()}><PackagePlus aria-hidden="true" />{busy ? 'Registrando…' : 'Somar ao estoque'}</button></div>
       </form>
     </div>}
