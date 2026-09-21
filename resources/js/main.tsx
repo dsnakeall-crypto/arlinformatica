@@ -3869,6 +3869,7 @@ function SettingsPage({ role }: any) {
   );
 }
 function BudgetBox({ order }: any) {
+  const statusName: Record<string, string> = { draft: "Rascunho", sent: "Enviado", approved: "Aprovado", refused: "Recusado" };
   const [list, setList] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [validity, setValidity] = useState(7);
@@ -4006,8 +4007,7 @@ function BudgetBox({ order }: any) {
       {list.length ? (
         list.map((b) => (
           <p>
-            Revisão {b.revision} · {b.status} · R${" "}
-            {(b.total_cents / 100).toFixed(2)} ·{" "}
+            Revisão {b.revision} · {statusName[b.status] || b.status} · {money(b.total_cents)} ·{" "}
             <a
               target="_blank"
               href={`/api/orders/${order.id}/budgets/${b.revision}/pdf`}

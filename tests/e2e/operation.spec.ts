@@ -117,8 +117,10 @@ test.describe.serial('fluxo operacional principal', () => {
     await budgetForm.getByRole('button', { name: 'Salvar e gerar PDF' }).click();
     const budgetsSection = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Orçamentos', exact: true }) });
     await expect(budgetsSection.getByText(/Revisão 1/)).toBeVisible();
+    await expect(budgetsSection.getByText(/Revisão 1 · Rascunho · R\$ 150,00/)).toBeVisible();
     await expect(budgetsSection.getByRole('link', { name: 'Abrir PDF' })).toHaveAttribute('href', `/api/orders/${orderId}/budgets/1/pdf`);
     await budgetsSection.getByRole('button', { name: 'Marcar enviado' }).click();
+    await expect(budgetsSection.getByText(/Revisão 1 · Enviado · R\$ 150,00/)).toBeVisible();
     await expect(budgetsSection.getByRole('button', { name: 'Aprovar orçamento' })).toBeVisible();
     const approvalRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/budgets/1/status`) && request.method() === 'PATCH');
     await budgetsSection.getByRole('button', { name: 'Aprovar orçamento' }).click();
@@ -126,6 +128,7 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(approvalPayload).toEqual({ status: 'approved' });
     expect(approvalPayload).not.toHaveProperty('copy_items');
     await expect(budgetsSection.getByRole('button', { name: 'Aprovar orçamento' })).toHaveCount(0);
+    await expect(budgetsSection.getByText(/Revisão 1 · Aprovado · R\$ 150,00/)).toBeVisible();
 
     const services = await api(page, '/catalogs/services');
     const formatting = services.body.find((row: any) => row.name === 'Formatação E2E');
