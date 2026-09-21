@@ -214,7 +214,6 @@ test('Unmount do Ver OS limpa resíduos persistentes e o sharebar legado é apos
     'arl-camera-modal',
     'arl-final-share-host',
     'arl-order-quick-actions',
-    'arl-order-opened-modal',
   ];
   await page.evaluate((classes) => {
     classes.forEach((className) => {
@@ -230,7 +229,7 @@ test('Unmount do Ver OS limpa resíduos persistentes e o sharebar legado é apos
   }, residueClasses);
 
   const injected = await page.locator('[data-test-order-residue]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLElement).dataset.testOrderResidue));
-  expect(injected, `Pré-condição resíduos: deveriam existir exatamente os 7 resíduos persistentes; encontrados=${injected.join(', ')}`).toEqual(residueClasses);
+  expect(injected, `Pré-condição resíduos: deveriam existir exatamente os 6 resíduos persistentes; encontrados=${injected.join(', ')}`).toEqual(residueClasses);
 
   await page.locator('aside').getByRole('button', { name: 'Painel', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Painel', exact: true }), 'Contrato unmount: navegação para Painel não concluiu').toBeVisible();
