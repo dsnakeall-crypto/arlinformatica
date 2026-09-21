@@ -9,7 +9,6 @@ use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -89,8 +88,7 @@ class FinalShareTest extends TestCase
         $this->get("/share/orders/{$this->order->number}/final/1")->assertNotFound();
         $this->get("/api/orders/{$this->order->id}/final/1/pdf")->assertUnauthorized();
         $this->get("/api/orders/{$this->order->id}/photos/1")->assertUnauthorized();
-        Route::middleware('auth')->get('/final-share-web-auth-check', static fn () => response()->noContent());
-        $this->get('/final-share-web-auth-check')->assertRedirect('/login');
+        $this->get('/')->assertOk()->assertSee('Acesso restrito')->assertSee('id="login-form"', false);
     }
 
     public function test_final_pdf_contains_lgpd_processing_notice(): void

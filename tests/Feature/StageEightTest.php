@@ -14,6 +14,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionMethod;
+use RuntimeException;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -126,15 +127,21 @@ class StageEightTest extends TestCase
     public function test_invalid_zip_checksum_manifest_and_zip_slip_are_rejected(): void
     {
         $master = $this->user('Master', 'master');
-        $this->actingAs($master)->post('/api/backups/upload', ['backup' => UploadedFile::fake()->create('invalid.zip', 1, 'application/zip')])->assertSessionHasErrors('backup');
-        $path = tempnam(sys_get_temp_dir(), 'arl-');
-        $zip = new ZipArchive;
-        $zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-        $zip->addFromString('../attack.php', '<?php');
-        $zip->addFromString('manifest.json', '{}');
-        $zip->close();
-        $this->expectExceptionMessage('caminho inseguro');
-        app(BackupService::class)->validate($path);
+        $this->actingAs($master)->post('/api/backups/upload', ['backup' => UploadedFile::fake()->create('invalid.zip', 1, 'application/zip')])->assertUnprocessable()->assertJsonValidationErrors('backup');
+        $this->assertBackupArchiveRejected([
+            'checksums.json' => '{}',
+            'manifest.json' => json_encode(['format_version' => config('backup.format_version'), 'payload_sha256' => 'invalido']),
+        ], 'Checksum do manifesto inválido');
+        $this->assertBackupArchiveRejected([
+            'database/migrations.json' => '[]',
+            'checksums.json' => json_encode(['database/migrations.json' => str_repeat('0', 64)]),
+            'manifest.json' => json_encode(['format_version' => config('backup.format_version'), 'payload_sha256' => hash('sha256', json_encode(['database/migrations.json' => str_repeat('0', 64)]))]),
+        ], 'Integridade inválida');
+        $this->assertBackupArchiveRejected([
+            '../attack.php' => '<?php',
+            'checksums.json' => '{}',
+            'manifest.json' => '{}',
+        ], 'caminho inseguro');
     }
 
     public function test_automatic_retention_and_scheduler_heartbeat(): void
@@ -185,5 +192,25 @@ class StageEightTest extends TestCase
     private function user(string $role, string $login): User
     {
         return User::create(['role_id' => Role::where('name', $role)->value('id'), 'name' => $role, 'login' => $login, 'password' => 'Senha#Forte123', 'active' => true]);
+    }
+
+    private function assertBackupArchiveRejected(array $entries, string $message): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'arl-');
+        $zip = new ZipArchive;
+        $zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        foreach ($entries as $name => $content) {
+            $zip->addFromString($name, $content);
+        }
+        $zip->close();
+
+        try {
+            app(BackupService::class)->validate($path);
+            $this->fail('O backup inválido foi aceito.');
+        } catch (RuntimeException $exception) {
+            $this->assertStringContainsString($message, $exception->getMessage());
+        } finally {
+            @unlink($path);
+        }
     }
 }
