@@ -673,7 +673,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
     [q, setQ] = useState(""),
     [tab, setTab] = useState(initialTab),
     [page, setPage] = useState(1),
-    [perPage, setPerPage] = useState(50),
+    [perPage, setPerPage] = useState(12),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
     [interrupt, setInterrupt] = useState<Order>(),
@@ -837,7 +837,8 @@ function Orders({ open, role, initialTab = "progress" }: any) {
                 setPage(1);
               }}
             >
-              <option value="50">50</option>
+              <option value="12">12</option>
+              <option value="30">30</option>
               <option value="100">100</option>
             </select>
           </label>

@@ -63,7 +63,11 @@ class ServiceOrderController extends Controller
         match ((string) $r->query('sort', 'recent')) {
             'oldest' => $q->oldest('received_at'),
             'client' => $q->orderBy(Client::select('name')->whereColumn('clients.id', 'service_orders.client_id'))->latest('received_at'),
-            default => $tab === 'closed_week' ? $q->latest('completed_at') : $q->latest('received_at'),
+            default => match ($tab) {
+                'closed_week' => $q->latest('completed_at'),
+                'all' => $q->latest('received_at'),
+                default => $q->latest('service_orders.updated_at'),
+            },
         };
 
         $summary = [
@@ -71,7 +75,7 @@ class ServiceOrderController extends Controller
             'completed_week' => ServiceOrder::whereIn('status', ['completed', 'interrupted'])->where('completed_at', '>=', now('America/Sao_Paulo')->startOfWeek())->count(),
         ];
 
-        $perPage = max(1, min(100, (int) $r->integer('per_page', 50)));
+        $perPage = max(1, min(100, (int) $r->integer('per_page', 12)));
 
         $orders = $q->paginate($perPage);
         $orders->getCollection()->transform(function (ServiceOrder $order) {
