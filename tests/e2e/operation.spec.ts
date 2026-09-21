@@ -213,13 +213,13 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(blockedBudget.body?.message).toBe('Não é possível criar orçamento para uma OS fechada.');
     const finalShareResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/final-share`) && response.request().method() === 'GET');
     const popupPromise = page.context().waitForEvent('page');
-    await page.getByRole('status', { name: 'Compartilhar fechamento da OS' }).getByRole('button', { name: 'Enviar PDF pelo WhatsApp' }).click();
+    await page.getByRole('status', { name: 'Compartilhar fechamento da OS' }).getByRole('button', { name: 'Enviar link ao cliente' }).click();
     const whatsappPage = await popupPromise;
     await expect.poll(() => whatsappPage.url()).toMatch(/api\.whatsapp\.com\/send/);
     const finalShareResponse = await finalShareResponsePromise;
     expect(finalShareResponse.status()).toBe(200);
     const finalShare = await finalShareResponse.json();
-    expect(finalShare.url).toContain(`/share/orders/${orderId}/final/1`);
+    expect(new URL(finalShare.url).pathname).toMatch(/^\/share\/final\/[a-f0-9]{64}$/);
     const whatsappHref = whatsappPage.url();
     const whatsappText = decodeURIComponent(new URL(whatsappHref).searchParams.get('text') || '');
     expect(whatsappText).toContain(finalShare.url);

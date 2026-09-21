@@ -39,6 +39,18 @@
 - [PENDENTE] Suítes completas, por instrução expressa deste bloco.
 - [PENDENTE] Push, por instrução expressa deste bloco.
 
+# Checklist final — LGPD e compartilhamento seguro
+
+- [OK] Relatório final inclui aviso conciso de tratamento de dados conforme a LGPD.
+- [OK] Link público usa token aleatório de 256 bits e persiste somente o hash, sem identificadores na URL.
+- [OK] Links vencem em 30 dias, podem ser revogados e deixam de funcionar quando a revisão é substituída.
+- [OK] Download valida documento, prazo, revogação e arquivo antes de responder, com cabeçalhos privados e contagem de acessos.
+- [OK] Menu PDF's gera link novo para WhatsApp, exibe a validade e permite revogar links ativos sem reemitir o PDF.
+- [OK] Fotos permanecem acessíveis somente por rota autenticada e a URL futura da política de privacidade é configurável.
+- [OK] Testes foram criados ou reescritos para as novas regras de segurança.
+- [PENDENTE] Testes PHP e E2E, por instrução expressa deste bloco.
+- [PENDENTE] Push, por instrução expressa deste bloco.
+
 # Checklist final — Bloco C: Produtos e controle de estoque
 
 ## Catálogos e produto
