@@ -25,11 +25,13 @@ class TechnicalSignatureTest extends TestCase
     public function test_processor_preserves_transparency_from_png_source(): void
     {
         $path = tempnam(sys_get_temp_dir(), 'signature-');
-        $image = imagecreatetruecolor(80, 40);
+        $image = imagecreatetruecolor(1420, 650);
         imagealphablending($image, false);
         imagesavealpha($image, true);
         imagefill($image, 0, 0, imagecolorallocatealpha($image, 0, 0, 0, 127));
-        imagesetpixel($image, 40, 20, imagecolorallocatealpha($image, 25, 25, 25, 0));
+        $ink = imagecolorallocatealpha($image, 25, 25, 25, 0);
+        imagesetpixel($image, 20, 325, $ink);
+        imagesetpixel($image, 1400, 325, $ink);
         imagepng($image, $path);
         imagedestroy($image);
 
@@ -55,6 +57,11 @@ class TechnicalSignatureTest extends TestCase
             ['key' => 'technical_signature'],
             ['value' => $path, 'type' => 'private_file', 'created_at' => now(), 'updated_at' => now()],
         );
+
+        $this->actingAs($admin)
+            ->get('/api/settings/signature')
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'no-store');
 
         $this->actingAs($admin)
             ->deleteJson('/api/settings/signature')

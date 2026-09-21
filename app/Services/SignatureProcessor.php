@@ -67,13 +67,19 @@ final class SignatureProcessor
         }
 
         $scale = min(1, 1000 / imagesx($cropped), 360 / imagesy($cropped));
-        $output = imagescale($cropped, max(1, (int) round(imagesx($cropped) * $scale)), max(1, (int) round(imagesy($cropped) * $scale)));
-        imagedestroy($cropped);
+        $outputWidth = max(1, (int) round(imagesx($cropped) * $scale));
+        $outputHeight = max(1, (int) round(imagesy($cropped) * $scale));
+        $output = imagecreatetruecolor($outputWidth, $outputHeight);
         if (! $output) {
+            imagedestroy($cropped);
             throw ValidationException::withMessages(['signature' => 'Não foi possível redimensionar a assinatura.']);
         }
 
+        imagealphablending($output, false);
         imagesavealpha($output, true);
+        imagefill($output, 0, 0, imagecolorallocatealpha($output, 0, 0, 0, 127));
+        imagecopyresampled($output, $cropped, 0, 0, 0, 0, $outputWidth, $outputHeight, imagesx($cropped), imagesy($cropped));
+        imagedestroy($cropped);
         ob_start();
         imagepng($output, null, 8);
         $data = (string) ob_get_clean();

@@ -128,7 +128,10 @@ class SettingsController extends Controller
         $path = DB::table('settings')->where('key', 'technical_signature')->value('value');
         abort_unless($path, 404);
 
-        return Storage::disk('local')->response($path, 'assinatura-tecnica.png', ['Content-Type' => 'image/png']);
+        return Storage::disk('local')->response($path, 'assinatura-tecnica.png', [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'no-store',
+        ]);
     }
 
     public function destroySignature(Request $request, Audit $audit): JsonResponse
