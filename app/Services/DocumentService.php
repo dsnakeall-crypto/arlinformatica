@@ -31,6 +31,10 @@ class DocumentService
         $document = DB::table('generated_documents')->where(['service_order_id' => $order->id, 'type' => $type, 'revision' => $revision])->first();
         abort_unless($document, 404);
 
-        return Storage::disk('local')->response($document->path, "$type-OS-{$order->number}-R$revision.pdf", ['Content-Type' => 'application/pdf', 'Cache-Control' => 'private, no-store']);
+        $filename = $type === 'final-record'
+            ? "Registro-Revisao-OS-{$order->number}-R$revision.pdf"
+            : "$type-OS-{$order->number}-R$revision.pdf";
+
+        return Storage::disk('local')->response($document->path, $filename, ['Content-Type' => 'application/pdf', 'Cache-Control' => 'private, no-store']);
     }
 }

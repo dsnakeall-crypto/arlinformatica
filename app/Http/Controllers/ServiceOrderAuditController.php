@@ -63,6 +63,7 @@ class ServiceOrderAuditController extends Controller
             'service_order.finalized' => 'Finalização da OS',
             'service_order.marked_paid_and_retrieved' => 'Pagamento e retirada',
             'service_order.reopened' => 'Reabertura da OS',
+            'service_order.final_pdf_replaced' => 'Substituição de PDF final',
             'service_order.interrupted' => 'Interrupção e fechamento da OS',
             'service_order.deleted' => 'Remoção da OS',
             'service_order.refund_created' => 'Estorno da OS',
@@ -77,6 +78,13 @@ class ServiceOrderAuditController extends Controller
             'service_order.finalized' => $this->finalizationChanges($after),
             'service_order.marked_paid_and_retrieved' => ['OS marcada como paga e retirada.'],
             'service_order.reopened' => $this->reopenChanges($after),
+            'service_order.final_pdf_replaced' => [
+                sprintf(
+                    'O PDF completo da revisão R%d foi substituído pelo registro interno; a revisão atual é R%d.',
+                    (int) ($after['revision'] ?? 0),
+                    (int) ($after['current_revision'] ?? 0),
+                ),
+            ],
             'service_order.interrupted' => [
                 'Motivo: '.$this->text($after['reason'] ?? null),
                 'O que já foi feito: '.$this->text($after['work_done'] ?? null),

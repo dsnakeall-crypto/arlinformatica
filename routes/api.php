@@ -121,6 +121,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/budgets/{revision}/pdf', [DocumentController::class, 'budget']);
     Route::get('/orders/{order}/documents', [DocumentController::class, 'index']);
     Route::get('/orders/{order}/final/{revision}/pdf', [DocumentController::class, 'finalDocument']);
+    Route::get('/orders/{order}/final-record/{revision}/pdf', [DocumentController::class, 'finalRecord']);
     Route::get('/orders/{order}/reports', [TechnicalReportController::class, 'index']);
     Route::post('/orders/{order}/reports', [TechnicalReportController::class, 'store']);
     Route::put('/orders/{order}/reports/{revision}', [TechnicalReportController::class, 'update']);

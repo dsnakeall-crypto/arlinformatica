@@ -112,7 +112,7 @@ class ClientController extends Controller
                         })->orWhereRaw('finalization_id = (SELECT latest_finalization.id FROM service_order_finalizations AS latest_finalization WHERE latest_finalization.service_order_id = service_order_items.service_order_id ORDER BY latest_finalization.revision DESC LIMIT 1)');
                     })
                     ->orderBy('id'),
-                'documents' => fn ($q) => $q->whereIn('type', ['final', 'budget'])->latest('issued_at'),
+                'documents' => fn ($q) => $q->whereIn('type', ['final', 'final-record', 'budget'])->latest('issued_at'),
             ])
             ->get();
 

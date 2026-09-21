@@ -37,6 +37,11 @@ class DocumentController extends Controller
         return $documents->response($order, 'final', $revision);
     }
 
+    public function finalRecord(ServiceOrder $order, int $revision, DocumentService $documents)
+    {
+        return $documents->response($order, 'final-record', $revision);
+    }
+
     public function technicalReport(ServiceOrder $order, int $revision, DocumentService $documents)
     {
         return $documents->response($order, 'technical-report', $revision);

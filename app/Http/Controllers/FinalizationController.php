@@ -7,6 +7,7 @@ use App\Services\CompanySettings;
 use App\Services\DocumentService;
 use App\Services\InventoryService;
 use App\Services\PdfPhotoOptimizer;
+use App\Services\ReplacedFinalDocumentService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ class FinalizationController extends Controller
 {
     private const RESULTS = ['repair_completed', 'irreparable', 'client_cancelled', 'economically_unviable', 'no_fault', 'other'];
 
-    public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents, InventoryService $inventory, PdfPhotoOptimizer $pdfPhotos): JsonResponse
+    public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents, InventoryService $inventory, PdfPhotoOptimizer $pdfPhotos, ReplacedFinalDocumentService $replacedDocuments): JsonResponse
     {
         abort_if($order->status === 'completed', 409, 'A OS já possui uma finalização imutável.');
         abort_if($order->status === 'interrupted', 409, 'Uma OS interrompida já está fechada e não pode ser finalizada nem reaberta.');
@@ -127,6 +128,9 @@ class FinalizationController extends Controller
         $documentOrderData = $documentOrder->toArray();
         $documentOrderData['intake_condition'] = $documentOrder->intake_condition;
         $documents->issue($documentOrder, 'final', ['company' => $company, 'order' => $documentOrderData, 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos, 'technical_signature' => $technicalSignature, 'show_item_warranties' => $showItemWarranties], $request->user()->id, (int) $finalization->revision);
+        if ((int) $finalization->revision > 1) {
+            $replacedDocuments->replacePrevious($documentOrder, (int) $finalization->revision - 1, (int) $finalization->revision, $request->user()->id, $request->ip());
+        }
 
         $freshOrder = $order->fresh();
         $orderPayload = $freshOrder->toArray();
