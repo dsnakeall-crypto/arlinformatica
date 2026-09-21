@@ -67,17 +67,29 @@ class FinalShareTest extends TestCase
 
     public function test_expired_and_revoked_links_return_the_specific_privacy_messages(): void
     {
+        config(['app.debug' => false]);
         $expiredUrl = $this->getJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json('url');
         DB::table('final_share_tokens')->update(['expires_at' => now()->subSecond()]);
         auth()->logout();
-        $this->get($expiredUrl)->assertGone()->assertSeeText('Este link de acesso expirou.');
+        $this->get($expiredUrl)->assertGone()->assertSeeText('Este link de acesso expirou.')->assertSeeText('Se precisar do documento, entre em contato com a ARL Informática.')->assertDontSee('Symfony')->assertDontSee('HttpException');
 
         $this->actingAs($this->user);
         $revokedUrl = $this->getJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json('url');
         $this->deleteJson("/api/orders/{$this->order->id}/final-share")->assertOk()->assertJsonPath('revoked', 1);
         $this->getJson("/api/orders/{$this->order->id}/final-share/status")->assertOk()->assertJsonPath('active', false);
         auth()->logout();
-        $this->get($revokedUrl)->assertGone()->assertSeeText('Este link não está mais disponível.');
+        $this->get($revokedUrl)->assertGone()->assertSeeText('Este link não está mais disponível.')->assertDontSee('Symfony')->assertDontSee('HttpException');
+        $this->get('/share/final/'.str_repeat('0', 64))->assertNotFound()->assertSeeText('Este link não está mais disponível.')->assertDontSee('Symfony')->assertDontSee('HttpException');
+    }
+
+    public function test_unavailable_share_page_shows_privacy_link_only_when_configured(): void
+    {
+        config(['app.debug' => false]);
+        $url = '/share/final/'.str_repeat('1', 64);
+        $this->get($url)->assertNotFound()->assertDontSee('Como tratamos seus dados');
+
+        DB::table('settings')->updateOrInsert(['key' => 'privacy_policy_url'], ['value' => 'https://arl.example/politica-de-privacidade', 'created_at' => now(), 'updated_at' => now()]);
+        $this->get($url)->assertNotFound()->assertSee('Como tratamos seus dados')->assertSee('https://arl.example/politica-de-privacidade', false);
     }
 
     public function test_order_identifiers_do_not_grant_public_document_or_photo_access(): void

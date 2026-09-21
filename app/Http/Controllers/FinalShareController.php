@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ServiceOrder;
 use App\Services\Audit;
+use App\Services\CompanySettings;
 use App\Services\DocumentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -77,20 +78,30 @@ class FinalShareController extends Controller
         return response()->json(['revoked' => $count]);
     }
 
-    public function download(string $token, DocumentService $documents)
+    public function download(string $token, DocumentService $documents, CompanySettings $settings)
     {
         $share = DB::table('final_share_tokens')->where('token_hash', hash('sha256', $token))->first();
-        abort_unless($share, 404, 'Este link não está mais disponível.');
+        if (! $share) {
+            return $this->unavailable($settings, 'Este link não está mais disponível.', 404);
+        }
 
         $document = $share->generated_document_id
             ? DB::table('generated_documents')->where('id', $share->generated_document_id)->where('type', 'final')->first()
             : null;
-        abort_if($share->revoked_at || ! $document || (int) $document->service_order_id !== (int) $share->service_order_id || (int) $document->revision !== (int) $share->revision, 410, 'Este link não está mais disponível.');
-        abort_if(now()->greaterThanOrEqualTo($share->expires_at), 410, 'Este link de acesso expirou.');
-        abort_unless(Storage::disk('local')->exists($document->path), 410, 'Este link não está mais disponível.');
+        if ($share->revoked_at || ! $document || (int) $document->service_order_id !== (int) $share->service_order_id || (int) $document->revision !== (int) $share->revision) {
+            return $this->unavailable($settings, 'Este link não está mais disponível.', 410);
+        }
+        if (now()->greaterThanOrEqualTo($share->expires_at)) {
+            return $this->unavailable($settings, 'Este link de acesso expirou.', 410);
+        }
+        if (! Storage::disk('local')->exists($document->path)) {
+            return $this->unavailable($settings, 'Este link não está mais disponível.', 410);
+        }
 
         $order = ServiceOrder::find($share->service_order_id);
-        abort_unless($order, 410, 'Este link não está mais disponível.');
+        if (! $order) {
+            return $this->unavailable($settings, 'Este link não está mais disponível.', 410);
+        }
 
         DB::table('final_share_tokens')->where('id', $share->id)->update([
             'last_access_at' => now(),
@@ -104,5 +115,17 @@ class FinalShareController extends Controller
         $response->headers->set('X-Robots-Tag', 'noindex, nofollow, noarchive');
 
         return $response;
+    }
+
+    private function unavailable(CompanySettings $settings, string $title, int $status)
+    {
+        return response()->view('shares.unavailable', [
+            'title' => $title,
+            'company' => $settings->all(),
+        ], $status, [
+            'Cache-Control' => 'no-store, private',
+            'Pragma' => 'no-cache',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
     }
 }
