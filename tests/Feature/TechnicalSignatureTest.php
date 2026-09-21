@@ -61,7 +61,7 @@ class TechnicalSignatureTest extends TestCase
         $this->actingAs($admin)
             ->get('/api/settings/signature')
             ->assertOk()
-            ->assertHeader('Cache-Control', 'no-store');
+            ->assertHeader('Cache-Control', 'no-store, private');
 
         $this->actingAs($admin)
             ->deleteJson('/api/settings/signature')
