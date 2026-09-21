@@ -380,7 +380,21 @@ function ReportBox({ order }: any) {
 
 function DocumentsBox({ order, embedded = false }: any) {
   const [docs, setDocs] = useState<any[]>([]); useEffect(() => { void api(`/orders/${order.id}/documents`).then(setDocs); }, [order.id, order.status]);
-  const content = <div className="documents"><a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de recebimento</a>{docs.filter((row) => row.type !== 'term').map((row) => { const href = row.type === 'final' ? `/api/orders/${order.id}/final/${row.revision}/pdf` : row.type === 'technical-report' ? `/api/orders/${order.id}/reports/${row.revision}/pdf` : `/api/orders/${order.id}/budgets/${row.revision}/pdf`; return <article key={row.id}><div><b>{row.type === 'final' ? 'PDF Final' : row.type === 'technical-report' ? 'Laudo Técnico' : 'Orçamento'}</b><small>Revisão {row.revision} · {new Date(row.issued_at).toLocaleString('pt-BR')} · {row.issued_by_name}</small></div><a target="_blank" rel="noreferrer" href={href}>Visualizar</a><a href={href} download>Baixar PDF</a><button onClick={() => { const popup = window.open(href); popup?.addEventListener('load', () => popup.print()); }}>Imprimir</button></article>; })}</div>;
+  const currentFinal = docs.filter((row) => row.type === 'final').sort((a, b) => b.revision - a.revision)[0];
+  const visibleDocs = docs.filter((row) => row.type !== 'term' && row.type !== 'final');
+  if (currentFinal) visibleDocs.unshift(currentFinal);
+  const content = <div className="documents"><a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de recebimento</a>{visibleDocs.map((row) => {
+    const finalRecord = row.type === 'final-record';
+    const href = row.type === 'final'
+      ? `/api/orders/${order.id}/final/${row.revision}/pdf`
+      : finalRecord
+        ? `/api/orders/${order.id}/final-record/${row.revision}/pdf`
+        : row.type === 'technical-report'
+          ? `/api/orders/${order.id}/reports/${row.revision}/pdf`
+          : `/api/orders/${order.id}/budgets/${row.revision}/pdf`;
+    const title = row.type === 'final' ? 'PDF Final' : finalRecord ? `Registro da Rev. ${row.revision} (substituída)` : row.type === 'technical-report' ? 'Laudo Técnico' : 'Orçamento';
+    return <article className={finalRecord ? 'arl-final-record-document' : undefined} key={row.id}><div><b>{title}</b><small>Revisão {row.revision} · {new Date(row.issued_at).toLocaleString('pt-BR')} · {row.issued_by_name}</small></div><a target="_blank" rel="noreferrer" href={href}>Visualizar</a><a href={href} download>Baixar PDF</a><button onClick={() => { const popup = window.open(href); popup?.addEventListener('load', () => popup.print()); }}>Imprimir</button></article>;
+  })}</div>;
   return embedded ? <div className="arl-record-documents">{content}</div> : <section className="wide"><h2>Documentos</h2>{content}</section>;
 }
 
@@ -408,7 +422,7 @@ function finalWhatsappMessage(order: any, pdfUrl: string) {
   ].join('\n');
 }
 
-function FinalShareCard({ order }: { order: any }) {
+function FinalShareCard({ order, onLinkCreated }: { order: any; onLinkCreated?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [shareError, setShareError] = useState('');
   const prepare = async (kind: 'pdf' | 'whatsapp') => {
@@ -417,6 +431,7 @@ function FinalShareCard({ order }: { order: any }) {
     setShareError('');
     try {
       const freshShare = await api(`/orders/${order.id}/final-share`);
+      onLinkCreated?.();
       const destination = kind === 'pdf'
         ? freshShare.url
         : (() => {
@@ -434,11 +449,11 @@ function FinalShareCard({ order }: { order: any }) {
       setBusy(false);
     }
   };
-  return <div className="arl-final-share-host"><section className="arl-final-share-card" role="status" aria-label="Compartilhar fechamento da OS"><h2>OS #{order.number} finalizada</h2><p>O PDF Final está pronto. Um link novo, válido por 48 horas, será criado somente quando você escolher uma ação.</p>{shareError && <p className="alert">{shareError}</p>}<div className="arl-final-share-actions"><button type="button" disabled={busy} onClick={() => void prepare('pdf')}>Abrir PDF</button><button type="button" className="whatsapp" disabled={busy} onClick={() => void prepare('whatsapp')}>Enviar PDF pelo WhatsApp</button></div></section></div>;
+  return <div className="arl-final-share-host"><section className="arl-final-share-card" role="status" aria-label="Compartilhar fechamento da OS"><h2>OS #{order.number} finalizada</h2><p>O PDF Final está pronto. Um link novo, válido por 30 dias, será criado somente quando você escolher uma ação.</p>{shareError && <p className="alert">{shareError}</p>}<div className="arl-final-share-actions"><button type="button" disabled={busy} onClick={() => void prepare('pdf')}>Abrir PDF</button><button type="button" className="whatsapp" disabled={busy} onClick={() => void prepare('whatsapp')}>Enviar link ao cliente</button></div></section></div>;
 }
 
 export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLoad = false, onEdit, onDirtyChange, onOpenClientHistory }: Props & { readOnly?: boolean }) {
-  const [order, setOrder] = useState<any>(), [role, setRole] = useState<string | null>(null), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [reopenOpen, setReopenOpen] = useState(false), [reopenNote, setReopenNote] = useState(''), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [servicesDirty, setServicesDirty] = useState(false), [finalReportDirty, setFinalReportDirty] = useState(false), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false), [pdfActionsOpen, setPdfActionsOpen] = useState(false);
+  const [order, setOrder] = useState<any>(), [role, setRole] = useState<string | null>(null), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [reopenOpen, setReopenOpen] = useState(false), [reopenNote, setReopenNote] = useState(''), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [servicesDirty, setServicesDirty] = useState(false), [finalReportDirty, setFinalReportDirty] = useState(false), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false), [pdfActionsOpen, setPdfActionsOpen] = useState(false), [finalLinkStatus, setFinalLinkStatus] = useState<any>(null), [finalLinkBusy, setFinalLinkBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null), pendingServicesSave = useRef<null | (() => Promise<any>)>(null);
   const load = async () => { try { const next = await api(`/orders/${id}`); setOrder(next); if (!finalReportDirty) setFinalReport(next.final_report || (next.status === 'completed' ? next.technical_report || '' : '')); setError(''); } catch (e: any) { setError(e.message); } };
   useEffect(() => {
@@ -453,6 +468,11 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
   useEffect(() => {
     if (reopenOnLoad && order?.status === 'completed' && ['Master', 'Administrador'].includes(role || '')) setReopenOpen(true);
   }, [reopenOnLoad, order?.id, order?.status, role]);
+  const loadFinalLinkStatus = async () => {
+    if (order?.status !== 'completed') return setFinalLinkStatus(null);
+    try { setFinalLinkStatus(await api(`/orders/${order.id}/final-share/status`)); } catch { setFinalLinkStatus(null); }
+  };
+  useEffect(() => { void loadFinalLinkStatus(); }, [order?.id, order?.status]);
 
   if (error) return <div className="state error">{error}</div>; if (!order || role === null) return <div className="state">Carregando OS…</div>;
   const operational = ['analysis', 'waiting_part', 'in_service'].includes(order.status);
@@ -499,6 +519,34 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
       window.alert(reason.message || 'Não foi possível abrir o Relatório Técnico Final.');
     }
   };
+  const sendFinalLink = async () => {
+    const phone = digits(order.client?.phone || '');
+    if (!phone) return window.alert('O cliente não possui telefone para WhatsApp.');
+    const target = window.open('about:blank', '_blank');
+    setFinalLinkBusy(true);
+    try {
+      const share = await api(`/orders/${order.id}/final-share`);
+      const full = phone.startsWith('55') ? phone : `55${phone}`;
+      const destination = `https://wa.me/${full}?text=${encodeURIComponent(finalWhatsappMessage(order, share.url))}`;
+      setFinalLinkStatus({ active: true, expires_at: share.expires_at, revision: share.revision });
+      if (target) target.location.href = destination;
+      else window.location.href = destination;
+    } catch (reason: any) {
+      target?.close();
+      window.alert(reason.message || 'Não foi possível gerar o link do relatório.');
+    } finally { setFinalLinkBusy(false); }
+  };
+  const revokeFinalLinks = async () => {
+    if (!window.confirm('Revogar agora todos os links ativos deste relatório?')) return;
+    setFinalLinkBusy(true);
+    try {
+      await api(`/orders/${order.id}/final-share`, { method: 'DELETE' });
+      setFinalLinkStatus({ active: false, expires_at: null, revision: null });
+    } catch (reason: any) {
+      window.alert(reason.message || 'Não foi possível revogar os links.');
+    } finally { setFinalLinkBusy(false); }
+  };
+  const finalLinkActions = order.status === 'completed' ? <><button type="button" disabled={finalLinkBusy} onClick={() => void sendFinalLink()}>Enviar link ao cliente</button><button type="button" disabled={finalLinkBusy || !finalLinkStatus?.active} onClick={() => void revokeFinalLinks()}>Revogar link</button><small>{finalLinkStatus?.active && finalLinkStatus.expires_at ? `Link ativo até ${new Date(finalLinkStatus.expires_at).toLocaleDateString('pt-BR')}` : 'Nenhum link ativo'}</small></> : null;
   const openingPhone = digits(order.client?.phone || '');
   const openingFullPhone = openingPhone ? (openingPhone.startsWith('55') ? openingPhone : `55${openingPhone}`) : '';
   const openingCondition = String(order.intake_condition || '').trim();
@@ -522,7 +570,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     <header className="arl-mobile-read-only-header"><button type="button" className="arl-back-button" onClick={back} aria-label="Voltar para OS abertas">←</button><div><span>ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1>{reopened&&<span className="arl-reopened-marker arl-order-reopened-marker">Reaberta</span>}{interrupted&&<span className="arl-reopened-marker arl-interrupted-marker arl-order-reopened-marker">Interrompida</span>}</div></header>
     <div className="arl-read-only-banner">Somente leitura · edite pelo PC</div>
     <div className="arl-mobile-read-only-actions">{openingWhatsapp && <a href={openingWhatsapp} target="_blank" rel="noreferrer">WhatsApp</a>}{mapsUrl && <a href={mapsUrl} target="_blank" rel="noreferrer">Rota</a>}</div>
-    <details className="arl-opening-call"><summary>PDF's e Reaberturas OS</summary><div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div></details>
+    <details className="arl-opening-call"><summary>PDF's e Reaberturas OS</summary><div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{finalLinkActions}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div></details>
     <section><h2>Cliente</h2><strong>{order.client.name}</strong><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></section>
     <section><h2>Equipamento</h2><p>{order.equipment_description || 'Equipamento não informado'}</p>{order.equipment_details && <p><strong>Fabricante / Modelo / Acessórios:</strong> {order.equipment_details}</p>}<p>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</p></section>
     <section><h2>Problema relatado</h2><p>{order.reported_problem}</p></section>
@@ -545,7 +593,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
         {onOpenClientHistory && <button type="button" data-order-action="history" onClick={() => onOpenClientHistory(order.client.id)}><History aria-hidden="true"/><span>Histórico</span></button>}
         {order.status === 'completed' ? canAdminister && <button type="button" className="arl-od-btn" data-order-action="reopen" onClick={() => setReopenOpen(true)}><RotateCcw aria-hidden="true"/><span>Reabrir OS</span></button> : !immutable && <button type="button" className="arl-od-btn" data-order-action="edit" onClick={editOrder}><Pencil aria-hidden="true"/><span>Editar</span></button>}
         {!immutable && <button type="button" data-order-action="budget" data-quick="budget" onClick={() => setBudgetSignal((x) => x + 1)}><ReceiptText aria-hidden="true"/><span>Orçamento</span></button>}
-        <div className="arl-opening-call arl-header-pdf-actions"><button type="button" data-order-action="pdf" aria-expanded={pdfActionsOpen} onClick={() => setPdfActionsOpen((open) => !open)}><FileText aria-hidden="true"/><span>PDF's</span></button>{pdfActionsOpen && <div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div>}</div>
+        <div className="arl-opening-call arl-header-pdf-actions"><button type="button" data-order-action="pdf" aria-expanded={pdfActionsOpen} onClick={() => setPdfActionsOpen((open) => !open)}><FileText aria-hidden="true"/><span>PDF's</span></button>{pdfActionsOpen && <div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{finalLinkActions}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div>}</div>
         {paymentEnabled && <button type="button" className="primary" data-order-action="payment" data-quick="payment" onClick={() => setPaymentSignal((x) => x + 1)}><Wallet aria-hidden="true"/><span>Pagamento</span></button>}
         {canAdminister && !immutable && order.status !== 'completed' && <button id="finalization-action" type="button" data-order-action="finalize" className="primary arl-finalization-action" onClick={() => setFinalSignal((x) => x + 1)}><Check aria-hidden="true"/><span>Concluir</span></button>}
       </div>
@@ -580,6 +628,6 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     {reopenOpen && <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Reabrir OS #${order.number}`}><h2>Reabrir OS #{order.number}</h2><p>A mesma OS voltará para Em Análise. Ao concluir novamente, a revisão anterior será mantida como um registro interno resumido.</p><label>Motivo da reabertura<textarea spellCheck={true} value={reopenNote} onChange={(event) => setReopenNote(event.target.value)}/></label><div className="arl-od-actions"><button type="button" onClick={() => setReopenOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={async () => { if (!reopenNote.trim()) return; await api(`/orders/${order.id}/reopen`, { method: 'POST', body: JSON.stringify({ note: reopenNote.trim() }) }); setReopenOpen(false); await load(); }}>Confirmar reabertura</button></div></section></div>}
     {photoChoice && <PhotoChoice onClose={() => setPhotoChoice(false)} onUpload={() => { setPhotoChoice(false); fileInput.current?.click(); }} onCamera={() => { setPhotoChoice(false); setCamera(true); }}/>} 
     {camera && <CameraModal onClose={() => setCamera(false)} onFile={(file) => { setCamera(false); void uploadFiles([file]); }}/>}
-    {order.status === 'completed' && <FinalShareCard order={order}/>} 
+    {order.status === 'completed' && <FinalShareCard order={order} onLinkCreated={() => void loadFinalLinkStatus()}/>}
   </div>;
 }

@@ -84,6 +84,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/orders/{order}/status', [ServiceOrderController::class, 'updateStatus']);
     Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store'])->middleware('role:Master,Administrador');
     Route::get('/orders/{order}/final-share', [FinalShareController::class, 'show']);
+    Route::get('/orders/{order}/final-share/status', [FinalShareController::class, 'status']);
+    Route::delete('/orders/{order}/final-share', [FinalShareController::class, 'revoke']);
     Route::middleware('role:Master,Administrador')->group(function () {
         Route::get('/orders/{order}/payment', [FinanceController::class, 'payment']);
         Route::get('/orders/{order}/payments', [FinanceController::class, 'payments']);

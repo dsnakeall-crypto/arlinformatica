@@ -59,7 +59,7 @@ class SettingsController extends Controller
             'company_name' => 'required|string|max:150', 'trade_name' => 'nullable|string|max:150', 'cnpj' => ['nullable', 'regex:/^\d{14}$/'],
             'phone' => ['nullable', 'regex:/^\d{10,11}$/'], 'email' => 'nullable|email|max:150', 'postal_code' => ['nullable', 'regex:/^\d{8}$/'], 'street' => 'nullable|string|max:150',
             'number' => 'nullable|string|max:30', 'district' => 'nullable|string|max:100', 'city' => 'nullable|string|max:100', 'state' => ['nullable', 'regex:/^[A-Z]{2}$/'],
-            'complement' => 'nullable|string|max:100', 'instagram' => 'nullable|url|max:255', 'google_review' => 'nullable|url|max:255',
+            'complement' => 'nullable|string|max:100', 'instagram' => 'nullable|url|max:255', 'google_review' => 'nullable|url|max:255', 'privacy_policy_url' => 'nullable|url|max:255',
             'budget_validity_days' => 'required|integer|min:1|max:365', 'budget_observation' => 'nullable|string|max:2000', 'budget_institutional_text' => 'required|string|max:1000', 'term_text' => 'required|string|max:10000',
             'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
         ], [
