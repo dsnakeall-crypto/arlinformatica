@@ -11,7 +11,9 @@ class DocumentService
 {
     public function issue(ServiceOrder $order, string $type, array $snapshot, int $userId, int $revision = 1): void
     {
-        $pdf = Pdf::loadView("documents.$type", $snapshot)->setPaper('a4');
+        $pdf = Pdf::loadView("documents.$type", $snapshot)
+            ->setOption('enable_font_subsetting', true)
+            ->setPaper('a4');
         $bytes = $pdf->output();
         $path = "documents/orders/{$order->id}/$type-r$revision.pdf";
         abort_if(DB::table('generated_documents')->where(['service_order_id' => $order->id, 'type' => $type, 'revision' => $revision])->exists(), 409, 'Uma revisão emitida não pode ser sobrescrita.');
