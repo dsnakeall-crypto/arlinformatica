@@ -3787,6 +3787,7 @@ function SettingsPage({ role }: any) {
                     ["Complemento", "complement"],
                     ["Instagram", "instagram"],
                     ["Avaliação Google", "google_review"],
+                    ["URL futura da Política de Privacidade", "privacy_policy_url"],
                   ].map(([label, name]) => (
                     <Field
                       label={label}

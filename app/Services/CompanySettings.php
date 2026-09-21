@@ -10,6 +10,7 @@ class CompanySettings
         'company_name' => 'ARL Informática', 'trade_name' => 'ARL Informática', 'cnpj' => '18588208000139', 'phone' => '35988285777', 'email' => 'arlinfocg@gmail.com',
         'postal_code' => '37160000', 'street' => 'Rua Nossa Senhora do Carmo', 'number' => '331', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG', 'complement' => '',
         'instagram' => 'https://www.instagram.com/allanluttembarck', 'google_review' => 'https://g.page/r/CSxkz5Y88MaJEBM/review',
+        'privacy_policy_url' => '',
         'budget_validity_days' => '7', 'budget_observation' => '',
         'budget_institutional_text' => 'Após análise técnica do equipamento acima identificado, foram constatados os serviços e/ou componentes descritos neste orçamento. A execução será realizada mediante aprovação do cliente.',
         'theme_primary' => '#C9001C', 'theme_sidebar' => '#09080A', 'theme_accent' => '#FF2443',

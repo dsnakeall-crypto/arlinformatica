@@ -9,7 +9,7 @@ Route::get('/api/theme', [SettingsController::class, 'theme']);
 Route::put('/api/theme', [SettingsController::class, 'updateTheme'])->middleware(['auth', 'role:Master,Administrador']);
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
-Route::get('/share/orders/{order}/final/{revision}/{token}', [FinalShareController::class, 'download'])
+Route::get('/share/final/{token}', [FinalShareController::class, 'download'])
     ->where('token', '[A-Fa-f0-9]{64}')
     ->name('orders.final.public');
 Route::redirect('/orders/{order}/reports', '/orders/{order}');
