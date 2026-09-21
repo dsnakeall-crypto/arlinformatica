@@ -230,12 +230,18 @@ test.describe.serial('fluxo operacional principal', () => {
     await documentMenu.getByRole('button', { name: "PDF's", exact: true }).click();
     const finalReportButton = documentMenu.getByRole('button', { name: 'Relatório Técnico Final' });
     await expect(finalReportButton).toBeVisible();
-    const finalPdfPromise = page.context().waitForEvent('page');
+    const browserContext = page.context();
+    const pagesBeforePdf = browserContext.pages();
+    const finalPdfResponsePromise = browserContext.waitForEvent('response', (response) => {
+      const url = new URL(response.url());
+      return url.pathname === `/api/orders/${orderId}/final/1/pdf` && response.request().method() === 'GET';
+    });
     await finalReportButton.click();
-    const finalPdf = await finalPdfPromise;
-    await finalPdf.waitForURL((url) => url.pathname === `/api/orders/${orderId}/final/1/pdf`, { waitUntil: 'commit' });
-    expect(new URL(finalPdf.url()).pathname).toBe(`/api/orders/${orderId}/final/1/pdf`);
-    await finalPdf.close();
+    const finalPdfResponse = await finalPdfResponsePromise;
+    expect(finalPdfResponse.status()).toBe(200);
+    expect(finalPdfResponse.headers()['content-type']).toContain('application/pdf');
+    const openedPdfPage = browserContext.pages().find((candidate) => !pagesBeforePdf.includes(candidate));
+    if (openedPdfPage) await openedPdfPage.close();
     await expect(documentMenu.getByRole('button', { name: 'Reabrir OS' })).toBeVisible();
   });
 
