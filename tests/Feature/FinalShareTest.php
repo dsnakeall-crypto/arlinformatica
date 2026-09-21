@@ -17,6 +17,7 @@ class FinalShareTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private ServiceOrder $order;
 
     protected function setUp(): void
