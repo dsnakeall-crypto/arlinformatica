@@ -75,14 +75,8 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
   await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
-  await page.locator('.menu-toggle').click();
-  const mobileAside = page.locator('aside');
-  await expect(mobileAside).toHaveClass(/open/);
-  await mobileAside.getByRole('button', { name: 'Clientes' }).click();
+  const mobileNavigation = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
+  await mobileNavigation.getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(page.locator('.clients-react-page')).toBeVisible();
-  await expect(mobileAside).not.toHaveClass(/open/);
-  const box = await mobileAside.boundingBox();
-  expect(box).not.toBeNull();
-  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(0);
 });
