@@ -64,6 +64,9 @@
 [data-arl-order-detail-react="1"] .arl-intake-equipment-details p{margin:0;color:#858b95!important;font-size:11px!important}
 [data-arl-order-detail-react="1"] .arl-intake-field.arl-checklist-ok{background:linear-gradient(135deg,#fff,var(--arl-primary-soft))!important}
 [data-arl-order-detail-react="1"] .arl-intake-photos{padding:12px 16px}
+[data-arl-order-detail-react="1"] .arl-intake-photos-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 7px}
+[data-arl-order-detail-react="1"] .arl-intake-photos-heading h3{margin:0}
+[data-arl-order-detail-react="1"] .arl-intake-photos-heading>span{color:#747987;font-size:11px;font-weight:800}
 [data-arl-order-detail-react="1"] .arl-intake-photos .arl-order-photo-tools{margin:0 0 10px}
 [data-arl-order-detail-react="1"] .arl-order-photo{position:relative}
 [data-arl-order-detail-react="1"] .arl-order-photo>button{position:absolute;top:6px;right:6px;width:34px;height:34px;display:grid;place-items:center;padding:0;border:1px solid #f0b8c1;border-radius:9px;background:#fff;color:#a7001b;box-shadow:0 4px 12px rgba(0,0,0,.16)}

@@ -87,7 +87,8 @@ test.describe.serial('fluxo operacional principal', () => {
 
   test('Master exclui foto com confirmação e contador atualiza sem recarregar', async ({ page }) => {
     await page.goto(`/orders/${orderId}`);
-    await expect(page.getByRole('heading', { name: 'Fotos (1/5)' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Fotos', exact: true })).toBeVisible();
+    await expect(page.getByText('1/5', { exact: true })).toBeVisible();
     const photo = page.getByRole('button', { name: /Excluir foto/ });
     await expect(photo).toBeVisible();
     page.once('dialog', async (dialog) => {
@@ -96,7 +97,8 @@ test.describe.serial('fluxo operacional principal', () => {
       await dialog.accept();
     });
     await photo.click();
-    await expect(page.getByRole('heading', { name: 'Fotos (0/5)' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Fotos', exact: true })).toBeVisible();
+    await expect(page.getByText('0/5', { exact: true })).toBeVisible();
     await expect(page.getByText('Nenhuma foto anexada.', { exact: true })).toBeVisible();
     const detail = await api(page, `/orders/${orderId}`);
     expect(detail.body.photos).toHaveLength(0);
@@ -231,7 +233,8 @@ test.describe.serial('fluxo operacional principal', () => {
     const finalPdfPromise = page.context().waitForEvent('page');
     await finalReportButton.click();
     const finalPdf = await finalPdfPromise;
-    await expect.poll(() => new URL(finalPdf.url()).pathname).toBe(`/api/orders/${orderId}/final/1/pdf`);
+    await finalPdf.waitForURL((url) => url.pathname === `/api/orders/${orderId}/final/1/pdf`, { waitUntil: 'commit' });
+    expect(new URL(finalPdf.url()).pathname).toBe(`/api/orders/${orderId}/final/1/pdf`);
     await finalPdf.close();
     await expect(documentMenu.getByRole('button', { name: 'Reabrir OS' })).toBeVisible();
   });
