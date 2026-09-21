@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { Camera, Check, FileText, History, MapPin, Pencil, Phone, Plus, ReceiptText, RotateCcw, Wallet, X } from 'lucide-react';
+import { Camera, Check, FileText, History, MapPin, Pencil, Phone, Plus, ReceiptText, RotateCcw, Trash2, Wallet, X } from 'lucide-react';
 import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
 import OrderAuditHistory from './order-audit-history';
 import '../css/order-detail-layout.css';
@@ -249,6 +249,7 @@ function FinalReportPanel({ order, value, setValue, reload, onDirtyChange }: any
 }
 
 function BudgetBox({ order, role, openSignal = 0 }: any) {
+  const statusName: Record<string, string> = { draft: 'Rascunho', sent: 'Enviado', approved: 'Aprovado', refused: 'Recusado' };
   const isFinalized = ['completed', 'interrupted'].includes(order.status);
   const [list, setList] = useState<any[]>([]), [open, setOpen] = useState(false), [validity, setValidity] = useState(7), [catalog, setCatalog] = useState<ServiceProductCatalogItem[]>([]), [items, setItems] = useState<any[]>([]), [error, setError] = useState('');
   const [diagnosis, setDiagnosis] = useState(''), [proposal, setProposal] = useState(''), [observation, setObservation] = useState('');
@@ -274,7 +275,7 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
   };
   return <section className="wide"><div className="section-title"><h2>Orçamentos</h2>{!isFinalized && <button className="primary" data-arl-quick-source="budget" onClick={() => setOpen(true)}><Plus/>Gerar orçamento</button>}</div>
     {open && <div className="modal"><form className="modal-card budget-form" role="dialog" aria-modal="true" aria-label="Gerar orçamento" onSubmit={submit}><button type="button" className="modal-close" aria-label="Fechar orçamento" onClick={() => setOpen(false)}><X/></button><h1>Gerar orçamento</h1><label className="field"><span>Diagnóstico</span><textarea spellCheck={true} required value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}/></label><label className="field"><span>Serviço proposto</span><textarea spellCheck={true} required value={proposal} onChange={(e) => setProposal(e.target.value)}/></label><TextField label="Validade (dias)" value={validity} onChange={(e: any) => setValidity(+e.target.value)} required/><ServiceProductSearch items={catalog} ariaLabel="Buscar serviço ou produto para o orçamento" onSelect={add} context="budget" browseButtonLabel="Adicionar serviços"/><div className="arl-od-lines">{items.map((row, index) => <div className="finish-item" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, quantity: Math.max(1, +e.target.value || 1) } : item))}/><input aria-label={`Valor unitário de ${row.description}`} value={(row.unit_price_cents / 100).toFixed(2).replace('.', ',')} onChange={(e) => setItems(items.map((item, i) => i === index ? { ...item, unit_price_cents: Math.max(0, Math.round(Number(e.target.value.replace(',', '.')) * 100) || 0) } : item))}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))}>Remover</button></div>)}</div><label className="field"><span>Observação (opcional)</span><textarea spellCheck={true} value={observation} onChange={(e) => setObservation(e.target.value)}/></label><strong>Total: {money(items.reduce((sum, row) => sum + row.quantity * row.unit_price_cents, 0))}</strong>{error && <div className="alert">{error}</div>}<div className="actions"><button type="button" onClick={() => setOpen(false)}>Cancelar</button><button className="primary">Salvar e gerar PDF</button></div></form></div>}
-    {error && !open && <div className="alert">{error}</div>}{list.length ? list.map((budget) => <p className="arl-budget-row" key={budget.id}>Revisão {budget.revision} · {budget.status} · R$ {(budget.total_cents / 100).toFixed(2)} · <a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/budgets/${budget.revision}/pdf`}>Abrir PDF</a> {!isFinalized && budget.status === 'draft' && <button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'sent' }) }).then(load)}>Marcar enviado</button>}{!isFinalized && budget.status === 'sent' && <><button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'approved' }) }).then(load)}>Aprovar orçamento</button><button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'refused' }) }).then(load)}>Recusar</button></>}{!isFinalized && ['Master', 'Administrador'].includes(role) && !budget.used_in_finalization && <button type="button" onClick={() => void remove(budget)}>Excluir orçamento</button>}</p>) : <p>Nenhum orçamento criado.</p>}
+    {error && !open && <div className="alert">{error}</div>}{list.length ? list.map((budget) => <p className="arl-budget-row" key={budget.id}>Revisão {budget.revision} · {statusName[budget.status] || budget.status} · {money(budget.total_cents)} · <a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/budgets/${budget.revision}/pdf`}>Abrir PDF</a> {!isFinalized && budget.status === 'draft' && <button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'sent' }) }).then(load)}>Marcar enviado</button>}{!isFinalized && budget.status === 'sent' && <><button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'approved' }) }).then(load)}>Aprovar orçamento</button><button onClick={() => api(`/orders/${order.id}/budgets/${budget.revision}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'refused' }) }).then(load)}>Recusar</button></>}{!isFinalized && ['Master', 'Administrador'].includes(role) && !budget.used_in_finalization && <button type="button" onClick={() => void remove(budget)}>Excluir orçamento</button>}</p>) : <p>Nenhum orçamento criado.</p>}
   </section>;
 }
 
@@ -471,18 +472,32 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
   };
   const uploadFiles = async (files?: readonly File[] | null) => { if (!files?.length) return; const available = Math.max(0, 5 - (order.photos?.length || 0)); if (files.length > available) window.alert('Cada OS aceita no máximo 5 fotos. As fotos excedentes não serão enviadas.'); if (available === 0) return; try { for (const file of files.slice(0, available)) { const form = new FormData(); form.append('photo', file); await api(`/orders/${order.id}/photos`, { method: 'POST', body: form }); } await load(); } catch (e: any) { setError(e.message); } };
   const canAdminister = ['Master', 'Administrador'].includes(role);
+  const deletePhoto = async (photo: any) => {
+    if (!canAdminister || !window.confirm('Excluir esta foto do equipamento? PDFs já emitidos não serão alterados.')) return;
+    try {
+      await api(`/photos/${photo.id}`, { method: 'DELETE' });
+      setOrder((current: any) => ({ ...current, photos: (current.photos || []).filter((item: any) => item.id !== photo.id) }));
+    } catch (reason: any) {
+      setError(reason.message);
+    }
+  };
   const editOrder = () => onEdit ? onEdit() : setEditOpen(true);
-  const finalMessage = [`Olá, ${order.client?.name || 'cliente'} 👋`, `Seu Equipamento está pronto da OS ${order.number}! 🎉`, '📋 Detalhes do Serviço:', `- Valor: ${money(order.total_cents || 0)}`, '💳 Formas de Pagamento:', '- PIX (Chave): 35988285777', '- Cartão: (Com taxas inclusas)', '- Dinheiro: (Favor trazer trocado)', '⚠️ A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.', 'Agradecemos pela preferência! 😊'].join('\n');
   const shareFinalReport = async () => {
-    const documents = await api(`/orders/${order.id}/documents`);
-    const final = documents.find((row: any) => row.type === 'final');
-    if (!final) return window.alert('O Relatório Técnico Final ainda não foi gerado.');
-    const href = `/api/orders/${order.id}/final/${final.revision}/pdf`;
-    const blob = await fetch(href, { credentials: 'same-origin' }).then((response) => response.blob());
-    const file = new File([blob], `Relatorio-Tecnico-OS-${order.number}-R${final.revision}.pdf`, { type: 'application/pdf' });
-    if (navigator.share && navigator.canShare?.({ files: [file] })) return navigator.share({ text: finalMessage, files: [file] });
-    const anchor = document.createElement('a'); anchor.href = href; anchor.download = file.name; anchor.click();
-    if (openingFullPhone) window.open(`https://wa.me/${openingFullPhone}?text=${encodeURIComponent(finalMessage)}`, '_blank', 'noopener');
+    const pdfWindow = window.open('', '_blank');
+    if (!pdfWindow) return window.alert('Permita a abertura de novas abas para visualizar o Relatório Técnico Final.');
+    pdfWindow.opener = null;
+    try {
+      const documents = await api(`/orders/${order.id}/documents`);
+      const final = documents.filter((row: any) => row.type === 'final').sort((a: any, b: any) => b.revision - a.revision)[0];
+      if (!final) {
+        pdfWindow.close();
+        return window.alert('O Relatório Técnico Final ainda não foi gerado.');
+      }
+      pdfWindow.location.replace(`/api/orders/${order.id}/final/${final.revision}/pdf`);
+    } catch (reason: any) {
+      pdfWindow.close();
+      window.alert(reason.message || 'Não foi possível abrir o Relatório Técnico Final.');
+    }
   };
   const openingPhone = digits(order.client?.phone || '');
   const openingFullPhone = openingPhone ? (openingPhone.startsWith('55') ? openingPhone : `55${openingPhone}`) : '';
@@ -514,7 +529,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     <section><h2>Estado físico na entrada</h2><p>{order.intake_condition || 'Equipamento aparentemente 100% sem avarias'}</p></section>
     <section><h2>Serviços</h2>{order.items?.length ? order.items.map((item: any) => <p key={item.id}>{item.quantity} × {item.description}</p>) : <p>Nenhum serviço registrado.</p>}</section>
     {interrupted && <section className="arl-interruption-note"><h2>Interrupção</h2><p><strong>Motivo:</strong> {order.interruption_reason || order.technical_report}</p><p><strong>O que já foi feito:</strong> {order.interruption_work_done}</p></section>}
-    {reopenOpen && <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Reabrir OS #${order.number}`}><h2>Reabrir OS #{order.number}</h2><p>A mesma OS voltará para Em Análise. A finalização e o PDF atuais permanecerão no histórico.</p><label>Motivo da reabertura<textarea spellCheck={true} value={reopenNote} onChange={(event) => setReopenNote(event.target.value)}/></label><div className="arl-od-actions"><button type="button" onClick={() => setReopenOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={async () => { if (!reopenNote.trim()) return; await api(`/orders/${order.id}/reopen`, { method: 'POST', body: JSON.stringify({ note: reopenNote.trim() }) }); setReopenOpen(false); await load(); }}>Confirmar reabertura</button></div></section></div>}
+    {reopenOpen && <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Reabrir OS #${order.number}`}><h2>Reabrir OS #{order.number}</h2><p>A mesma OS voltará para Em Análise. Ao concluir novamente, a revisão anterior será mantida como um registro interno resumido.</p><label>Motivo da reabertura<textarea spellCheck={true} value={reopenNote} onChange={(event) => setReopenNote(event.target.value)}/></label><div className="arl-od-actions"><button type="button" onClick={() => setReopenOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={async () => { if (!reopenNote.trim()) return; await api(`/orders/${order.id}/reopen`, { method: 'POST', body: JSON.stringify({ note: reopenNote.trim() }) }); setReopenOpen(false); await load(); }}>Confirmar reabertura</button></div></section></div>}
   </div>;
   const stages = ['Entrada', 'Aguardando', 'Execução', 'Finalização', 'Pagamento'];
   const currentStage = order.archived ? -1 : ['completed', 'interrupted'].includes(order.status) ? 4 : ['in_service', 'waiting_part'].includes(order.status) ? 2 : order.status === 'analysis' ? 1 : 0;
@@ -545,7 +560,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
         <section className="arl-intake-field"><h3>Problema relatado</h3><p>{order.reported_problem}</p></section>
         <section className={`arl-intake-field ${!order.intake_condition ? 'arl-checklist-ok' : ''}`}><h3>Estado físico na entrada</h3><p className={!order.intake_condition ? 'ok' : undefined}>{order.intake_condition || 'Equipamento aparentemente 100% sem avarias'}</p></section>
       </div>
-        <section className="arl-intake-photos"><h3>Fotos</h3><div><div className="arl-order-photo-tools"><label>↑ Enviar foto<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => { const selectedPhotos = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ''; void uploadFiles(selectedPhotos); }}/></label><button type="button" className="arl-camera-button" onClick={() => setCamera(true)}>◉ Usar câmera</button></div><div className="photos">{order.photos?.length ? order.photos.map((photo: any) => <a key={photo.id} href={`/api/orders/${order.id}/photos/${photo.id}`} target="_blank" rel="noreferrer"><img src={`/api/orders/${order.id}/photos/${photo.id}`} alt={`Foto ${photo.id} da OS`}/></a>) : <p>Nenhuma foto anexada.</p>}</div></div></section>
+        <section className="arl-intake-photos"><div className="arl-intake-photos-heading"><h3>Fotos</h3><span aria-live="polite">{order.photos?.length || 0}/5</span></div><div><div className="arl-order-photo-tools"><label>↑ Enviar foto<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => { const selectedPhotos = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ''; void uploadFiles(selectedPhotos); }}/></label><button type="button" className="arl-camera-button" onClick={() => setCamera(true)}>◉ Usar câmera</button></div><div className="photos">{order.photos?.length ? order.photos.map((photo: any) => <div className="arl-order-photo" key={photo.id}><a href={`/api/orders/${order.id}/photos/${photo.id}`} target="_blank" rel="noreferrer"><img src={`/api/orders/${order.id}/photos/${photo.id}`} alt={`Foto ${photo.id} da OS`}/></a>{canAdminister && <button type="button" aria-label={`Excluir foto ${photo.id}`} title="Excluir foto" onClick={() => void deletePhoto(photo)}><Trash2 aria-hidden="true"/></button>}</div>) : <p>Nenhuma foto anexada.</p>}</div></div></section>
     </section>
     <div className="detail-grid arl-order-detail arl-order-workflow">
       {immutable && order.items?.length > 0 && <section className="wide order-items-summary"><h2>Serviços / Produtos da OS</h2>{order.items.map((item: any) => <div className="order-item-line" key={item.id}><div><b>{item.description}</b><small>{item.quantity} × {money(item.unit_price_cents)}</small></div><strong>{money(item.subtotal_cents)}</strong></div>)}</section>}
@@ -562,7 +577,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
       </section>}
     </div>
     {editOpen && (immutable ? <ImmutableModal order={order} onClose={() => setEditOpen(false)}/> : <EditOrderModal order={order} onClose={() => setEditOpen(false)} onSaved={async () => { setEditOpen(false); await load(); }}/>) }
-    {reopenOpen && <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Reabrir OS #${order.number}`}><h2>Reabrir OS #{order.number}</h2><p>A mesma OS voltará para Em Análise. A finalização e o PDF atuais permanecerão no histórico.</p><label>Motivo da reabertura<textarea spellCheck={true} value={reopenNote} onChange={(event) => setReopenNote(event.target.value)}/></label><div className="arl-od-actions"><button type="button" onClick={() => setReopenOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={async () => { if (!reopenNote.trim()) return; await api(`/orders/${order.id}/reopen`, { method: 'POST', body: JSON.stringify({ note: reopenNote.trim() }) }); setReopenOpen(false); await load(); }}>Confirmar reabertura</button></div></section></div>}
+    {reopenOpen && <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Reabrir OS #${order.number}`}><h2>Reabrir OS #{order.number}</h2><p>A mesma OS voltará para Em Análise. Ao concluir novamente, a revisão anterior será mantida como um registro interno resumido.</p><label>Motivo da reabertura<textarea spellCheck={true} value={reopenNote} onChange={(event) => setReopenNote(event.target.value)}/></label><div className="arl-od-actions"><button type="button" onClick={() => setReopenOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={async () => { if (!reopenNote.trim()) return; await api(`/orders/${order.id}/reopen`, { method: 'POST', body: JSON.stringify({ note: reopenNote.trim() }) }); setReopenOpen(false); await load(); }}>Confirmar reabertura</button></div></section></div>}
     {photoChoice && <PhotoChoice onClose={() => setPhotoChoice(false)} onUpload={() => { setPhotoChoice(false); fileInput.current?.click(); }} onCamera={() => { setPhotoChoice(false); setCamera(true); }}/>} 
     {camera && <CameraModal onClose={() => setCamera(false)} onFile={(file) => { setCamera(false); void uploadFiles([file]); }}/>}
     {order.status === 'completed' && <FinalShareCard order={order}/>} 

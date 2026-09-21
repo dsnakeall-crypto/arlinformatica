@@ -42,6 +42,7 @@ class TechnicalSignatureTest extends TestCase
 
         $result = imagecreatefromstring($processed);
         $corner = imagecolorsforindex($result, imagecolorat($result, 0, 0));
+        $this->assertLessThanOrEqual(600, imagesx($result));
         $this->assertSame(127, $corner['alpha']);
         $this->assertLessThan(127, $this->minimumAlpha($result));
         imagedestroy($result);

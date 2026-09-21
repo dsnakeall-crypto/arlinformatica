@@ -51,7 +51,13 @@ class FinalShareController extends Controller
             ->exists();
         abort_unless($valid, 403, 'Este link não é válido ou já expirou.');
 
-        $response = $documents->response($order, 'final', $revision);
+        $currentRevision = DB::table('generated_documents')
+            ->where('service_order_id', $order->id)
+            ->where('type', 'final')
+            ->max('revision');
+        abort_unless($currentRevision, 404, 'O PDF final atual desta OS não foi encontrado.');
+
+        $response = $documents->response($order, 'final', (int) $currentRevision);
         $response->headers->set('X-Robots-Tag', 'noindex');
 
         return $response;

@@ -54,7 +54,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/users/{user}/password', [UserController::class, 'resetPassword']);
         Route::post('/storage/photos/preview', [StorageController::class, 'preview']);
         Route::delete('/storage/photos', [StorageController::class, 'purge']);
-        Route::delete('/photos/{photo}', [StorageController::class, 'destroy']);
         Route::get('/backups', [BackupController::class, 'index']);
         Route::put('/backups/automatic', [BackupController::class, 'updateAutomatic']);
         Route::post('/backups/manual-download', [BackupController::class, 'manualDownload'])->middleware('throttle:2,10');
@@ -76,6 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/audit-history', [ServiceOrderAuditController::class, 'index']);
     Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
     Route::middleware('role:Master,Administrador')->group(function () {
+        Route::delete('/photos/{photo}', [StorageController::class, 'destroy']);
         Route::delete('/orders/{order}', [ServiceOrderMaintenanceController::class, 'destroy']);
         Route::post('/orders/{order}/reopen', [ServiceOrderMaintenanceController::class, 'reopen']);
     });
@@ -121,6 +121,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/budgets/{revision}/pdf', [DocumentController::class, 'budget']);
     Route::get('/orders/{order}/documents', [DocumentController::class, 'index']);
     Route::get('/orders/{order}/final/{revision}/pdf', [DocumentController::class, 'finalDocument']);
+    Route::get('/orders/{order}/final-record/{revision}/pdf', [DocumentController::class, 'finalRecord']);
     Route::get('/orders/{order}/reports', [TechnicalReportController::class, 'index']);
     Route::post('/orders/{order}/reports', [TechnicalReportController::class, 'store']);
     Route::put('/orders/{order}/reports/{revision}', [TechnicalReportController::class, 'update']);

@@ -123,6 +123,31 @@ class StageSevenTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'photos.purged']);
     }
 
+    public function test_master_and_admin_delete_individual_photo_but_employee_cannot(): void
+    {
+        Storage::fake('local');
+        $master = $this->user('Master', 'master-photo');
+        $admin = $this->user('Administrador', 'admin-photo');
+        $employee = $this->user('Funcionário', 'employee-photo');
+        $order = $this->order($master);
+
+        foreach ([[$master, 'master'], [$admin, 'admin']] as [$authorized, $suffix]) {
+            $path = "orders/photo-$suffix.jpg";
+            Storage::disk('local')->put($path, 'photo');
+            $photo = ServiceOrderPhoto::create(['service_order_id' => $order->id, 'disk' => 'local', 'path' => $path, 'mime' => 'image/jpeg', 'bytes' => 5, 'width' => 10, 'height' => 10, 'uploaded_by' => $master->id]);
+            $this->actingAs($authorized)->deleteJson("/api/photos/{$photo->id}")->assertOk();
+            Storage::disk('local')->assertMissing($path);
+            $this->assertDatabaseMissing('service_order_photos', ['id' => $photo->id]);
+            $this->assertDatabaseHas('audit_logs', ['action' => 'photo.deleted', 'subject_id' => $photo->id]);
+        }
+
+        Storage::disk('local')->put('orders/photo-employee.jpg', 'photo');
+        $protected = ServiceOrderPhoto::create(['service_order_id' => $order->id, 'disk' => 'local', 'path' => 'orders/photo-employee.jpg', 'mime' => 'image/jpeg', 'bytes' => 5, 'width' => 10, 'height' => 10, 'uploaded_by' => $master->id]);
+        $this->actingAs($employee)->deleteJson("/api/photos/{$protected->id}")->assertForbidden();
+        Storage::disk('local')->assertExists('orders/photo-employee.jpg');
+        $this->assertDatabaseHas('service_order_photos', ['id' => $protected->id]);
+    }
+
     private function user(string $role, string $login): User
     {
         return User::create(['role_id' => Role::where('name', $role)->value('id'), 'name' => $role, 'login' => $login, 'password' => 'Senha#Forte123', 'active' => true]);

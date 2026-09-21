@@ -15,7 +15,11 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await expect(page.locator('.clients-react-page')).toBeVisible();
   await expect(page.locator('.clients-list-panel')).toBeVisible();
- 
+  const clientSearch = page.getByLabel('Buscar clientes');
+  await clientSearch.fill('__cliente_inexistente_homologacao_9f4a2__');
+  await expect(page.getByText('Nenhum cliente encontrado.', { exact: true })).toBeVisible();
+  await clientSearch.fill('');
+
   await expect(page.getByTestId('client-modal')).toHaveCount(0);
   await page.getByRole('button', { name: 'Novo cliente', exact: true }).click();
   const clientModal = page.getByTestId('client-modal');
@@ -62,6 +66,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   expect(requestBody.equipment_details).toBe('Dell Inspiron 15 + carregador');
   const created = await orderResponse.json();
 
+  await expect(page.locator('.arl-order-opened-modal')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: `OS #${created.number}`, exact: true })).toBeVisible();
   const detail = await api(page, `/orders/${created.id}`);
   expect(detail.status).toBe(200);

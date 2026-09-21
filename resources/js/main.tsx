@@ -192,14 +192,14 @@ const serializeCompanySettings = (data: any) => ({
   phone: String(data.phone || "").replace(/\D/g, ""),
   postal_code: String(data.postal_code || "").replace(/\D/g, ""),
 });
-function Field({ label, name, value, onChange, error, required = false, spellCheck = false }: any) {
+function Field({ label, name, value, onChange, error, required = false, spellCheck = false, type = "text" }: any) {
   return (
     <label className="field">
       <span>
         {label}
         {required && " *"}
       </span>
-      <input name={name} value={value} onChange={onChange} spellCheck={spellCheck} />
+      <input type={type} name={name} value={value} onChange={onChange} spellCheck={spellCheck} />
       {error && <small>{error}</small>}
     </label>
   );
@@ -673,7 +673,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
     [q, setQ] = useState(""),
     [tab, setTab] = useState(initialTab),
     [page, setPage] = useState(1),
-    [perPage, setPerPage] = useState(50),
+    [perPage, setPerPage] = useState(12),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
     [interrupt, setInterrupt] = useState<Order>(),
@@ -837,7 +837,8 @@ function Orders({ open, role, initialTab = "progress" }: any) {
                 setPage(1);
               }}
             >
-              <option value="50">50</option>
+              <option value="12">12</option>
+              <option value="30">30</option>
               <option value="100">100</option>
             </select>
           </label>
@@ -3868,6 +3869,7 @@ function SettingsPage({ role }: any) {
   );
 }
 function BudgetBox({ order }: any) {
+  const statusName: Record<string, string> = { draft: "Rascunho", sent: "Enviado", approved: "Aprovado", refused: "Recusado" };
   const [list, setList] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [validity, setValidity] = useState(7);
@@ -4005,8 +4007,7 @@ function BudgetBox({ order }: any) {
       {list.length ? (
         list.map((b) => (
           <p>
-            Revisão {b.revision} · {b.status} · R${" "}
-            {(b.total_cents / 100).toFixed(2)} ·{" "}
+            Revisão {b.revision} · {statusName[b.status] || b.status} · {money(b.total_cents)} ·{" "}
             <a
               target="_blank"
               href={`/api/orders/${order.id}/budgets/${b.revision}/pdf`}
@@ -4659,20 +4660,43 @@ function CatalogAdmin({ catalog, title }: any) {
 }
 function UsersAdmin() {
   const [data, setData] = useState<any>({ users: { data: [] }, roles: [] }),
-    [form, setForm] = useState<any>();
+    [form, setForm] = useState<any>(),
+    [error, setError] = useState("");
   const load = () => api("/users").then(setData);
   useEffect(() => {
     void load();
   }, []);
   const save = async (e: FormEvent) => {
     e.preventDefault();
+    setError("");
+    if (!form.id) {
+      const missing = [
+        form.password.length < 12 && "pelo menos 12 caracteres",
+        !/[a-z]/.test(form.password) && "uma letra minúscula",
+        !/[A-Z]/.test(form.password) && "uma letra maiúscula",
+        !/[0-9]/.test(form.password) && "um número",
+        !/[^a-zA-Z0-9]/.test(form.password) && "um caractere especial",
+      ].filter(Boolean);
+      if (missing.length) {
+        setError(`A senha precisa conter ${missing.join(", ")}.`);
+        return;
+      }
+      if (form.password !== form.password_confirmation) {
+        setError("A confirmação da senha não confere.");
+        return;
+      }
+    }
     const payload = { ...form, role_id: +form.role_id, active: !!form.active };
-    await api(form.id ? `/users/${form.id}` : "/users", {
-      method: form.id ? "PUT" : "POST",
-      body: JSON.stringify(payload),
-    });
-    setForm(null);
-    load();
+    try {
+      await api(form.id ? `/users/${form.id}` : "/users", {
+        method: form.id ? "PUT" : "POST",
+        body: JSON.stringify(payload),
+      });
+      setForm(null);
+      await load();
+    } catch (reason: any) {
+      setError((Object.values(reason.errors || {}).flat()[0] as string) || reason.message || "Não foi possível salvar o usuário.");
+    }
   };
   return (
     <>
@@ -4683,7 +4707,8 @@ function UsersAdmin() {
         actions={
           <button
             className="primary"
-            onClick={() =>
+            onClick={() => {
+              setError("");
               setForm({
                 name: "",
                 login: "",
@@ -4692,14 +4717,15 @@ function UsersAdmin() {
                 active: true,
                 password: "",
                 password_confirmation: "",
-              })
-            }
+              });
+            }}
           >
             Novo usuário
           </button>
         }
       />
       <section className="panel admin-list">
+        {!form && error && <div className="alert" role="alert">{error}</div>}
         {data.users.data.map((u: any) => (
           <article>
             <div>
@@ -4709,20 +4735,22 @@ function UsersAdmin() {
                 criado em {new Date(u.created_at).toLocaleDateString("pt-BR")}
               </small>
             </div>
-            <button onClick={() => setForm({ ...u, role_id: u.role.id })}>
+            <button onClick={() => { setError(""); setForm({ ...u, role_id: u.role.id }); }}>
               Editar
             </button>
             <button
               onClick={() => {
                 const p = prompt("Nova senha forte (mínimo 12 caracteres)");
-                if (p)
+                if (p) {
+                  setError("");
                   api(`/users/${u.id}/password`, {
                     method: "PUT",
                     body: JSON.stringify({
                       password: p,
                       password_confirmation: p,
                     }),
-                  });
+                  }).catch((reason) => setError((Object.values(reason.errors || {}).flat()[0] as string) || reason.message || "Não foi possível redefinir a senha."));
+                }
               }}
             >
               Redefinir senha
@@ -4734,6 +4762,7 @@ function UsersAdmin() {
         <div className="modal">
           <form className="modal-card users-admin-modal" onSubmit={save}>
             <h2>{form.id ? "Editar usuário" : "Novo usuário"}</h2>
+            {error && <div className="alert" role="alert">{error}</div>}
             {["name", "login", "email"].map((k) => (
               <Field
                 label={
@@ -4766,6 +4795,7 @@ function UsersAdmin() {
               <>
                 <Field
                   label="Senha forte"
+                  type="password"
                   value={form.password}
                   onChange={(e: any) =>
                     setForm({ ...form, password: e.target.value })
@@ -4773,6 +4803,7 @@ function UsersAdmin() {
                 />
                 <Field
                   label="Confirmar senha"
+                  type="password"
                   value={form.password_confirmation}
                   onChange={(e: any) =>
                     setForm({ ...form, password_confirmation: e.target.value })
@@ -4986,9 +5017,11 @@ function MobileBottomBar({ go, page }: any) {
   );
 }
 function App() {
-  const [layout, setLayout] = useState<"desktop" | "mobile">(() =>
-    localStorage.getItem("arl-layout-mode") === "mobile" ? "mobile" : "desktop",
-  );
+  const [layout, setLayout] = useState<"desktop" | "mobile">(() => {
+    const saved = localStorage.getItem("arl-layout-mode");
+    if (saved === "desktop" || saved === "mobile") return saved;
+    return window.matchMedia("(max-width: 1024px)").matches ? "mobile" : "desktop";
+  });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem("arl-sidebar-collapsed") === "true",
   );

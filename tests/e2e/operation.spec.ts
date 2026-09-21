@@ -18,6 +18,10 @@ test.describe.serial('fluxo operacional principal', () => {
     await modal.locator('label').filter({ hasText: 'Nome' }).locator('input').fill('Funcionário Homologação');
     await modal.locator('label').filter({ hasText: 'Login' }).locator('input').fill('func.homologacao');
     await modal.locator('select').selectOption({ label: 'Funcionário' });
+    await modal.locator('label').filter({ hasText: 'Senha forte' }).locator('input').fill('fraca');
+    await modal.locator('label').filter({ hasText: 'Confirmar senha' }).locator('input').fill('fraca');
+    await modal.getByRole('button', { name: 'Salvar' }).click();
+    await expect(modal.getByRole('alert')).toContainText('A senha precisa conter pelo menos 12 caracteres, uma letra maiúscula, um número, um caractere especial.');
     await modal.locator('label').filter({ hasText: 'Senha forte' }).locator('input').fill(employeePassword);
     await modal.locator('label').filter({ hasText: 'Confirmar senha' }).locator('input').fill(employeePassword);
     await modal.getByRole('button', { name: 'Salvar' }).click();
@@ -81,6 +85,25 @@ test.describe.serial('fluxo operacional principal', () => {
     expect((await page.request.get(`/api/orders/${orderId}/term`)).status()).toBe(200);
   });
 
+  test('Master exclui foto com confirmação e contador atualiza sem recarregar', async ({ page }) => {
+    await page.goto(`/orders/${orderId}`);
+    await expect(page.getByRole('heading', { name: 'Fotos', exact: true })).toBeVisible();
+    await expect(page.getByText('1/5', { exact: true })).toBeVisible();
+    const photo = page.getByRole('button', { name: /Excluir foto/ });
+    await expect(photo).toBeVisible();
+    page.once('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('confirm');
+      expect(dialog.message()).toContain('PDFs já emitidos não serão alterados');
+      await dialog.accept();
+    });
+    await photo.click();
+    await expect(page.getByRole('heading', { name: 'Fotos', exact: true })).toBeVisible();
+    await expect(page.getByText('0/5', { exact: true })).toBeVisible();
+    await expect(page.getByText('Nenhuma foto anexada.', { exact: true })).toBeVisible();
+    const detail = await api(page, `/orders/${orderId}`);
+    expect(detail.body.photos).toHaveLength(0);
+  });
+
   test('gera e aprova orçamento da OS', async ({ page }) => {
     await page.getByRole('button', { name: 'Ordens' }).click();
     await page.getByRole('tablist', { name: 'Filtrar ordens' }).getByRole('button', { name: 'Todas', exact: true }).click();
@@ -113,8 +136,10 @@ test.describe.serial('fluxo operacional principal', () => {
     await budgetForm.getByRole('button', { name: 'Salvar e gerar PDF' }).click();
     const budgetsSection = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Orçamentos', exact: true }) });
     await expect(budgetsSection.getByText(/Revisão 1/)).toBeVisible();
+    await expect(budgetsSection.getByText(/Revisão 1 · Rascunho · R\$ 150,00/)).toBeVisible();
     await expect(budgetsSection.getByRole('link', { name: 'Abrir PDF' })).toHaveAttribute('href', `/api/orders/${orderId}/budgets/1/pdf`);
     await budgetsSection.getByRole('button', { name: 'Marcar enviado' }).click();
+    await expect(budgetsSection.getByText(/Revisão 1 · Enviado · R\$ 150,00/)).toBeVisible();
     await expect(budgetsSection.getByRole('button', { name: 'Aprovar orçamento' })).toBeVisible();
     const approvalRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/budgets/1/status`) && request.method() === 'PATCH');
     await budgetsSection.getByRole('button', { name: 'Aprovar orçamento' }).click();
@@ -122,6 +147,7 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(approvalPayload).toEqual({ status: 'approved' });
     expect(approvalPayload).not.toHaveProperty('copy_items');
     await expect(budgetsSection.getByRole('button', { name: 'Aprovar orçamento' })).toHaveCount(0);
+    await expect(budgetsSection.getByText(/Revisão 1 · Aprovado · R\$ 150,00/)).toBeVisible();
 
     const services = await api(page, '/catalogs/services');
     const formatting = services.body.find((row: any) => row.name === 'Formatação E2E');
@@ -167,7 +193,9 @@ test.describe.serial('fluxo operacional principal', () => {
     const finalizePayload = (await finalizeRequestPromise).postDataJSON();
     expect(finalizePayload.approved_budget_id).toBeTruthy();
     expect(finalizePayload).not.toHaveProperty('items');
-    await expect(page.getByRole('status', { name: 'Compartilhar fechamento da OS' })).toBeVisible();
+    const completion = page.getByRole('status', { name: 'Compartilhar fechamento da OS' });
+    await expect(completion).toBeVisible();
+    await expect(completion.getByText(`OS #${orderNumber} finalizada`, { exact: true })).toBeVisible();
     const documents = await api(page, `/orders/${orderId}/documents`);
     expect(documents.body.some((document: any) => document.type === 'final')).toBe(true);
     const finalizedResponse = await page.request.get(`/api/orders/${orderId}`);
@@ -200,7 +228,20 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.reload();
     const documentMenu = page.locator('.arl-opening-call');
     await documentMenu.getByRole('button', { name: "PDF's", exact: true }).click();
-    await expect(documentMenu.getByRole('button', { name: 'Relatório Técnico Final' })).toBeVisible();
+    const finalReportButton = documentMenu.getByRole('button', { name: 'Relatório Técnico Final' });
+    await expect(finalReportButton).toBeVisible();
+    const browserContext = page.context();
+    const pagesBeforePdf = browserContext.pages();
+    const finalPdfResponsePromise = browserContext.waitForEvent('response', (response) => {
+      const url = new URL(response.url());
+      return url.pathname === `/api/orders/${orderId}/final/1/pdf` && response.request().method() === 'GET';
+    });
+    await finalReportButton.click();
+    const finalPdfResponse = await finalPdfResponsePromise;
+    expect(finalPdfResponse.status()).toBe(200);
+    expect(finalPdfResponse.headers()['content-type']).toContain('application/pdf');
+    const openedPdfPage = browserContext.pages().find((candidate) => !pagesBeforePdf.includes(candidate));
+    if (openedPdfPage) await openedPdfPage.close();
     await expect(documentMenu.getByRole('button', { name: 'Reabrir OS' })).toBeVisible();
   });
 

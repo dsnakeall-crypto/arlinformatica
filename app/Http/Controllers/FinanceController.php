@@ -537,7 +537,10 @@ class FinanceController extends Controller
             'generated_at' => now(self::TZ)->format('d/m/Y H:i:s'),
             'timezone' => self::TZ,
         ];
-        $bytes = Pdf::loadView('documents.financial-report', $snapshot)->setPaper('a4')->output();
+        $bytes = Pdf::loadView('documents.financial-report', $snapshot)
+            ->setOption('enable_font_subsetting', true)
+            ->setPaper('a4')
+            ->output();
         $revision = (int) DB::table('generated_documents')->where(['type' => 'financial-report', 'period' => $month['period']])->max('revision') + 1;
         $path = "documents/finance/{$month['period']}-r$revision.pdf";
         Storage::disk('local')->put($path, $bytes);

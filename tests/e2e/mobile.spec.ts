@@ -212,10 +212,11 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
   expect(persisted.status).toBe(200);
   expect(persisted.body.equipment_description).toBe(manualDescription);
 
-  const openedModal = page.locator('.arl-order-opened-modal');
-  await expect(openedModal).toBeVisible();
-  await openedModal.getByRole('button', { name: 'Cancelar', exact: true }).click();
-  await expect(openedModal).toHaveCount(0);
+  await expect(page.locator('.arl-order-opened-modal')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: `OS #${createdOrder.number}`, exact: true })).toBeVisible();
+  const pdfMenu = page.locator('.arl-opening-call');
+  await pdfMenu.getByText("PDF's e Reaberturas OS", { exact: true }).click();
+  await expect(pdfMenu.getByRole('link', { name: 'Mensagem de abertura', exact: true })).toBeVisible();
 
   await bottom.getByRole('button', { name: 'Clientes', exact: true }).click();
   await page.getByRole('button', { name: 'Novo cliente' }).click();

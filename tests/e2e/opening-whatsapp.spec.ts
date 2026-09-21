@@ -2,7 +2,7 @@ import { selectNewOrderClient } from './helpers';
 import { expect, test } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
-test('abertura da OS mostra um único popup e prepara a mensagem fixa do WhatsApp', async ({ page }) => {
+test('abertura da OS vai direto à ficha e mantém a mensagem fixa no menu de PDFs', async ({ page }) => {
   await login(page);
 
   const stamp = Date.now();
@@ -26,21 +26,14 @@ test('abertura da OS mostra um único popup e prepara a mensagem fixa do WhatsAp
   await selectNewOrderClient(page, createdClient.body.id);
   await page.getByLabel('Equipamento *').fill('Notebook homologação WhatsApp');
   await page.getByLabel('Problema relatado *').fill('Teste da mensagem fixa de abertura');
+  const createdResponse = page.waitForResponse((response) => response.url().endsWith('/api/orders') && response.request().method() === 'POST');
   await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
+  const order = await (await createdResponse).json();
 
-  const modal = page.locator('.arl-order-opened-modal');
-  await expect(modal).toHaveCount(1);
-  await expect(modal).toBeVisible();
-  await expect(modal.getByRole('heading', { name: 'Enviar mensagem da Abertura da OS via Whatsapp' })).toBeVisible();
-  await expect(modal.getByRole('button', { name: 'Cancelar' })).toBeVisible();
-  await expect(modal.getByRole('link', { name: 'Enviar' })).toBeVisible();
+  await expect(page.locator('.arl-order-opened-modal')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: `OS #${order.number}`, exact: true })).toBeVisible();
   await expect(page.locator('.arl-od-modal, .arl-od-sharebar')).toHaveCount(0);
   await expect(page.getByText('Compartilhar Termo PDF', { exact: true })).toHaveCount(0);
-
-  const orders = await api(page, `/orders?q=${encodeURIComponent(clientName)}`);
-  expect(orders.status).toBe(200);
-  const order = orders.body.data[0];
-  expect(order).toBeTruthy();
 
   const expectedMessage = [
     `Olá, ${clientName}`,
@@ -56,18 +49,16 @@ test('abertura da OS mostra um único popup e prepara a mensagem fixa do WhatsAp
     '*ARL Informática*',
   ].join('\n');
 
-  const href = await modal.getByRole('link', { name: 'Enviar' }).getAttribute('href');
+  const pdfMenu = page.locator('.arl-header-pdf-actions');
+  await pdfMenu.getByRole('button', { name: "PDF's", exact: true }).click();
+  const openingMessage = pdfMenu.getByRole('link', { name: 'Mensagem de abertura', exact: true });
+  await expect(openingMessage).toBeVisible();
+  const href = await openingMessage.getAttribute('href');
   expect(href).toBeTruthy();
   const url = new URL(href!);
   expect(url.hostname).toBe('wa.me');
   expect(url.pathname).toBe('/5534999998888');
   expect(url.searchParams.get('text')).toBe(expectedMessage);
-
-  await modal.getByRole('button', { name: 'Cancelar' }).click();
-  await expect(modal).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: `OS #${order.number}` })).toBeVisible();
-  await expect(page.locator('.arl-od-modal, .arl-od-sharebar')).toHaveCount(0);
-  await expect(page.getByText('Compartilhar Termo PDF', { exact: true })).toHaveCount(0);
 
   const term = await page.request.get(`/api/orders/${order.id}/term`);
   expect(term.status()).toBe(200);

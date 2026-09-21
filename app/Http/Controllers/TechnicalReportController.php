@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\ServiceOrder;
 use App\Services\CompanySettings;
 use App\Services\DocumentService;
+use App\Services\PdfPhotoOptimizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class TechnicalReportController extends Controller
 {
@@ -43,7 +43,7 @@ class TechnicalReportController extends Controller
         return response()->json(DB::table('technical_reports')->find($report->id));
     }
 
-    public function issue(Request $request, ServiceOrder $order, int $revision, CompanySettings $settings, DocumentService $documents): JsonResponse
+    public function issue(Request $request, ServiceOrder $order, int $revision, CompanySettings $settings, DocumentService $documents, PdfPhotoOptimizer $pdfPhotos): JsonResponse
     {
         abort_unless(self::FEATURE_ENABLED, 410, 'A emissão de laudos técnicos está desativada. Use o Laudo Final da OS.');
         $report = $this->find($order, $revision);
@@ -56,7 +56,7 @@ class TechnicalReportController extends Controller
         validator($content, ['technical_analysis' => 'required|string', 'diagnosis' => 'required|string', 'conclusion' => 'required|string', 'responsible_technician' => 'required|string', 'confirmed' => 'accepted'])->validate();
         $order->load(['client', 'snapshot']);
         $photoIds = $content['photo_ids'] ?? [];
-        $photos = $order->photos()->whereIn('id', $photoIds)->get()->map(fn ($photo) => ['mime' => $photo->mime, 'data' => base64_encode(Storage::disk($photo->disk)->get($photo->path))])->all();
+        $photos = $order->photos()->whereIn('id', $photoIds)->get()->map(fn ($photo) => $pdfPhotos->fromStoredPhoto($photo))->all();
         $snapshot = ['company' => $settings->snapshot(), 'order' => $order->toArray(), 'template' => (array) $template, 'content' => $content, 'photos' => $photos];
         DB::transaction(function () use ($report, $snapshot, $request) {
             DB::table('technical_reports')->where('id', $report->id)->update(['status' => 'issued', 'snapshot' => json_encode($snapshot), 'issued_at' => now(), 'issued_by' => $request->user()->id, 'updated_at' => now()]);
