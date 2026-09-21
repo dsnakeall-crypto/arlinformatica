@@ -481,17 +481,22 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     }
   };
   const editOrder = () => onEdit ? onEdit() : setEditOpen(true);
-  const finalMessage = [`Olá, ${order.client?.name || 'cliente'} 👋`, `Seu Equipamento está pronto da OS ${order.number}! 🎉`, '📋 Detalhes do Serviço:', `- Valor: ${money(order.total_cents || 0)}`, '💳 Formas de Pagamento:', '- PIX (Chave): 35988285777', '- Cartão: (Com taxas inclusas)', '- Dinheiro: (Favor trazer trocado)', '⚠️ A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.', 'Agradecemos pela preferência! 😊'].join('\n');
   const shareFinalReport = async () => {
-    const documents = await api(`/orders/${order.id}/documents`);
-    const final = documents.find((row: any) => row.type === 'final');
-    if (!final) return window.alert('O Relatório Técnico Final ainda não foi gerado.');
-    const href = `/api/orders/${order.id}/final/${final.revision}/pdf`;
-    const blob = await fetch(href, { credentials: 'same-origin' }).then((response) => response.blob());
-    const file = new File([blob], `Relatorio-Tecnico-OS-${order.number}-R${final.revision}.pdf`, { type: 'application/pdf' });
-    if (navigator.share && navigator.canShare?.({ files: [file] })) return navigator.share({ text: finalMessage, files: [file] });
-    const anchor = document.createElement('a'); anchor.href = href; anchor.download = file.name; anchor.click();
-    if (openingFullPhone) window.open(`https://wa.me/${openingFullPhone}?text=${encodeURIComponent(finalMessage)}`, '_blank', 'noopener');
+    const pdfWindow = window.open('', '_blank');
+    if (!pdfWindow) return window.alert('Permita a abertura de novas abas para visualizar o Relatório Técnico Final.');
+    pdfWindow.opener = null;
+    try {
+      const documents = await api(`/orders/${order.id}/documents`);
+      const final = documents.filter((row: any) => row.type === 'final').sort((a: any, b: any) => b.revision - a.revision)[0];
+      if (!final) {
+        pdfWindow.close();
+        return window.alert('O Relatório Técnico Final ainda não foi gerado.');
+      }
+      pdfWindow.location.replace(`/api/orders/${order.id}/final/${final.revision}/pdf`);
+    } catch (reason: any) {
+      pdfWindow.close();
+      window.alert(reason.message || 'Não foi possível abrir o Relatório Técnico Final.');
+    }
   };
   const openingPhone = digits(order.client?.phone || '');
   const openingFullPhone = openingPhone ? (openingPhone.startsWith('55') ? openingPhone : `55${openingPhone}`) : '';

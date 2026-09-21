@@ -206,7 +206,13 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.reload();
     const documentMenu = page.locator('.arl-opening-call');
     await documentMenu.getByRole('button', { name: "PDF's", exact: true }).click();
-    await expect(documentMenu.getByRole('button', { name: 'Relatório Técnico Final' })).toBeVisible();
+    const finalReportButton = documentMenu.getByRole('button', { name: 'Relatório Técnico Final' });
+    await expect(finalReportButton).toBeVisible();
+    const finalPdfPromise = page.context().waitForEvent('page');
+    await finalReportButton.click();
+    const finalPdf = await finalPdfPromise;
+    await expect.poll(() => new URL(finalPdf.url()).pathname).toBe(`/api/orders/${orderId}/final/1/pdf`);
+    await finalPdf.close();
     await expect(documentMenu.getByRole('button', { name: 'Reabrir OS' })).toBeVisible();
   });
 
