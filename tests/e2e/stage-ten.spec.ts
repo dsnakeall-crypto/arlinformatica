@@ -56,7 +56,7 @@ test('Painel alinha cabeçalho e linha nas seis colunas operacionais', async ({ 
   await expect(row.locator('.order-client-report')).toHaveAttribute('title', /Relato longo do cliente/);
 });
 
-test('layout oferece dois modos, usa Web/PC por padrão e persiste por dispositivo', async ({ page }) => {
+test('layout detecta o aparelho sem preferência e preserva a escolha manual por dispositivo', async ({ page }) => {
   await login(page);
   const selector = page.getByLabel('Layout neste dispositivo');
   await expect(selector).toHaveValue('desktop');
@@ -73,6 +73,13 @@ test('layout oferece dois modos, usa Web/PC por padrão e persiste por dispositi
   await page.reload();
   await expect(selector).toHaveValue('desktop');
   await page.evaluate(() => localStorage.setItem('arl-layout-mode', 'automatic'));
+  await page.reload();
+  await expect(selector).toHaveValue('desktop');
+  await page.evaluate(() => localStorage.removeItem('arl-layout-mode'));
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await page.reload();
+  await expect(selector).toHaveValue('mobile');
+  await selector.selectOption('desktop');
   await page.reload();
   await expect(selector).toHaveValue('desktop');
 });

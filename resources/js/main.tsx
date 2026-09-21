@@ -5016,9 +5016,11 @@ function MobileBottomBar({ go, page }: any) {
   );
 }
 function App() {
-  const [layout, setLayout] = useState<"desktop" | "mobile">(() =>
-    localStorage.getItem("arl-layout-mode") === "mobile" ? "mobile" : "desktop",
-  );
+  const [layout, setLayout] = useState<"desktop" | "mobile">(() => {
+    const saved = localStorage.getItem("arl-layout-mode");
+    if (saved === "desktop" || saved === "mobile") return saved;
+    return window.matchMedia("(max-width: 1024px)").matches ? "mobile" : "desktop";
+  });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem("arl-sidebar-collapsed") === "true",
   );
