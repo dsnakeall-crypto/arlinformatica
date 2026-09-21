@@ -6,6 +6,7 @@ use App\Models\ServiceOrder;
 use App\Services\CompanySettings;
 use App\Services\DocumentService;
 use App\Services\InventoryService;
+use App\Services\PdfPhotoOptimizer;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class FinalizationController extends Controller
 {
     private const RESULTS = ['repair_completed', 'irreparable', 'client_cancelled', 'economically_unviable', 'no_fault', 'other'];
 
-    public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents, InventoryService $inventory): JsonResponse
+    public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents, InventoryService $inventory, PdfPhotoOptimizer $pdfPhotos): JsonResponse
     {
         abort_if($order->status === 'completed', 409, 'A OS já possui uma finalização imutável.');
         abort_if($order->status === 'interrupted', 409, 'Uma OS interrompida já está fechada e não pode ser finalizada nem reaberta.');
@@ -79,8 +80,8 @@ class FinalizationController extends Controller
             : null;
         unset($company['technical_signature']);
         $order->load(['client', 'snapshot', 'checklists', 'photos']);
-        $photos = $order->photos->whereIn('id', $data['photo_ids'] ?? [])->map(function ($photo) {
-            return ['id' => $photo->id, 'mime' => $photo->mime, 'data' => base64_encode(Storage::disk($photo->disk)->get($photo->path))];
+        $photos = $order->photos->whereIn('id', $data['photo_ids'] ?? [])->map(function ($photo) use ($pdfPhotos) {
+            return ['id' => $photo->id, ...$pdfPhotos->fromStoredPhoto($photo)];
         })->values()->all();
         $showItemWarranties = (bool) ($data['show_item_warranties'] ?? false);
         $isPaid = (bool) ($data['is_paid'] ?? false);

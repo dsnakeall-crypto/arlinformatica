@@ -198,11 +198,11 @@ class ServiceOrderController extends Controller
                 ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
                 abort_if($order->photos()->count() >= 5, 422, 'Esta OS já possui o limite de 5 fotos. Remova uma foto antes de enviar outra.');
                 $data = $optimizer->optimize($request->file('photo'));
-                $path = 'orders/'.$order->id.'/'.str()->uuid().'.webp';
+                $path = 'orders/'.$order->id.'/'.str()->uuid().'.jpg';
                 Storage::disk('local')->put($path, $data);
                 [$width, $height] = getimagesizefromstring($data);
 
-                return $order->photos()->create(['disk' => 'local', 'path' => $path, 'mime' => 'image/webp', 'bytes' => strlen($data), 'width' => $width, 'height' => $height, 'uploaded_by' => $request->user()->id]);
+                return $order->photos()->create(['disk' => 'local', 'path' => $path, 'mime' => 'image/jpeg', 'bytes' => strlen($data), 'width' => $width, 'height' => $height, 'uploaded_by' => $request->user()->id]);
             });
         } catch (\Throwable $exception) {
             if ($path) {
@@ -218,7 +218,9 @@ class ServiceOrderController extends Controller
     {
         $record = $order->photos()->findOrFail($photo);
 
-        return Storage::disk($record->disk)->response($record->path, "OS-{$order->number}-{$record->id}.webp", ['Content-Type' => $record->mime, 'Cache-Control' => 'private, max-age=3600']);
+        $extension = $record->mime === 'image/jpeg' ? 'jpg' : pathinfo($record->path, PATHINFO_EXTENSION);
+
+        return Storage::disk($record->disk)->response($record->path, "OS-{$order->number}-{$record->id}.$extension", ['Content-Type' => $record->mime, 'Cache-Control' => 'private, max-age=3600']);
     }
 
     public function updateStatus(Request $r, ServiceOrder $order, InventoryService $inventory): JsonResponse

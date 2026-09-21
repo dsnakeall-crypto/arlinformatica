@@ -9,9 +9,9 @@ final class PhotoOptimizer
 {
     public const MAX_BYTES = 100 * 1024;
 
-    public const SIZE = 1200;
+    public const SIZE = 400;
 
-    public const INITIAL_QUALITY = 85;
+    public const INITIAL_QUALITY = 80;
 
     public function optimize(UploadedFile $file): string
     {
@@ -33,13 +33,14 @@ final class PhotoOptimizer
         $sourceX = (int) floor((imagesx($source) - $side) / 2);
         $sourceY = (int) floor((imagesy($source) - $side) / 2);
         $square = imagecreatetruecolor(self::SIZE, self::SIZE);
+        imagefill($square, 0, 0, imagecolorallocate($square, 255, 255, 255));
         imagecopyresampled($square, $source, 0, 0, $sourceX, $sourceY, self::SIZE, self::SIZE, $side, $side);
         imagedestroy($source);
 
         $data = '';
         for ($quality = self::INITIAL_QUALITY; $quality >= 0; $quality -= 5) {
             ob_start();
-            imagewebp($square, null, $quality);
+            imagejpeg($square, null, $quality);
             $data = (string) ob_get_clean();
             if (strlen($data) <= self::MAX_BYTES) {
                 break;
