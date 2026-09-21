@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { Camera, Check, FileText, History, MapPin, Pencil, Phone, Plus, ReceiptText, RotateCcw, Wallet, X } from 'lucide-react';
+import { Camera, Check, FileText, History, MapPin, Pencil, Phone, Plus, ReceiptText, RotateCcw, Trash2, Wallet, X } from 'lucide-react';
 import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
 import OrderAuditHistory from './order-audit-history';
 import '../css/order-detail-layout.css';
@@ -471,6 +471,15 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
   };
   const uploadFiles = async (files?: readonly File[] | null) => { if (!files?.length) return; const available = Math.max(0, 5 - (order.photos?.length || 0)); if (files.length > available) window.alert('Cada OS aceita no máximo 5 fotos. As fotos excedentes não serão enviadas.'); if (available === 0) return; try { for (const file of files.slice(0, available)) { const form = new FormData(); form.append('photo', file); await api(`/orders/${order.id}/photos`, { method: 'POST', body: form }); } await load(); } catch (e: any) { setError(e.message); } };
   const canAdminister = ['Master', 'Administrador'].includes(role);
+  const deletePhoto = async (photo: any) => {
+    if (!canAdminister || !window.confirm('Excluir esta foto do equipamento? PDFs já emitidos não serão alterados.')) return;
+    try {
+      await api(`/photos/${photo.id}`, { method: 'DELETE' });
+      setOrder((current: any) => ({ ...current, photos: (current.photos || []).filter((item: any) => item.id !== photo.id) }));
+    } catch (reason: any) {
+      setError(reason.message);
+    }
+  };
   const editOrder = () => onEdit ? onEdit() : setEditOpen(true);
   const finalMessage = [`Olá, ${order.client?.name || 'cliente'} 👋`, `Seu Equipamento está pronto da OS ${order.number}! 🎉`, '📋 Detalhes do Serviço:', `- Valor: ${money(order.total_cents || 0)}`, '💳 Formas de Pagamento:', '- PIX (Chave): 35988285777', '- Cartão: (Com taxas inclusas)', '- Dinheiro: (Favor trazer trocado)', '⚠️ A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.', 'Agradecemos pela preferência! 😊'].join('\n');
   const shareFinalReport = async () => {
@@ -545,7 +554,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
         <section className="arl-intake-field"><h3>Problema relatado</h3><p>{order.reported_problem}</p></section>
         <section className={`arl-intake-field ${!order.intake_condition ? 'arl-checklist-ok' : ''}`}><h3>Estado físico na entrada</h3><p className={!order.intake_condition ? 'ok' : undefined}>{order.intake_condition || 'Equipamento aparentemente 100% sem avarias'}</p></section>
       </div>
-        <section className="arl-intake-photos"><h3>Fotos</h3><div><div className="arl-order-photo-tools"><label>↑ Enviar foto<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => { const selectedPhotos = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ''; void uploadFiles(selectedPhotos); }}/></label><button type="button" className="arl-camera-button" onClick={() => setCamera(true)}>◉ Usar câmera</button></div><div className="photos">{order.photos?.length ? order.photos.map((photo: any) => <a key={photo.id} href={`/api/orders/${order.id}/photos/${photo.id}`} target="_blank" rel="noreferrer"><img src={`/api/orders/${order.id}/photos/${photo.id}`} alt={`Foto ${photo.id} da OS`}/></a>) : <p>Nenhuma foto anexada.</p>}</div></div></section>
+        <section className="arl-intake-photos"><h3>Fotos ({order.photos?.length || 0}/5)</h3><div><div className="arl-order-photo-tools"><label>↑ Enviar foto<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => { const selectedPhotos = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ''; void uploadFiles(selectedPhotos); }}/></label><button type="button" className="arl-camera-button" onClick={() => setCamera(true)}>◉ Usar câmera</button></div><div className="photos">{order.photos?.length ? order.photos.map((photo: any) => <div className="arl-order-photo" key={photo.id}><a href={`/api/orders/${order.id}/photos/${photo.id}`} target="_blank" rel="noreferrer"><img src={`/api/orders/${order.id}/photos/${photo.id}`} alt={`Foto ${photo.id} da OS`}/></a>{canAdminister && <button type="button" aria-label={`Excluir foto ${photo.id}`} title="Excluir foto" onClick={() => void deletePhoto(photo)}><Trash2 aria-hidden="true"/></button>}</div>) : <p>Nenhuma foto anexada.</p>}</div></div></section>
     </section>
     <div className="detail-grid arl-order-detail arl-order-workflow">
       {immutable && order.items?.length > 0 && <section className="wide order-items-summary"><h2>Serviços / Produtos da OS</h2>{order.items.map((item: any) => <div className="order-item-line" key={item.id}><div><b>{item.description}</b><small>{item.quantity} × {money(item.unit_price_cents)}</small></div><strong>{money(item.subtotal_cents)}</strong></div>)}</section>}

@@ -60,8 +60,11 @@ class StorageController extends Controller
     public function destroy(Request $request, ServiceOrderPhoto $photo, Audit $audit): JsonResponse
     {
         abort_unless($photo->path !== '' && ! str_contains($photo->path, '..'), 422);
-        Storage::disk($photo->disk)->delete($photo->path);
         $before = $photo->only(['id', 'service_order_id', 'bytes']);
+        $disk = Storage::disk($photo->disk);
+        if ($disk->exists($photo->path) && ! $disk->delete($photo->path)) {
+            abort(500, 'Não foi possível excluir o arquivo da foto. Tente novamente.');
+        }
         $photo->delete();
         $audit->record($request, 'photo.deleted', ServiceOrderPhoto::class, $photo->id, $before);
 
