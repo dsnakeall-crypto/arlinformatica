@@ -209,12 +209,19 @@ function captureOrderCreation() {
 }
 
 let frame = 0;
+function removeOpeningCreationModal() {
+  const modal = q<HTMLElement>('.arl-order-opened-modal');
+  if (!modal) return;
+  pendingOpening = null;
+  sessionStorage.removeItem('arl:new-order-id');
+  modal.remove();
+}
+
 function scheduleSync() {
   if (frame) return;
   frame = window.requestAnimationFrame(() => {
     frame = 0;
-    const modal = q<HTMLElement>('.arl-order-opened-modal');
-    if (modal) rewriteOpeningModal(modal);
+    removeOpeningCreationModal();
     removeLegacyOpeningShare();
     syncMessageSettings();
     syncPostSale();
@@ -229,8 +236,7 @@ document.addEventListener('click', (event) => {
 });
 
 function syncImmediately() {
-  const modal = q<HTMLElement>('.arl-order-opened-modal');
-  if (modal) rewriteOpeningModal(modal);
+  removeOpeningCreationModal();
   removeLegacyOpeningShare();
   scheduleSync();
 }

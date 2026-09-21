@@ -62,6 +62,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   expect(requestBody.equipment_details).toBe('Dell Inspiron 15 + carregador');
   const created = await orderResponse.json();
 
+  await expect(page.locator('.arl-order-opened-modal')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: `OS #${created.number}`, exact: true })).toBeVisible();
   const detail = await api(page, `/orders/${created.id}`);
   expect(detail.status).toBe(200);
