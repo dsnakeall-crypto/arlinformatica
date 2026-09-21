@@ -351,6 +351,8 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(historyCard.getByText('Total: R$ 140,00', { exact: true })).toBeVisible();
     await expect(historyCard.locator('.clients-history-services')).toHaveCount(0);
     await expect(historyCard.getByRole('link', { name: 'Baixar A4 final · Rev. 2', exact: true })).toHaveAttribute('href', `/api/orders/${orderId}/final/2/pdf`);
+    await expect(historyCard.getByRole('link', { name: 'Registro da Rev. 1 (substituída)', exact: true })).toHaveAttribute('href', `/api/orders/${orderId}/final-record/1/pdf`);
+    await expect(historyCard.getByRole('link', { name: 'Baixar A4 final · Rev. 1', exact: true })).toHaveCount(0);
     const history = await api(page, `/clients/${clientId}`);
     expect(history.body.orders.some((order: { id: number }) => order.id === orderId)).toBeTruthy();
     const historicalOrder = history.body.orders.find((order: { id: number }) => order.id === orderId);

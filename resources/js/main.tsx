@@ -392,14 +392,23 @@ function ClientHistory({ id, onClose, openOrder }: any) {
                 R$ {((o.total_cents || 0) / 100).toFixed(2).replace(".", ",")}
               </strong>
               <button onClick={() => openOrder(o.id)}>Ver OS</button>
-              {o.documents?.[0] && (
-                <a
-                  href={`/api/orders/${o.id}/final/${o.documents[0].revision}/pdf`}
-                  target="_blank"
-                >
-                  Baixar PDF
-                </a>
-              )}
+              {o.documents
+                ?.filter((document: any) => document.type === "final")
+                .sort((a: any, b: any) => b.revision - a.revision)
+                .slice(0, 1)
+                .map((document: any) => (
+                  <a key={`final-${document.revision}`} href={`/api/orders/${o.id}/final/${document.revision}/pdf`} target="_blank" rel="noreferrer">
+                    Baixar A4 final · Rev. {document.revision}
+                  </a>
+                ))}
+              {o.documents
+                ?.filter((document: any) => document.type === "final-record")
+                .sort((a: any, b: any) => b.revision - a.revision)
+                .map((document: any) => (
+                  <a key={`final-record-${document.revision}`} href={`/api/orders/${o.id}/final-record/${document.revision}/pdf`} target="_blank" rel="noreferrer">
+                    Registro da Rev. {document.revision} (substituída)
+                  </a>
+                ))}
             </article>
           ))
         ) : (
@@ -1766,6 +1775,7 @@ function DocumentsBox({ order }: any) {
   useEffect(() => {
     api(`/orders/${order.id}/documents`).then(setDocs);
   }, [order.id, order.status]);
+  const currentFinalRevision = Math.max(0, ...docs.filter((document) => document.type === "final").map((document) => document.revision));
   return (
     <section className="wide">
       <h2>Documentos</h2>
@@ -1774,11 +1784,13 @@ function DocumentsBox({ order }: any) {
           Termo de recebimento
         </a>
         {docs
-          .filter((d) => d.type !== "term")
+          .filter((d) => d.type !== "term" && (d.type !== "final" || d.revision === currentFinalRevision))
           .map((d) => {
             const href =
               d.type === "final"
                 ? `/api/orders/${order.id}/final/${d.revision}/pdf`
+                : d.type === "final-record"
+                  ? `/api/orders/${order.id}/final-record/${d.revision}/pdf`
                 : d.type === "technical-report"
                   ? `/api/orders/${order.id}/reports/${d.revision}/pdf`
                   : `/api/orders/${order.id}/budgets/${d.revision}/pdf`;
@@ -1788,6 +1800,8 @@ function DocumentsBox({ order }: any) {
                   <b>
                     {d.type === "final"
                       ? "PDF Final"
+                      : d.type === "final-record"
+                        ? `Registro da Rev. ${d.revision} (substituída)`
                       : d.type === "technical-report"
                         ? "Laudo Técnico"
                         : "Orçamento"}

@@ -380,7 +380,21 @@ function ReportBox({ order }: any) {
 
 function DocumentsBox({ order, embedded = false }: any) {
   const [docs, setDocs] = useState<any[]>([]); useEffect(() => { void api(`/orders/${order.id}/documents`).then(setDocs); }, [order.id, order.status]);
-  const content = <div className="documents"><a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de recebimento</a>{docs.filter((row) => row.type !== 'term').map((row) => { const href = row.type === 'final' ? `/api/orders/${order.id}/final/${row.revision}/pdf` : row.type === 'technical-report' ? `/api/orders/${order.id}/reports/${row.revision}/pdf` : `/api/orders/${order.id}/budgets/${row.revision}/pdf`; return <article key={row.id}><div><b>{row.type === 'final' ? 'PDF Final' : row.type === 'technical-report' ? 'Laudo Técnico' : 'Orçamento'}</b><small>Revisão {row.revision} · {new Date(row.issued_at).toLocaleString('pt-BR')} · {row.issued_by_name}</small></div><a target="_blank" rel="noreferrer" href={href}>Visualizar</a><a href={href} download>Baixar PDF</a><button onClick={() => { const popup = window.open(href); popup?.addEventListener('load', () => popup.print()); }}>Imprimir</button></article>; })}</div>;
+  const currentFinal = docs.filter((row) => row.type === 'final').sort((a, b) => b.revision - a.revision)[0];
+  const visibleDocs = docs.filter((row) => row.type !== 'term' && row.type !== 'final');
+  if (currentFinal) visibleDocs.unshift(currentFinal);
+  const content = <div className="documents"><a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de recebimento</a>{visibleDocs.map((row) => {
+    const finalRecord = row.type === 'final-record';
+    const href = row.type === 'final'
+      ? `/api/orders/${order.id}/final/${row.revision}/pdf`
+      : finalRecord
+        ? `/api/orders/${order.id}/final-record/${row.revision}/pdf`
+        : row.type === 'technical-report'
+          ? `/api/orders/${order.id}/reports/${row.revision}/pdf`
+          : `/api/orders/${order.id}/budgets/${row.revision}/pdf`;
+    const title = row.type === 'final' ? 'PDF Final' : finalRecord ? `Registro da Rev. ${row.revision} (substituída)` : row.type === 'technical-report' ? 'Laudo Técnico' : 'Orçamento';
+    return <article className={finalRecord ? 'arl-final-record-document' : undefined} key={row.id}><div><b>{title}</b><small>Revisão {row.revision} · {new Date(row.issued_at).toLocaleString('pt-BR')} · {row.issued_by_name}</small></div><a target="_blank" rel="noreferrer" href={href}>Visualizar</a><a href={href} download>Baixar PDF</a><button onClick={() => { const popup = window.open(href); popup?.addEventListener('load', () => popup.print()); }}>Imprimir</button></article>;
+  })}</div>;
   return embedded ? <div className="arl-record-documents">{content}</div> : <section className="wide"><h2>Documentos</h2>{content}</section>;
 }
 

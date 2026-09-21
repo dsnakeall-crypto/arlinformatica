@@ -9,6 +9,7 @@ use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
@@ -123,6 +124,9 @@ class ClientController extends Controller
             ->groupBy('service_order_id');
 
         $orders->each(function ($order) use ($budgets) {
+            $order->setRelation('documents', $order->documents
+                ->filter(fn ($document) => Storage::disk('local')->exists($document->path))
+                ->values());
             $order->setAttribute('budgets', $budgets->get($order->id, collect())->values());
         });
 

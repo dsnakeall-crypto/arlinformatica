@@ -138,6 +138,8 @@
 [data-arl-order-detail-react="1"] .arl-record-documents .documents{display:grid;gap:8px}
 [data-arl-order-detail-react="1"] .arl-record-documents .documents>article{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid #f0edef;padding-top:9px}
 [data-arl-order-detail-react="1"] .arl-record-documents .documents>article>div{display:grid;margin-right:auto}
+[data-arl-order-detail-react="1"] .arl-record-documents .documents>article.arl-final-record-document{color:var(--arl-muted);font-size:10.5px}
+[data-arl-order-detail-react="1"] .arl-record-documents .documents>article.arl-final-record-document b{font-size:10.5px;font-weight:700;color:var(--arl-muted)}
 [data-arl-order-detail-react="1"] .arl-record-documents .documents a,[data-arl-order-detail-react="1"] .arl-record-documents .documents button{min-height:34px;border:1px solid #dfdce0;border-radius:8px;background:#fff;padding:6px 9px;color:var(--arl-ink);font-size:10.5px;font-weight:800;text-decoration:none}
 main:has([data-arl-order-detail-react="1"]) .device-layout>.arl-layout-label{display:none!important}
 @media(max-width:900px){
