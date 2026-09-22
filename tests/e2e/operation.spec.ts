@@ -223,6 +223,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const whatsappHref = whatsappPage.url();
     const whatsappText = decodeURIComponent(new URL(whatsappHref).searchParams.get('text') || '');
     expect(whatsappText).toContain(finalShare.url);
+    expect(whatsappText).toContain('🔴 Detalhes do Serviço no link abaixo');
     expect(whatsappText).toContain('Detalhes do Serviço no link abaixo');
     await whatsappPage.close();
     await page.reload();

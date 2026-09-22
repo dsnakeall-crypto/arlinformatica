@@ -31,6 +31,7 @@ const api = async (url: string, options: RequestInit = {}) => {
 };
 
 const digits = (value: unknown) => typeof value === 'string' ? value.replace(/\D/g, '') : '';
+const whatsappText = (message: string) => encodeURIComponent(message.replace(/\uFFFD/g, '🔴').normalize('NFC'));
 const masks = {
   document: (value: unknown) => {
     const n = digits(value).slice(0, 14);
@@ -404,19 +405,19 @@ function finalWhatsappMessage(order: any, pdfUrl: string) {
     '',
     `Seu equipamento está pronto (${order.number}).`,
     '',
-    '💵 Detalhes do Serviço no link abaixo',
+    '🔴 Detalhes do Serviço no link abaixo',
     pdfUrl,
     '',
     '',
     `- Valor: ${money(order.total_cents || 0)}`,
     '',
-    '💳 Formas de Pagamento: ',
+    '🔴 Formas de Pagamento: ',
     '',
     '- PIX (Chave): 35988285777 ',
     '- Cartão (com taxas) ',
     '- Dinheiro (favor trazer trocado)',
     '',
-    '🚚 A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.',
+    '🔴 A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.',
     '',
     'Agradecemos pela preferência!',
   ].join('\n');
@@ -438,7 +439,7 @@ function FinalShareCard({ order, onLinkCreated }: { order: any; onLinkCreated?: 
             const phone = digits(order.client?.phone || '');
             const full = phone.startsWith('55') ? phone : `55${phone}`;
             if (!full) throw new Error('O cliente não possui telefone para WhatsApp.');
-            return `https://wa.me/${full}?text=${encodeURIComponent(finalWhatsappMessage(order, freshShare.url))}`;
+            return `https://wa.me/${full}?text=${whatsappText(finalWhatsappMessage(order, freshShare.url))}`;
           })();
       if (target) target.location.href = destination;
       else window.location.href = destination;
@@ -527,7 +528,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     try {
       const share = await api(`/orders/${order.id}/final-share`);
       const full = phone.startsWith('55') ? phone : `55${phone}`;
-      const destination = `https://wa.me/${full}?text=${encodeURIComponent(finalWhatsappMessage(order, share.url))}`;
+      const destination = `https://wa.me/${full}?text=${whatsappText(finalWhatsappMessage(order, share.url))}`;
       setFinalLinkStatus({ active: true, expires_at: share.expires_at, revision: share.revision });
       if (target) target.location.href = destination;
       else window.location.href = destination;
@@ -563,7 +564,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     '',
     '*ARL Informática*',
   ].join('\n');
-  const openingWhatsapp = openingFullPhone ? `https://wa.me/${openingFullPhone}?text=${encodeURIComponent(openingMessage)}` : '';
+  const openingWhatsapp = openingFullPhone ? `https://wa.me/${openingFullPhone}?text=${whatsappText(openingMessage)}` : '';
   const mapsAddress = [order.client?.street, order.client?.number, order.client?.district, order.client?.city, order.client?.state].filter(Boolean).join(', ');
   const mapsUrl = order.mobile_actions?.maps_url || (mapsAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsAddress)}` : '');
   if (readOnly) return <div data-arl-order-detail-react="1" data-mobile-read-only="1" className="arl-mobile-read-only">

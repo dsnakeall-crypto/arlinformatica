@@ -54,7 +54,7 @@ function fixedOpeningMessage(clientName: string, orderNumber: string, intakeCond
 function whatsappUrl(phone: string, message: string) {
   const raw = digits(phone);
   const full = raw.startsWith('55') ? raw : `55${raw}`;
-  return `https://wa.me/${full}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${full}?text=${encodeURIComponent(message.replace(/\uFFFD/g, '🔴').normalize('NFC'))}`;
 }
 
 function phoneFromLink(link: HTMLAnchorElement | null) {

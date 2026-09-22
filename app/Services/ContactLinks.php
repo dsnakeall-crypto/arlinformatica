@@ -11,7 +11,7 @@ class ContactLinks
             $digits = '55'.$digits;
         }
 
-        return 'https://wa.me/'.$digits.($message !== '' ? '?text='.rawurlencode($message) : '');
+        return 'https://wa.me/'.$digits.($message !== '' ? '?text='.rawurlencode(str_replace("\u{FFFD}", '🔴', $message)) : '');
     }
 
     public static function maps(array $address): string
