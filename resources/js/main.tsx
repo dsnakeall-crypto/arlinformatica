@@ -886,7 +886,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
   );
 }
 
-function NewOrder({ done }: any) {
+function NewOrder({ done, initialClient }: { done: (id: number) => void; initialClient?: Client }) {
   const [clients, setClients] = useState<Client[]>([]),
     [services, setServices] = useState<Catalog[]>([]),
     [orderItems, setOrderItems] = useState<any[]>([]);
@@ -5065,6 +5065,12 @@ function App() {
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, []);
+  useEffect(() => {
+    if (!initialClient) return;
+    setClients((current) => [initialClient, ...current.filter((row) => row.id !== initialClient.id)]);
+    setClient(initialClient.id);
+    window.__arlSelectedClient = initialClient;
+  }, [initialClient]);
   useEffect(
     () =>
       localStorage.setItem("arl-sidebar-collapsed", String(sidebarCollapsed)),
@@ -5127,6 +5133,7 @@ function App() {
     clientId: number;
     orderId: number;
   }>();
+  const [newOrderClient, setNewOrderClient] = useState<Client>();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [mobileQuickEntry, setMobileQuickEntry] = useState(false);
   const [mobileLogoutConfirm, setMobileLogoutConfirm] = useState(false);
@@ -5160,6 +5167,7 @@ function App() {
     setOrderAction(action);
     if (p === "desk") p = "dashboard";
     if (p === "orders" && !id) setOrdersTab(ordersInitialTab || "progress");
+    if (p !== "new") setNewOrderClient(undefined);
     setClientHistoryOrigin(undefined);
     setPage(p);
     setDetail(id);
@@ -5433,6 +5441,10 @@ function App() {
                 : undefined
             }
             openOrder={(id: number) => go("orders", id)}
+            onNewOrderForClient={(client: Client) => {
+              setNewOrderClient(client);
+              go("new");
+            }}
           />
         ) : page === "finance" ? (
           <FinancePage
@@ -5450,7 +5462,7 @@ function App() {
         ) : page === "settings" ? (
           <SettingsPage role={me?.role} />
         ) : (
-          <NewOrder done={(id: number) => go("orders", id)} />
+          <NewOrder initialClient={newOrderClient} done={(id: number) => go("orders", id)} />
         )}
       </main>
       {mobileLayout && <MobileBottomBar go={go} page={page} />}
