@@ -464,15 +464,17 @@ function OrderTable({
           <tbody>
             {items.map((o: Order) => {
               const reopened = isReopenedOrder(o);
+              const external = o.attendance_type === "external";
               const interrupted = o.status === "interrupted";
               const closed = o.status === "completed" || interrupted;
               const displayStatus = o.display_status || o.status;
               return (
-                <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
+                <tr className={`order-row${reopened ? " order-row-reopened" : ""}${external ? " order-row-external" : ""}`} key={o.id}>
                   <td><b>#{o.number}</b></td>
                   <td>
                     <span className="order-customer">
                       <strong>{o.client.name}</strong>
+                      {external && <span className="arl-external-marker" aria-label="Atendimento externo">Externo</span>}
                       {reopened && <span className="arl-reopened-marker" aria-label="OS reaberta">Reaberta</span>}
                       {interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}
                     </span>
@@ -532,15 +534,16 @@ function OrderTable({
         <thead><tr><th># OS</th><th>CLIENTE</th><th>DISPOSITIVO</th><th>STATUS</th><th>RELATO</th><th>VALOR</th><th>AÇÕES</th></tr></thead>
         <tbody>{items.map((o: Order) => {
           const reopened = isReopenedOrder(o);
+          const external = o.attendance_type === "external";
           const interrupted = o.status === "interrupted";
           const displayStatus = o.display_status || o.status;
           const awaitingPayment = displayStatus === "awaiting_payment";
           const canSetPaid = awaitingPayment && ["Master", "Administrador"].includes(role);
           const closed = Boolean(o.completed_at) || interrupted;
           return (
-            <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
+            <tr className={`order-row${reopened ? " order-row-reopened" : ""}${external ? " order-row-external" : ""}`} key={o.id}>
               <td><b>#{o.number}</b></td>
-              <td><span className="order-customer"><strong>{o.client.name}</strong>{reopened && <span className="arl-reopened-marker" aria-label="OS reaberta">Reaberta</span>}{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
+              <td><span className="order-customer"><strong>{o.client.name}</strong>{external && <span className="arl-external-marker" aria-label="Atendimento externo">Externo</span>}{reopened && <span className="arl-reopened-marker" aria-label="OS reaberta">Reaberta</span>}{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
               <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
               <td><label className={`row-status status-${displayStatus}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={displayStatus} disabled={closed && !canSetPaid} onChange={(e) => onStatus(o, e.target.value)}>{awaitingPayment ? <><option value="awaiting_payment">Aguardando PGTO</option>{canSetPaid && <option value="paid">PAGO</option>}</> : displayStatus === "paid" ? <option value="paid">Pago</option> : <><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</>}</select></label></td>
               <td><span className="order-client-report" title={o.reported_problem || undefined}>{o.reported_problem || ""}</span></td>
