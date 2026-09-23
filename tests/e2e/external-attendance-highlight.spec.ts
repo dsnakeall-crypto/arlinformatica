@@ -38,11 +38,11 @@ async function backgroundOf(locator: Locator) {
 
 async function expectExternalRow(row: Locator, standardBackground: string) {
   await expect(row).toBeVisible();
-  await expect(row.getByText(externalLabel, { exact: true })).toBeVisible();
+  await expect(row.getByText(externalLabel, { exact: true })).toHaveClass(/status-awaiting_payment/);
   await expect(row.locator('td').first()).toHaveCSS('background-color', standardBackground);
 }
 
-test('Painel e Ordens destacam atendimento externo somente pelo fundo cinza', async ({ page }) => {
+test('Painel e Ordens exibem atendimento externo com as cores de aguardando pagamento', async ({ page }) => {
   await login(page, 'e2e.master');
   const suffix = Date.now();
   const external = await createOrder(page, 'external', suffix);
@@ -64,7 +64,7 @@ test('Painel e Ordens destacam atendimento externo somente pelo fundo cinza', as
   await expect(ordersBench.getByText(externalLabel, { exact: true })).toHaveCount(0);
 });
 
-test('home Mobile destaca atendimento externo somente pelo fundo cinza', async ({ page }) => {
+test('home Mobile exibe atendimento externo com as cores de aguardando pagamento', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => localStorage.setItem('arl-layout-mode', 'mobile'));
   await login(page, 'e2e.master');
@@ -77,7 +77,7 @@ test('home Mobile destaca atendimento externo somente pelo fundo cinza', async (
   await expect(card).toBeVisible();
   const benchCard = page.locator('.arl-mobile-order-card').filter({ hasText: bench.clientName });
   await expect(benchCard).toBeVisible();
-  await expect(card.getByText(externalLabel, { exact: true })).toBeVisible();
+  await expect(card.getByText(externalLabel, { exact: true })).toHaveClass(/status-awaiting_payment/);
   await expect(card).toHaveCSS('background-color', await backgroundOf(benchCard));
   await expect(benchCard.getByText(externalLabel, { exact: true })).toHaveCount(0);
 });
