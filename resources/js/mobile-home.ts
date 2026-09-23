@@ -105,7 +105,7 @@ function renderOrders(list: HTMLElement, orders: MobileOrder[]) {
   orders.forEach((order) => {
     const card = document.createElement('article');
     const reopened = isReopenedOrder(order);
-    card.className = `arl-mobile-order-card${reopened ? ' arl-mobile-order-reopened' : ''}${order.attendance_type === 'external' ? ' arl-mobile-order-external' : ''}`;
+    card.className = `arl-mobile-order-card${reopened ? ' arl-mobile-order-reopened' : ''}`;
     card.dataset.orderId = String(order.id);
     card.tabIndex = 0;
     card.setAttribute('role', 'button');
@@ -124,6 +124,12 @@ function renderOrders(list: HTMLElement, orders: MobileOrder[]) {
     meta.textContent = `OS #${order.number} · ${statusLabels[order.status] || order.status}`;
 
     info.append(client, meta);
+    if (order.attendance_type === 'external') {
+      const marker = document.createElement('span');
+      marker.className = 'arl-external-attendance-marker';
+      marker.textContent = 'Atendimento Externo';
+      info.append(marker);
+    }
     if (reopened) {
       const marker = document.createElement('span');
       marker.className = 'arl-reopened-marker';
