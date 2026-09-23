@@ -5,12 +5,19 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ClientValidationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(DatabaseSeeder::class);
+    }
 
     public function test_required_client_fields_return_clear_field_messages(): void
     {
@@ -72,10 +79,8 @@ class ClientValidationTest extends TestCase
 
     private function user(): User
     {
-        $role = Role::create(['name' => 'Master']);
-
         return User::create([
-            'role_id' => $role->id,
+            'role_id' => Role::where('name', 'Master')->value('id'),
             'name' => 'Validador de clientes',
             'login' => 'client-validator',
             'password' => 'Senha#Forte123',

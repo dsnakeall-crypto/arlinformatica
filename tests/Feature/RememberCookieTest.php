@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Cookie\CookieValuePrefix;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -13,6 +14,12 @@ use Tests\TestCase;
 class RememberCookieTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(DatabaseSeeder::class);
+    }
 
     public function test_invalid_remember_cookies_show_the_login_gate_without_a_server_error(): void
     {
@@ -71,9 +78,8 @@ class RememberCookieTest extends TestCase
 
     private function user(): User
     {
-        $role = Role::create(['name' => 'Master']);
         $user = User::create([
-            'role_id' => $role->id,
+            'role_id' => Role::where('name', 'Master')->value('id'),
             'name' => 'Usuário com lembrar login',
             'login' => 'remember-user',
             'password' => Hash::make('Senha#Forte123'),
