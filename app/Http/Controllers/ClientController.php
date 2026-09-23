@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
@@ -55,6 +56,29 @@ class ClientController extends Controller
         $notifications->notifyUsers('client_created', 'Novo cliente cadastrado', $client->name, "/clients?client={$client->id}", "client-created:{$client->id}", ['client_id' => $client->id]);
 
         return response()->json($client, 201);
+    }
+
+    public function documentStatus(Request $request): JsonResponse
+    {
+        $document = DocumentValidator::normalize((string) $request->query('document'));
+        $label = $this->documentLabel($document);
+
+        if (! DocumentValidator::valid($document)) {
+            return response()->json([
+                'status' => 'invalid',
+                'message' => "O {$label} informado é inválido.",
+            ]);
+        }
+
+        $client = Client::withTrashed()->where('document', $document)->first();
+        if (! $client || $client->id === $request->integer('ignore')) {
+            return response()->json(['status' => 'available']);
+        }
+
+        return response()->json([
+            'status' => $client->trashed() ? 'archived' : 'duplicate',
+            'message' => $this->duplicateDocumentMessage($document, $client->trashed()),
+        ]);
     }
 
     public function update(Request $r, Client $client, Audit $audit): JsonResponse
@@ -137,13 +161,45 @@ class ClientController extends Controller
     {
         $data = $r->validate(['name' => 'required|string|max:255', 'document' => ['required', function ($a, $v, $fail) {
             if (! DocumentValidator::valid($v)) {
-                $fail('CPF/CNPJ inválido.');
+                $fail('O '.($this->documentLabel(DocumentValidator::normalize($v))).' informado é inválido.');
             }
-        }], 'phone' => 'required|string|max:20', 'postal_code' => 'nullable|string|size:8', 'street' => 'required|string|max:255', 'number' => 'nullable|string|max:30', 'district' => 'nullable|string|max:255', 'city' => 'nullable|string|max:255', 'state' => 'nullable|string|size:2', 'complement' => 'nullable|string|max:255']);
+        }], 'phone' => 'required|string|max:20', 'postal_code' => 'nullable|string|size:8', 'street' => 'required|string|max:255', 'number' => 'nullable|string|max:30', 'district' => 'nullable|string|max:255', 'city' => 'nullable|string|max:255', 'state' => 'nullable|string|size:2', 'complement' => 'nullable|string|max:255'], [
+            'name.required' => 'Informe o nome ou razão social.',
+            'document.required' => 'Informe o CPF ou CNPJ.',
+            'phone.required' => 'Informe o telefone.',
+            'street.required' => 'Informe o endereço.',
+            'postal_code.size' => 'O CEP deve ter 8 dígitos.',
+            'state.size' => 'O estado deve ter 2 letras.',
+        ]);
         $data['document'] = DocumentValidator::normalize($data['document']);
         $data['postal_code'] = filled($data['postal_code'] ?? null) ? preg_replace('/\D/', '', $data['postal_code']) : null;
-        validator($data, ['document' => Rule::unique('clients', 'document')->ignore($ignore)])->validate();
+        $existing = Client::withTrashed()
+            ->where('document', $data['document'])
+            ->when($ignore, fn ($query) => $query->whereKeyNot($ignore))
+            ->first();
+
+        if ($existing) {
+            throw ValidationException::withMessages([
+                'document' => [$this->duplicateDocumentMessage($data['document'], $existing->trashed())],
+            ]);
+        }
+
+        validator($data, ['document' => Rule::unique('clients', 'document')->ignore($ignore)], [
+            'document.unique' => $this->duplicateDocumentMessage($data['document']),
+        ])->validate();
 
         return $data;
+    }
+
+    private function documentLabel(string $document): string
+    {
+        return strlen($document) === 14 ? 'CNPJ' : 'CPF';
+    }
+
+    private function duplicateDocumentMessage(string $document, bool $archived = false): string
+    {
+        $message = 'Este '.$this->documentLabel($document).' já está cadastrado.';
+
+        return $archived ? $message.' O cliente foi removido da lista.' : $message;
     }
 }

@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/me/sidebar', [AuthController::class, 'updateSidebarPreference']);
     Route::get('/navigation-summary', [NavigationController::class, 'summary']);
     Route::get('/clients', [ClientController::class, 'index']);
+    Route::get('/clients/document-status', [ClientController::class, 'documentStatus']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::get('/clients/{client}', [ClientController::class, 'show']);
     Route::put('/clients/{client}', [ClientController::class, 'update'])->middleware('role:Master,Administrador');
