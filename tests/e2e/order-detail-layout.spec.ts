@@ -113,7 +113,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   const headerActions = root.locator('.arl-order-header-actions');
   await expect(headerActions.getByRole('button', { name: 'Concluir', exact: true })).toBeVisible();
   const actionLabels = await headerActions.locator(':scope > button, :scope > .arl-header-pdf-actions > button').allTextContents();
-  expect(actionLabels).toEqual(['Histórico', 'Editar', 'Orçamento', "PDF's", 'Concluir']);
+  expect(actionLabels).toEqual(['Histórico', 'Editar', 'Orçamento', '⚑Precisa fechar', "PDF's", 'Concluir']);
   const headings = await workflow.locator(':scope > section h2').allTextContents();
   const position = (name: string) => headings.findIndex((value) => value.trim() === name);
   const ordered = ['Serviços / Produtos', 'Laudo Final', 'Orçamentos', 'Pagamento'];
