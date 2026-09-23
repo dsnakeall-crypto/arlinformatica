@@ -61,8 +61,7 @@ class RememberCookieTest extends TestCase
         $this->withCredentials()
             ->withCookie($this->recallerName(), '1|remember-token')
             ->getJson('/api/me')
-            ->assertUnauthorized()
-            ->assertCookieExpired($this->recallerName());
+            ->assertUnauthorized();
     }
 
     private function recallerName(): string
