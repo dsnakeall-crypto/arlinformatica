@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Middleware\RequireRole;
 use App\Http\Middleware\DiscardInvalidRememberCookie;
+use App\Http\Middleware\RequireRole;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;

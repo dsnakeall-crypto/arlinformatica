@@ -10,9 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DiscardInvalidRememberCookie
 {
-    public function __construct(private readonly AuthFactory $auth)
-    {
-    }
+    public function __construct(private readonly AuthFactory $auth) {}
 
     public function handle(Request $request, Closure $next): Response
     {
