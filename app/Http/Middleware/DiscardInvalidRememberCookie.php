@@ -24,6 +24,12 @@ class DiscardInvalidRememberCookie
 
         $request->cookies->remove($name);
 
+        if ($request->is('api/*')) {
+            return response()
+                ->json(['message' => 'Unauthenticated.'], 401)
+                ->withCookie(Cookie::forget($name));
+        }
+
         return $next($request)->withCookie(Cookie::forget($name));
     }
 
