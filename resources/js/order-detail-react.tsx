@@ -455,7 +455,7 @@ function FinalShareCard({ order, onLinkCreated }: { order: any; onLinkCreated?: 
 
 export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLoad = false, onEdit, onDirtyChange, onOpenClientHistory }: Props & { readOnly?: boolean }) {
   const [order, setOrder] = useState<any>(), [role, setRole] = useState<string | null>(null), [error, setError] = useState(''), [editOpen, setEditOpen] = useState(false), [reopenOpen, setReopenOpen] = useState(false), [reopenNote, setReopenNote] = useState(''), [closingOpen, setClosingOpen] = useState(false), [closingValue, setClosingValue] = useState(''), [closingBusy, setClosingBusy] = useState(false), [closingError, setClosingError] = useState(''), [budgetSignal, setBudgetSignal] = useState(0), [paymentSignal, setPaymentSignal] = useState(0), [finalSignal, setFinalSignal] = useState(0), [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null), [finalReport, setFinalReport] = useState(''), [servicesDirty, setServicesDirty] = useState(false), [finalReportDirty, setFinalReportDirty] = useState(false), [photoChoice, setPhotoChoice] = useState(false), [camera, setCamera] = useState(false), [pdfActionsOpen, setPdfActionsOpen] = useState(false), [finalLinkStatus, setFinalLinkStatus] = useState<any>(null), [finalLinkBusy, setFinalLinkBusy] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null), pendingServicesSave = useRef<null | (() => Promise<any>)>(null);
+  const fileInput = useRef<HTMLInputElement>(null), pendingServicesSave = useRef<null | (() => Promise<any>)>(null), pdfActionsRef = useRef<HTMLDivElement>(null), mobilePdfActionsRef = useRef<HTMLDetailsElement>(null);
   const load = async () => { try { const next = await api(`/orders/${id}`); setOrder(next); if (!finalReportDirty) setFinalReport(next.final_report || (next.status === 'completed' ? next.technical_report || '' : '')); setError(''); } catch (e: any) { setError(e.message); } };
   useEffect(() => {
     setRole(null);
@@ -474,6 +474,36 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     try { setFinalLinkStatus(await api(`/orders/${order.id}/final-share/status`)); } catch { setFinalLinkStatus(null); }
   };
   useEffect(() => { void loadFinalLinkStatus(); }, [order?.id, order?.status]);
+  useEffect(() => {
+    if (!pdfActionsOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!pdfActionsRef.current?.contains(event.target as Node)) setPdfActionsOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPdfActionsOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [pdfActionsOpen]);
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      const menu = mobilePdfActionsRef.current;
+      if (menu?.open && !menu.contains(event.target as Node)) menu.open = false;
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && mobilePdfActionsRef.current?.open) mobilePdfActionsRef.current.open = false;
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, []);
 
   if (error) return <div className="state error">{error}</div>; if (!order || role === null) return <div className="state">Carregando OS…</div>;
   const operational = ['analysis', 'waiting_part', 'in_service'].includes(order.status);
@@ -576,7 +606,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
     <header className="arl-mobile-read-only-header"><button type="button" className="arl-back-button" onClick={back} aria-label="Voltar para OS abertas">←</button><div><span>ORDEM DE SERVIÇO</span><h1>OS #{order.number}</h1><span className="arl-order-markers">{reopened&&<span className="arl-reopened-marker status-paid arl-order-reopened-marker">Reaberta</span>}{closingMarker}</span>{interrupted&&<span className="arl-reopened-marker arl-interrupted-marker arl-order-reopened-marker">Interrompida</span>}</div></header>
     <div className="arl-read-only-banner">Somente leitura · edite pelo PC</div>
     <div className="arl-mobile-read-only-actions">{openingWhatsapp && <a href={openingWhatsapp} target="_blank" rel="noreferrer">WhatsApp</a>}{mapsUrl && <a href={mapsUrl} target="_blank" rel="noreferrer">Rota</a>}{canAdminister && operational && <button type="button" aria-label="Precisa fechar" onClick={openClosingReference}>Precisa fechar</button>}</div>
-    <details className="arl-opening-call"><summary>PDF's e Reaberturas OS</summary><div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{finalLinkActions}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div></details>
+    <details className="arl-opening-call" ref={mobilePdfActionsRef}><summary>PDF's e Reaberturas OS</summary><div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{finalLinkActions}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div></details>
     <section><h2>Cliente</h2><strong>{order.client.name}</strong><p>{masks.document(order.client.document)} · {masks.phone(order.client.phone)}</p><p>{order.client.street}, {order.client.number} — {order.client.city}/{order.client.state}</p></section>
     <section><h2>Equipamento</h2><p>{order.equipment_description || 'Equipamento não informado'}</p>{order.equipment_details && <p><strong>Fabricante / Modelo / Acessórios:</strong> {order.equipment_details}</p>}<p>{order.attendance_type === 'bench' ? 'Análise na Bancada' : 'Atendimento Externo'}</p></section>
     <section><h2>Problema relatado</h2><p>{order.reported_problem}</p></section>
@@ -599,7 +629,7 @@ export default function OrderDetailPage({ id, back, readOnly = false, reopenOnLo
         {onOpenClientHistory && <button type="button" data-order-action="history" onClick={() => onOpenClientHistory(order.client.id)}><History aria-hidden="true"/><span>Histórico</span></button>}
         {order.status === 'completed' ? canAdminister && <button type="button" className="arl-od-btn" data-order-action="reopen" onClick={() => setReopenOpen(true)}><RotateCcw aria-hidden="true"/><span>Reabrir OS</span></button> : !immutable && <button type="button" className="arl-od-btn" data-order-action="edit" onClick={editOrder}><Pencil aria-hidden="true"/><span>Editar</span></button>}
         {!immutable && <button type="button" data-order-action="budget" data-quick="budget" onClick={() => setBudgetSignal((x) => x + 1)}><ReceiptText aria-hidden="true"/><span>Orçamento</span></button>}
-        <div className="arl-opening-call arl-header-pdf-actions"><button type="button" data-order-action="pdf" aria-expanded={pdfActionsOpen} onClick={() => setPdfActionsOpen((open) => !open)}><FileText aria-hidden="true"/><span>PDF's</span></button>{pdfActionsOpen && <div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{finalLinkActions}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div>}</div>
+        <div className="arl-opening-call arl-header-pdf-actions" ref={pdfActionsRef}><button type="button" data-order-action="pdf" aria-expanded={pdfActionsOpen} onClick={() => setPdfActionsOpen((open) => !open)}><FileText aria-hidden="true"/><span>PDF's</span></button>{pdfActionsOpen && <div className="arl-opening-call-menu">{openingWhatsapp ? <a target="_blank" rel="noreferrer" href={openingWhatsapp}>Mensagem de abertura</a> : <span aria-disabled="true">Mensagem de abertura indisponível</span>}<a target="_blank" rel="noreferrer" href={`/api/orders/${order.id}/term`}>Termo de Recebimento PDF</a>{order.status === 'completed' ? <button type="button" onClick={() => void shareFinalReport()}>Relatório Técnico Final</button> : <span aria-disabled="true">Relatório Técnico Final</span>}{finalLinkActions}{canAdminister && (order.status === 'completed' ? <button type="button" onClick={() => setReopenOpen(true)}>Reabrir OS</button> : <span aria-disabled="true">{interrupted ? 'OS interrompida não pode ser reaberta' : 'Reabrir OS'}</span>)}</div>}</div>
         {paymentEnabled && <button type="button" className="primary" data-order-action="payment" data-quick="payment" onClick={() => setPaymentSignal((x) => x + 1)}><Wallet aria-hidden="true"/><span>Pagamento</span></button>}
         {canAdminister && !immutable && order.status !== 'completed' && <button id="finalization-action" type="button" data-order-action="finalize" className="primary arl-finalization-action" onClick={() => setFinalSignal((x) => x + 1)}><Check aria-hidden="true"/><span>Concluir</span></button>}
       </div>

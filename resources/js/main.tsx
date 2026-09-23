@@ -3,7 +3,7 @@ import ClientImport from "./client-import";
 import TermTextEditor from "./term-text-editor";
 import { isReopenedOrder } from "./order-reopened";
 import { CameraModal } from "./order-detail-react";
-import React, { FormEvent, useEffect, useMemo, useState } from "react";
+import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Bell,
@@ -4251,6 +4251,7 @@ function NotificationBell({ go }: any) {
   const [open, setOpen] = useState(false),
     [data, setData] = useState<any>({ unread: 0, data: [] }),
     [push, setPush] = useState<"on" | "off" | "blocked" | "unsupported">("off");
+  const notificationRef = useRef<HTMLDivElement>(null);
   const syncPush = async () => {
     if (
       !("Notification" in window) ||
@@ -4277,6 +4278,21 @@ function NotificationBell({ go }: any) {
     const id = setInterval(load, 60000);
     return () => clearInterval(id);
   }, []);
+  useEffect(() => {
+    if (!open) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!notificationRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
   const togglePush = async () => {
     if (push === "blocked" || push === "unsupported") return;
     const registration = await navigator.serviceWorker.ready;
@@ -4324,7 +4340,7 @@ function NotificationBell({ go }: any) {
     load();
   };
   return (
-    <div className="notification-wrap">
+    <div className="notification-wrap" ref={notificationRef}>
       <button
         className="bell"
         aria-label="Notificações"
