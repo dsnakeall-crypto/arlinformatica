@@ -143,6 +143,11 @@ class ServiceOrderWorkflowTest extends TestCase
             ->assertJsonFragment(['id' => $order->id, 'status' => 'interrupted'])
             ->assertJsonPath('total', 1)
             ->assertJsonPath('summary.completed_week', 1);
+        $this->getJson('/api/orders?tab=closed_week')
+            ->assertOk()
+            ->assertJsonFragment(['id' => $order->id, 'status' => 'interrupted'])
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('summary.completed_week', 1);
 
         $this->postJson("/api/orders/{$order->id}/finalize", [])->assertStatus(409);
         $this->postJson("/api/orders/{$order->id}/reopen", ['note' => 'Tentativa proibida.'])

@@ -2891,7 +2891,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
       .then(setItems)
       .finally(() => setLoading(false));
     api("/orders?tab=closed_week&per_page=100").then((x) => setClosedItems(x.data));
-    api("/orders?tab=finalized&per_page=1").then((x) => setCompleted(x.total));
+    api("/orders?tab=closed_week&per_page=1").then((x) => setCompleted(x.total));
   };
   useEffect(load, []);
   if (desk)
