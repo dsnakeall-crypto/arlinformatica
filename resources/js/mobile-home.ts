@@ -19,6 +19,7 @@ type MobileOrder = {
   id: number;
   number: string;
   status: 'analysis' | 'waiting_part' | 'in_service' | string;
+  attendance_type: 'bench' | 'external';
   client: MobileClient;
 };
 
@@ -104,7 +105,7 @@ function renderOrders(list: HTMLElement, orders: MobileOrder[]) {
   orders.forEach((order) => {
     const card = document.createElement('article');
     const reopened = isReopenedOrder(order);
-    card.className = `arl-mobile-order-card${reopened ? ' arl-mobile-order-reopened' : ''}`;
+    card.className = `arl-mobile-order-card${reopened ? ' arl-mobile-order-reopened' : ''}${order.attendance_type === 'external' ? ' arl-mobile-order-external' : ''}`;
     card.dataset.orderId = String(order.id);
     card.tabIndex = 0;
     card.setAttribute('role', 'button');
