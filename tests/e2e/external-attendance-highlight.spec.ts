@@ -40,6 +40,8 @@ async function expectExternalRow(row: Locator, standardBackground: string) {
   await expect(row).toBeVisible();
   await expect(row.getByText(externalLabel, { exact: true })).toHaveClass(/status-awaiting_payment/);
   await expect(row.locator('td').first()).toHaveCSS('background-color', standardBackground);
+  await expect(row.locator('.order-customer')).toHaveCSS('text-align', 'center');
+  await expect(row.locator('.arl-order-markers')).toHaveCSS('justify-content', 'center');
 }
 
 test('Painel e Ordens exibem atendimento externo com as cores de aguardando pagamento', async ({ page }) => {
@@ -79,5 +81,7 @@ test('home Mobile exibe atendimento externo com as cores de aguardando pagamento
   await expect(benchCard).toBeVisible();
   await expect(card.getByText(externalLabel, { exact: true })).toHaveClass(/status-awaiting_payment/);
   await expect(card).toHaveCSS('background-color', await backgroundOf(benchCard));
+  await expect(card.locator('.arl-mobile-order-info')).toHaveCSS('text-align', 'center');
+  await expect(card.locator('.arl-mobile-order-info')).toHaveCSS('justify-items', 'center');
   await expect(benchCard.getByText(externalLabel, { exact: true })).toHaveCount(0);
 });
