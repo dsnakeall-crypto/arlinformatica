@@ -7,6 +7,10 @@ type OpeningContext = { number: string; clientName: string; phone: string; intak
 let pendingOpening: OpeningContext | null = null;
 
 const digits = (value: unknown) => typeof value === 'string' ? value.replace(/\D/g, '') : '';
+const WHATSAPP_RED_MARKER = '\u{1F534}';
+const normalizeWhatsappMessage = (message: string) => message
+  .replace(/\uFFFD|\u00EF\u00BF\u00BD|\u00F0\u0178\u201D\u00B4/g, WHATSAPP_RED_MARKER)
+  .normalize('NFC');
 const q = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const qa = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => Array.from(root.querySelectorAll<T>(selector));
 const hide = (element: HTMLElement | null | undefined) => {
@@ -54,7 +58,7 @@ function fixedOpeningMessage(clientName: string, orderNumber: string, intakeCond
 function whatsappUrl(phone: string, message: string) {
   const raw = digits(phone);
   const full = raw.startsWith('55') ? raw : `55${raw}`;
-  return `https://wa.me/${full}?text=${encodeURIComponent(message.replace(/\uFFFD/g, '🔴').normalize('NFC'))}`;
+  return `https://wa.me/${full}?text=${encodeURIComponent(normalizeWhatsappMessage(message))}`;
 }
 
 function phoneFromLink(link: HTMLAnchorElement | null) {

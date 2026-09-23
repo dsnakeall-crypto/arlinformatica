@@ -224,7 +224,10 @@ test.describe.serial('fluxo operacional principal', () => {
     const whatsappText = decodeURIComponent(new URL(whatsappHref).searchParams.get('text') || '');
     expect(whatsappText).toContain(finalShare.url);
     expect(whatsappText).toContain('🔴 Detalhes do Serviço no link abaixo');
-    expect(whatsappText).toContain('Detalhes do Serviço no link abaixo');
+    expect(whatsappText).toContain('🔴 Formas de Pagamento:');
+    expect(whatsappText).toContain('🔴 A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.');
+    expect(whatsappText).not.toContain('\uFFFD');
+    expect(whatsappText).not.toContain('\u00EF\u00BF\u00BD');
     await whatsappPage.close();
     await page.reload();
     const documentMenu = page.locator('.arl-opening-call');
