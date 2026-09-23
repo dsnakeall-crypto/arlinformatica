@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\RequireRole;
+use App\Http\Middleware\DiscardInvalidRememberCookie;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
@@ -27,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
             ShareErrorsFromSession::class,
             ValidateCsrfToken::class,
         ]);
+        $middleware->web(append: [DiscardInvalidRememberCookie::class]);
+        $middleware->api(append: [DiscardInvalidRememberCookie::class]);
         $middleware->alias(['role' => RequireRole::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
