@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
-use Illuminate\Cookie\CookieValuePrefix;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -24,7 +23,7 @@ class RememberCookieTest extends TestCase
     public function test_invalid_remember_cookies_show_the_login_gate_without_a_server_error(): void
     {
         foreach (['1|remember-token', '1|remember-token|', 'not-a-recaller-cookie'] as $value) {
-            $response = $this->withCookie($this->recallerName(), $this->encryptedCookie($value))->get('/');
+            $response = $this->withCookie($this->recallerName(), $value)->get('/');
 
             $response->assertOk()
                 ->assertSee('Acesso restrito')
@@ -34,7 +33,7 @@ class RememberCookieTest extends TestCase
 
     public function test_an_illegible_remember_cookie_is_discarded_without_a_server_error(): void
     {
-        $this->withCookie($this->recallerName(), 'ilegível')
+        $this->withUnencryptedCookie($this->recallerName(), 'ilegível')
             ->get('/')
             ->assertOk()
             ->assertSee('Acesso restrito')
@@ -50,7 +49,8 @@ class RememberCookieTest extends TestCase
             auth()->guard('web')->hashPasswordForCookie($user->getAuthPassword()),
         ]);
 
-        $this->withCookie($this->recallerName(), $this->encryptedCookie($value))
+        $this->withCredentials()
+            ->withCookie($this->recallerName(), $value)
             ->getJson('/api/me')
             ->assertOk()
             ->assertJsonPath('id', $user->id);
@@ -58,7 +58,8 @@ class RememberCookieTest extends TestCase
 
     public function test_api_request_with_an_invalid_remember_cookie_returns_unauthorized(): void
     {
-        $this->withCookie($this->recallerName(), $this->encryptedCookie('1|remember-token'))
+        $this->withCredentials()
+            ->withCookie($this->recallerName(), '1|remember-token')
             ->getJson('/api/me')
             ->assertUnauthorized()
             ->assertCookieExpired($this->recallerName());
@@ -67,13 +68,6 @@ class RememberCookieTest extends TestCase
     private function recallerName(): string
     {
         return auth()->guard('web')->getRecallerName();
-    }
-
-    private function encryptedCookie(string $value): string
-    {
-        $encrypter = app('encrypter');
-
-        return $encrypter->encrypt(CookieValuePrefix::create($this->recallerName(), $encrypter->getKey()).$value);
     }
 
     private function user(): User
