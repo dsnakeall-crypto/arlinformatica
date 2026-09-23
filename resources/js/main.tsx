@@ -921,6 +921,15 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
       })
       .catch((e) => setError(e.message));
   }, []);
+  useEffect(() => {
+    if (!initialClient) return;
+    setClients((current: Client[]) => [
+      initialClient,
+      ...current.filter((row: Client) => row.id !== initialClient.id),
+    ]);
+    setClient(initialClient.id);
+    window.__arlSelectedClient = initialClient;
+  }, [initialClient]);
   const currentClient = clients.find((c) => c.id === client);
   const photoPreviews = useMemo(
     () => photos.map((file) => ({ file, url: URL.createObjectURL(file) })),
@@ -5068,12 +5077,6 @@ function App() {
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, []);
-  useEffect(() => {
-    if (!initialClient) return;
-    setClients((current) => [initialClient, ...current.filter((row) => row.id !== initialClient.id)]);
-    setClient(initialClient.id);
-    window.__arlSelectedClient = initialClient;
-  }, [initialClient]);
   useEffect(
     () =>
       localStorage.setItem("arl-sidebar-collapsed", String(sidebarCollapsed)),
