@@ -137,5 +137,6 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
   expect(whatsappText).toMatch(/\/share\/final\/[a-f0-9]{64}/);
   expect(whatsappText).not.toContain('\uFFFD');
   expect(whatsappText).not.toContain('\u00EF\u00BF\u00BD');
+  expect(whatsappText).not.toMatch(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/u);
   await whatsappPage.close();
 });

@@ -185,8 +185,12 @@ class StageSixTest extends TestCase
     public function test_whatsapp_and_maps_links_are_normalized_and_encoded(): void
     {
         $this->assertSame('https://wa.me/5535999999999?text=Ol%C3%A1%20Jo%C3%A3o', ContactLinks::whatsapp('(35) 99999-9999', 'Olá João'));
-        $this->assertStringContainsString('%F0%9F%94%B4', ContactLinks::whatsapp('(35) 99999-9999', "\u{00EF}\u{00BF}\u{00BD} aviso"));
-        $this->assertStringNotContainsString('%EF%BF%BD', ContactLinks::whatsapp('(35) 99999-9999', "\u{FFFD} aviso"));
+        $messages = $this->actingAs($this->user)->getJson('/api/post-sales/settings')->assertOk()->json();
+        foreach ([$messages['post_sale_google'], $messages['post_sale_instagram']] as $message) {
+            $this->assertStringNotContainsString("\u{FFFD}", $message);
+            $this->assertStringNotContainsString("\u{00EF}\u{00BF}\u{00BD}", $message);
+            $this->assertDoesNotMatchRegularExpression('/[\x{1F000}-\x{1FAFF}\x{2600}-\x{27BF}]/u', $message);
+        }
         $this->assertStringContainsString('query=Rua%20A%2C%2010%2C%20Centro%2C%20Campos%20Gerais%2C%20MG%2C%2037160000', ContactLinks::maps(['street' => 'Rua A', 'number' => '10', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG', 'postal_code' => '37160000']));
     }
 

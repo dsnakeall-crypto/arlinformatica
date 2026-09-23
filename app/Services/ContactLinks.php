@@ -11,13 +11,7 @@ class ContactLinks
             $digits = '55'.$digits;
         }
 
-        $normalizedMessage = str_replace(
-            ["\u{FFFD}", "\u{00EF}\u{00BF}\u{00BD}", "\u{00F0}\u{0178}\u{201D}\u{00B4}"],
-            "\u{1F534}",
-            $message,
-        );
-
-        return 'https://wa.me/'.$digits.($normalizedMessage !== '' ? '?text='.rawurlencode($normalizedMessage) : '');
+        return 'https://wa.me/'.$digits.($message !== '' ? '?text='.rawurlencode($message) : '');
     }
 
     public static function maps(array $address): string

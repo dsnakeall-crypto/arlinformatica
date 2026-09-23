@@ -31,11 +31,7 @@ const api = async (url: string, options: RequestInit = {}) => {
 };
 
 const digits = (value: unknown) => typeof value === 'string' ? value.replace(/\D/g, '') : '';
-const WHATSAPP_RED_MARKER = '\u{1F534}';
-const normalizeWhatsappMessage = (message: string) => message
-  .replace(/\uFFFD|\u00EF\u00BF\u00BD|\u00F0\u0178\u201D\u00B4/g, WHATSAPP_RED_MARKER)
-  .normalize('NFC');
-const whatsappText = (message: string) => encodeURIComponent(normalizeWhatsappMessage(message));
+const whatsappText = (message: string) => encodeURIComponent(message);
 const masks = {
   document: (value: unknown) => {
     const n = digits(value).slice(0, 14);
@@ -409,19 +405,19 @@ function finalWhatsappMessage(order: any, pdfUrl: string) {
     '',
     `Seu equipamento está pronto (${order.number}).`,
     '',
-    `${WHATSAPP_RED_MARKER} Detalhes do Serviço no link abaixo`,
+    'Detalhes do Serviço no link abaixo',
     pdfUrl,
     '',
     '',
     `- Valor: ${money(order.total_cents || 0)}`,
     '',
-    `${WHATSAPP_RED_MARKER} Formas de Pagamento: `,
+    'Formas de Pagamento: ',
     '',
     '- PIX (Chave): 35988285777 ',
     '- Cartão (com taxas) ',
     '- Dinheiro (favor trazer trocado)',
     '',
-    `${WHATSAPP_RED_MARKER} A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.`,
+    'A retirada ou entrega será liberada imediatamente após a confirmação do pagamento.',
     '',
     'Agradecemos pela preferência!',
   ].join('\n');
