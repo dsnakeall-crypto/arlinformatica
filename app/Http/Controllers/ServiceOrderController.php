@@ -30,7 +30,7 @@ class ServiceOrderController extends Controller
             ->select('service_orders.*')
             ->addSelect(DB::raw('COALESCE(payment_status.paid_cents, 0) as paid_cents'))
             ->leftJoinSub($paidByOrder, 'payment_status', 'payment_status.service_order_id', '=', 'service_orders.id')
-            ->with('client:id,name,phone,street,number,district,city,state')
+            ->with(['client:id,name,phone,street,number,district,city,state', 'closingMarkedBy:id,name'])
             ->withExists(['histories as reopened' => fn ($history) => $history->where('from_status', 'completed')->where('to_status', 'analysis')]);
         $requestedStatus = (string) $r->query('status', '');
         $tab = (string) $r->query('tab', 'all');
@@ -94,7 +94,7 @@ class ServiceOrderController extends Controller
         $postSales->catchUp(true);
         $orders = ServiceOrder::query()
             ->select('service_orders.*')
-            ->with('client:id,name,phone,street,number,district,city,state')
+            ->with(['client:id,name,phone,street,number,district,city,state', 'closingMarkedBy:id,name'])
             ->withExists(['histories as reopened' => fn ($history) => $history->where('from_status', 'completed')->where('to_status', 'analysis')])
             ->whereNotIn('status', ['completed', 'interrupted'])
             ->oldest('received_at')
@@ -163,7 +163,7 @@ class ServiceOrderController extends Controller
 
     public function show(ServiceOrder $order): JsonResponse
     {
-        $order->load(['client', 'checklists', 'items', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']);
+        $order->load(['client', 'closingMarkedBy:id,name', 'checklists', 'items', 'photos:id,service_order_id,mime,bytes,width,height,created_at', 'histories.user:id,name', 'snapshot']);
         $payload = $order->toArray();
         if (in_array($order->status, ['completed', 'interrupted'], true) && is_array($order->snapshot?->client)) {
             $payload['client'] = $order->snapshot->client;

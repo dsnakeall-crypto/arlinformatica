@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/audit-history', [ServiceOrderAuditController::class, 'index']);
     Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
     Route::middleware('role:Master,Administrador')->group(function () {
+        Route::patch('/orders/{order}/closing-reference', [ServiceOrderMaintenanceController::class, 'updateClosingReference']);
+        Route::delete('/orders/{order}/closing-reference', [ServiceOrderMaintenanceController::class, 'clearClosingReference']);
         Route::delete('/photos/{photo}', [StorageController::class, 'destroy']);
         Route::delete('/orders/{order}', [ServiceOrderMaintenanceController::class, 'destroy']);
         Route::post('/orders/{order}/reopen', [ServiceOrderMaintenanceController::class, 'reopen']);

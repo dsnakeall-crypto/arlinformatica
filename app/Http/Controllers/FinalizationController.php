@@ -115,6 +115,9 @@ class FinalizationController extends Controller
                 'subtotal_cents' => $subtotal,
                 'discount_cents' => $data['discount_cents'],
                 'total_cents' => $total,
+                'closing_reference_cents' => null,
+                'closing_marked_by' => null,
+                'closing_marked_at' => null,
                 'archived' => $settledByPreviousPayments,
             ])->save();
             DB::table('status_history')->insert(['service_order_id' => $order->id, 'from_status' => $before, 'to_status' => 'completed', 'user_id' => $request->user()->id, 'created_at' => now()]);
