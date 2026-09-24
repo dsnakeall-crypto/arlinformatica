@@ -166,7 +166,7 @@ function showFinalShare(order: FinalOrder) {
   host.className = 'arl-final-share-host';
   host.innerHTML = `<section class="arl-final-share-card" role="status" aria-label="Compartilhar fechamento da OS">
     <h2>OS #${order.number} finalizada</h2>
-    <p>O PDF Final está pronto. Um link novo, válido por 48 horas, será criado somente quando você escolher uma ação.</p>
+    <p>O PDF Final está pronto. Um link novo, válido por 30 dias, será criado somente quando você escolher uma ação.</p>
     <div class="arl-final-share-actions">
       <button type="button" data-final-pdf>Abrir PDF</button>
       <button type="button" class="whatsapp" data-final-whatsapp>Enviar PDF pelo WhatsApp</button>
