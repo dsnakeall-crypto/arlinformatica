@@ -1615,26 +1615,6 @@ function FinalizationBox({
     ),
     disc = centsFromMoneyInput(discount),
     total = Math.max(0, subtotal - disc);
-  const closingMismatch =
-    order.closing_reference_cents != null &&
-    order.closing_reference_cents !== total;
-  const updateClosingReference = async () => {
-    if (!window.confirm(`Atualizar o valor combinado para ${money(total)}?`))
-      return;
-    setBusy(true);
-    setError("");
-    try {
-      await api(`/orders/${order.id}/closing-reference`, {
-        method: "PATCH",
-        body: JSON.stringify({ amount_cents: total }),
-      });
-      await reload();
-    } catch (reason: any) {
-      setError(reason.message || "Não foi possível atualizar o valor combinado.");
-    } finally {
-      setBusy(false);
-    }
-  };
   const add = (entry: ServiceProductCatalogItem, quantity = 1) => {
     setSourceBudgetId(null);
     setItems((current) => {
@@ -1719,18 +1699,10 @@ function FinalizationBox({
               <X aria-hidden="true" />
             </button>
             <h1>FINALIZAÇÃO DA OS</h1>
-            {order.closing_reference_cents != null && !closingMismatch && (
+            {order.closing_reference_cents != null && (
               <div className="notice arl-closing-reminder">
                 Valor combinado em campo:{" "}
                 <strong>{money(order.closing_reference_cents)}</strong>
-              </div>
-            )}
-            {closingMismatch && (
-              <div className="alert arl-closing-reminder">
-                O total está diferente do valor combinado em campo ({money(order.closing_reference_cents)}).{" "}
-                <button type="button" disabled={busy || total <= 0} onClick={() => void updateClosingReference()}>
-                  Atualizar valor combinado
-                </button>
               </div>
             )}
             <div className="section-title">
@@ -1904,7 +1876,7 @@ function FinalizationBox({
               <button
                 type="button"
                 className="primary"
-                disabled={busy || closingMismatch}
+                disabled={busy}
                 onClick={finish}
               >
                 {busy ? "Finalizando…" : "Salvar e concluir OS"}

@@ -73,11 +73,6 @@ class FinalizationController extends Controller
             throw ValidationException::withMessages(['discount_cents' => 'O desconto não pode superar o subtotal.']);
         }
         $total = max(0, $subtotal - (int) $data['discount_cents']);
-        if ($order->closing_reference_cents !== null && (int) $order->closing_reference_cents !== $total) {
-            throw ValidationException::withMessages([
-                'closing_reference_cents' => 'O total está diferente do valor combinado em campo.',
-            ]);
-        }
         $resultLabel = 'Reparo realizado';
         $company = $settings->snapshot();
         $signaturePath = $company['technical_signature'] ?? null;

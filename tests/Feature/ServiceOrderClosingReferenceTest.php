@@ -115,7 +115,7 @@ class ServiceOrderClosingReferenceTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('amount_cents');
     }
 
-    public function test_mismatched_reference_blocks_until_an_audited_update_matches_the_total(): void
+    public function test_mismatched_reference_is_informative_and_is_cleared_on_finalization(): void
     {
         $master = $this->user('Master', 'closing-match');
         $order = $this->order($master);
@@ -123,11 +123,14 @@ class ServiceOrderClosingReferenceTest extends TestCase
         $this->actingAs($master)->patchJson("/api/orders/{$order->id}/closing-reference", ['amount_cents' => 9000])->assertOk();
         $payload = ['technical_report' => 'Reparo concluído.', 'discount_cents' => 0, 'items' => [['description' => 'Serviço', 'quantity' => 1, 'unit_price_cents' => 10000, 'warranty_enabled' => false]]];
 
-        $this->postJson("/api/orders/{$order->id}/finalize", $payload)
-            ->assertUnprocessable()->assertJsonValidationErrors('closing_reference_cents');
-        $this->patchJson("/api/orders/{$order->id}/closing-reference", ['amount_cents' => 10000])->assertOk();
-        $this->assertDatabaseHas('audit_logs', ['action' => 'service_order.closing_reference_updated', 'subject_id' => $order->id]);
         $this->postJson("/api/orders/{$order->id}/finalize", $payload)->assertCreated();
+
+        $order->refresh();
+        $this->assertSame('completed', $order->status);
+        $this->assertSame(10000, (int) $order->total_cents);
+        $this->assertNull($order->closing_reference_cents);
+        $this->assertNull($order->closing_marked_by);
+        $this->assertNull($order->closing_marked_at);
     }
 
     private function user(string $role, string $login): User

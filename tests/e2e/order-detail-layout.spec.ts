@@ -174,6 +174,35 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(finalization.getByRole('button', { name: 'Fechar finalização' })).toBeVisible();
 });
 
+test('valor combinado é somente informativo na finalização', async ({ page }) => {
+  const { clientName, equipmentDescription, equipmentDetails, order } = await createOrder(page);
+  const reference = 1;
+  const marked = await api(page, `/orders/${order.id}/closing-reference`, 'PATCH', { amount_cents: reference });
+  expect(marked.status, JSON.stringify(marked.body)).toBe(200);
+
+  const root = await openOrder(page, clientName, order.number, equipmentDescription, equipmentDetails);
+  const service = await validServiceItem(page);
+  await root.getByLabel('Pesquisar Serviço / Produto').fill(service.description);
+  await root.getByRole('button', { name: `Adicionar ${service.description}` }).click();
+  await root.getByLabel('Laudo Final').fill('Laudo para validar valor combinado apenas informativo.');
+  await root.getByRole('button', { name: 'Concluir', exact: true }).click();
+
+  const modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
+  await expect(modal).toContainText('Valor combinado em campo: R$ 0,01');
+  await expect(modal.getByText('O total está diferente do valor combinado em campo', { exact: false })).toHaveCount(0);
+  await expect(modal.getByRole('button', { name: 'Atualizar valor combinado' })).toHaveCount(0);
+
+  const finalized = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === `/api/orders/${order.id}/finalize` && response.request().method() === 'POST',
+  );
+  await modal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
+  expect((await finalized).status()).toBe(201);
+
+  const completed = await api(page, `/orders/${order.id}`);
+  expect(completed.body.closing_reference_cents).toBeNull();
+  expect(completed.body.total_cents).toBeGreaterThan(reference);
+});
+
 test('OS externa reaberta não recria atalhos removidos do detalhe', async ({ page }) => {
   const { clientName, equipmentDescription, equipmentDetails, order } = await createOrder(page);
   const serviceItem = await validServiceItem(page);
