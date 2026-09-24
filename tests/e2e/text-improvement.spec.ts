@@ -40,5 +40,15 @@ test('melhora problema relatado e laudo final sem substituir o texto automaticam
   await expect(reportTools.getByText('Texto técnico.', { exact: true })).toBeVisible();
   await reportTools.getByText('Técnica', { exact: true }).locator('..').getByRole('button', { name: 'Usar este' }).click();
   await expect(report).toHaveValue('Texto técnico.');
+  await page.getByRole('button', { name: 'Concluir', exact: true }).click();
+  const finalization = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
+  const finalizationReport = finalization.getByLabel('LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO');
+  await finalizationReport.fill('laudo da finalização');
+  const finalizationTools = finalizationReport.locator('..').locator('.arl-text-improvement');
+  await finalizationTools.getByRole('button', { name: 'Melhorar texto' }).click();
+  await expect(finalizationTools.getByText('Texto simples.', { exact: true })).toBeVisible();
+  await expect(finalizationTools.getByText('Texto técnico.', { exact: true })).toBeVisible();
+  await finalizationTools.getByText('Simples', { exact: true }).locator('..').getByRole('button', { name: 'Usar este' }).click();
+  await expect(finalizationReport).toHaveValue('Texto simples.');
   expect(order.status).toBe(201);
 });

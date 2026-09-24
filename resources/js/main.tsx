@@ -1475,6 +1475,7 @@ function FinalizationBox({ order, reload }: any) {
                 value={report}
                 onChange={(e) => setReport(e.target.value)}
               />
+              <TextImprovement value={report} onUse={setReport} />
             </label>
             <div className="section-title">
               <h2>Itens</h2>
