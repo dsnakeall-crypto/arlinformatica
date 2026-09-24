@@ -23,12 +23,16 @@ class FinalizationController extends Controller
         abort_if($order->status === 'completed', 409, 'A OS já possui uma finalização imutável.');
         abort_if($order->status === 'interrupted', 409, 'Uma OS interrompida já está fechada e não pode ser finalizada nem reaberta.');
         $data = $request->validate([
-            'technical_report' => 'nullable|string|max:20000', 'discount_cents' => 'required|integer|min:0|max:999999999',
+            'technical_report' => 'required|string|max:20000', 'discount_cents' => 'required|integer|min:0|max:999999999',
             'approved_budget_id' => 'nullable|exists:budgets,id', 'photo_ids' => 'array', 'photo_ids.*' => 'integer',
             'show_item_warranties' => 'sometimes|boolean',
             'is_paid' => 'sometimes|boolean',
             'payment_method' => ['nullable', 'required_if:is_paid,true', Rule::in(['cash', 'pix', 'credit', 'debit'])],
-        ]);
+        ], ['technical_report.required' => 'Preencha o laudo para concluir a OS.']);
+        $data['technical_report'] = trim((string) $data['technical_report']);
+        if ($data['technical_report'] === '') {
+            throw ValidationException::withMessages(['technical_report' => 'Preencha o laudo para concluir a OS.']);
+        }
         $data['result'] = 'repair_completed';
         $data['result_other'] = null;
 

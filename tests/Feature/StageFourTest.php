@@ -69,6 +69,16 @@ class StageFourTest extends TestCase
         $this->finalize(['result' => 'repair_completed', 'technical_report' => 'Reparo', 'discount_cents' => 101, 'items' => [['description' => 'Serviço', 'quantity' => 1, 'unit_price_cents' => 100, 'warranty_enabled' => false]]])->assertUnprocessable()->assertJsonValidationErrors('discount_cents');
     }
 
+    public function test_finalization_requires_a_non_blank_technical_report(): void
+    {
+        $payload = ['discount_cents' => 0, 'items' => [['description' => 'Serviço', 'quantity' => 1, 'unit_price_cents' => 100, 'warranty_enabled' => false]]];
+
+        $this->finalize($payload)->assertUnprocessable()->assertJsonValidationErrors('technical_report');
+        $this->finalize([...$payload, 'technical_report' => '   '])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.technical_report.0', 'Preencha o laudo para concluir a OS.');
+    }
+
     public function test_finalization_can_register_full_payment_and_requires_one_of_the_supported_methods(): void
     {
         $payload = ['result' => 'repair_completed', 'technical_report' => 'Reparo concluído', 'discount_cents' => 1000, 'items' => [['description' => 'Reparo completo', 'quantity' => 2, 'unit_price_cents' => 10000, 'warranty_enabled' => false]], 'is_paid' => true];

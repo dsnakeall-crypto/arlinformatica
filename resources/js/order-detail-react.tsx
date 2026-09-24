@@ -1618,6 +1618,10 @@ function FinalizationBox({
     });
   };
   const finish = async () => {
+    if (!finalReport.trim()) {
+      setError("Preencha o laudo para concluir a OS.");
+      return;
+    }
     if (isPaid && !paymentMethod) {
       setError("Escolha a forma de pagamento.");
       return;

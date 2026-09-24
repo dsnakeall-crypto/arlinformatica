@@ -1407,6 +1407,10 @@ function FinalizationBox({ order, reload }: any) {
     disc = Math.round(Number(discount.replace(",", ".")) * 100),
     total = Math.max(0, subtotal - disc);
   const finish = async () => {
+    if (!report.trim()) {
+      setError("Preencha o laudo para concluir a OS.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {

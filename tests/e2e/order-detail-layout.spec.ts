@@ -166,6 +166,8 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   const finalization = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(finalization).toBeVisible();
   await expect(finalization.getByText('Resultado do atendimento', { exact: true })).toHaveCount(0);
+  await finalization.getByRole('button', { name: 'Salvar e concluir OS' }).click();
+  await expect(finalization.getByText('Preencha o laudo para concluir a OS.', { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   const finalizationFitsMobile = await finalization.evaluate((node) => node.scrollWidth <= node.clientWidth + 1);
   expect(finalizationFitsMobile, 'Modal de finalização não deve cortar nem provocar overflow em mobile').toBe(true);
