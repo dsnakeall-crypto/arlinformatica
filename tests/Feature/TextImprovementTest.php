@@ -28,15 +28,23 @@ class TextImprovementTest extends TestCase
         return $user;
     }
 
+    private function openAiResponse(string $text): array
+    {
+        return ['output' => [['content' => [['type' => 'output_text', 'text' => $text]]]]];
+    }
+
     public function test_authenticated_user_receives_suggestion_and_only_field_text_is_sent(): void
     {
         $this->enableOpenAi();
         config()->set('openai.model', 'gpt-4.1-mini');
-        Http::fake(['https://api.openai.com/v1/responses' => Http::response(['output' => [['content' => [['type' => 'output_text', 'text' => 'Texto corrigido.']]]]], 200)]);
+        Http::fake(['https://api.openai.com/v1/responses' => Http::response($this->openAiResponse('Texto corrigido.'), 200)]);
         $this->actingAs($this->user())->postJson('/api/text-improvements', ['text' => 'texto corrigido'])
             ->assertOk()->assertJsonPath('suggestion', 'Texto corrigido.');
         Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/responses'
             && $request['input'] === 'texto corrigido'
+            && str_contains($request['instructions'], 'assistência técnica de informática')
+            && str_contains($request['instructions'], '500 caracteres')
+            && str_contains($request['instructions'], 'É proibido acrescentar qualquer fato')
             && array_keys($request->data()) === ['model', 'store', 'max_output_tokens', 'instructions', 'input']);
     }
 
@@ -61,7 +69,7 @@ class TextImprovementTest extends TestCase
     public function test_limits_requests_per_user(): void
     {
         $this->enableOpenAi();
-        Http::fake(['https://api.openai.com/v1/responses' => Http::response(['output' => [['content' => [['type' => 'output_text', 'text' => 'Texto.']]]]], 200)]);
+        Http::fake(['https://api.openai.com/v1/responses' => Http::response($this->openAiResponse('Texto.'), 200)]);
         $user = $this->user();
         RateLimiter::clear('text-improvement:'.$user->id);
         for ($i = 0; $i < 20; $i++) $this->actingAs($user)->postJson('/api/text-improvements', ['text' => 'texto'])->assertOk();
