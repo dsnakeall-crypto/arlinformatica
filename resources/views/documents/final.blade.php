@@ -48,7 +48,7 @@ $completedAt = \Carbon\Carbon::parse($finalization['completed_at'])->setTimezone
 
 <table class="two-column"><tr>
 <td><div class="section-title">Problema relatado</div><p>{{ $order['reported_problem'] }}</p></td>
-<td><div class="section-title">Laudo técnico / descrição do atendimento</div>@if(filled($finalization['technical_report'] ?? null))<p>{!! nl2br(e($finalization['technical_report'])) !!}</p>@endif<p class="result">Resultado: {{ $result_label }}</p></td>
+<td><div class="section-title">Laudo técnico / descrição do atendimento</div>@if(filled($finalization['technical_report'] ?? null))<p>{!! nl2br(e($finalization['technical_report'])) !!}</p>@endif</td>
 </tr></table>
 
 <div class="full-box"><div class="section-title">Estado físico na entrada</div><p>{{ data_get($order, 'intake_condition') ?: 'Equipamento aparentemente 100% sem avarias' }}</p></div>
