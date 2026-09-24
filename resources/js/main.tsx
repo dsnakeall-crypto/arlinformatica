@@ -1406,6 +1406,20 @@ function FinalizationBox({ order, reload }: any) {
     ),
     disc = Math.round(Number(discount.replace(",", ".")) * 100),
     total = Math.max(0, subtotal - disc);
+  const closingMismatch = order.closing_reference_cents != null && order.closing_reference_cents !== total;
+  const updateClosingReference = async () => {
+    if (!window.confirm(`Atualizar o valor combinado para ${money(total)}?`)) return;
+    setBusy(true);
+    setError("");
+    try {
+      await api(`/orders/${order.id}/closing-reference`, { method: "PATCH", body: JSON.stringify({ amount_cents: total }) });
+      reload();
+    } catch (e: any) {
+      setError(e.message || "Não foi possível atualizar o valor combinado.");
+    } finally {
+      setBusy(false);
+    }
+  };
   const finish = async () => {
     if (!report.trim()) {
       setError("Preencha o laudo para concluir a OS.");
@@ -1472,6 +1486,7 @@ function FinalizationBox({ order, reload }: any) {
               <X />
             </button>
             <h1>FINALIZAÇÃO DA OS</h1>
+            {closingMismatch && <div className="alert arl-closing-reminder">O total está diferente do valor combinado em campo ({money(order.closing_reference_cents)}). <button type="button" onClick={() => void updateClosingReference()}>Atualizar valor combinado</button></div>}
             <label className="field">
               <span>LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO</span>
               <textarea
@@ -1576,7 +1591,7 @@ function FinalizationBox({ order, reload }: any) {
             {error && <div className="alert">{error}</div>}
             <div className="actions">
               <button onClick={() => setOpen(false)}>Cancelar</button>
-              <button className="primary" disabled={busy} onClick={finish}>
+              <button className="primary" disabled={busy || closingMismatch} onClick={finish}>
                 {busy ? "Finalizando…" : "Salvar e concluir OS"}
               </button>
             </div>

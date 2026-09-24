@@ -115,6 +115,21 @@ class ServiceOrderClosingReferenceTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('amount_cents');
     }
 
+    public function test_mismatched_reference_blocks_until_an_audited_update_matches_the_total(): void
+    {
+        $master = $this->user('Master', 'closing-match');
+        $order = $this->order($master);
+        $order->snapshot()->create(['client' => ['name' => 'Cliente'], 'company' => ['company_name' => 'ARL'], 'equipment' => ['name' => 'Notebook'], 'term_text' => 'Termo']);
+        $this->actingAs($master)->patchJson("/api/orders/{$order->id}/closing-reference", ['amount_cents' => 9000])->assertOk();
+        $payload = ['technical_report' => 'Reparo concluído.', 'discount_cents' => 0, 'items' => [['description' => 'Serviço', 'quantity' => 1, 'unit_price_cents' => 10000, 'warranty_enabled' => false]]];
+
+        $this->postJson("/api/orders/{$order->id}/finalize", $payload)
+            ->assertUnprocessable()->assertJsonValidationErrors('closing_reference_cents');
+        $this->patchJson("/api/orders/{$order->id}/closing-reference", ['amount_cents' => 10000])->assertOk();
+        $this->assertDatabaseHas('audit_logs', ['action' => 'service_order.closing_reference_updated', 'subject_id' => $order->id]);
+        $this->postJson("/api/orders/{$order->id}/finalize", $payload)->assertCreated();
+    }
+
     private function user(string $role, string $login): User
     {
         return User::create([
