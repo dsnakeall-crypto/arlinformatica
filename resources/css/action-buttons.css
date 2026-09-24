@@ -11,4 +11,13 @@
     font-size: 12px !important;
     font-weight: 800 !important;
     box-shadow: 0 4px 10px rgba(42, 8, 15, .22) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+.services-add {
+    width: 150px !important;
+    min-width: 150px !important;
+    justify-self: start;
 }
