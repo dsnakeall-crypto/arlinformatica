@@ -6,23 +6,24 @@ test('melhora problema relatado e laudo final sem substituir o texto automaticam
   let fail = false;
   await page.route('**/api/text-improvements', async (route) => {
     if (fail) return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ message: 'Não foi possível melhorar o texto agora.' }) });
-    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ suggestion: 'Texto corrigido.' }) });
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ suggestions: { simples: 'Texto simples.', tecnica: 'Texto técnico.' } }) });
   });
   await page.getByRole('button', { name: 'Nova OS' }).click();
   const problem = page.getByLabel('Problema relatado *');
   await problem.fill('texto original');
   const problemTools = problem.locator('..');
   await problemTools.getByRole('button', { name: 'Melhorar texto' }).click();
-  await expect(problemTools.getByText('Texto corrigido.', { exact: true })).toBeVisible();
+  await expect(problemTools.getByText('Texto simples.', { exact: true })).toBeVisible();
+  await expect(problemTools.getByText('Texto técnico.', { exact: true })).toBeVisible();
   await problemTools.getByRole('button', { name: 'Manter o meu' }).click();
   await expect(problem).toHaveValue('texto original');
   await problemTools.getByRole('button', { name: 'Melhorar texto' }).click();
-  await problemTools.getByRole('button', { name: 'Usar este' }).click();
-  await expect(problem).toHaveValue('Texto corrigido.');
+  await problemTools.getByText('Simples', { exact: true }).locator('..').getByRole('button', { name: 'Usar este' }).click();
+  await expect(problem).toHaveValue('Texto simples.');
   fail = true;
   await problemTools.getByRole('button', { name: 'Melhorar texto' }).click();
   await expect(problemTools.getByText('Não foi possível melhorar o texto agora.', { exact: true })).toBeVisible();
-  await expect(problem).toHaveValue('Texto corrigido.');
+  await expect(problem).toHaveValue('Texto simples.');
 
   const client = await api(page, '/clients', 'POST', { name: 'Cliente IA', document: uniqueDocument(Date.now()), phone: '35999995555', street: 'Rua IA' });
   const equipment = await api(page, '/catalogs/equipment');
@@ -35,8 +36,9 @@ test('melhora problema relatado e laudo final sem substituir o texto automaticam
   const reportTools = page.locator('.arl-od-report .arl-text-improvement');
   fail = false;
   await reportTools.getByRole('button', { name: 'Melhorar texto' }).click();
-  await expect(reportTools.getByText('Texto corrigido.', { exact: true })).toBeVisible();
-  await reportTools.getByRole('button', { name: 'Usar este' }).click();
-  await expect(report).toHaveValue('Texto corrigido.');
+  await expect(reportTools.getByText('Texto simples.', { exact: true })).toBeVisible();
+  await expect(reportTools.getByText('Texto técnico.', { exact: true })).toBeVisible();
+  await reportTools.getByText('Técnica', { exact: true }).locator('..').getByRole('button', { name: 'Usar este' }).click();
+  await expect(report).toHaveValue('Texto técnico.');
   expect(order.status).toBe(201);
 });
