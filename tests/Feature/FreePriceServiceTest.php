@@ -65,7 +65,12 @@ class FreePriceServiceTest extends TestCase
                 ['catalog_id' => $fixed['id'], 'description' => $fixed['name'], 'quantity' => 1, 'unit_price_cents' => 1, 'warranty_enabled' => false],
                 ['catalog_id' => $free['id'], 'description' => $free['name'], 'quantity' => 1, 'unit_price_cents' => 20000, 'warranty_enabled' => false],
             ],
-        ])->assertCreated()->assertJsonPath('finalization.total_cents', 30000);
+        ])->assertCreated()->assertJsonPath('finalization.total_cents', 20001);
+
+        $this->assertDatabaseHas('service_order_items', [
+            'service_order_id' => $order['id'], 'catalog_id' => $fixed['id'],
+            'unit_price_cents' => 1, 'subtotal_cents' => 1,
+        ]);
     }
 
     public function test_free_price_service_rejects_zero_value(): void

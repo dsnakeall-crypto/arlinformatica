@@ -142,7 +142,7 @@ class InventoryService
                 return $item;
             }
             $catalog = $catalogs->get((int) $item['catalog_id']);
-            if ($catalog) {
+            if ($catalog && $catalog->category !== 'product' && (bool) ($catalog->free_price ?? false)) {
                 $item['unit_price_cents'] = $this->catalogUnitPrice($catalog, $item['unit_price_cents'] ?? null);
             }
 

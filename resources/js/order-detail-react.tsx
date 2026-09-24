@@ -1800,7 +1800,7 @@ function FinalizationBox({
                   />
                   <input
                     aria-label={`Valor unitário de ${row.description}`}
-                    disabled={!!sourceBudgetId || !catalog.find((entry) => entry.id === row.catalog_id)?.free_price}
+                    disabled={!!sourceBudgetId}
                     inputMode="decimal"
                     value={moneyInputFromCents(row.unit_price_cents)}
                     onChange={(e) =>

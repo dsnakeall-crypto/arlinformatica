@@ -1563,7 +1563,7 @@ function FinalizationBox({ order, reload }: any) {
                   }
                 />
                 <input
-                  disabled={!!sourceBudgetId || !catalog.find((entry) => entry.id === x.catalog_id)?.free_price}
+                  disabled={!!sourceBudgetId}
                   inputMode="decimal"
                   value={moneyInputFromCents(x.unit_price_cents)}
                   onChange={(e) =>
