@@ -90,7 +90,7 @@ class ServiceOrderClosingReferenceTest extends TestCase
 
         $this->postJson("/api/orders/{$order->id}/finalize", [
             'technical_report' => 'Reparo concluído.', 'discount_cents' => 0,
-            'items' => [['description' => 'Serviço', 'quantity' => 1, 'unit_price_cents' => 10000, 'warranty_enabled' => false]],
+            'items' => [['description' => 'Serviço', 'quantity' => 1, 'unit_price_cents' => 9000, 'warranty_enabled' => false]],
         ])->assertCreated();
 
         $order->refresh();
