@@ -55,6 +55,7 @@ import DatabaseResetPanel from "./database-reset";
 import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
 import TextImprovement from "./text-improvement";
+import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
 import ServiceProductSearch from "./service-product-search";
 import {
   OrderPaymentFigures,
@@ -1404,7 +1405,7 @@ function FinalizationBox({ order, reload }: any) {
       (n: number, x: any) => n + x.quantity * x.unit_price_cents,
       0,
     ),
-    disc = Math.round(Number(discount.replace(",", ".")) * 100),
+    disc = centsFromMoneyInput(discount),
     total = Math.max(0, subtotal - disc);
   const closingMismatch = order.closing_reference_cents != null && order.closing_reference_cents !== total;
   const updateClosingReference = async () => {
@@ -1547,16 +1548,14 @@ function FinalizationBox({ order, reload }: any) {
                 <input
                   disabled={!!sourceBudgetId}
                   inputMode="decimal"
-                  value={(x.unit_price_cents / 100).toFixed(2).replace(".", ",")}
+                  value={moneyInputFromCents(x.unit_price_cents)}
                   onChange={(e) =>
                     setItems(
                       items.map((a, j) =>
                         j === i
                           ? {
                               ...a,
-                              unit_price_cents: Math.round(
-                                +e.target.value.replace(",", ".") * 100,
-                              ),
+                              unit_price_cents: centsFromMoneyInput(e.target.value),
                             }
                           : a,
                       ),
@@ -1583,7 +1582,7 @@ function FinalizationBox({ order, reload }: any) {
                 Desconto (R$)
                 <input
                   value={discount}
-                  onChange={(e) => setDiscount(e.target.value)}
+                  onChange={(e) => setDiscount(maskMoneyInput(e.target.value))}
                 />
               </label>
               <strong>Total R$ {(total / 100).toFixed(2)}</strong>
@@ -1860,7 +1859,7 @@ function PaymentBox({ order }: any) {
     api(`/orders/${order.id}/payments`).then((x: any) => {
       setSummary(x);
       setAmount(
-        ((x.collectible_balance_cents || 0) / 100).toFixed(2).replace(".", ","),
+        moneyInputFromCents(x.collectible_balance_cents || 0),
       );
     });
   useEffect(() => {
@@ -1869,7 +1868,7 @@ function PaymentBox({ order }: any) {
   const total = summary?.total_cents ?? (order.total_cents || 0),
     paid = summary?.paid_cents ?? 0,
     balance = summary?.collectible_balance_cents ?? Math.max(0, total - paid);
-  const entered = Math.round(Number(amount.replace(",", ".")) * 100);
+  const entered = centsFromMoneyInput(amount);
   const remainingAfter = Number.isFinite(entered)
     ? Math.max(0, balance - entered)
     : balance;
@@ -1885,12 +1884,12 @@ function PaymentBox({ order }: any) {
       }) as Record<string, string>
     )[value] || value;
   const openPayment = () => {
-    setAmount((balance / 100).toFixed(2).replace(".", ","));
+    setAmount(moneyInputFromCents(balance));
     setError("");
     setOpen(true);
   };
   const save = async () => {
-    const cents = Math.round(Number(amount.replace(",", ".")) * 100);
+    const cents = centsFromMoneyInput(amount);
     if (!Number.isFinite(cents) || cents <= 0) {
       setError("Informe um valor recebido válido.");
       return;
@@ -1985,7 +1984,7 @@ function PaymentBox({ order }: any) {
             <Field
               label="Valor recebido (R$)"
               value={amount}
-              onChange={(e: any) => setAmount(e.target.value)}
+              onChange={(e: any) => setAmount(maskMoneyInput(e.target.value))}
               required
             />
             <label className="field">
@@ -2028,7 +2027,7 @@ function PaymentBox({ order }: any) {
   );
 }
 function QuickEntry({ open, onClose, onSaved }: any) {
-  const [value, setValue] = useState(""),
+  const [value, setValue] = useState("0,00"),
     [description, setDescription] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -2040,11 +2039,11 @@ function QuickEntry({ open, onClose, onSaved }: any) {
       await api("/finance/quick-entry", {
         method: "POST",
         body: JSON.stringify({
-          amount_cents: Math.round(Number(value.replace(",", ".")) * 100),
+          amount_cents: centsFromMoneyInput(value),
           description: description.trim() || null,
         }),
       });
-      setValue("");
+      setValue("0,00");
       setDescription("");
       onClose();
       onSaved?.();
@@ -2073,7 +2072,7 @@ function QuickEntry({ open, onClose, onSaved }: any) {
         <Field
           label="Valor recebido (R$)"
           value={value}
-          onChange={(e: any) => setValue(e.target.value)}
+          onChange={(e: any) => setValue(maskMoneyInput(e.target.value))}
           required
         />
         {error && <div className="alert">{error}</div>}
@@ -2088,7 +2087,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
   const [spentOn, setSpentOn] = useState(""),
     [category, setCategory] = useState("merchandise_purchase"),
     [description, setDescription] = useState(""),
-    [value, setValue] = useState(""),
+    [value, setValue] = useState("0,00"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   useEffect(() => {
@@ -2102,7 +2101,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
     setCategory(item?.category || "merchandise_purchase");
     setDescription(item?.description || "");
     setValue(
-      item ? (item.amount_cents / 100).toFixed(2).replace(".", ",") : "",
+      moneyInputFromCents(item?.amount_cents || 0),
     );
     setError("");
   }, [open, item]);
@@ -2117,7 +2116,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
           spent_on: spentOn,
           category,
           description: description.trim(),
-          amount_cents: Math.round(Number(value.replace(",", ".")) * 100),
+          amount_cents: centsFromMoneyInput(value),
         }),
       });
       onClose();
@@ -2171,7 +2170,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
         <Field
           label="Valor (R$)"
           value={value}
-          onChange={(e: any) => setValue(e.target.value)}
+          onChange={(e: any) => setValue(maskMoneyInput(e.target.value))}
           required
         />
         {error && <div className="alert">{error}</div>}
@@ -3910,7 +3909,7 @@ function BudgetBox({ order }: any) {
     [proposal, setProposal] = useState(""),
     [description, setDescription] = useState(""),
     [quantity, setQuantity] = useState(1),
-    [price, setPrice] = useState("0"),
+    [price, setPrice] = useState("0,00"),
     [warranty, setWarranty] = useState(false),
     [term, setTerm] = useState(30),
     [unit, setUnit] = useState("days");
@@ -3933,7 +3932,7 @@ function BudgetBox({ order }: any) {
           {
             description,
             quantity,
-            unit_price_cents: Math.round(Number(price.replace(",", ".")) * 100),
+            unit_price_cents: centsFromMoneyInput(price),
             warranty_enabled: warranty,
             warranty_term: warranty ? term : null,
             warranty_unit: warranty ? unit : null,
@@ -3999,7 +3998,7 @@ function BudgetBox({ order }: any) {
             <Field
               label="Valor unitário"
               value={price}
-              onChange={(e: any) => setPrice(e.target.value)}
+              onChange={(e: any) => setPrice(maskMoneyInput(e.target.value))}
               required
             />
             <label className="field">
@@ -4470,7 +4469,7 @@ function PushSettings() {
 function CatalogAdmin({ catalog, title }: any) {
   const [items, setItems] = useState<any[]>([]),
     [name, setName] = useState(""),
-    [price, setPrice] = useState("0"),
+    [price, setPrice] = useState("0,00"),
     [category, setCategory] = useState("service"),
     [warranty, setWarranty] = useState(false),
     [term, setTerm] = useState(30),
@@ -4489,7 +4488,7 @@ function CatalogAdmin({ catalog, title }: any) {
         active: true,
         ...(service
           ? {
-              price_cents: Math.round(Number(price.replace(",", ".")) * 100),
+              price_cents: centsFromMoneyInput(price),
               category,
               warranty_enabled: warranty,
               warranty_term: warranty ? term : null,
@@ -4499,7 +4498,7 @@ function CatalogAdmin({ catalog, title }: any) {
       }),
     });
     setName("");
-    setPrice("0");
+    setPrice("0,00");
     setWarranty(false);
     setTerm(30);
     setUnit("days");
@@ -4511,9 +4510,7 @@ function CatalogAdmin({ catalog, title }: any) {
       body: JSON.stringify({
         name: edit.name,
         category: edit.category,
-        price_cents: Math.round(
-          Number(String(edit.price).replace(",", ".")) * 100,
-        ),
+        price_cents: centsFromMoneyInput(String(edit.price)),
         warranty_enabled: !!edit.warranty_enabled,
         warranty_term: edit.warranty_enabled ? +edit.warranty_term : null,
         warranty_unit: edit.warranty_enabled ? edit.warranty_unit : null,
@@ -4539,7 +4536,7 @@ function CatalogAdmin({ catalog, title }: any) {
             <input
               aria-label="Valor em R$"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={(e) => setPrice(maskMoneyInput(e.target.value))}
               placeholder="Valor em R$"
             />
             <label className="field">

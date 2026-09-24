@@ -22,6 +22,7 @@ import "../css/order-detail-layout.css";
 import { OrderPaymentFigures } from "./finance-refund-summary";
 import { isReopenedOrder } from "./order-reopened";
 import TextImprovement from "./text-improvement";
+import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
 
 type Props = {
   reopenOnLoad?: boolean;
@@ -935,22 +936,14 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
                   />
                   <input
                     aria-label={`Valor unitário de ${row.description}`}
-                    value={(row.unit_price_cents / 100)
-                      .toFixed(2)
-                      .replace(".", ",")}
+                    value={moneyInputFromCents(row.unit_price_cents)}
                     onChange={(e) =>
                       setItems(
                         items.map((item, i) =>
                           i === index
                             ? {
                                 ...item,
-                                unit_price_cents: Math.max(
-                                  0,
-                                  Math.round(
-                                    Number(e.target.value.replace(",", ".")) *
-                                      100,
-                                  ) || 0,
-                                ),
+                                unit_price_cents: centsFromMoneyInput(e.target.value),
                               }
                             : item,
                         ),
@@ -1070,12 +1063,12 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
 
 function PaymentCorrection({ order, payment, onClose, onSaved }: any) {
   const [value, setValue] = useState(
-    (payment.effective_cents / 100).toFixed(2).replace(".", ","),
+    moneyInputFromCents(payment.effective_cents),
   );
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const save = async () => {
-    const cents = Math.round(Number(value.replace(",", ".")) * 100);
+    const cents = centsFromMoneyInput(value);
     if (!Number.isFinite(cents) || cents < 0 || reason.trim().length < 3) {
       setError("Informe valor e motivo válidos.");
       return;
@@ -1102,7 +1095,7 @@ function PaymentCorrection({ order, payment, onClose, onSaved }: any) {
         <p>A correção mantém o lançamento original e fica auditada.</p>
         <label>
           Novo valor (R$)
-          <input value={value} onChange={(e) => setValue(e.target.value)} />
+          <input value={value} onChange={(e) => setValue(maskMoneyInput(e.target.value))} />
         </label>
         <label>
           Motivo
@@ -1128,14 +1121,14 @@ function PaymentCorrection({ order, payment, onClose, onSaved }: any) {
 
 function RefundModal({ order, maximum, onClose, onSaved }: any) {
   const [value, setValue] = useState(
-      (maximum / 100).toFixed(2).replace(".", ","),
+      moneyInputFromCents(maximum),
     ),
     [reason, setReason] = useState(""),
     [method, setMethod] = useState("pix"),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const save = async () => {
-    const cents = Math.round(Number(value.replace(",", ".")) * 100);
+    const cents = centsFromMoneyInput(value);
     setBusy(true);
     setError("");
     try {
@@ -1172,7 +1165,7 @@ function RefundModal({ order, maximum, onClose, onSaved }: any) {
         <TextField
           label="Valor devolvido (R$)"
           value={value}
-          onChange={(e: any) => setValue(e.target.value)}
+          onChange={(e: any) => setValue(maskMoneyInput(e.target.value))}
           required
         />
         <label>
@@ -1231,9 +1224,7 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
     const next = (await api(`/orders/${order.id}/payments`)) as PaymentSummary;
     setSummary(next);
     setAmount(
-      ((next.collectible_balance_cents || 0) / 100)
-        .toFixed(2)
-        .replace(".", ","),
+      moneyInputFromCents(next.collectible_balance_cents || 0),
     );
     onSummary?.(next);
   };
@@ -1248,7 +1239,7 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
       summary.total_cents > 0
     ) {
       setAmount(
-        (summary.collectible_balance_cents / 100).toFixed(2).replace(".", ","),
+        moneyInputFromCents(summary.collectible_balance_cents),
       );
       setError("");
       setOpen(true);
@@ -1275,12 +1266,12 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
     paid_cents: paid,
     collectible_balance_cents: balance,
   } = summary;
-  const entered = Math.round(Number(amount.replace(",", ".")) * 100),
+  const entered = centsFromMoneyInput(amount),
     remainingAfter = Number.isFinite(entered)
       ? Math.max(0, balance - entered)
       : balance;
   const save = async () => {
-    const cents = Math.round(Number(amount.replace(",", ".")) * 100);
+    const cents = centsFromMoneyInput(amount);
     if (!Number.isFinite(cents) || cents <= 0) {
       setError("Informe um valor recebido válido.");
       return;
@@ -1412,7 +1403,7 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
             <TextField
               label="Valor recebido (R$)"
               value={amount}
-              onChange={(e: any) => setAmount(e.target.value)}
+              onChange={(e: any) => setAmount(maskMoneyInput(e.target.value))}
               required
             />
             <label className="field">
@@ -1591,7 +1582,7 @@ function FinalizationBox({
       (sum: number, row: any) => sum + row.quantity * row.unit_price_cents,
       0,
     ),
-    disc = Math.round(Number(discount.replace(",", ".")) * 100),
+    disc = centsFromMoneyInput(discount),
     total = Math.max(0, subtotal - disc);
   const closingMismatch =
     order.closing_reference_cents != null &&
@@ -1809,22 +1800,14 @@ function FinalizationBox({
                     aria-label={`Valor unitário de ${row.description}`}
                     disabled={!!sourceBudgetId}
                     inputMode="decimal"
-                    value={(row.unit_price_cents / 100)
-                      .toFixed(2)
-                      .replace(".", ",")}
+                    value={moneyInputFromCents(row.unit_price_cents)}
                     onChange={(e) =>
                       setItems(
                         items.map((item, i) =>
                           i === index
                             ? {
                                 ...item,
-                                unit_price_cents: Math.max(
-                                  0,
-                                  Math.round(
-                                    Number(e.target.value.replace(",", ".")) *
-                                      100,
-                                  ) || 0,
-                                ),
+                                unit_price_cents: centsFromMoneyInput(e.target.value),
                               }
                             : item,
                         ),
@@ -1894,7 +1877,7 @@ function FinalizationBox({
                 Desconto (R$)
                 <input
                   value={discount}
-                  onChange={(e) => setDiscount(e.target.value)}
+                  onChange={(e) => setDiscount(maskMoneyInput(e.target.value))}
                 />
               </label>
               <strong>Total {money(total)}</strong>
@@ -2396,14 +2379,14 @@ export default function OrderDetailPage({
   const openClosingReference = () => {
     setClosingValue(
       order.closing_reference_cents != null
-        ? (order.closing_reference_cents / 100).toFixed(2).replace(".", ",")
-        : "",
+        ? moneyInputFromCents(order.closing_reference_cents)
+        : "0,00",
     );
     setClosingError("");
     setClosingOpen(true);
   };
   const saveClosingReference = async () => {
-    const amount = Math.round(Number(closingValue.replace(",", ".")) * 100);
+    const amount = centsFromMoneyInput(closingValue);
     if (!Number.isFinite(amount) || amount <= 0)
       return setClosingError("Informe um valor combinado maior que zero.");
     setClosingBusy(true);
@@ -2462,7 +2445,7 @@ export default function OrderDetailPage({
             autoFocus
             inputMode="decimal"
             value={closingValue}
-            onChange={(event) => setClosingValue(event.target.value)}
+            onChange={(event) => setClosingValue(maskMoneyInput(event.target.value))}
           />
         </label>
         {closingError && <div className="alert">{closingError}</div>}

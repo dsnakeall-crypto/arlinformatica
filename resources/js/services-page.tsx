@@ -3,6 +3,7 @@ import { Ban, Box, CheckCircle2, History, PackagePlus, Pencil, Plus, RotateCcw, 
 import '../css/services-page.css';
 import '../css/stock-management.css';
 import PageHeader from './page-header';
+import { centsFromMoneyInput, maskMoneyInput } from './money-input';
 
 type ServiceItem = {
   id: number;
@@ -71,11 +72,7 @@ function money(cents = 0) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
 }
 
-function cents(value: string) {
-  const normalized = value.trim().replace(/\./g, '').replace(',', '.');
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) : NaN;
-}
+const cents = centsFromMoneyInput;
 
 function unitLabel(unit: ServiceItem['warranty_unit']) {
   if (unit === 'months') return 'meses';
@@ -281,7 +278,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
         </label>
         <label className="services-field">
           <span>Valor (R$)</span>
-          <div className="services-money-input"><b>R$</b><input aria-label="Valor em R$" inputMode="decimal" value={draft.price} onChange={(event) => setDraft({ ...draft, price: event.target.value })} /></div>
+          <div className="services-money-input"><b>R$</b><input aria-label="Valor em R$" inputMode="decimal" value={draft.price} onChange={(event) => setDraft({ ...draft, price: maskMoneyInput(event.target.value) })} /></div>
         </label>
         {product && <label className="services-field">
           <span>Quantidade em estoque</span>
@@ -345,7 +342,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
         <button type="button" className="modal-close" aria-label="Fechar edição" onClick={() => setEdit(null)}><X aria-hidden="true" /></button>
         <div className="services-section-heading"><span className="services-heading-icon"><Pencil aria-hidden="true" /></span><div><h2>Editar {singular}</h2><p>Alterações futuras não modificam o histórico das OS já abertas.</p></div></div>
         <label className="services-field"><span>Nome / descrição</span><input spellCheck={true} value={edit.name} onChange={(event) => setEdit({ ...edit, name: event.target.value })} /></label>
-        <label className="services-field"><span>Valor (R$)</span><input inputMode="decimal" value={edit.price} onChange={(event) => setEdit({ ...edit, price: event.target.value })} /></label>
+        <label className="services-field"><span>Valor (R$)</span><input inputMode="decimal" value={edit.price} onChange={(event) => setEdit({ ...edit, price: maskMoneyInput(event.target.value) })} /></label>
         {product && <label className="services-field"><span>Quantidade em estoque</span><input aria-label="Quantidade atual em estoque" type="number" value={edit.stock_quantity} readOnly /><small>Use a ação de entrada de estoque para acrescentar unidades.</small></label>}
         <label className="services-warranty-toggle compact"><input type="checkbox" checked={edit.warranty_enabled} onChange={(event) => setEdit({ ...edit, warranty_enabled: event.target.checked })} /><span><ShieldCheck aria-hidden="true" /><b>Garantia adicional</b></span></label>
         {edit.warranty_enabled && <div className="services-edit-warranty"><label className="services-field"><span>Duração</span><input type="number" min="1" max="9999" value={edit.warranty_term} onChange={(event) => setEdit({ ...edit, warranty_term: Number(event.target.value) || 1 })} /></label><label className="services-field"><span>Unidade</span><select value={edit.warranty_unit} onChange={(event) => setEdit({ ...edit, warranty_unit: event.target.value as Draft['warranty_unit'] })}><option value="days">Dias</option><option value="months">Meses</option><option value="years">Anos</option></select></label></div>}
