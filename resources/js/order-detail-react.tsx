@@ -563,6 +563,7 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
               description: entry.name,
               quantity,
               unit_price_cents: Number(entry.price_cents),
+              free_price: !!entry.free_price,
             },
           ];
     });
@@ -574,12 +575,22 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
     setBusy(true);
     if (notify) setMessage("");
     try {
+      const invalidFreePrice = items.find((row) =>
+        catalog.find((entry) => Number(entry.id) === Number(row.catalog_id))?.free_price &&
+        Number(row.unit_price_cents) <= 0,
+      );
+      if (invalidFreePrice) {
+        throw new Error(`Informe um valor maior que zero para ${invalidFreePrice.description}.`);
+      }
       const updated = await api(`/orders/${order.id}`, {
         method: "PATCH",
         body: JSON.stringify({
           items: items.map((row) => ({
             catalog_id: row.catalog_id,
             quantity: row.quantity,
+            ...(catalog.find((entry) => Number(entry.id) === Number(row.catalog_id))?.free_price
+              ? { unit_price_cents: row.unit_price_cents }
+              : {}),
           })),
         }),
       });
@@ -617,8 +628,9 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
       />
       <div className="arl-od-lines">
         {items.length ? (
-          items.map((row, index) => (
-            <div className="arl-od-line" key={`${row.catalog_id}-${index}`}>
+          items.map((row, index) => {
+            const freePrice = row.free_price ?? !!catalog.find((entry) => Number(entry.id) === Number(row.catalog_id))?.free_price;
+            return <div className="arl-od-line" key={`${row.catalog_id}-${index}`}>
               <b>{row.description}</b>
               <input
                 aria-label={`Quantidade de ${row.description}`}
@@ -642,6 +654,19 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
                   )
                 }
               />
+              <input
+                aria-label={`Valor unitário de ${row.description}`}
+                inputMode="decimal"
+                disabled={!freePrice}
+                value={moneyInputFromCents(row.unit_price_cents)}
+                onChange={(event) =>
+                  changeItems((current) => current.map((item, i) =>
+                    i === index
+                      ? { ...item, unit_price_cents: centsFromMoneyInput(event.target.value) }
+                      : item,
+                  ))
+                }
+              />
               <span>{money(row.quantity * row.unit_price_cents)}</span>
               <button
                 type="button"
@@ -654,8 +679,8 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
               >
                 ×
               </button>
-            </div>
-          ))
+            </div>;
+          })
         ) : (
           <p>Nenhum serviço adicionado.</p>
         )}
