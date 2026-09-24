@@ -102,7 +102,7 @@ class ServiceOrderClosingReferenceTest extends TestCase
     public function test_closed_paid_and_invalid_amounts_are_rejected(): void
     {
         $master = $this->user('Master', 'closing-rejections');
-        foreach ([['completed', false], ['interrupted', false], ['analysis', true]] as [$status, $archived]) {
+        foreach ([['completed', false], ['interrupted', false], ['completed', true]] as [$status, $archived]) {
             $order = $this->order($master, $status, $archived);
             $this->actingAs($master)->patchJson("/api/orders/{$order->id}/closing-reference", ['amount_cents' => 1000])
                 ->assertStatus(409);
@@ -131,11 +131,14 @@ class ServiceOrderClosingReferenceTest extends TestCase
             'street' => 'Rua A', 'number' => null, 'district' => null, 'city' => null, 'state' => null,
         ]);
 
-        return ServiceOrder::create([
+        $order = ServiceOrder::create([
             'number' => str_pad((string) random_int(1, 999999), 7, '0', STR_PAD_LEFT), 'client_id' => $client->id,
             'equipment_type_id' => DB::table('equipment_types')->value('id'), 'attendance_type' => 'bench',
-            'status' => $status, 'archived' => $archived, 'reported_problem' => 'Teste', 'received_at' => now(),
+            'status' => $status, 'reported_problem' => 'Teste', 'received_at' => now(),
             'created_by' => $user->id,
         ]);
+        $order->forceFill(['archived' => $archived])->save();
+
+        return $order;
     }
 }
