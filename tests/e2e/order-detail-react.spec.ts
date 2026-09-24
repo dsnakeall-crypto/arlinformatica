@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { api, login, uniqueDocument } from './helpers';
+import { api, login, uniqueDocument, validServiceItem } from './helpers';
 
 async function createActiveOrder(page: Page, suffix: number, attendance: 'bench' | 'external' = 'bench') {
   await login(page);
@@ -72,12 +72,13 @@ test('Ver OS React possui uma única raiz e blocos funcionais sem duplicação l
 
 test('OS finalizada não oferece edição e exige reabertura antes da edição completa', async ({ page }) => {
   const { clientName, order } = await createActiveOrder(page, 2);
+  const serviceItem = await validServiceItem(page);
   const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
     technical_report: 'Laudo histórico imutável E2E',
     discount_cents: 0,
     approved_budget_id: null,
     photo_ids: [],
-    items: [{ description: 'Registro de finalização', quantity: 1, unit_price_cents: 0, warranty_enabled: false }],
+    items: [serviceItem],
   });
   expect([200, 201], `Contrato imutabilidade: backend não finalizou a OS; status=${finalized.status} body=${JSON.stringify(finalized.body)}`).toContain(finalized.status);
 

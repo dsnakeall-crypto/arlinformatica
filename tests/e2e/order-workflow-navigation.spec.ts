@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { api, login, uniqueDocument } from './helpers';
+import { api, login, uniqueDocument, validServiceItem } from './helpers';
 
 async function fixture(page: Page) {
   const suffix = Date.now();
@@ -14,7 +14,10 @@ async function fixture(page: Page) {
     const order = await api(page, '/orders', 'POST', { client_id: client.body.id, equipment_type_id: equipment.body[0].id, attendance_type: state === 'completed' ? 'external' : 'bench', reported_problem: `Teste ${state}`, items: [], checklist: [] });
     expect(order.status).toBe(201);
     if (state === 'completed') {
-      expect((await api(page, `/orders/${order.body.id}/finalize`, 'POST', { technical_report: 'Finalização para os testes de abas.', items: [{ description: 'Registro de finalização', quantity: 1, unit_price_cents: 0, warranty_enabled: false }], discount_cents: 0, photo_ids: [] })).status).toBe(201);
+      const serviceItem = await validServiceItem(page);
+      const finalized = await api(page, `/orders/${order.body.id}/finalize`, 'POST', { technical_report: 'Finalização para os testes de abas.', items: [serviceItem], discount_cents: 0, photo_ids: [] });
+      expect(finalized.status).toBe(201);
+      order.body = finalized.body.order;
     } else if (state === 'interrupted') {
       expect((await api(page, `/orders/${order.body.id}/status`, 'PATCH', {
         status: state,
@@ -68,7 +71,7 @@ test('Mesa redireciona e as cinco abas React são a única fonte do filtro de Or
     await expect(page.locator('.arl-finalized-toggle')).toHaveCount(0);
   }
   const completedRow = page.locator('.order-row').filter({ hasText: `#${orders[1].number}` });
-  await expect(completedRow.locator('.order-value strong')).toHaveText('R$ 0,00');
+  await expect(completedRow.locator('.order-value strong')).toHaveText(`R$ ${(Number(orders[1].total_cents) / 100).toFixed(2).replace('.', ',')}`);
   await expect(completedRow.locator('.order-value small')).not.toBeEmpty();
   expect(requests.every(url => !url.searchParams.has('finalized'))).toBe(true);
 });

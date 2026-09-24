@@ -31,6 +31,28 @@ export async function api(page: Page, path: string, method = 'GET', body?: unkno
   }, { path, method, body });
 }
 
+export async function validServiceItem(page: Page) {
+  const catalog = await api(page, '/catalogs/services');
+  let service = catalog.body?.find((row: any) => Number(row.price_cents) > 0);
+  if (!service) {
+    const created = await api(page, '/catalogs/services', 'POST', {
+      name: `Serviço válido E2E ${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      price_cents: 10000,
+      warranty_enabled: false,
+    });
+    expect(created.status, JSON.stringify(created.body)).toBe(201);
+    service = created.body;
+  }
+
+  return {
+    catalog_id: service.id,
+    description: service.name,
+    quantity: 1,
+    unit_price_cents: Number(service.price_cents),
+    warranty_enabled: false,
+  };
+}
+
 export function uniqueDocument(seed = Date.now()) {
   const raw = String(seed).replace(/\D/g, '');
   const digits = raw.padStart(9, '0').slice(-9);

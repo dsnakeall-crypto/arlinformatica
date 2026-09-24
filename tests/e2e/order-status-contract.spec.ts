@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { api, login, uniqueDocument } from './helpers';
+import { api, login, uniqueDocument, validServiceItem } from './helpers';
 
 type StatusCase = {
   code: 'analysis' | 'waiting_part' | 'in_service' | 'interrupted' | 'completed';
@@ -52,12 +52,13 @@ async function moveToStatus(page: Page, order: any, status: StatusCase) {
   if (status.code === 'analysis') return;
 
   if (status.code === 'completed') {
+    const serviceItem = await validServiceItem(page);
     const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
       technical_report: 'Contrato E2E: finalização sem defeito constatado.',
       discount_cents: 0,
       approved_budget_id: null,
       photo_ids: [],
-      items: [{ description: 'Registro de finalização', quantity: 1, unit_price_cents: 0, warranty_enabled: false }],
+      items: [serviceItem],
     });
     expect(finalized.status, `Transição para Finalizado: ${JSON.stringify(finalized.body)}`).toBe(201);
     return;

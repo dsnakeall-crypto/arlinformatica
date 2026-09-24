@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { api, login, uniqueDocument } from './helpers';
+import { api, login, uniqueDocument, validServiceItem } from './helpers';
 
 async function createOrder(page: Page) {
   await login(page);
@@ -174,9 +174,10 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
 
 test('OS externa reaberta não recria atalhos removidos do detalhe', async ({ page }) => {
   const { clientName, equipmentDescription, equipmentDetails, order } = await createOrder(page);
+  const serviceItem = await validServiceItem(page);
   const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
     technical_report: 'Finalização usada para validar os atalhos após reabertura.',
-    items: [{ description: 'Registro de finalização', quantity: 1, unit_price_cents: 0, warranty_enabled: false }],
+    items: [serviceItem],
     discount_cents: 0,
     photo_ids: [],
   });
