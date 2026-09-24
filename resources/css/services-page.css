@@ -75,7 +75,7 @@
   margin-top: 18px;
 }
 .services-create-grid.is-service {
-  grid-template-columns: minmax(260px, 1.65fr) minmax(170px, 0.75fr) auto;
+  grid-template-columns: minmax(234px, 1.485fr) minmax(85px, 0.375fr) auto;
 }
 .services-free-price-row {
   margin-top: 14px;
