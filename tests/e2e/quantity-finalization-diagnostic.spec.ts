@@ -87,6 +87,7 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
   await expect(listedItems).toContainText(expectedMoney);
   await expect(modal.locator('.money')).toContainText(`Subtotal ${expectedMoney}`);
   await expect(modal.locator('.money')).toContainText(`Total ${expectedMoney}`);
+  await modal.getByLabel('LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO').fill('Serviço concluído com a quantidade registrada na OS.');
 
   const finalizeResponse = page.waitForResponse((response) =>
     new URL(response.url()).pathname === `/api/orders/${order.id}/finalize` && response.request().method() === 'POST'

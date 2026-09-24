@@ -190,3 +190,10 @@
 - [OK] TypeScript typecheck, sintaxe PHP e Pint dos arquivos PHP alterados.
 - [PENDENTE] Testes PHP e E2E, por instrução expressa deste lote.
 - [PENDENTE] Push, por instrução expressa deste lote.
+
+## Ajustes pós-lote de preço livre
+
+- [OK] A finalização permite editar o valor de qualquer item e preserva a exigência de valor positivo para serviço de preço livre.
+- [OK] Nova OS envia valor unitário somente para serviços de preço livre.
+- [OK] Limpeza da marcação de valor combinado é testada com total correspondente; divergência permanece coberta separadamente.
+- [OK] Fluxos E2E de conclusão preenchem o laudo obrigatório antes do envio.
