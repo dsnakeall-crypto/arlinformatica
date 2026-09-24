@@ -59,6 +59,8 @@ async function moveToStatus(page: Page, order: any, status: StatusCase) {
       approved_budget_id: null,
       photo_ids: [],
       items: [serviceItem],
+      is_paid: true,
+      payment_method: 'cash',
     });
     expect(finalized.status, `Transição para Finalizado: ${JSON.stringify(finalized.body)}`).toBe(201);
     return;

@@ -8,7 +8,7 @@ test('melhora problema relatado e laudo final sem substituir o texto automaticam
     if (fail) return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ message: 'Não foi possível melhorar o texto agora.' }) });
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ suggestions: { simples: 'Texto simples.', tecnica: 'Texto técnico.' } }) });
   });
-  await page.getByRole('button', { name: 'Nova OS' }).click();
+  await page.getByTestId('page-header').getByRole('button', { name: 'Nova OS' }).click();
   const problem = page.getByLabel('Problema relatado *');
   await problem.fill('texto original');
   const problemTools = problem.locator('..');

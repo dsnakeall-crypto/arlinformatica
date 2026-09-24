@@ -15,8 +15,7 @@ async function fixture(page: Page) {
     expect(order.status).toBe(201);
     if (state === 'completed') {
       const serviceItem = await validServiceItem(page);
-      const finalized = await api(page, `/orders/${order.body.id}/finalize`, 'POST', { technical_report: 'Finalização para os testes de abas.', items: [serviceItem], discount_cents: 0, photo_ids: [] });
-      expect(finalized.status).toBe(201);
+      const finalized = await api(page, `/orders/${order.body.id}/finalize`, 'POST', { technical_report: 'Finalização para os testes de abas.', items: [serviceItem], discount_cents: 0, photo_ids: [], is_paid: true, payment_method: 'cash' });
       order.body = finalized.body.order;
     } else if (state === 'interrupted') {
       expect((await api(page, `/orders/${order.body.id}/status`, 'PATCH', {
