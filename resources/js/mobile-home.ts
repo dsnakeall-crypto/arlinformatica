@@ -133,18 +133,21 @@ function renderOrders(list: HTMLElement, orders: MobileOrder[]) {
     info.append(client);
     if (nickname) info.append(nickname);
     info.append(meta);
+    const markers = document.createElement('div');
+    markers.className = 'arl-mobile-order-markers';
     if (order.attendance_type === 'external') {
       const marker = document.createElement('span');
       marker.className = 'arl-external-attendance-marker status-awaiting_payment';
       marker.textContent = 'Atendimento Externo';
-      info.append(marker);
+      markers.append(marker);
     }
     if (reopened) {
       const marker = document.createElement('span');
       marker.className = 'arl-reopened-marker status-paid';
       marker.textContent = 'Reaberta';
-      info.append(marker);
+      markers.append(marker);
     }
+    if (markers.childElementCount) info.append(markers);
 
     const actions = document.createElement('div');
     actions.className = 'arl-mobile-order-actions';
