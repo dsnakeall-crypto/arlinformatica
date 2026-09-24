@@ -48,6 +48,35 @@ class TextImprovementTest extends TestCase
             && array_keys($request->data()) === ['model', 'store', 'max_output_tokens', 'instructions', 'input']);
     }
 
+    public function test_retries_once_when_the_suggestion_exceeds_five_hundred_characters(): void
+    {
+        $this->enableOpenAi();
+        Http::fake(['https://api.openai.com/v1/responses' => Http::sequence()
+            ->push($this->openAiResponse(str_repeat('a', 501)), 200)
+            ->push($this->openAiResponse('Sugestão reduzida.'), 200)]);
+
+        $this->actingAs($this->user())->postJson('/api/text-improvements', ['text' => 'texto'])
+            ->assertOk()->assertJsonPath('suggestion', 'Sugestão reduzida.')->assertJsonMissingPath('warning');
+
+        Http::assertSentCount(2);
+    }
+
+    public function test_returns_an_uncut_long_suggestion_with_a_warning_after_one_retry(): void
+    {
+        $this->enableOpenAi();
+        $firstSuggestion = str_repeat('a', 501);
+        $secondSuggestion = str_repeat('b', 502);
+        Http::fake(['https://api.openai.com/v1/responses' => Http::sequence()
+            ->push($this->openAiResponse($firstSuggestion), 200)
+            ->push($this->openAiResponse($secondSuggestion), 200)]);
+
+        $this->actingAs($this->user())->postJson('/api/text-improvements', ['text' => 'texto'])
+            ->assertOk()->assertJsonPath('suggestion', $secondSuggestion)
+            ->assertJsonPath('warning', 'A sugestão passou de 500 caracteres.');
+
+        Http::assertSentCount(2);
+    }
+
     public function test_openai_error_and_missing_key_return_safe_message(): void
     {
         $user = $this->user();

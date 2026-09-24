@@ -35,19 +35,37 @@ PROMPT;
 
         try {
             $suggestion = $this->suggestion($key, $data['text']);
-            return response()->json(['suggestion' => $suggestion]);
+            $warning = null;
+
+            if (mb_strlen($suggestion) > 500) {
+                $suggestion = $this->suggestion($key, $data['text'], true);
+
+                if (mb_strlen($suggestion) > 500) {
+                    $warning = 'A sugestão passou de 500 caracteres.';
+                }
+            }
+
+            $payload = ['suggestion' => $suggestion];
+            if ($warning !== null) $payload['warning'] = $warning;
+
+            return response()->json($payload);
         } catch (\Throwable) {
             return response()->json(['message' => 'Não foi possível melhorar o texto agora.'], 503);
         }
     }
 
-    private function suggestion(string $key, string $text): string
+    private function suggestion(string $key, string $text, bool $reinforceLimit = false): string
     {
+        $instructions = self::INSTRUCTIONS;
+        if ($reinforceLimit) {
+            $instructions .= "\n\nSua resposta anterior ultrapassou 500 caracteres. Reescreva o texto com no máximo 500 caracteres, contando espaços, sem descartar nenhum fato.";
+        }
+
         $response = Http::withToken($key)->acceptJson()->timeout(20)->post('https://api.openai.com/v1/responses', [
             'model' => config('openai.model'),
             'store' => false,
             'max_output_tokens' => 300,
-            'instructions' => self::INSTRUCTIONS,
+            'instructions' => $instructions,
             'input' => $text,
         ]);
         if (!$response->successful()) throw new \RuntimeException('OpenAI unavailable');
