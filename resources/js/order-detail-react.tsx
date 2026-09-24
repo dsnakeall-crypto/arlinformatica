@@ -5,6 +5,7 @@ import OrderAuditHistory from './order-audit-history';
 import '../css/order-detail-layout.css';
 import { OrderPaymentFigures } from './finance-refund-summary';
 import { isReopenedOrder } from './order-reopened';
+import TextImprovement from './text-improvement';
 
 type Props = { reopenOnLoad?: boolean; id: number; back: () => void; onEdit?: () => void; onDirtyChange?: (dirty: boolean) => void; onOpenClientHistory?: (clientId: number) => void };
 type ApiError = Error & { errors?: Record<string, string[]> };
@@ -146,7 +147,7 @@ function EditOrderModal({ order, onClose, onSaved }: any) {
   return <div className="arl-od-modal"><section className="arl-od-card" role="dialog" aria-modal="true" aria-label={`Editar OS #${order.number}`}>
     <h2>Editar OS #{order.number}</h2><p>Corrija o relato e o checklist da OS ativa. Pagamentos são corrigidos separadamente e ficam auditados.</p>
     <label>Atendimento<select value={attendance} onChange={(e) => setAttendance(e.target.value)}><option value="bench">Bancada</option><option value="external">Externo</option></select></label>
-    <label>Problema relatado<textarea spellCheck={true} value={problem} onChange={(e) => setProblem(e.target.value)}/></label>
+    <label>Problema relatado<textarea spellCheck={true} value={problem} onChange={(e) => setProblem(e.target.value)}/><TextImprovement value={problem} onUse={setProblem}/></label>
     <label>Checklist selecionado</label><div className="arl-od-checks">{templates.length ? templates.map((row) => <label key={row.id}><input type="checkbox" checked={selected.has(row.id)} onChange={(e) => toggle(row.id, e.target.checked)}/>{row.label}</label>) : <span>Nenhuma opção para este equipamento.</span>}</div>
     {error && <div className="alert">{error}</div>}
     <div className="arl-od-actions"><button type="button" onClick={onClose}>Cancelar</button><button type="button" className="primary" disabled={busy} onClick={save}>{busy ? 'Salvando…' : 'Salvar alterações'}</button></div>
@@ -245,6 +246,7 @@ function FinalReportPanel({ order, value, setValue, reload, onDirtyChange }: any
   };
   return <section className="wide arl-od-report"><h2>Laudo Final</h2><p>O que foi feito, pontos de atenção e recomendações. Este texto sai no PDF final.</p>
     <textarea spellCheck={true} readOnly={readOnly} placeholder="Descreva o serviço executado e observações..." value={value} onChange={(e) => { setValue(e.target.value); onDirtyChange?.(true); }}/>
+    {!readOnly && <TextImprovement value={value} onUse={(text) => { setValue(text); onDirtyChange?.(true); }} />}
     {!readOnly && <div className="arl-od-report-actions"><small>{message}</small><button type="button" className="primary arl-od-save" onClick={save}>Salvar Laudo Final</button></div>}
   </section>;
 }

@@ -23,10 +23,12 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\TechnicalReportController;
 use App\Http\Controllers\TechnicalReportTemplateController;
+use App\Http\Controllers\TextImprovementController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
+    Route::post('/text-improvements', [TextImprovementController::class, 'store']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::patch('/me/sidebar', [AuthController::class, 'updateSidebarPreference']);
     Route::get('/navigation-summary', [NavigationController::class, 'summary']);

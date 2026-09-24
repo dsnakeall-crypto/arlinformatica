@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ClipboardList, FileText, Save, X } from 'lucide-react';
 import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
+import TextImprovement from './text-improvement';
 
 type Props = {
   orderId: number;
@@ -146,7 +147,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
         <label>Equipamento<textarea aria-label="Equipamento" spellCheck={true} required maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }}/></label>
         <label>Fabricante / Modelo / Acessórios<textarea aria-label="Fabricante / Modelo / Acessórios" spellCheck={true} maxLength={500} value={equipmentDetails} onChange={(event) => { markDirty(); setEquipmentDetails(event.target.value); }}/></label>
         {termIssued && (equipmentChanged || equipmentDetailsChanged) && <div className="notice">O Termo de Recebimento já emitido mantém os dados anteriores do equipamento.</div>}
-        <label>Problema relatado<textarea aria-label="Problema relatado" spellCheck={true} value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }}/></label>
+        <label>Problema relatado<textarea aria-label="Problema relatado" spellCheck={true} value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }}/><TextImprovement value={problem} onUse={(text) => { markDirty(); setProblem(text); }}/></label>
       </div>
       <div className="arl-unified-editor-column">
         <label>Atendimento<select aria-label="Atendimento" value={attendance} onChange={(event) => { markDirty(); setAttendance(event.target.value); }}><option value="bench">Bancada</option><option value="external">Externo</option></select></label>

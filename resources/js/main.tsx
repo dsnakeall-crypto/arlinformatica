@@ -54,6 +54,7 @@ import ClientsPage from "./clients-page";
 import DatabaseResetPanel from "./database-reset";
 import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
+import TextImprovement from "./text-improvement";
 import ServiceProductSearch from "./service-product-search";
 import {
   OrderPaymentFigures,
@@ -1145,6 +1146,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
                   value={problem}
                   onChange={(e) => setProblem(e.target.value)}
                 />
+                <TextImprovement value={problem} onUse={setProblem} />
               </label>
             </section>
             <section>
