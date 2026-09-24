@@ -54,3 +54,4 @@
  .clients-toolbar{grid-template-columns:1fr}.clients-pagination,.clients-page-size{justify-content:space-between}.clients-page-size{grid-row:auto}.clients-sort{grid-template-columns:1fr}.clients-sort select{width:100%}
  .clients-list-panel .client-list article.clients-row{grid-template-columns:1fr}.clients-phone{grid-column:1;grid-row:auto}.clients-address,.clients-actions{grid-column:1!important}.clients-actions{justify-content:space-between!important;gap:4px!important}
 }
+.clients-main .clients-nickname{color:#737985;font-size:10.5px;font-weight:500}

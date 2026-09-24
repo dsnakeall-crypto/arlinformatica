@@ -11,7 +11,7 @@ class Client extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'document', 'phone', 'postal_code', 'street', 'number', 'district', 'city', 'state', 'complement'];
+    protected $fillable = ['name', 'nickname', 'document', 'phone', 'postal_code', 'street', 'number', 'district', 'city', 'state', 'complement'];
 
     public function serviceOrders(): HasMany
     {

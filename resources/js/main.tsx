@@ -75,6 +75,7 @@ type Page =
 type Client = {
   id: number;
   name: string;
+  nickname?: string | null;
   document: string;
   phone: string;
   postal_code: string;
@@ -122,6 +123,7 @@ type Catalog = {
 type Errors = Record<string, string[]>;
 const emptyClient = {
   name: "",
+  nickname: "",
   document: "",
   phone: "",
   postal_code: "",
@@ -274,6 +276,13 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           onChange={change}
           error={errors.name?.[0]}
           required
+        />
+        <Field
+          label="Apelido / Referência"
+          name="nickname"
+          value={data.nickname || ""}
+          onChange={change}
+          error={errors.nickname?.[0]}
         />
         <Field
           label="CPF / CNPJ"
@@ -478,6 +487,7 @@ function OrderTable({
                   <td>
                     <span className="order-customer">
                       <strong>{o.client.name}</strong>
+                      {o.client.nickname && <small className="arl-client-nickname">{o.client.nickname}</small>}
                       <span className="arl-order-markers">
                         {external && <span className="arl-external-attendance-marker status-awaiting_payment">Atendimento Externo</span>}
                         {reopened && <span className="arl-reopened-marker status-paid" aria-label="OS reaberta">Reaberta</span>}
@@ -550,7 +560,7 @@ function OrderTable({
           return (
             <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
               <td><b>#{o.number}</b></td>
-              <td><span className="order-customer"><strong>{o.client.name}</strong><span className="arl-order-markers">{external && <span className="arl-external-attendance-marker status-awaiting_payment">Atendimento Externo</span>}{reopened && <span className="arl-reopened-marker status-paid" aria-label="OS reaberta">Reaberta</span>}{o.closing_reference_cents != null && <span className="arl-closing-marker" aria-label="OS precisa fechar">⚑ Fechar · {money(o.closing_reference_cents)}</span>}</span>{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
+              <td><span className="order-customer"><strong>{o.client.name}</strong>{o.client.nickname && <small className="arl-client-nickname">{o.client.nickname}</small>}<span className="arl-order-markers">{external && <span className="arl-external-attendance-marker status-awaiting_payment">Atendimento Externo</span>}{reopened && <span className="arl-reopened-marker status-paid" aria-label="OS reaberta">Reaberta</span>}{o.closing_reference_cents != null && <span className="arl-closing-marker" aria-label="OS precisa fechar">⚑ Fechar · {money(o.closing_reference_cents)}</span>}</span>{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
               <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
               <td><label className={`row-status status-${displayStatus}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={displayStatus} disabled={closed && !canSetPaid} onChange={(e) => onStatus(o, e.target.value)}>{awaitingPayment ? <><option value="awaiting_payment">Aguardando PGTO</option>{canSetPaid && <option value="paid">PAGO</option>}</> : displayStatus === "paid" ? <option value="paid">Pago</option> : <><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</>}</select></label></td>
               <td><span className="order-client-report" title={o.reported_problem || undefined}>{o.reported_problem || ""}</span></td>
@@ -2885,6 +2895,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
                       <b>
                         #{o.number} · {o.client.name}
                       </b>
+                      {o.client.nickname && <small className="arl-client-nickname">{o.client.nickname}</small>}
                       <small>{o.reported_problem}</small>
                     </button>
                   ))}
@@ -3141,6 +3152,7 @@ function OrderView({ id, back }: any) {
         <section>
           <h2>Cliente</h2>
           <b>{o.client.name}</b>
+          {o.client.nickname && <small className="arl-client-nickname">{o.client.nickname}</small>}
           <p>
             {masks.document(o.client.document)} · {masks.phone(o.client.phone)}
           </p>
