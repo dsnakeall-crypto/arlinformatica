@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/me/sidebar', [AuthController::class, 'updateSidebarPreference']);
     Route::get('/navigation-summary', [NavigationController::class, 'summary']);
     Route::get('/clients', [ClientController::class, 'index']);
+    Route::get('/clients/document-status', [ClientController::class, 'documentStatus']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::get('/clients/{client}', [ClientController::class, 'show']);
     Route::put('/clients/{client}', [ClientController::class, 'update'])->middleware('role:Master,Administrador');
@@ -75,6 +76,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/audit-history', [ServiceOrderAuditController::class, 'index']);
     Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
     Route::middleware('role:Master,Administrador')->group(function () {
+        Route::patch('/orders/{order}/closing-reference', [ServiceOrderMaintenanceController::class, 'updateClosingReference']);
+        Route::delete('/orders/{order}/closing-reference', [ServiceOrderMaintenanceController::class, 'clearClosingReference']);
         Route::delete('/photos/{photo}', [StorageController::class, 'destroy']);
         Route::delete('/orders/{order}', [ServiceOrderMaintenanceController::class, 'destroy']);
         Route::post('/orders/{order}/reopen', [ServiceOrderMaintenanceController::class, 'reopen']);

@@ -76,6 +76,12 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(opening.getByRole('link', { name: 'Termo de Recebimento PDF' })).toBeVisible();
   await expect(opening.getByText('Relatório Técnico Final', { exact: true })).toBeVisible();
   await expect(opening.getByText('Reabrir OS', { exact: true })).toBeVisible();
+  await root.locator('.arl-order-stage-rail').click({ position: { x: 1, y: 1 } });
+  await expect(opening.getByRole('link', { name: 'Mensagem de abertura' })).toHaveCount(0);
+  await opening.getByRole('button', { name: "PDF's", exact: true }).click();
+  await expect(opening.getByRole('link', { name: 'Mensagem de abertura' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(opening.getByRole('link', { name: 'Mensagem de abertura' })).toHaveCount(0);
 
   const rail = root.locator('.arl-order-stage-rail');
   await expect(rail).toBeVisible();
@@ -114,6 +120,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(headerActions.getByRole('button', { name: 'Concluir', exact: true })).toBeVisible();
   const actionLabels = await headerActions.locator(':scope > button, :scope > .arl-header-pdf-actions > button').allTextContents();
   expect(actionLabels).toEqual(['Histórico', 'Editar', 'Orçamento', "PDF's", 'Concluir']);
+  await expect(headerActions.getByRole('button', { name: 'Precisa fechar' })).toHaveCount(0);
   const headings = await workflow.locator(':scope > section h2').allTextContents();
   const position = (name: string) => headings.findIndex((value) => value.trim() === name);
   const ordered = ['Serviços / Produtos', 'Laudo Final', 'Orçamentos', 'Pagamento'];

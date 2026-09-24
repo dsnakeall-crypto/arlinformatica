@@ -3,7 +3,7 @@ import ClientImport from "./client-import";
 import TermTextEditor from "./term-text-editor";
 import { isReopenedOrder } from "./order-reopened";
 import { CameraModal } from "./order-detail-react";
-import React, { FormEvent, useEffect, useMemo, useState } from "react";
+import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Bell,
@@ -104,6 +104,9 @@ type Order = {
   reopened?: boolean | number;
   interruption_reason?: string | null;
   interruption_work_done?: string | null;
+  closing_reference_cents?: number | null;
+  closing_marked_at?: string | null;
+  closing_marked_by?: { id: number; name: string } | null;
 };
 type Catalog = {
   id: number;
@@ -464,6 +467,7 @@ function OrderTable({
           <tbody>
             {items.map((o: Order) => {
               const reopened = isReopenedOrder(o);
+              const external = o.attendance_type === "external";
               const interrupted = o.status === "interrupted";
               const closed = o.status === "completed" || interrupted;
               const displayStatus = o.display_status || o.status;
@@ -473,7 +477,11 @@ function OrderTable({
                   <td>
                     <span className="order-customer">
                       <strong>{o.client.name}</strong>
-                      {reopened && <span className="arl-reopened-marker" aria-label="OS reaberta">Reaberta</span>}
+                      <span className="arl-order-markers">
+                        {external && <span className="arl-external-attendance-marker status-awaiting_payment">Atendimento Externo</span>}
+                        {reopened && <span className="arl-reopened-marker status-paid" aria-label="OS reaberta">Reaberta</span>}
+                        {o.closing_reference_cents != null && <span className="arl-closing-marker" aria-label="OS precisa fechar">⚑ Fechar · {money(o.closing_reference_cents)}</span>}
+                      </span>
                       {interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}
                     </span>
                   </td>
@@ -532,6 +540,7 @@ function OrderTable({
         <thead><tr><th># OS</th><th>CLIENTE</th><th>DISPOSITIVO</th><th>STATUS</th><th>RELATO</th><th>VALOR</th><th>AÇÕES</th></tr></thead>
         <tbody>{items.map((o: Order) => {
           const reopened = isReopenedOrder(o);
+          const external = o.attendance_type === "external";
           const interrupted = o.status === "interrupted";
           const displayStatus = o.display_status || o.status;
           const awaitingPayment = displayStatus === "awaiting_payment";
@@ -540,7 +549,7 @@ function OrderTable({
           return (
             <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
               <td><b>#{o.number}</b></td>
-              <td><span className="order-customer"><strong>{o.client.name}</strong>{reopened && <span className="arl-reopened-marker" aria-label="OS reaberta">Reaberta</span>}{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
+              <td><span className="order-customer"><strong>{o.client.name}</strong><span className="arl-order-markers">{external && <span className="arl-external-attendance-marker status-awaiting_payment">Atendimento Externo</span>}{reopened && <span className="arl-reopened-marker status-paid" aria-label="OS reaberta">Reaberta</span>}{o.closing_reference_cents != null && <span className="arl-closing-marker" aria-label="OS precisa fechar">⚑ Fechar · {money(o.closing_reference_cents)}</span>}</span>{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
               <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
               <td><label className={`row-status status-${displayStatus}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={displayStatus} disabled={closed && !canSetPaid} onChange={(e) => onStatus(o, e.target.value)}>{awaitingPayment ? <><option value="awaiting_payment">Aguardando PGTO</option>{canSetPaid && <option value="paid">PAGO</option>}</> : displayStatus === "paid" ? <option value="paid">Pago</option> : <><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</>}</select></label></td>
               <td><span className="order-client-report" title={o.reported_problem || undefined}>{o.reported_problem || ""}</span></td>
@@ -886,7 +895,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
   );
 }
 
-function NewOrder({ done }: any) {
+function NewOrder({ done, initialClient }: { done: (id: number) => void; initialClient?: Client }) {
   const [clients, setClients] = useState<Client[]>([]),
     [services, setServices] = useState<Catalog[]>([]),
     [orderItems, setOrderItems] = useState<any[]>([]);
@@ -918,6 +927,15 @@ function NewOrder({ done }: any) {
       })
       .catch((e) => setError(e.message));
   }, []);
+  useEffect(() => {
+    if (!initialClient) return;
+    setClients((current: Client[]) => [
+      initialClient,
+      ...current.filter((row: Client) => row.id !== initialClient.id),
+    ]);
+    setClient(initialClient.id);
+    window.__arlSelectedClient = initialClient;
+  }, [initialClient]);
   const currentClient = clients.find((c) => c.id === client);
   const photoPreviews = useMemo(
     () => photos.map((file) => ({ file, url: URL.createObjectURL(file) })),
@@ -2873,7 +2891,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
       .then(setItems)
       .finally(() => setLoading(false));
     api("/orders?tab=closed_week&per_page=100").then((x) => setClosedItems(x.data));
-    api("/orders?tab=finalized&per_page=1").then((x) => setCompleted(x.total));
+    api("/orders?tab=closed_week&per_page=1").then((x) => setCompleted(x.total));
   };
   useEffect(load, []);
   if (desk)
@@ -4233,6 +4251,7 @@ function NotificationBell({ go }: any) {
   const [open, setOpen] = useState(false),
     [data, setData] = useState<any>({ unread: 0, data: [] }),
     [push, setPush] = useState<"on" | "off" | "blocked" | "unsupported">("off");
+  const notificationRef = useRef<HTMLDivElement>(null);
   const syncPush = async () => {
     if (
       !("Notification" in window) ||
@@ -4259,6 +4278,21 @@ function NotificationBell({ go }: any) {
     const id = setInterval(load, 60000);
     return () => clearInterval(id);
   }, []);
+  useEffect(() => {
+    if (!open) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!notificationRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
   const togglePush = async () => {
     if (push === "blocked" || push === "unsupported") return;
     const registration = await navigator.serviceWorker.ready;
@@ -4306,7 +4340,7 @@ function NotificationBell({ go }: any) {
     load();
   };
   return (
-    <div className="notification-wrap">
+    <div className="notification-wrap" ref={notificationRef}>
       <button
         className="bell"
         aria-label="Notificações"
@@ -5127,6 +5161,7 @@ function App() {
     clientId: number;
     orderId: number;
   }>();
+  const [newOrderClient, setNewOrderClient] = useState<Client>();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [mobileQuickEntry, setMobileQuickEntry] = useState(false);
   const [mobileLogoutConfirm, setMobileLogoutConfirm] = useState(false);
@@ -5160,6 +5195,7 @@ function App() {
     setOrderAction(action);
     if (p === "desk") p = "dashboard";
     if (p === "orders" && !id) setOrdersTab(ordersInitialTab || "progress");
+    if (p !== "new") setNewOrderClient(undefined);
     setClientHistoryOrigin(undefined);
     setPage(p);
     setDetail(id);
@@ -5433,6 +5469,10 @@ function App() {
                 : undefined
             }
             openOrder={(id: number) => go("orders", id)}
+            onNewOrderForClient={(client: Client) => {
+              setNewOrderClient(client);
+              go("new");
+            }}
           />
         ) : page === "finance" ? (
           <FinancePage
@@ -5450,7 +5490,7 @@ function App() {
         ) : page === "settings" ? (
           <SettingsPage role={me?.role} />
         ) : (
-          <NewOrder done={(id: number) => go("orders", id)} />
+          <NewOrder initialClient={newOrderClient} done={(id: number) => go("orders", id)} />
         )}
       </main>
       {mobileLayout && <MobileBottomBar go={go} page={page} />}

@@ -19,6 +19,7 @@ type MobileOrder = {
   id: number;
   number: string;
   status: 'analysis' | 'waiting_part' | 'in_service' | string;
+  attendance_type: 'bench' | 'external';
   client: MobileClient;
 };
 
@@ -123,9 +124,15 @@ function renderOrders(list: HTMLElement, orders: MobileOrder[]) {
     meta.textContent = `OS #${order.number} · ${statusLabels[order.status] || order.status}`;
 
     info.append(client, meta);
+    if (order.attendance_type === 'external') {
+      const marker = document.createElement('span');
+      marker.className = 'arl-external-attendance-marker status-awaiting_payment';
+      marker.textContent = 'Atendimento Externo';
+      info.append(marker);
+    }
     if (reopened) {
       const marker = document.createElement('span');
-      marker.className = 'arl-reopened-marker';
+      marker.className = 'arl-reopened-marker status-paid';
       marker.textContent = 'Reaberta';
       info.append(marker);
     }

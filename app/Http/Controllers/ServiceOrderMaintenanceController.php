@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\ServiceOrder;
+use App\Services\Audit;
 use App\Services\InventoryService;
 use App\Services\NotificationService;
 use App\Services\PostSaleService;
@@ -14,6 +15,35 @@ use Illuminate\Validation\ValidationException;
 
 class ServiceOrderMaintenanceController extends Controller
 {
+    public function updateClosingReference(Request $request, ServiceOrder $order, Audit $audit): JsonResponse
+    {
+        abort_unless($request->user()->hasRole('Master', 'Administrador'), 403);
+        abort_if($order->archived || in_array($order->status, ['completed', 'interrupted'], true), 409, 'Somente uma OS aberta pode ser marcada para fechamento.');
+        $data = $request->validate(['amount_cents' => ['required', 'integer', 'min:1', 'max:999999999']]);
+        $before = $order->only(['closing_reference_cents', 'closing_marked_by', 'closing_marked_at']);
+        $action = $order->closing_reference_cents === null ? 'service_order.closing_reference_marked' : 'service_order.closing_reference_updated';
+        $order->forceFill([
+            'closing_reference_cents' => (int) $data['amount_cents'],
+            'closing_marked_by' => $request->user()->id,
+            'closing_marked_at' => now(),
+        ])->save();
+        $audit->record($request, $action, ServiceOrder::class, $order->id, $before, $order->fresh()->only(['closing_reference_cents', 'closing_marked_by', 'closing_marked_at']));
+
+        return response()->json($order->fresh()->load('closingMarkedBy:id,name'));
+    }
+
+    public function clearClosingReference(Request $request, ServiceOrder $order, Audit $audit): JsonResponse
+    {
+        abort_unless($request->user()->hasRole('Master', 'Administrador'), 403);
+        abort_if($order->archived || in_array($order->status, ['completed', 'interrupted'], true), 409, 'Somente uma OS aberta pode ser desmarcada.');
+        abort_if($order->closing_reference_cents === null, 409, 'Esta OS não está marcada para fechamento.');
+        $before = $order->only(['closing_reference_cents', 'closing_marked_by', 'closing_marked_at']);
+        $order->forceFill(['closing_reference_cents' => null, 'closing_marked_by' => null, 'closing_marked_at' => null])->save();
+        $audit->record($request, 'service_order.closing_reference_cleared', ServiceOrder::class, $order->id, $before, null);
+
+        return response()->json($order->fresh());
+    }
+
     public function update(Request $request, ServiceOrder $order, InventoryService $inventory): JsonResponse
     {
         $data = $request->validate([

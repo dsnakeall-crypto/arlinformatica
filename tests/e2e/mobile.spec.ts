@@ -81,6 +81,27 @@ test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado'
   await cameraDialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
 });
 
+test('painel de notificações fecha fora e com Esc, mas permanece aberto ao interagir dentro no Mobile', async ({ page }) => {
+  await login(page);
+
+  const bell = page.getByRole('button', { name: 'Notificações', exact: true });
+  const panel = page.locator('.notification-center');
+  const outside = page.locator('main');
+
+  await bell.click();
+  await expect(panel).toBeVisible();
+  await panel.getByRole('button', { name: 'Marcar todas como lidas' }).click();
+  await expect(panel).toBeVisible();
+
+  await outside.click({ position: { x: 1, y: 1 } });
+  await expect(panel).toHaveCount(0);
+
+  await bell.click();
+  await expect(panel).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(panel).toHaveCount(0);
+});
+
 test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Status ou Finalizar', async ({ page }) => {
   await login(page);
   const client = await api(page, '/clients', 'POST', {
@@ -135,6 +156,7 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
   await expect(detail.getByRole('button', { name: 'Status', exact: true })).toHaveCount(0);
   await expect(detail.getByRole('button', { name: 'Finalizar' })).toHaveCount(0);
   await expect(detail.getByRole('button', { name: 'Histórico', exact: true })).toHaveCount(0);
+  await expect(detail.getByRole('button', { name: 'Precisa fechar' })).toBeVisible();
   await expect(detail.locator('input[type=file]')).toHaveCount(0);
 
   const apiWrites: string[] = [];
@@ -217,6 +239,12 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
   const pdfMenu = page.locator('.arl-opening-call');
   await pdfMenu.getByText("PDF's e Reaberturas OS", { exact: true }).click();
   await expect(pdfMenu.getByRole('link', { name: 'Mensagem de abertura', exact: true })).toBeVisible();
+  await page.locator('.arl-read-only-banner').click();
+  await expect(pdfMenu.getByRole('link', { name: 'Mensagem de abertura', exact: true })).toHaveCount(0);
+  await pdfMenu.getByText("PDF's e Reaberturas OS", { exact: true }).click();
+  await expect(pdfMenu.getByRole('link', { name: 'Mensagem de abertura', exact: true })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(pdfMenu.getByRole('link', { name: 'Mensagem de abertura', exact: true })).toHaveCount(0);
 
   await bottom.getByRole('button', { name: 'Clientes', exact: true }).click();
   await page.getByRole('button', { name: 'Novo cliente' }).click();

@@ -17,8 +17,8 @@ class PostSaleController extends Controller
     private const GOOGLE_REVIEW_URL = 'https://g.page/r/CSxkz5Y88MaJEBM/review';
 
     private const MESSAGES = [
-        'instagram' => "Olá! 😊\nAgradecemos por escolher a Arl Informática.\nFoi um prazer atender você!\n\nSiga a gente no Instagram e acompanhe nossas novidades:\nhttps://www.instagram.com/allanluttembarck\n\nEquipe Arl Informática",
-        'google' => "Olá! 😊\nAgradecemos por escolher a Arl Informática.\nFoi um prazer atender você!\n\nSe puder, deixe sua avaliação no Google. Sua opinião é muito importante para nós:\nhttps://g.page/r/CSxkz5Y88MaJEBM/review\n\nEquipe Arl Informática",
+        'instagram' => "Olá!\nAgradecemos por escolher a Arl Informática.\nFoi um prazer atender você!\n\nSiga a gente no Instagram e acompanhe nossas novidades:\nhttps://www.instagram.com/allanluttembarck\n\nEquipe Arl Informática",
+        'google' => "Olá!\nAgradecemos por escolher a Arl Informática.\nFoi um prazer atender você!\n\nSe puder, deixe sua avaliação no Google. Sua opinião é muito importante para nós:\nhttps://g.page/r/CSxkz5Y88MaJEBM/review\n\nEquipe Arl Informática",
     ];
 
     public function index(PostSaleService $service): JsonResponse

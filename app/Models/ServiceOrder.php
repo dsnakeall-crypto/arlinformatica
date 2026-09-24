@@ -13,16 +13,21 @@ class ServiceOrder extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['number', 'client_id', 'equipment_type_id', 'manufacturer_id', 'equipment_description', 'equipment_details', 'attendance_type', 'status', 'reported_problem', 'intake_condition', 'received_at', 'completed_at', 'result', 'technical_report', 'interruption_work_done', 'final_report', 'subtotal_cents', 'discount_cents', 'total_cents', 'created_by'];
+    protected $fillable = ['number', 'client_id', 'equipment_type_id', 'manufacturer_id', 'equipment_description', 'equipment_details', 'attendance_type', 'status', 'reported_problem', 'intake_condition', 'received_at', 'completed_at', 'result', 'technical_report', 'interruption_work_done', 'final_report', 'subtotal_cents', 'discount_cents', 'total_cents', 'closing_reference_cents', 'closing_marked_by', 'closing_marked_at', 'created_by'];
 
     protected function casts(): array
     {
-        return ['received_at' => 'datetime', 'completed_at' => 'datetime', 'archived' => 'boolean'];
+        return ['received_at' => 'datetime', 'completed_at' => 'datetime', 'closing_marked_at' => 'datetime', 'archived' => 'boolean'];
     }
 
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class)->withTrashed();
+    }
+
+    public function closingMarkedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'closing_marked_by');
     }
 
     public function items(): HasMany
