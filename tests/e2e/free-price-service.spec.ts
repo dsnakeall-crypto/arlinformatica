@@ -52,8 +52,22 @@ test('serviço de preço livre permite informar o valor somente na OS', async ({
 
   const persisted = await api(page, `/orders/${order.body.id}`);
   expect(persisted.body.items.find((item: any) => Number(item.catalog_id) === Number(service.id))?.unit_price_cents).toBe(15000);
-  await page.locator('.arl-od-report textarea').fill('Serviço de preço livre concluído.');
+  const report = page.getByLabel('Laudo Final');
+  await page.getByRole('button', { name: 'Concluir', exact: true }).click();
+  await expect(page.getByText('Preencha o Laudo Final antes de concluir a OS.', { exact: true })).toBeVisible();
+  await expect(report).toBeFocused();
+  await expect(page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' })).toHaveCount(0);
+
+  const reportText = 'Serviço de preço livre concluído.';
+  await report.fill(reportText);
   await page.getByRole('button', { name: 'Concluir', exact: true }).click();
   const finalization = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(finalization.getByLabel(`Valor unitário de ${name}`)).toHaveValue('150,00');
+  const finalizeResponse = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === `/api/orders/${order.body.id}/finalize` && response.request().method() === 'POST'
+  );
+  await finalization.getByRole('button', { name: 'Salvar e concluir OS' }).click();
+  const response = await finalizeResponse;
+  expect(response.status()).toBe(201);
+  expect(response.request().postDataJSON().technical_report).toBe(reportText);
 });

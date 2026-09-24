@@ -715,6 +715,9 @@ function FinalReportPanel({
   setValue,
   reload,
   onDirtyChange,
+  inputRef,
+  validationMessage,
+  onValidationClear,
 }: any) {
   const [message, setMessage] = useState("");
   const readOnly = Boolean(
@@ -742,15 +745,19 @@ function FinalReportPanel({
         PDF final.
       </p>
       <textarea
+        ref={inputRef}
+        aria-label="Laudo Final"
         spellCheck={true}
         readOnly={readOnly}
         placeholder="Descreva o serviço executado e observações..."
         value={value}
         onChange={(e) => {
+          onValidationClear?.();
           setValue(e.target.value);
           onDirtyChange?.(true);
         }}
       />
+      {validationMessage && <div className="alert">{validationMessage}</div>}
       {!readOnly && (
         <TextImprovement
           value={value}
@@ -1499,9 +1506,7 @@ function FinalizationBox({
   reload,
   openSignal = 0,
   finalReport,
-  setFinalReport,
   persistPendingChanges,
-  onFinalReportDirty,
 }: any) {
   const seeded = (sourceOrder = order) =>
     (sourceOrder.items || [])
@@ -1657,7 +1662,7 @@ function FinalizationBox({
   };
   const finish = async () => {
     if (!finalReport.trim()) {
-      setError("Preencha o laudo para concluir a OS.");
+      setError("Preencha o Laudo Final antes de concluir a OS.");
       return;
     }
     if (isPaid && !paymentMethod) {
@@ -1728,24 +1733,6 @@ function FinalizationBox({
                 </button>
               </div>
             )}
-            <label className="field">
-              <span>LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO</span>
-              <textarea
-                spellCheck={true}
-                value={finalReport}
-                onChange={(e) => {
-                  setFinalReport(e.target.value);
-                  onFinalReportDirty?.(true);
-                }}
-              />
-              <TextImprovement
-                value={finalReport}
-                onUse={(text) => {
-                  setFinalReport(text);
-                  onFinalReportDirty?.(true);
-                }}
-              />
-            </label>
             <div className="section-title">
               <h2>Serviços da OS</h2>
               {approved && (
@@ -2270,6 +2257,7 @@ export default function OrderDetailPage({
     [finalSignal, setFinalSignal] = useState(0),
     [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null),
     [finalReport, setFinalReport] = useState(""),
+    [finalReportValidation, setFinalReportValidation] = useState(""),
     [servicesDirty, setServicesDirty] = useState(false),
     [finalReportDirty, setFinalReportDirty] = useState(false),
     [photoChoice, setPhotoChoice] = useState(false),
@@ -2278,6 +2266,7 @@ export default function OrderDetailPage({
     [finalLinkStatus, setFinalLinkStatus] = useState<any>(null),
     [finalLinkBusy, setFinalLinkBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null),
+    finalReportInput = useRef<HTMLTextAreaElement>(null),
     pendingServicesSave = useRef<null | (() => Promise<any>)>(null),
     pdfActionsRef = useRef<HTMLDivElement>(null),
     mobilePdfActionsRef = useRef<HTMLDetailsElement>(null);
@@ -2382,6 +2371,21 @@ export default function OrderDetailPage({
       persistedOrder = (await pendingServicesSave.current()) || persistedOrder;
     }
     return persistedOrder;
+  };
+  const requestFinalization = () => {
+    if (!finalReport.trim()) {
+      setFinalReportValidation("Preencha o Laudo Final antes de concluir a OS.");
+      requestAnimationFrame(() => {
+        finalReportInput.current?.focus();
+        finalReportInput.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      });
+      return;
+    }
+    setFinalReportValidation("");
+    setFinalSignal((current) => current + 1);
   };
   const uploadFiles = async (files?: readonly File[] | null) => {
     if (!files?.length) return;
@@ -3035,7 +3039,7 @@ export default function OrderDetailPage({
               type="button"
               data-order-action="finalize"
               className="primary arl-finalization-action"
-              onClick={() => setFinalSignal((x) => x + 1)}
+              onClick={requestFinalization}
             >
               <Check aria-hidden="true" />
               <span>Concluir</span>
@@ -3237,6 +3241,9 @@ export default function OrderDetailPage({
           setValue={setFinalReport}
           reload={load}
           onDirtyChange={setFinalReportDirty}
+          inputRef={finalReportInput}
+          validationMessage={finalReportValidation}
+          onValidationClear={() => setFinalReportValidation("")}
         />
         {interrupted && (
           <section className="wide arl-interruption-note">
@@ -3266,9 +3273,7 @@ export default function OrderDetailPage({
             reload={load}
             openSignal={finalSignal}
             finalReport={finalReport}
-            setFinalReport={setFinalReport}
             persistPendingChanges={persistPendingChanges}
-            onFinalReportDirty={setFinalReportDirty}
           />
         )}
         {SHOW_ORDER_RECORD && (

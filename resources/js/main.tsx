@@ -1438,9 +1438,27 @@ function FinalizationBox({ order, reload }: any) {
       setBusy(false);
     }
   };
+  const openFinalization = () => {
+    const reportField = document.querySelector<HTMLTextAreaElement>(
+      ".arl-od-report textarea",
+    );
+    const currentReport = (reportField?.value || order.final_report || "").trim();
+    if (!currentReport) {
+      setError("Preencha o Laudo Final antes de concluir a OS.");
+      reportField?.focus();
+      reportField?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    setReport(currentReport);
+    setError("");
+    setOpen(true);
+    api(`/orders/${order.id}/budgets`)
+      .then(setBudgets)
+      .catch((e) => setError(e.message));
+  };
   const finish = async () => {
     if (!report.trim()) {
-      setError("Preencha o laudo para concluir a OS.");
+      setError("Preencha o Laudo Final antes de concluir a OS.");
       return;
     }
     setBusy(true);
@@ -1487,16 +1505,12 @@ function FinalizationBox({ order, reload }: any) {
         <button
           id="finalization-action"
           className="primary"
-          onClick={() => {
-            setOpen(true);
-            api(`/orders/${order.id}/budgets`)
-              .then(setBudgets)
-              .catch((e) => setError(e.message));
-          }}
+          onClick={openFinalization}
         >
           Concluir OS
         </button>
       </div>
+      {!open && error && <div className="alert">{error}</div>}
       {open && (
         <div className="modal">
           <div className="modal-card arl-finalization">
@@ -1505,15 +1519,6 @@ function FinalizationBox({ order, reload }: any) {
             </button>
             <h1>FINALIZAÇÃO DA OS</h1>
             {closingMismatch && <div className="alert arl-closing-reminder">O total está diferente do valor combinado em campo ({money(order.closing_reference_cents)}). <button type="button" onClick={() => void updateClosingReference()}>Atualizar valor combinado</button></div>}
-            <label className="field">
-              <span>LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO</span>
-              <textarea
-                spellCheck={true}
-                value={report}
-                onChange={(e) => setReport(e.target.value)}
-              />
-              <TextImprovement value={report} onUse={setReport} />
-            </label>
             <div className="section-title">
               <h2>Itens</h2>
               {approved && (

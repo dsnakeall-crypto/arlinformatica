@@ -182,12 +182,12 @@ test.describe.serial('fluxo operacional principal', () => {
     }
     const statusHistory = await api(page, `/orders/${orderId}`);
     expect(statusHistory.body.histories.map((entry: any) => entry.to_status)).toEqual(expect.arrayContaining(['in_service', 'waiting_part', 'analysis']));
+    await page.getByLabel('Laudo Final').fill('Equipamento testado e funcionando.');
     await page.getByRole('button', { name: 'Concluir', exact: true }).click();
     const finalModal = page.locator('.modal-card').filter({ hasText: 'FINALIZAÇÃO DA OS' });
     await expect(finalModal).toBeVisible();
     await finalModal.getByRole('button', { name: 'USAR ITENS DO ORÇAMENTO APROVADO' }).click();
     await expect(finalModal.getByText(/Itens vinculados ao orçamento aprovado/)).toBeVisible();
-    await finalModal.locator('textarea').fill('Equipamento testado e funcionando.');
     const finalizeRequestPromise = page.waitForRequest((request) => request.url().endsWith(`/api/orders/${orderId}/finalize`) && request.method() === 'POST');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
     const finalizePayload = (await finalizeRequestPromise).postDataJSON();
@@ -318,10 +318,10 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.getByText('Reaberta', { exact: true })).toBeVisible();
     const reopenedOrder = await api(page, `/orders/${orderId}`);
     expect(reopenedOrder.body.status).toBe('analysis');
+    await page.getByLabel('Laudo Final').fill('Valor corrigido e equipamento reconferido.');
     await page.getByRole('button', { name: 'Concluir', exact: true }).click();
     const finalModal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
     await finalModal.getByLabel('Valor unitário de Formatação E2E').fill('140,00');
-    await finalModal.locator('textarea').fill('Valor corrigido e equipamento reconferido.');
     const refinalizationResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/finalize`) && response.request().method() === 'POST');
     await finalModal.getByRole('button', { name: 'Salvar e concluir OS' }).click();
     expect((await refinalizationResponsePromise).status()).toBe(201);

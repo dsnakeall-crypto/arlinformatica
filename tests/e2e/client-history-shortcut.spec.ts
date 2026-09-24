@@ -14,11 +14,11 @@ async function openOrder(page: Page, orderNumber: string) {
 
 async function finalizeThroughUi(page: Page, order: { id: number; number: string }, discountCents: number) {
   await openOrder(page, order.number);
+  await page.getByLabel('Laudo Final').fill('Serviço concluído para validação do histórico do cliente.');
   await page.getByRole('button', { name: 'Concluir', exact: true }).click();
   const modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(modal).toBeVisible();
   await expect(modal.locator('.finish-item input').first()).toHaveValue('Formatação E2E');
-  await modal.getByLabel('LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO').fill('Serviço concluído para validação do histórico do cliente.');
   await modal.getByLabel('Desconto (R$)').fill((discountCents / 100).toFixed(2).replace('.', ','));
 
   const responsePromise = page.waitForResponse((response) =>

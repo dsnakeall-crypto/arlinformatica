@@ -66,6 +66,7 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
     return Array.isArray(body?.items) && body.items.some((item: any) => Number(item.catalog_id) === Number(service.id) && Number(item.quantity) === 4);
   });
 
+  await root.getByLabel('Laudo Final').fill('Serviço concluído com a quantidade registrada na OS.');
   await root.getByRole('button', { name: 'Concluir', exact: true }).click();
   const saved = await pendingSaveResponse;
   expect(saved.status()).toBe(200);
@@ -87,8 +88,6 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
   await expect(listedItems).toContainText(expectedMoney);
   await expect(modal.locator('.money')).toContainText(`Subtotal ${expectedMoney}`);
   await expect(modal.locator('.money')).toContainText(`Total ${expectedMoney}`);
-  await modal.getByLabel('LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO').fill('Serviço concluído com a quantidade registrada na OS.');
-
   const finalizeResponse = page.waitForResponse((response) =>
     new URL(response.url()).pathname === `/api/orders/${order.id}/finalize` && response.request().method() === 'POST'
   );

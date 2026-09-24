@@ -99,7 +99,7 @@ test('OS finalizada não oferece edição e exige reabertura antes da edição c
   }
 });
 
-test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PATCH nem finaliza', async ({ page }) => {
+test('Laudo Final da ficha é persistido antes da finalização e fechar não finaliza', async ({ page }) => {
   const { clientName, order } = await createActiveOrder(page, 3);
   const root = await openOrder(page, clientName, order.number);
   const panel = root.locator('.arl-od-report textarea');
@@ -107,7 +107,9 @@ test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PA
   await panel.fill('Rascunho A do painel');
   await root.getByRole('button', { name: 'Concluir', exact: true }).click();
   let modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
-  await expect(modal.locator('textarea'), 'Contrato laudo painel→modal: cada abertura deve receber o rascunho atual do painel').toHaveValue('Rascunho A do painel');
+  await expect(modal).toBeVisible();
+  await expect(modal.getByLabel('Laudo Final')).toHaveCount(0);
+  expect((await api(page, `/orders/${order.id}`)).body.final_report).toBe('Rascunho A do painel');
   const services = await api(page, '/catalogs/services');
   const service = services.body?.[0];
   expect(service, 'Contrato finalização: catálogo ativo precisa ter ao menos um Serviço / Produto').toBeTruthy();
@@ -133,7 +135,8 @@ test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PA
   await panel.fill('Rascunho B alterado depois de fechar');
   await root.getByRole('button', { name: 'Concluir', exact: true }).click();
   modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
-  await expect(modal.locator('textarea'), 'Contrato laudo reabertura: modal reutilizou valor antigo em vez do estado atual do painel').toHaveValue('Rascunho B alterado depois de fechar');
+  await expect(modal).toBeVisible();
+  expect((await api(page, `/orders/${order.id}`)).body.final_report).toBe('Rascunho B alterado depois de fechar');
 
   const writes: string[] = [];
   page.on('request', (request) => {
@@ -142,10 +145,9 @@ test('Laudo Final usa estado compartilhado painel↔modal e fechar não grava PA
       writes.push(`${request.method()} ${pathname}`);
     }
   });
-  await modal.locator('textarea').fill('Rascunho C escrito no modal');
   await modal.locator('.modal-close').click();
 
-  await expect(panel, 'Contrato laudo modal→painel: fechar sem finalizar deve manter o rascunho digitado no estado compartilhado').toHaveValue('Rascunho C escrito no modal');
+  await expect(panel, 'Fechar sem finalizar deve manter o laudo atual da ficha').toHaveValue('Rascunho B alterado depois de fechar');
   expect(writes, `Contrato crítico de cancelamento: fechar o modal disparou gravação/finalização indevida: ${writes.join(', ') || 'nenhuma'}`).toEqual([]);
 });
 
