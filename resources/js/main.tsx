@@ -1024,7 +1024,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
       const items = orderItems.map((x) => ({
         catalog_id: x.catalog_id,
         quantity: x.quantity,
-        unit_price_cents: x.price_cents,
+        ...(x.free_price ? { unit_price_cents: x.price_cents } : {}),
       }));
       const order = await api("/orders", {
         method: "POST",
