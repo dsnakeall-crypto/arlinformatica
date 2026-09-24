@@ -3,13 +3,14 @@ import { Ban, Box, CheckCircle2, History, PackagePlus, Pencil, Plus, RotateCcw, 
 import '../css/services-page.css';
 import '../css/stock-management.css';
 import PageHeader from './page-header';
-import { centsFromMoneyInput, maskMoneyInput } from './money-input';
+import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from './money-input';
 
 type ServiceItem = {
   id: number;
   name: string;
   category: 'service' | 'product' | null;
   price_cents: number;
+  free_price: boolean;
   stock_quantity: number;
   warranty_enabled: boolean;
   warranty_term: number | null;
@@ -22,6 +23,7 @@ type ServiceItem = {
 type Draft = {
   name: string;
   price: string;
+  free_price: boolean;
   stock_quantity: number;
   warranty_enabled: boolean;
   warranty_term: number;
@@ -41,6 +43,7 @@ type StockMovement = {
 const emptyDraft = (): Draft => ({
   name: '',
   price: '0,00',
+  free_price: false,
   stock_quantity: 0,
   warranty_enabled: false,
   warranty_term: 30,
@@ -149,6 +152,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
     return {
       name: source.name.trim(),
       price_cents: price,
+      free_price: !product && source.free_price,
       ...(product ? { stock_quantity: Math.max(0, Math.floor(source.stock_quantity || 0)) } : {}),
       warranty_enabled: source.warranty_enabled,
       warranty_term: source.warranty_enabled ? source.warranty_term : null,
@@ -211,7 +215,8 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
   const openEdit = (item: ServiceItem) => setEdit({
     id: item.id,
     name: item.name,
-    price: (item.price_cents / 100).toFixed(2).replace('.', ','),
+    price: item.free_price ? '' : moneyInputFromCents(item.price_cents),
+    free_price: Boolean(item.free_price),
     stock_quantity: Number(item.stock_quantity || 0),
     warranty_enabled: Boolean(item.warranty_enabled),
     warranty_term: item.warranty_term || 30,
@@ -278,8 +283,9 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
         </label>
         <label className="services-field">
           <span>Valor (R$)</span>
-          <div className="services-money-input"><b>R$</b><input aria-label="Valor em R$" inputMode="decimal" value={draft.price} onChange={(event) => setDraft({ ...draft, price: maskMoneyInput(event.target.value) })} /></div>
+          <div className="services-money-input"><b>R$</b><input aria-label="Valor em R$" inputMode="decimal" disabled={!product && draft.free_price} value={draft.price} onChange={(event) => setDraft({ ...draft, price: maskMoneyInput(event.target.value) })} /></div>
         </label>
+        {!product && <label className="services-warranty-toggle compact"><input type="checkbox" checked={draft.free_price} onChange={(event) => setDraft({ ...draft, free_price: event.target.checked, price: event.target.checked ? '' : '0,00' })} /><span><b>Preço livre</b><small>O valor será informado ao adicionar o serviço à OS.</small></span></label>}
         {product && <label className="services-field">
           <span>Quantidade em estoque</span>
           <input aria-label="Quantidade inicial em estoque" type="number" min="0" step="1" value={draft.stock_quantity} onChange={(event) => setDraft({ ...draft, stock_quantity: Math.max(0, Number(event.target.value) || 0) })} />
@@ -308,7 +314,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
           <span className="services-rank">#{index + 1}</span>
           <span className={`services-type-icon ${product ? 'product' : 'service'}`}><TypeIcon category={product ? 'product' : 'service'} /></span>
           <div><b>{item.name}</b><small>{product ? 'Produto' : 'Serviço'} · {usage(item)} OS</small></div>
-          <strong>{money(item.price_cents)}</strong>
+          <strong>{item.free_price ? 'Preço livre' : money(item.price_cents)}</strong>
         </article>) : <div className="services-empty">Cadastre o primeiro {singular} para começar.</div>}
       </div>
     </section>
@@ -324,7 +330,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
           <span className={`services-type-icon ${product ? 'product' : 'service'}`}><TypeIcon category={product ? 'product' : 'service'} /></span>
           <div className="services-row-main">
             <b>{item.name}</b>
-            <small><span className={`services-state ${item.active ? 'active' : 'inactive'}`}>{item.active ? 'Ativo' : 'Inativo'}</span> · {money(item.price_cents)} · {product ? `Produto · Estoque: ${item.stock_quantity}` : 'Serviço'}{product && item.stock_quantity === 1 ? ' · Última unidade em estoque' : ''}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ''}</small>
+            <small><span className={`services-state ${item.active ? 'active' : 'inactive'}`}>{item.active ? 'Ativo' : 'Inativo'}</span> · {item.free_price ? 'Preço livre' : money(item.price_cents)} · {product ? `Produto · Estoque: ${item.stock_quantity}` : 'Serviço'}{product && item.stock_quantity === 1 ? ' · Última unidade em estoque' : ''}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ''}</small>
           </div>
           <span className="services-usage"><b>{usage(item)}</b><small>uso em OS</small></span>
           <div className="services-row-actions">
@@ -342,7 +348,8 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
         <button type="button" className="modal-close" aria-label="Fechar edição" onClick={() => setEdit(null)}><X aria-hidden="true" /></button>
         <div className="services-section-heading"><span className="services-heading-icon"><Pencil aria-hidden="true" /></span><div><h2>Editar {singular}</h2><p>Alterações futuras não modificam o histórico das OS já abertas.</p></div></div>
         <label className="services-field"><span>Nome / descrição</span><input spellCheck={true} value={edit.name} onChange={(event) => setEdit({ ...edit, name: event.target.value })} /></label>
-        <label className="services-field"><span>Valor (R$)</span><input inputMode="decimal" value={edit.price} onChange={(event) => setEdit({ ...edit, price: maskMoneyInput(event.target.value) })} /></label>
+        <label className="services-field"><span>Valor (R$)</span><input inputMode="decimal" disabled={!product && edit.free_price} value={edit.price} onChange={(event) => setEdit({ ...edit, price: maskMoneyInput(event.target.value) })} /></label>
+        {!product && <label className="services-warranty-toggle compact"><input type="checkbox" checked={edit.free_price} onChange={(event) => setEdit({ ...edit, free_price: event.target.checked, price: event.target.checked ? '' : '0,00' })} /><span><b>Preço livre</b><small>O valor será informado ao adicionar o serviço à OS.</small></span></label>}
         {product && <label className="services-field"><span>Quantidade em estoque</span><input aria-label="Quantidade atual em estoque" type="number" value={edit.stock_quantity} readOnly /><small>Use a ação de entrada de estoque para acrescentar unidades.</small></label>}
         <label className="services-warranty-toggle compact"><input type="checkbox" checked={edit.warranty_enabled} onChange={(event) => setEdit({ ...edit, warranty_enabled: event.target.checked })} /><span><ShieldCheck aria-hidden="true" /><b>Garantia adicional</b></span></label>
         {edit.warranty_enabled && <div className="services-edit-warranty"><label className="services-field"><span>Duração</span><input type="number" min="1" max="9999" value={edit.warranty_term} onChange={(event) => setEdit({ ...edit, warranty_term: Number(event.target.value) || 1 })} /></label><label className="services-field"><span>Unidade</span><select value={edit.warranty_unit} onChange={(event) => setEdit({ ...edit, warranty_unit: event.target.value as Draft['warranty_unit'] })}><option value="days">Dias</option><option value="months">Meses</option><option value="years">Anos</option></select></label></div>}

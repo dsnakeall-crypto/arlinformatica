@@ -196,7 +196,7 @@ main:has([data-arl-order-detail-react="1"]) .device-layout>.arl-layout-label{dis
 .arl-unified-editor-close:hover{background:var(--arl-primary-soft);color:var(--arl-primary-dark)}
 .arl-unified-editor-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
 .arl-unified-editor-column{display:flex;min-width:0;flex-direction:column;gap:18px}
-.arl-unified-editor .arl-od-line{grid-template-columns:minmax(260px,1fr) 72px 105px 34px}
+.arl-unified-editor .arl-od-line{grid-template-columns:minmax(220px,1fr) 72px 105px 105px 34px}
 .arl-unified-editor .arl-od-line b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.35}
 .arl-unified-editor label{display:grid;gap:7px;color:var(--arl-ink);font-weight:800;font-size:12px}
 .arl-unified-editor input,.arl-unified-editor select,.arl-unified-editor textarea{width:100%;border:1px solid #e1dce0;border-radius:10px;background:#fafafb;color:var(--arl-ink);padding:11px 12px;font:inherit;font-weight:500;box-sizing:border-box}

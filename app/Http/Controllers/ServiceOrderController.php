@@ -121,6 +121,7 @@ class ServiceOrderController extends Controller
             'items' => 'array|max:50',
             'items.*.catalog_id' => 'required|integer|exists:service_catalog,id',
             'items.*.quantity' => 'required|integer|min:1|max:999',
+            'items.*.unit_price_cents' => 'nullable|integer|min:0|max:999999999',
         ]);
         $data['equipment_description'] = trim((string) ($data['equipment_description'] ?? '')) ?: null;
         $data['equipment_details'] = trim((string) ($data['equipment_details'] ?? '')) ?: null;

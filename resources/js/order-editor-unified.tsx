@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ClipboardList, FileText, Save, X } from 'lucide-react';
 import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
 import TextImprovement from './text-improvement';
+import { centsFromMoneyInput, moneyInputFromCents } from './money-input';
 
 type Props = {
   orderId: number;
@@ -11,7 +12,7 @@ type Props = {
 };
 
 type ApiError = Error & { errors?: Record<string, string[]> };
-type ServiceLine = { catalog_id: number; description: string; quantity: number; unit_price_cents: number };
+type ServiceLine = { catalog_id: number; description: string; quantity: number; unit_price_cents: number; free_price?: boolean };
 
 const UNSAVED_MESSAGE = 'Existem alterações não salvas. Deseja sair sem salvar?';
 const csrf = () => document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
@@ -100,7 +101,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     setItems((current) => {
       const found = current.find((row) => row.catalog_id === Number(entry.id));
       if (found) return current.map((row) => row.catalog_id === Number(entry.id) ? { ...row, quantity: Math.min(999, row.quantity + quantity) } : row);
-      return [...current, { catalog_id: Number(entry.id), description: entry.name, quantity, unit_price_cents: Number(entry.price_cents) }];
+      return [...current, { catalog_id: Number(entry.id), description: entry.name, quantity, unit_price_cents: Number(entry.price_cents), free_price: !!entry.free_price }];
     });
   };
 
@@ -125,7 +126,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
       };
       if (equipmentChanged) payload.equipment_description = equipment.trim();
       if (equipmentDetailsChanged) payload.equipment_details = equipmentDetails.trim() || null;
-      payload.items = items.map((row) => ({ catalog_id: row.catalog_id, quantity: row.quantity }));
+      payload.items = items.map((row) => ({ catalog_id: row.catalog_id, quantity: row.quantity, unit_price_cents: row.unit_price_cents }));
 
       await api(`/orders/${orderId}`, { method: 'PATCH', body: JSON.stringify(payload) });
       setDirty(false);
@@ -156,7 +157,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
         <p className="arl-unified-editor-help">Deixe vazio quando o equipamento chegar aparentemente sem avarias.</p>
         <div className="arl-unified-editor-section-title"><span className="arl-unified-editor-icon"><FileText/></span><h3>Serviços / Produtos</h3></div>
         <ServiceProductSearch items={catalog} ariaLabel="Pesquisar Serviço / Produto no editor" onSelect={addService}/>
-        <div className="arl-od-lines">{items.length ? items.map((row, index) => <div className="arl-od-line" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade no editor de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(event) => { markDirty(); setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: Math.max(1, Math.min(999, Number(event.target.value) || 1)) } : item)); }}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" aria-label={`Remover ${row.description} do editor`} onClick={() => { markDirty(); setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)); }}>×</button></div>) : <p>Nenhum serviço adicionado.</p>}</div>
+        <div className="arl-od-lines">{items.length ? items.map((row, index) => { const freePrice = row.free_price ?? !!catalog.find((entry) => entry.id === row.catalog_id)?.free_price; return <div className="arl-od-line" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade no editor de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(event) => { markDirty(); setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: Math.max(1, Math.min(999, Number(event.target.value) || 1)) } : item)); }}/><input aria-label={`Valor unitário no editor de ${row.description}`} inputMode="decimal" disabled={!freePrice} value={moneyInputFromCents(row.unit_price_cents)} onChange={(event) => { markDirty(); setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, unit_price_cents: centsFromMoneyInput(event.target.value) } : item)); }}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" aria-label={`Remover ${row.description} do editor`} onClick={() => { markDirty(); setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)); }}>×</button></div>; }) : <p>Nenhum serviço adicionado.</p>}</div>
         <div className="arl-od-foot"><span/><strong>Subtotal: {money(subtotal)}</strong></div>
       </div>
     </div>

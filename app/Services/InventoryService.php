@@ -40,7 +40,8 @@ class InventoryService
      */
     public function syncActiveOrderItems(ServiceOrder $order, array $requested, int $userId, string $reason): array
     {
-        $grouped = collect($requested)->groupBy('catalog_id')->mapWithKeys(function (Collection $rows, $catalogId) {
+        $requestedByCatalog = collect($requested)->groupBy('catalog_id');
+        $grouped = $requestedByCatalog->mapWithKeys(function (Collection $rows, $catalogId) {
             $quantity = (int) $rows->sum('quantity');
             abort_if($quantity > 999, 422, 'A quantidade de um item da OS não pode ultrapassar 999.');
 
@@ -105,8 +106,11 @@ class InventoryService
             $appliedByCatalog[(int) $catalogId] = $newApplied;
         }
 
-        return $grouped->map(function (int $quantity, int $catalogId) use ($selectable, $appliedByCatalog) {
+        return $grouped->map(function (int $quantity, int $catalogId) use ($selectable, $appliedByCatalog, $requestedByCatalog) {
             $catalog = $selectable->get($catalogId);
+            $requestedRow = $requestedByCatalog->get($catalogId)?->first();
+            $requestedPrice = $requestedRow['unit_price_cents'] ?? null;
+            $unitPrice = $this->catalogUnitPrice($catalog, $requestedPrice);
             $warranty = $catalog->warranty_enabled ? [
                 'enabled' => true,
                 'term' => (int) $catalog->warranty_term,
@@ -118,11 +122,32 @@ class InventoryService
                 'description' => $catalog->name,
                 'quantity' => $quantity,
                 'stock_applied_quantity' => (int) ($appliedByCatalog[$catalogId] ?? 0),
-                'unit_price_cents' => (int) $catalog->price_cents,
-                'subtotal_cents' => $quantity * (int) $catalog->price_cents,
+                'unit_price_cents' => $unitPrice,
+                'subtotal_cents' => $quantity * $unitPrice,
                 'warranty_snapshot' => $warranty,
             ];
         })->values()->all();
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public function resolveFinalItemPrices(array $items): array
+    {
+        $catalogs = DB::table('service_catalog')
+            ->whereIn('id', collect($items)->pluck('catalog_id')->filter())
+            ->get()
+            ->keyBy('id');
+
+        return collect($items)->map(function (array $item) use ($catalogs) {
+            if (! isset($item['catalog_id'])) {
+                return $item;
+            }
+            $catalog = $catalogs->get((int) $item['catalog_id']);
+            if ($catalog) {
+                $item['unit_price_cents'] = $this->catalogUnitPrice($catalog, $item['unit_price_cents'] ?? null);
+            }
+
+            return $item;
+        })->all();
     }
 
     /**
@@ -195,5 +220,21 @@ class InventoryService
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+    }
+
+    private function catalogUnitPrice(object $catalog, mixed $requestedPrice): int
+    {
+        if ($catalog->category !== 'product' && (bool) ($catalog->free_price ?? false)) {
+            $price = (int) $requestedPrice;
+            if ($price <= 0) {
+                throw ValidationException::withMessages([
+                    'items' => "Informe um valor maior que zero para {$catalog->name}.",
+                ]);
+            }
+
+            return $price;
+        }
+
+        return (int) $catalog->price_cents;
     }
 }

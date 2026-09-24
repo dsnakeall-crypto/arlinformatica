@@ -60,6 +60,7 @@ class ServiceOrderMaintenanceController extends Controller
             'items' => ['sometimes', 'array', 'max:100'],
             'items.*.catalog_id' => ['required', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
+            'items.*.unit_price_cents' => ['nullable', 'integer', 'min:0', 'max:999999999'],
         ]);
 
         abort_if($data === [], 422, 'Informe ao menos uma alteração para a OS.');

@@ -115,6 +115,7 @@ type Catalog = {
   id: number;
   name: string;
   price_cents?: number;
+  free_price?: boolean;
   category?: string;
   warranty_enabled?: boolean;
   warranty_term?: number | null;
@@ -993,6 +994,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
               name: item.name,
               quantity,
               price_cents: item.price_cents || 0,
+              free_price: !!item.free_price,
             },
           ];
     });
@@ -1022,6 +1024,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
       const items = orderItems.map((x) => ({
         catalog_id: x.catalog_id,
         quantity: x.quantity,
+        unit_price_cents: x.price_cents,
       }));
       const order = await api("/orders", {
         method: "POST",
@@ -1271,6 +1274,19 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
                       </small>
                     </div>
                     <input
+                      aria-label={`Valor unitário de ${item.name}`}
+                      inputMode="decimal"
+                      disabled={!item.free_price}
+                      value={moneyInputFromCents(item.price_cents)}
+                      onChange={(event) =>
+                        setOrderItems((current) => current.map((row) =>
+                          row.catalog_id === item.catalog_id
+                            ? { ...row, price_cents: centsFromMoneyInput(event.target.value) }
+                            : row,
+                        ))
+                      }
+                    />
+                    <input
                       aria-label={`Quantidade de ${item.name}`}
                       type="number"
                       min="1"
@@ -1389,6 +1405,7 @@ function FinalizationBox({ order, reload }: any) {
         description: c.name,
         quantity: 1,
         unit_price_cents: c.price_cents,
+        free_price: !!c.free_price,
         warranty_enabled: !!c.warranty_enabled,
         warranty_term: c.warranty_term,
         warranty_unit: c.warranty_unit,
@@ -1546,7 +1563,7 @@ function FinalizationBox({ order, reload }: any) {
                   }
                 />
                 <input
-                  disabled={!!sourceBudgetId}
+                  disabled={!!sourceBudgetId || !catalog.find((entry) => entry.id === x.catalog_id)?.free_price}
                   inputMode="decimal"
                   value={moneyInputFromCents(x.unit_price_cents)}
                   onChange={(e) =>

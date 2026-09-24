@@ -62,7 +62,7 @@ class FinalizationController extends Controller
                 'items.*.warranty_enabled' => 'boolean', 'items.*.warranty_term' => 'nullable|required_if:items.*.warranty_enabled,true|integer|min:1|max:999',
                 'items.*.warranty_unit' => 'nullable|required_if:items.*.warranty_enabled,true|in:days,months,years', 'items.*.warranty_description' => 'nullable|string|max:500',
             ]);
-            $data['items'] = $itemData['items'] ?? [];
+            $data['items'] = $inventory->resolveFinalItemPrices($itemData['items'] ?? []);
         }
 
         if (empty($data['items'])) {
@@ -199,5 +199,4 @@ class FinalizationController extends Controller
             ->selectRaw('COALESCE(SUM(COALESCE(adjustment.new_cents, ft.amount_cents)), 0) as paid_cents')
             ->value('paid_cents') ?? 0);
     }
-
 }

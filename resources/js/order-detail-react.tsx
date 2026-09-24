@@ -793,6 +793,7 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
               description: entry.name,
               quantity,
               unit_price_cents: entry.price_cents,
+              free_price: !!entry.free_price,
               warranty_enabled: !!entry.warranty_enabled,
               warranty_term: entry.warranty_term,
               warranty_unit: entry.warranty_unit,
@@ -1621,6 +1622,7 @@ function FinalizationBox({
               description: entry.name,
               quantity,
               unit_price_cents: entry.price_cents,
+              free_price: !!entry.free_price,
               warranty_enabled: !!entry.warranty_enabled,
               warranty_term: entry.warranty_term,
               warranty_unit: entry.warranty_unit,
@@ -1798,7 +1800,7 @@ function FinalizationBox({
                   />
                   <input
                     aria-label={`Valor unitário de ${row.description}`}
-                    disabled={!!sourceBudgetId}
+                    disabled={!!sourceBudgetId || !catalog.find((entry) => entry.id === row.catalog_id)?.free_price}
                     inputMode="decimal"
                     value={moneyInputFromCents(row.unit_price_cents)}
                     onChange={(e) =>

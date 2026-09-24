@@ -8,6 +8,7 @@ export type ServiceProductCatalogItem = {
   name: string;
   category: 'service' | 'product' | null;
   price_cents: number;
+  free_price?: boolean;
   stock_quantity?: number;
   warranty_enabled: boolean;
   warranty_term: number | null;
@@ -37,7 +38,7 @@ function ItemDetails({ item }: { item: ServiceProductCatalogItem }) {
   const available = stock(item);
   return <span className="services-row-main">
     <b>{item.name}</b>
-    <small>{money(item.price_cents)} · {isProduct(item) ? `Produto · Disponível: ${available}` : 'Serviço'}{isProduct(item) && available === 0 ? ' · Sem estoque' : ''}{isProduct(item) && available === 1 ? ' · Última unidade em estoque' : ''}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ' · Sem garantia'}</small>
+    <small>{item.free_price ? 'Preço livre' : money(item.price_cents)} · {isProduct(item) ? `Produto · Disponível: ${available}` : 'Serviço'}{isProduct(item) && available === 0 ? ' · Sem estoque' : ''}{isProduct(item) && available === 1 ? ' · Última unidade em estoque' : ''}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ' · Sem garantia'}</small>
   </span>;
 }
 
