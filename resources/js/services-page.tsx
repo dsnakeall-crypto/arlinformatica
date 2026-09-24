@@ -276,7 +276,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
         </div>
       </div>
 
-      <div className="services-create-grid">
+      <div className={`services-create-grid ${product ? 'is-product' : 'is-service'}`}>
         <label className="services-field services-name-field">
           <span>Nome / descrição</span>
           <input aria-label={`Nome ou descrição do ${singular}`} spellCheck={true} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Nome / descrição" />
@@ -285,13 +285,14 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
           <span>Valor (R$)</span>
           <div className="services-money-input"><b>R$</b><input aria-label="Valor em R$" inputMode="decimal" disabled={!product && draft.free_price} value={draft.price} onChange={(event) => setDraft({ ...draft, price: maskMoneyInput(event.target.value) })} /></div>
         </label>
-        {!product && <label className="services-warranty-toggle compact"><input type="checkbox" checked={draft.free_price} onChange={(event) => setDraft({ ...draft, free_price: event.target.checked, price: event.target.checked ? '' : '0,00' })} /><span><b>Preço livre</b><small>O valor será informado ao adicionar o serviço à OS.</small></span></label>}
         {product && <label className="services-field">
           <span>Quantidade em estoque</span>
           <input aria-label="Quantidade inicial em estoque" type="number" min="0" step="1" value={draft.stock_quantity} onChange={(event) => setDraft({ ...draft, stock_quantity: Math.max(0, Number(event.target.value) || 0) })} />
         </label>}
         <button className="primary services-add" disabled={busy}><Plus aria-hidden="true" />{busy ? 'Salvando…' : 'Adicionar'}</button>
       </div>
+
+      {!product && <div className="services-free-price-row"><label className="services-warranty-toggle"><input type="checkbox" checked={draft.free_price} onChange={(event) => setDraft({ ...draft, free_price: event.target.checked, price: event.target.checked ? '' : '0,00' })} /><span><b>Preço livre</b><small>O valor será informado ao adicionar o serviço à OS.</small></span></label></div>}
 
       <div className="services-warranty-row">
         <label className="services-warranty-toggle">
