@@ -83,7 +83,7 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
   await expect(listedItems).toHaveCount(1);
   await expect(listedItems.getByLabel('Descrição do item 1')).toHaveValue(service.name);
   await expect(listedItems.getByLabel(`Quantidade de ${service.name}`)).toHaveValue('4');
-  await expect(listedItems.getByLabel(`Valor unitário de ${service.name}`)).toHaveValue((Number(service.price_cents) / 100).toFixed(2));
+  await expect(listedItems.getByLabel(`Valor unitário de ${service.name}`)).toHaveValue((Number(service.price_cents) / 100).toFixed(2).replace('.', ','));
   await expect(listedItems).toContainText(expectedMoney);
   await expect(modal.locator('.money')).toContainText(`Subtotal ${expectedMoney}`);
   await expect(modal.locator('.money')).toContainText(`Total ${expectedMoney}`);
