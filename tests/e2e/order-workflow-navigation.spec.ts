@@ -14,7 +14,7 @@ async function fixture(page: Page) {
     const order = await api(page, '/orders', 'POST', { client_id: client.body.id, equipment_type_id: equipment.body[0].id, attendance_type: state === 'completed' ? 'external' : 'bench', reported_problem: `Teste ${state}`, items: [], checklist: [] });
     expect(order.status).toBe(201);
     if (state === 'completed') {
-      expect((await api(page, `/orders/${order.body.id}/finalize`, 'POST', { result: 'no_fault', technical_report: 'Sem defeito constatado nos testes.', items: [], discount_cents: 0, photo_ids: [] })).status).toBe(201);
+      expect((await api(page, `/orders/${order.body.id}/finalize`, 'POST', { technical_report: 'Finalização para os testes de abas.', items: [{ description: 'Registro de finalização', quantity: 1, unit_price_cents: 0, warranty_enabled: false }], discount_cents: 0, photo_ids: [] })).status).toBe(201);
     } else if (state === 'interrupted') {
       expect((await api(page, `/orders/${order.body.id}/status`, 'PATCH', {
         status: state,

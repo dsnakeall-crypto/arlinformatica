@@ -18,20 +18,19 @@ use Illuminate\Validation\ValidationException;
 
 class FinalizationController extends Controller
 {
-    private const RESULTS = ['repair_completed', 'irreparable', 'client_cancelled', 'economically_unviable', 'no_fault', 'other'];
-
     public function store(Request $request, ServiceOrder $order, CompanySettings $settings, DocumentService $documents, InventoryService $inventory, PdfPhotoOptimizer $pdfPhotos, ReplacedFinalDocumentService $replacedDocuments): JsonResponse
     {
         abort_if($order->status === 'completed', 409, 'A OS já possui uma finalização imutável.');
         abort_if($order->status === 'interrupted', 409, 'Uma OS interrompida já está fechada e não pode ser finalizada nem reaberta.');
         $data = $request->validate([
-            'result' => 'required|in:'.implode(',', self::RESULTS), 'result_other' => 'nullable|required_if:result,other|string|max:255',
             'technical_report' => 'nullable|string|max:20000', 'discount_cents' => 'required|integer|min:0|max:999999999',
             'approved_budget_id' => 'nullable|exists:budgets,id', 'photo_ids' => 'array', 'photo_ids.*' => 'integer',
             'show_item_warranties' => 'sometimes|boolean',
             'is_paid' => 'sometimes|boolean',
             'payment_method' => ['nullable', 'required_if:is_paid,true', Rule::in(['cash', 'pix', 'credit', 'debit'])],
         ]);
+        $data['result'] = 'repair_completed';
+        $data['result_other'] = null;
 
         if (! empty($data['approved_budget_id'])) {
             $approved = DB::table('budgets')->where(['id' => $data['approved_budget_id'], 'service_order_id' => $order->id, 'status' => 'approved'])->whereNull('deleted_at')->first();
@@ -62,10 +61,7 @@ class FinalizationController extends Controller
             $data['items'] = $itemData['items'] ?? [];
         }
 
-        if ($data['result'] !== 'repair_completed' && blank($data['technical_report'] ?? null)) {
-            throw ValidationException::withMessages(['technical_report' => 'O laudo/motivo é obrigatório quando não houve reparo.']);
-        }
-        if ($data['result'] === 'repair_completed' && empty($data['items'])) {
+        if (empty($data['items'])) {
             throw ValidationException::withMessages(['items' => 'Informe ao menos um serviço ou produto para um reparo realizado.']);
         }
         $subtotal = collect($data['items'])->sum(fn ($item) => (int) $item['quantity'] * (int) $item['unit_price_cents']);
@@ -73,7 +69,7 @@ class FinalizationController extends Controller
             throw ValidationException::withMessages(['discount_cents' => 'O desconto não pode superar o subtotal.']);
         }
         $total = max(0, $subtotal - (int) $data['discount_cents']);
-        $resultLabel = $this->resultLabel($data['result'], $data['result_other'] ?? null);
+        $resultLabel = 'Reparo realizado';
         $company = $settings->snapshot();
         $signaturePath = $company['technical_signature'] ?? null;
         $technicalSignature = $signaturePath && Storage::disk('local')->exists($signaturePath)
@@ -195,8 +191,4 @@ class FinalizationController extends Controller
             ->value('paid_cents') ?? 0);
     }
 
-    private function resultLabel(string $result, ?string $other): string
-    {
-        return $result === 'other' ? 'Outro: '.$other : ['repair_completed' => 'Reparo realizado', 'irreparable' => 'Equipamento sem possibilidade de reparo', 'client_cancelled' => 'Cliente desistiu/cancelou', 'economically_unviable' => 'Reparo economicamente inviável', 'no_fault' => 'Sem defeito constatado'][$result];
-    }
 }

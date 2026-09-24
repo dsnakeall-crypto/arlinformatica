@@ -53,13 +53,11 @@ async function moveToStatus(page: Page, order: any, status: StatusCase) {
 
   if (status.code === 'completed') {
     const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
-      result: 'no_fault',
-      result_other: null,
       technical_report: 'Contrato E2E: finalização sem defeito constatado.',
       discount_cents: 0,
       approved_budget_id: null,
       photo_ids: [],
-      items: [],
+      items: [{ description: 'Registro de finalização', quantity: 1, unit_price_cents: 0, warranty_enabled: false }],
     });
     expect(finalized.status, `Transição para Finalizado: ${JSON.stringify(finalized.body)}`).toBe(201);
     return;

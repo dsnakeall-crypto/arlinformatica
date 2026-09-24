@@ -33,7 +33,8 @@ class StageFourTest extends TestCase
     public function test_direct_completion_is_rejected_and_completed_order_can_be_soft_deleted_with_history_preserved(): void
     {
         $this->actingAs($this->user)->patchJson("/api/orders/{$this->order->id}/status", ['status' => 'completed'])->assertUnprocessable();
-        $this->finalize(['result' => 'no_fault', 'technical_report' => 'Nenhum defeito foi constatado.', 'items' => [], 'discount_cents' => 0])->assertCreated()->assertJsonPath('order.status', 'completed');
+        $this->finalize(['technical_report' => 'Reparo concluído.', 'items' => [['description' => 'Reparo', 'quantity' => 1, 'unit_price_cents' => 100, 'warranty_enabled' => false]], 'discount_cents' => 0])
+            ->assertCreated()->assertJsonPath('order.status', 'completed')->assertJsonPath('finalization.result', 'repair_completed');
 
         $this->actingAs($this->user)
             ->deleteJson("/api/orders/{$this->order->id}")

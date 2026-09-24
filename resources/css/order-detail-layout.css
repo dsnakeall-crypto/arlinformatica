@@ -82,7 +82,7 @@
 [data-arl-order-detail-react="1"] .budget-form .arl-service-product-result{border-radius:10px!important;text-align:left!important;justify-items:start}
 [data-arl-order-detail-react="1"] .budget-form .arl-service-product-result .services-row-main{text-align:left!important;justify-items:start}
 [data-arl-order-detail-react="1"] .arl-budget-row>a,[data-arl-order-detail-react="1"] .arl-budget-row>button{margin-left:10px}
-[data-arl-order-detail-react="1"] .arl-finalization{width:min(980px,calc(100vw - 24px));min-width:0;max-height:calc(100vh - 24px);padding:15px 18px!important;gap:6px!important;box-sizing:border-box;border:1px solid var(--arl-test-border);border-radius:18px!important;overflow:auto}
+[data-arl-order-detail-react="1"] .arl-finalization{width:min(1100px,calc(100vw - 24px));min-width:0;max-height:calc(100vh - 24px);padding:18px 21px!important;gap:10px!important;box-sizing:border-box;border:1px solid var(--arl-test-border);border-radius:18px!important;overflow:auto}
 [data-arl-order-detail-react="1"] .arl-finalization>h1{margin:0 36px 2px 0;font-size:19px;line-height:1.15;color:var(--arl-ink)}
 [data-arl-order-detail-react="1"] .arl-finalization>.field{gap:3px;margin:0}
 [data-arl-order-detail-react="1"] .arl-finalization>.field>span{font-size:10.5px}

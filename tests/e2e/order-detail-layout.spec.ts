@@ -165,6 +165,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await headerActions.getByRole('button', { name: 'Concluir', exact: true }).click();
   const finalization = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(finalization).toBeVisible();
+  await expect(finalization.getByText('Resultado do atendimento', { exact: true })).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
   const finalizationFitsMobile = await finalization.evaluate((node) => node.scrollWidth <= node.clientWidth + 1);
   expect(finalizationFitsMobile, 'Modal de finalização não deve cortar nem provocar overflow em mobile').toBe(true);
@@ -174,9 +175,8 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
 test('OS externa reaberta não recria atalhos removidos do detalhe', async ({ page }) => {
   const { clientName, equipmentDescription, equipmentDetails, order } = await createOrder(page);
   const finalized = await api(page, `/orders/${order.id}/finalize`, 'POST', {
-    result: 'no_fault',
     technical_report: 'Finalização usada para validar os atalhos após reabertura.',
-    items: [],
+    items: [{ description: 'Registro de finalização', quantity: 1, unit_price_cents: 0, warranty_enabled: false }],
     discount_cents: 0,
     photo_ids: [],
   });

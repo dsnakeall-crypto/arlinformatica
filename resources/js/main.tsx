@@ -1334,8 +1334,6 @@ function FinalizationBox({ order, reload }: any) {
       };
     });
   const [open, setOpen] = useState(false),
-    [result, setResult] = useState("repair_completed"),
-    [other, setOther] = useState(""),
     [report, setReport] = useState(""),
     [discount, setDiscount] = useState("0"),
     [items, setItems] = useState<any[]>(seededItems),
@@ -1405,8 +1403,6 @@ function FinalizationBox({ order, reload }: any) {
       await api(`/orders/${order.id}/finalize`, {
         method: "POST",
         body: JSON.stringify({
-          result,
-          result_other: other,
           technical_report: report,
           discount_cents: disc,
           approved_budget_id: sourceBudgetId,
@@ -1457,44 +1453,13 @@ function FinalizationBox({ order, reload }: any) {
       </div>
       {open && (
         <div className="modal">
-          <div className="modal-card">
+          <div className="modal-card arl-finalization">
             <button className="modal-close" onClick={() => setOpen(false)}>
               <X />
             </button>
             <h1>FINALIZAÇÃO DA OS</h1>
             <label className="field">
-              <span>Resultado do atendimento *</span>
-              <select
-                value={result}
-                onChange={(e) => setResult(e.target.value)}
-              >
-                <option value="repair_completed">Reparo realizado</option>
-                <option value="irreparable">
-                  Equipamento sem possibilidade de reparo
-                </option>
-                <option value="client_cancelled">
-                  Cliente desistiu/cancelou
-                </option>
-                <option value="economically_unviable">
-                  Reparo economicamente inviável
-                </option>
-                <option value="no_fault">Sem defeito constatado</option>
-                <option value="other">Outro</option>
-              </select>
-            </label>
-            {result === "other" && (
-              <Field
-                label="Descreva o outro resultado"
-                value={other}
-                onChange={(e: any) => setOther(e.target.value)}
-                required
-              />
-            )}
-            <label className="field">
-              <span>
-                LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO{" "}
-                {result !== "repair_completed" && "*"}
-              </span>
+              <span>LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO</span>
               <textarea
                 spellCheck={true}
                 value={report}
@@ -1551,7 +1516,8 @@ function FinalizationBox({ order, reload }: any) {
                 />
                 <input
                   disabled={!!sourceBudgetId}
-                  value={(x.unit_price_cents / 100).toFixed(2)}
+                  inputMode="decimal"
+                  value={(x.unit_price_cents / 100).toFixed(2).replace(".", ",")}
                   onChange={(e) =>
                     setItems(
                       items.map((a, j) =>
