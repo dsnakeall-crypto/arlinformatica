@@ -44,7 +44,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(form.getByText('ViaCEP indisponível. Preencha o endereço manualmente.', { exact: true })).toBeVisible();
     await form.getByRole('button', { name: 'Salvar cliente' }).click();
     await expect(page.getByTestId('client-modal')).toHaveCount(0);
-    await page.getByPlaceholder(/Nome, telefone/).fill('Cliente E2E');
+    await page.getByRole('searchbox', { name: 'Buscar clientes' }).fill('Cliente E2E');
     const clientCard = page.locator('.client-list article').filter({ hasText: 'Cliente E2E' });
     await expect(clientCard).toBeVisible();
     await expect(clientCard.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', /wa\.me|whatsapp/);

@@ -47,7 +47,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   const form = page.locator('form.os-form');
   await expect(form.getByRole('heading', { name: 'Serviços / Itens da OS' })).toBeVisible();
   await selectNewOrderClient(page, clientResponse.body.id);
-  await expect(form.getByPlaceholder('Buscar por nome, telefone ou CPF/CNPJ')).toHaveValue(clientResponse.body.name);
+  await expect(form.locator('.arl-client-search input[type="search"]')).toHaveValue(clientResponse.body.name);
   await expect(form.locator('.arl-client-results button')).toHaveCount(0);
   await form.getByLabel('Equipamento *').fill('Notebook');
   await form.getByLabel('Fabricante / Modelo / Acessórios').fill('Dell Inspiron 15 + carregador');

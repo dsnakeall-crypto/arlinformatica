@@ -112,14 +112,14 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
   const newOrderForm = page.locator('form.os-form');
   await selectNewOrderClient(page, clientResponse.body.id);
-  await expect(newOrderForm.getByPlaceholder('Buscar por nome, telefone ou CPF/CNPJ')).toHaveValue(clientResponse.body.name);
+  await expect(newOrderForm.locator('.arl-client-search input[type="search"]')).toHaveValue(clientResponse.body.name);
   await expect(newOrderForm.locator('.arl-client-results button')).toHaveCount(0);
   await newOrderForm.getByLabel('Equipamento *').fill('Notebook');
   await newOrderForm.getByLabel('Fabricante / Modelo / Acessórios').fill('Dell Inspiron 15 + carregador');
   await newOrderForm.getByLabel('Problema relatado *').fill('Notebook lento para referência da homologação visual.');
   await newOrderForm.locator('.opening-catalog button').first().click();
   await expect(newOrderForm.locator('.opening-item')).toHaveCount(1);
-  await expect(page.getByPlaceholder('Buscar por nome, telefone ou CPF/CNPJ')).toBeVisible();
+  await expect(newOrderForm.locator('.arl-client-search input[type="search"]')).toBeVisible();
   await expect(page.getByPlaceholder('Pesquisar serviço ou produto')).toBeVisible();
   await expect(page.getByRole('button', { name: /Usar câmera/ })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/03-nova-os-desktop.png', fullPage: true });
