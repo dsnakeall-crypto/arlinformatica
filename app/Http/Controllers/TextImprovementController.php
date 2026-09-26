@@ -30,10 +30,14 @@ PROMPT;
     {
         $data = $request->validate(['text' => ['required', 'string', 'max:3000']]);
         $key = (string) config('openai.api_key');
-        if ($key === '') return response()->json(['message' => 'Não foi possível melhorar o texto agora.'], 503);
+        if ($key === '') {
+            return response()->json(['message' => 'Não foi possível melhorar o texto agora.'], 503);
+        }
 
         $limitKey = 'text-improvement:'.$request->user()->id;
-        if (RateLimiter::tooManyAttempts($limitKey, 20)) return response()->json(['message' => 'Não foi possível melhorar o texto agora.'], 429);
+        if (RateLimiter::tooManyAttempts($limitKey, 20)) {
+            return response()->json(['message' => 'Não foi possível melhorar o texto agora.'], 429);
+        }
         RateLimiter::hit($limitKey, 60);
 
         try {
@@ -51,7 +55,9 @@ PROMPT;
             }
 
             $payload = ['suggestions' => $suggestions];
-            if ($warnings !== []) $payload['warnings'] = $warnings;
+            if ($warnings !== []) {
+                $payload['warnings'] = $warnings;
+            }
 
             return response()->json($payload);
         } catch (\Throwable) {
@@ -90,17 +96,21 @@ PROMPT;
                 ],
             ],
         ]);
-        if (!$response->successful()) throw new \RuntimeException('OpenAI unavailable');
+        if (! $response->successful()) {
+            throw new \RuntimeException('OpenAI unavailable');
+        }
 
         $content = collect($response->json('output', []))->flatMap(fn ($item) => $item['content'] ?? [])->firstWhere('type', 'output_text');
         $json = is_array($content) ? ($content['text'] ?? '') : '';
-        if (!is_string($json) || trim($json) === '') throw new \RuntimeException('Empty response');
+        if (! is_string($json) || trim($json) === '') {
+            throw new \RuntimeException('Empty response');
+        }
 
         $suggestions = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-        if (!is_array($suggestions)
+        if (! is_array($suggestions)
             || array_keys($suggestions) !== ['simples', 'tecnica']
-            || !is_string($suggestions['simples'])
-            || !is_string($suggestions['tecnica'])
+            || ! is_string($suggestions['simples'])
+            || ! is_string($suggestions['tecnica'])
             || trim($suggestions['simples']) === ''
             || trim($suggestions['tecnica']) === '') {
             throw new \RuntimeException('Invalid response');

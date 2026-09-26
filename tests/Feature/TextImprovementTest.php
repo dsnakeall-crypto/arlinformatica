@@ -112,7 +112,9 @@ class TextImprovementTest extends TestCase
         Http::fake(['https://api.openai.com/v1/responses' => Http::response($this->openAiResponse(['simples' => 'Texto simples.', 'tecnica' => 'Texto técnico.']), 200)]);
         $user = $this->user();
         RateLimiter::clear('text-improvement:'.$user->id);
-        for ($i = 0; $i < 20; $i++) $this->actingAs($user)->postJson('/api/text-improvements', ['text' => 'texto'])->assertOk();
+        for ($i = 0; $i < 20; $i++) {
+            $this->actingAs($user)->postJson('/api/text-improvements', ['text' => 'texto'])->assertOk();
+        }
         $this->actingAs($user)->postJson('/api/text-improvements', ['text' => 'texto'])->assertStatus(429)->assertJsonPath('message', 'Não foi possível melhorar o texto agora.');
     }
 }
