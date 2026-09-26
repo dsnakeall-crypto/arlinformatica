@@ -48,7 +48,7 @@ $completedAt = \Carbon\Carbon::parse($finalization['completed_at'])->setTimezone
 
 <div class="full-box problem-box"><div class="section-title">Problema relatado</div><p>{{ $order['reported_problem'] }}</p></div>
 
-<div class="full-box technical-report-box"><div class="section-title">Laudo técnico / descrição do atendimento</div>@if(filled($finalization['technical_report'] ?? null))<p>{!! nl2br(e($finalization['technical_report'])) !!}</p>@endif<p class="result">Resultado: {{ $result_label }}</p></div>
+<div class="full-box technical-report-box"><div class="section-title">Laudo técnico / descrição do atendimento</div>@if(filled($finalization['technical_report'] ?? null))<p>{!! nl2br(e($finalization['technical_report'])) !!}</p>@endif</div>
 
 <div class="full-box services-box"><div class="section-title">Serviços realizados / produtos</div>@if(count($items))<table class="items"><thead><tr><th>Descrição</th><th>Qtd.</th><th>Valor unitário</th><th>Subtotal</th></tr></thead><tbody>@foreach($items as $item)<tr><td><strong>{{ $item['description'] }}</strong>@if(!empty($show_item_warranties) && $item['warranty_snapshot'])<br><span class="item-warranty">Garantia adicional: {{ data_get(json_decode($item['warranty_snapshot'], true), 'term') }} {{ ['days'=>'dias','months'=>'meses','years'=>'anos'][data_get(json_decode($item['warranty_snapshot'], true), 'unit')] }}</span>@endif</td><td>{{ $item['quantity'] }}</td><td>R$ {{ number_format($item['unit_price_cents']/100, 2, ',', '.') }}</td><td>R$ {{ number_format($item['subtotal_cents']/100, 2, ',', '.') }}</td></tr>@endforeach</tbody></table>@else<p><strong>Nenhum serviço realizado</strong></p>@endif</div>
 

@@ -23,7 +23,7 @@ class DocumentPaginationTest extends TestCase
         $this->assertStringContainsString('<div class="full-box problem-box"><div class="section-title">Problema relatado</div>', $html);
         $this->assertStringContainsString('<div class="full-box technical-report-box"><div class="section-title">Laudo técnico / descrição do atendimento</div>', $html);
         $this->assertLessThan(strpos($html, 'technical-report-box'), strpos($html, 'problem-box'));
-        $this->assertStringContainsString('<p class="result">Resultado: Reparo realizado</p>', $html);
+        $this->assertStringNotContainsString('Resultado:', $html);
         $this->assertStringContainsString('class="grand-total-row"', $html);
         $this->assertStringContainsString('background:#FFF3BF;border-top:1px solid #C9001C', $html);
     }
