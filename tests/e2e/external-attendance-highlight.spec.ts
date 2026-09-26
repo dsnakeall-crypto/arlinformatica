@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
-const externalLabel = 'Atendimento Externo';
+const externalLabel = 'Externo';
 
 async function createOrder(page: Page, attendanceType: 'bench' | 'external', suffix: number) {
   const clientName = `Cliente destaque externo ${attendanceType} ${suffix}`;

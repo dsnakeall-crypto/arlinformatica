@@ -138,7 +138,7 @@ function renderOrders(list: HTMLElement, orders: MobileOrder[]) {
     if (order.attendance_type === 'external') {
       const marker = document.createElement('span');
       marker.className = 'arl-external-attendance-marker status-awaiting_payment';
-      marker.textContent = 'Atendimento Externo';
+      marker.textContent = 'Externo';
       markers.append(marker);
     }
     if (reopened) {
