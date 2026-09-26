@@ -75,7 +75,8 @@
   margin-top: 18px;
 }
 .services-create-grid.is-service {
-  grid-template-columns: minmax(234px, 1.485fr) minmax(85px, 0.375fr) auto;
+  grid-template-columns: minmax(0, 480px) minmax(0, 180px) auto;
+  justify-content: start;
 }
 .services-free-price-row {
   margin-top: 14px;
@@ -298,7 +299,7 @@
   gap: 13px;
   align-items: center;
   padding: 13px 18px;
-  border-bottom: 1px solid #f0edef;
+  border-bottom: 1px solid #e9eaec;
   background: #fff;
 }
 .services-row:last-child {
