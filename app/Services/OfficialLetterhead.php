@@ -10,13 +10,13 @@ class OfficialLetterhead
 
     public const HEIGHT = 1491;
 
-    public const SHA256 = '3aaa083837bcd3489df9904ae247cfa360a11f0b5e247ba6a0e322d40e90a70e';
+    public const SHA256 = '68a8da62efcebb7713c0346d5c9946977157e2583263a822ecfb461bac4eda2a';
 
     public static function path(): string
     {
         // This service is also used by a plain PHPUnit test, before Laravel's
         // application container (and therefore resource_path()) is available.
-        $path = dirname(__DIR__, 2).'/resources/images/documents/papel-timbrado.jpg';
+        $path = dirname(__DIR__, 2).'/resources/images/documents/papel-timbrado.png';
         $size = @getimagesize($path);
 
         if ($size === false || $size[0] !== self::WIDTH || $size[1] !== self::HEIGHT || hash_file('sha256', $path) !== self::SHA256) {
