@@ -22,6 +22,7 @@ export default defineConfig({
                 'resources/js/page-isolation.ts',
                 'resources/js/official-icons.ts',
                 'resources/css/brand2026.css',
+                'resources/css/action-buttons.css',
                 'resources/css/theme.css',
                 'resources/js/theme.ts',
             ],

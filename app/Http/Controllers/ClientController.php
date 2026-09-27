@@ -25,6 +25,7 @@ class ClientController extends Controller
                 $document = DocumentValidator::normalize($term);
                 $q->where(function ($query) use ($term, $document) {
                     $query->where('name', 'like', "%{$term}%")
+                        ->orWhere('nickname', 'like', "%{$term}%")
                         ->orWhere('phone', 'like', "%{$term}%");
                     if ($document !== '') {
                         $query->orWhere('document', 'like', "%{$document}%");
@@ -159,7 +160,7 @@ class ClientController extends Controller
 
     private function validated(Request $r, ?int $ignore = null): array
     {
-        $data = $r->validate(['name' => 'required|string|max:255', 'document' => ['required', function ($a, $v, $fail) {
+        $data = $r->validate(['name' => 'required|string|max:255', 'nickname' => 'nullable|string|max:80', 'document' => ['required', function ($a, $v, $fail) {
             if (! DocumentValidator::valid($v)) {
                 $fail('O '.($this->documentLabel(DocumentValidator::normalize($v))).' informado é inválido.');
             }
@@ -172,6 +173,7 @@ class ClientController extends Controller
             'state.size' => 'O estado deve ter 2 letras.',
         ]);
         $data['document'] = DocumentValidator::normalize($data['document']);
+        $data['nickname'] = filled($data['nickname'] ?? null) ? trim((string) $data['nickname']) : null;
         $data['postal_code'] = filled($data['postal_code'] ?? null) ? preg_replace('/\D/', '', $data['postal_code']) : null;
         $existing = Client::withTrashed()
             ->where('document', $data['document'])

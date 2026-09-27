@@ -66,6 +66,7 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
     return Array.isArray(body?.items) && body.items.some((item: any) => Number(item.catalog_id) === Number(service.id) && Number(item.quantity) === 4);
   });
 
+  await root.getByLabel('Laudo Final').fill('Serviço concluído com a quantidade registrada na OS.');
   await root.getByRole('button', { name: 'Concluir', exact: true }).click();
   const saved = await pendingSaveResponse;
   expect(saved.status()).toBe(200);
@@ -83,11 +84,10 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
   await expect(listedItems).toHaveCount(1);
   await expect(listedItems.getByLabel('Descrição do item 1')).toHaveValue(service.name);
   await expect(listedItems.getByLabel(`Quantidade de ${service.name}`)).toHaveValue('4');
-  await expect(listedItems.getByLabel(`Valor unitário de ${service.name}`)).toHaveValue((Number(service.price_cents) / 100).toFixed(2));
+  await expect(listedItems.getByLabel(`Valor unitário de ${service.name}`)).toHaveValue((Number(service.price_cents) / 100).toFixed(2).replace('.', ','));
   await expect(listedItems).toContainText(expectedMoney);
   await expect(modal.locator('.money')).toContainText(`Subtotal ${expectedMoney}`);
   await expect(modal.locator('.money')).toContainText(`Total ${expectedMoney}`);
-
   const finalizeResponse = page.waitForResponse((response) =>
     new URL(response.url()).pathname === `/api/orders/${order.id}/finalize` && response.request().method() === 'POST'
   );

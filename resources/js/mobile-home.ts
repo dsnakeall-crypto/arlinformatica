@@ -5,6 +5,7 @@ export {};
 
 type MobileClient = {
   name: string;
+  nickname?: string | null;
   phone?: string | null;
   street?: string | null;
   number?: string | null;
@@ -120,22 +121,33 @@ function renderOrders(list: HTMLElement, orders: MobileOrder[]) {
     const client = document.createElement('strong');
     client.textContent = order.client.name;
 
+    const nickname = order.client.nickname ? document.createElement('small') : null;
+    if (nickname) {
+      nickname.className = 'arl-mobile-client-nickname';
+      nickname.textContent = order.client.nickname ?? '';
+    }
+
     const meta = document.createElement('span');
     meta.textContent = `OS #${order.number} · ${statusLabels[order.status] || order.status}`;
 
-    info.append(client, meta);
+    info.append(client);
+    if (nickname) info.append(nickname);
+    info.append(meta);
+    const markers = document.createElement('div');
+    markers.className = 'arl-mobile-order-markers';
     if (order.attendance_type === 'external') {
       const marker = document.createElement('span');
       marker.className = 'arl-external-attendance-marker status-awaiting_payment';
-      marker.textContent = 'Atendimento Externo';
-      info.append(marker);
+      marker.textContent = 'Externo';
+      markers.append(marker);
     }
     if (reopened) {
       const marker = document.createElement('span');
       marker.className = 'arl-reopened-marker status-paid';
       marker.textContent = 'Reaberta';
-      info.append(marker);
+      markers.append(marker);
     }
+    if (markers.childElementCount) info.append(markers);
 
     const actions = document.createElement('div');
     actions.className = 'arl-mobile-order-actions';

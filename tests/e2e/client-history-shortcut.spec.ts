@@ -14,6 +14,7 @@ async function openOrder(page: Page, orderNumber: string) {
 
 async function finalizeThroughUi(page: Page, order: { id: number; number: string }, discountCents: number) {
   await openOrder(page, order.number);
+  await page.getByLabel('Laudo Final').fill('Serviço concluído para validação do histórico do cliente.');
   await page.getByRole('button', { name: 'Concluir', exact: true }).click();
   const modal = page.getByRole('dialog', { name: 'FINALIZAÇÃO DA OS' });
   await expect(modal).toBeVisible();

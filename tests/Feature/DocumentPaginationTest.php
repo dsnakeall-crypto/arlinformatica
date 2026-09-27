@@ -17,6 +17,13 @@ class DocumentPaginationTest extends TestCase
         $this->assertStringContainsString('official-letterhead', $html);
         $this->assertStringContainsString('.dates-line{width:100%;table-layout:fixed', $html);
         $this->assertStringContainsString('.two-column{width:calc(100% + 10px);table-layout:fixed', $html);
+        $this->assertSame(1, substr_count($html, '<table class="two-column">'));
+        $this->assertStringContainsString('<p class="equipment-line"><strong>Notebook</strong><span class="equipment-details">carregador e capa cinza</span></p>', $html);
+        $this->assertStringContainsString('<div class="equipment-condition"><div class="section-title">Estado físico na entrada</div>', $html);
+        $this->assertStringContainsString('<div class="full-box problem-box"><div class="section-title">Problema relatado</div>', $html);
+        $this->assertStringContainsString('<div class="full-box technical-report-box"><div class="section-title">Laudo técnico / descrição do atendimento</div>', $html);
+        $this->assertLessThan(strpos($html, 'technical-report-box'), strpos($html, 'problem-box'));
+        $this->assertStringNotContainsString('Resultado:', $html);
         $this->assertStringContainsString('class="grand-total-row"', $html);
         $this->assertStringContainsString('background:#FFF3BF;border-top:1px solid #C9001C', $html);
     }
@@ -61,7 +68,7 @@ class DocumentPaginationTest extends TestCase
                     'state' => 'MG',
                     'postal_code' => '37160000',
                 ],
-                'snapshot' => ['equipment' => ['name' => 'Notebook']],
+                'snapshot' => ['equipment' => ['name' => 'Notebook', 'details' => 'carregador e capa cinza']],
             ],
             'finalization' => [
                 'completed_at' => '2026-09-20 15:00:00',

@@ -30,7 +30,7 @@ class ServiceOrderController extends Controller
             ->select('service_orders.*')
             ->addSelect(DB::raw('COALESCE(payment_status.paid_cents, 0) as paid_cents'))
             ->leftJoinSub($paidByOrder, 'payment_status', 'payment_status.service_order_id', '=', 'service_orders.id')
-            ->with(['client:id,name,phone,street,number,district,city,state', 'closingMarkedBy:id,name'])
+            ->with(['client:id,name,nickname,phone,street,number,district,city,state', 'closingMarkedBy:id,name'])
             ->withExists(['histories as reopened' => fn ($history) => $history->where('from_status', 'completed')->where('to_status', 'analysis')]);
         $requestedStatus = (string) $r->query('status', '');
         $tab = (string) $r->query('tab', 'all');
@@ -58,7 +58,7 @@ class ServiceOrderController extends Controller
             $q->where('status', $requestedStatus);
         }
         if ($search = trim((string) $r->query('q'))) {
-            $q->where(fn ($x) => $x->where('number', 'like', "%$search%")->orWhere('reported_problem', 'like', "%$search%")->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%$search%")->orWhere('phone', 'like', "%$search%")->orWhere('street', 'like', "%$search%")));
+            $q->where(fn ($x) => $x->where('number', 'like', "%$search%")->orWhere('reported_problem', 'like', "%$search%")->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%$search%")->orWhere('nickname', 'like', "%$search%")->orWhere('phone', 'like', "%$search%")->orWhere('street', 'like', "%$search%")));
         }
         match ((string) $r->query('sort', 'recent')) {
             'oldest' => $q->oldest('received_at'),
@@ -94,7 +94,7 @@ class ServiceOrderController extends Controller
         $postSales->catchUp(true);
         $orders = ServiceOrder::query()
             ->select('service_orders.*')
-            ->with(['client:id,name,phone,street,number,district,city,state', 'closingMarkedBy:id,name'])
+            ->with(['client:id,name,nickname,phone,street,number,district,city,state', 'closingMarkedBy:id,name'])
             ->withExists(['histories as reopened' => fn ($history) => $history->where('from_status', 'completed')->where('to_status', 'analysis')])
             ->whereNotIn('status', ['completed', 'interrupted'])
             ->oldest('received_at')
@@ -121,6 +121,7 @@ class ServiceOrderController extends Controller
             'items' => 'array|max:50',
             'items.*.catalog_id' => 'required|integer|exists:service_catalog,id',
             'items.*.quantity' => 'required|integer|min:1|max:999',
+            'items.*.unit_price_cents' => 'nullable|integer|min:0|max:999999999',
         ]);
         $data['equipment_description'] = trim((string) ($data['equipment_description'] ?? '')) ?: null;
         $data['equipment_details'] = trim((string) ($data['equipment_details'] ?? '')) ?: null;

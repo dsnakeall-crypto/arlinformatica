@@ -54,6 +54,8 @@ import ClientsPage from "./clients-page";
 import DatabaseResetPanel from "./database-reset";
 import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
+import TextImprovement from "./text-improvement";
+import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
 import ServiceProductSearch from "./service-product-search";
 import {
   OrderPaymentFigures,
@@ -74,6 +76,7 @@ type Page =
 type Client = {
   id: number;
   name: string;
+  nickname?: string | null;
   document: string;
   phone: string;
   postal_code: string;
@@ -112,6 +115,7 @@ type Catalog = {
   id: number;
   name: string;
   price_cents?: number;
+  free_price?: boolean;
   category?: string;
   warranty_enabled?: boolean;
   warranty_term?: number | null;
@@ -121,6 +125,7 @@ type Catalog = {
 type Errors = Record<string, string[]>;
 const emptyClient = {
   name: "",
+  nickname: "",
   document: "",
   phone: "",
   postal_code: "",
@@ -273,6 +278,13 @@ function ClientForm({ onSaved, onCancel, client }: any) {
           onChange={change}
           error={errors.name?.[0]}
           required
+        />
+        <Field
+          label="Apelido / Referência"
+          name="nickname"
+          value={data.nickname || ""}
+          onChange={change}
+          error={errors.nickname?.[0]}
         />
         <Field
           label="CPF / CNPJ"
@@ -477,8 +489,9 @@ function OrderTable({
                   <td>
                     <span className="order-customer">
                       <strong>{o.client.name}</strong>
+                      {o.client.nickname && <small className="arl-client-nickname">{o.client.nickname}</small>}
                       <span className="arl-order-markers">
-                        {external && <span className="arl-external-attendance-marker status-awaiting_payment">Atendimento Externo</span>}
+                        {external && <span className="arl-external-attendance-marker status-awaiting_payment">Externo</span>}
                         {reopened && <span className="arl-reopened-marker status-paid" aria-label="OS reaberta">Reaberta</span>}
                         {o.closing_reference_cents != null && <span className="arl-closing-marker" aria-label="OS precisa fechar">⚑ Fechar · {money(o.closing_reference_cents)}</span>}
                       </span>
@@ -549,7 +562,7 @@ function OrderTable({
           return (
             <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
               <td><b>#{o.number}</b></td>
-              <td><span className="order-customer"><strong>{o.client.name}</strong><span className="arl-order-markers">{external && <span className="arl-external-attendance-marker status-awaiting_payment">Atendimento Externo</span>}{reopened && <span className="arl-reopened-marker status-paid" aria-label="OS reaberta">Reaberta</span>}{o.closing_reference_cents != null && <span className="arl-closing-marker" aria-label="OS precisa fechar">⚑ Fechar · {money(o.closing_reference_cents)}</span>}</span>{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
+              <td><span className="order-customer"><strong>{o.client.name}</strong>{o.client.nickname && <small className="arl-client-nickname">{o.client.nickname}</small>}<span className="arl-order-markers">{external && <span className="arl-external-attendance-marker status-awaiting_payment">Externo</span>}{reopened && <span className="arl-reopened-marker status-paid" aria-label="OS reaberta">Reaberta</span>}{o.closing_reference_cents != null && <span className="arl-closing-marker" aria-label="OS precisa fechar">⚑ Fechar · {money(o.closing_reference_cents)}</span>}</span>{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
               <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
               <td><label className={`row-status status-${displayStatus}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={displayStatus} disabled={closed && !canSetPaid} onChange={(e) => onStatus(o, e.target.value)}>{awaitingPayment ? <><option value="awaiting_payment">Aguardando PGTO</option>{canSetPaid && <option value="paid">PAGO</option>}</> : displayStatus === "paid" ? <option value="paid">Pago</option> : <><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</>}</select></label></td>
               <td><span className="order-client-report" title={o.reported_problem || undefined}>{o.reported_problem || ""}</span></td>
@@ -981,6 +994,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
               name: item.name,
               quantity,
               price_cents: item.price_cents || 0,
+              free_price: !!item.free_price,
             },
           ];
     });
@@ -1010,6 +1024,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
       const items = orderItems.map((x) => ({
         catalog_id: x.catalog_id,
         quantity: x.quantity,
+        ...(x.free_price ? { unit_price_cents: x.price_cents } : {}),
       }));
       const order = await api("/orders", {
         method: "POST",
@@ -1145,6 +1160,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
                   value={problem}
                   onChange={(e) => setProblem(e.target.value)}
                 />
+                <TextImprovement value={problem} onUse={setProblem} />
               </label>
             </section>
             <section>
@@ -1258,6 +1274,19 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
                       </small>
                     </div>
                     <input
+                      aria-label={`Valor unitário de ${item.name}`}
+                      inputMode="decimal"
+                      disabled={!item.free_price}
+                      value={moneyInputFromCents(item.price_cents)}
+                      onChange={(event) =>
+                        setOrderItems((current) => current.map((row) =>
+                          row.catalog_id === item.catalog_id
+                            ? { ...row, price_cents: centsFromMoneyInput(event.target.value) }
+                            : row,
+                        ))
+                      }
+                    />
+                    <input
                       aria-label={`Quantidade de ${item.name}`}
                       type="number"
                       min="1"
@@ -1332,8 +1361,6 @@ function FinalizationBox({ order, reload }: any) {
       };
     });
   const [open, setOpen] = useState(false),
-    [result, setResult] = useState("repair_completed"),
-    [other, setOther] = useState(""),
     [report, setReport] = useState(""),
     [discount, setDiscount] = useState("0"),
     [items, setItems] = useState<any[]>(seededItems),
@@ -1378,6 +1405,7 @@ function FinalizationBox({ order, reload }: any) {
         description: c.name,
         quantity: 1,
         unit_price_cents: c.price_cents,
+        free_price: !!c.free_price,
         warranty_enabled: !!c.warranty_enabled,
         warranty_term: c.warranty_term,
         warranty_unit: c.warranty_unit,
@@ -1394,17 +1422,37 @@ function FinalizationBox({ order, reload }: any) {
       (n: number, x: any) => n + x.quantity * x.unit_price_cents,
       0,
     ),
-    disc = Math.round(Number(discount.replace(",", ".")) * 100),
+    disc = centsFromMoneyInput(discount),
     total = Math.max(0, subtotal - disc);
+  const openFinalization = () => {
+    const reportField = document.querySelector<HTMLTextAreaElement>(
+      ".arl-od-report textarea",
+    );
+    const currentReport = (reportField?.value || order.final_report || "").trim();
+    if (!currentReport) {
+      setError("Preencha o Laudo Final antes de concluir a OS.");
+      reportField?.focus();
+      reportField?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    setReport(currentReport);
+    setError("");
+    setOpen(true);
+    api(`/orders/${order.id}/budgets`)
+      .then(setBudgets)
+      .catch((e) => setError(e.message));
+  };
   const finish = async () => {
+    if (!report.trim()) {
+      setError("Preencha o Laudo Final antes de concluir a OS.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
       await api(`/orders/${order.id}/finalize`, {
         method: "POST",
         body: JSON.stringify({
-          result,
-          result_other: other,
           technical_report: report,
           discount_cents: disc,
           approved_budget_id: sourceBudgetId,
@@ -1443,62 +1491,20 @@ function FinalizationBox({ order, reload }: any) {
         <button
           id="finalization-action"
           className="primary"
-          onClick={() => {
-            setOpen(true);
-            api(`/orders/${order.id}/budgets`)
-              .then(setBudgets)
-              .catch((e) => setError(e.message));
-          }}
+          onClick={openFinalization}
         >
           Concluir OS
         </button>
       </div>
+      {!open && error && <div className="alert">{error}</div>}
       {open && (
         <div className="modal">
-          <div className="modal-card">
+          <div className="modal-card arl-finalization">
             <button className="modal-close" onClick={() => setOpen(false)}>
               <X />
             </button>
             <h1>FINALIZAÇÃO DA OS</h1>
-            <label className="field">
-              <span>Resultado do atendimento *</span>
-              <select
-                value={result}
-                onChange={(e) => setResult(e.target.value)}
-              >
-                <option value="repair_completed">Reparo realizado</option>
-                <option value="irreparable">
-                  Equipamento sem possibilidade de reparo
-                </option>
-                <option value="client_cancelled">
-                  Cliente desistiu/cancelou
-                </option>
-                <option value="economically_unviable">
-                  Reparo economicamente inviável
-                </option>
-                <option value="no_fault">Sem defeito constatado</option>
-                <option value="other">Outro</option>
-              </select>
-            </label>
-            {result === "other" && (
-              <Field
-                label="Descreva o outro resultado"
-                value={other}
-                onChange={(e: any) => setOther(e.target.value)}
-                required
-              />
-            )}
-            <label className="field">
-              <span>
-                LAUDO TÉCNICO / DESCRIÇÃO DO ATENDIMENTO{" "}
-                {result !== "repair_completed" && "*"}
-              </span>
-              <textarea
-                spellCheck={true}
-                value={report}
-                onChange={(e) => setReport(e.target.value)}
-              />
-            </label>
+            {order.closing_reference_cents != null && <div className="notice arl-closing-reminder">Valor combinado em campo: <strong>{money(order.closing_reference_cents)}</strong></div>}
             <div className="section-title">
               <h2>Itens</h2>
               {approved && (
@@ -1549,16 +1555,15 @@ function FinalizationBox({ order, reload }: any) {
                 />
                 <input
                   disabled={!!sourceBudgetId}
-                  value={(x.unit_price_cents / 100).toFixed(2)}
+                  inputMode="decimal"
+                  value={moneyInputFromCents(x.unit_price_cents)}
                   onChange={(e) =>
                     setItems(
                       items.map((a, j) =>
                         j === i
                           ? {
                               ...a,
-                              unit_price_cents: Math.round(
-                                +e.target.value.replace(",", ".") * 100,
-                              ),
+                              unit_price_cents: centsFromMoneyInput(e.target.value),
                             }
                           : a,
                       ),
@@ -1585,7 +1590,7 @@ function FinalizationBox({ order, reload }: any) {
                 Desconto (R$)
                 <input
                   value={discount}
-                  onChange={(e) => setDiscount(e.target.value)}
+                  onChange={(e) => setDiscount(maskMoneyInput(e.target.value))}
                 />
               </label>
               <strong>Total R$ {(total / 100).toFixed(2)}</strong>
@@ -1862,7 +1867,7 @@ function PaymentBox({ order }: any) {
     api(`/orders/${order.id}/payments`).then((x: any) => {
       setSummary(x);
       setAmount(
-        ((x.collectible_balance_cents || 0) / 100).toFixed(2).replace(".", ","),
+        moneyInputFromCents(x.collectible_balance_cents || 0),
       );
     });
   useEffect(() => {
@@ -1871,7 +1876,7 @@ function PaymentBox({ order }: any) {
   const total = summary?.total_cents ?? (order.total_cents || 0),
     paid = summary?.paid_cents ?? 0,
     balance = summary?.collectible_balance_cents ?? Math.max(0, total - paid);
-  const entered = Math.round(Number(amount.replace(",", ".")) * 100);
+  const entered = centsFromMoneyInput(amount);
   const remainingAfter = Number.isFinite(entered)
     ? Math.max(0, balance - entered)
     : balance;
@@ -1887,12 +1892,12 @@ function PaymentBox({ order }: any) {
       }) as Record<string, string>
     )[value] || value;
   const openPayment = () => {
-    setAmount((balance / 100).toFixed(2).replace(".", ","));
+    setAmount(moneyInputFromCents(balance));
     setError("");
     setOpen(true);
   };
   const save = async () => {
-    const cents = Math.round(Number(amount.replace(",", ".")) * 100);
+    const cents = centsFromMoneyInput(amount);
     if (!Number.isFinite(cents) || cents <= 0) {
       setError("Informe um valor recebido válido.");
       return;
@@ -1987,7 +1992,7 @@ function PaymentBox({ order }: any) {
             <Field
               label="Valor recebido (R$)"
               value={amount}
-              onChange={(e: any) => setAmount(e.target.value)}
+              onChange={(e: any) => setAmount(maskMoneyInput(e.target.value))}
               required
             />
             <label className="field">
@@ -2030,7 +2035,7 @@ function PaymentBox({ order }: any) {
   );
 }
 function QuickEntry({ open, onClose, onSaved }: any) {
-  const [value, setValue] = useState(""),
+  const [value, setValue] = useState("0,00"),
     [description, setDescription] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -2042,11 +2047,11 @@ function QuickEntry({ open, onClose, onSaved }: any) {
       await api("/finance/quick-entry", {
         method: "POST",
         body: JSON.stringify({
-          amount_cents: Math.round(Number(value.replace(",", ".")) * 100),
+          amount_cents: centsFromMoneyInput(value),
           description: description.trim() || null,
         }),
       });
-      setValue("");
+      setValue("0,00");
       setDescription("");
       onClose();
       onSaved?.();
@@ -2075,7 +2080,7 @@ function QuickEntry({ open, onClose, onSaved }: any) {
         <Field
           label="Valor recebido (R$)"
           value={value}
-          onChange={(e: any) => setValue(e.target.value)}
+          onChange={(e: any) => setValue(maskMoneyInput(e.target.value))}
           required
         />
         {error && <div className="alert">{error}</div>}
@@ -2090,7 +2095,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
   const [spentOn, setSpentOn] = useState(""),
     [category, setCategory] = useState("merchandise_purchase"),
     [description, setDescription] = useState(""),
-    [value, setValue] = useState(""),
+    [value, setValue] = useState("0,00"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   useEffect(() => {
@@ -2104,7 +2109,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
     setCategory(item?.category || "merchandise_purchase");
     setDescription(item?.description || "");
     setValue(
-      item ? (item.amount_cents / 100).toFixed(2).replace(".", ",") : "",
+      moneyInputFromCents(item?.amount_cents || 0),
     );
     setError("");
   }, [open, item]);
@@ -2119,7 +2124,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
           spent_on: spentOn,
           category,
           description: description.trim(),
-          amount_cents: Math.round(Number(value.replace(",", ".")) * 100),
+          amount_cents: centsFromMoneyInput(value),
         }),
       });
       onClose();
@@ -2173,7 +2178,7 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
         <Field
           label="Valor (R$)"
           value={value}
-          onChange={(e: any) => setValue(e.target.value)}
+          onChange={(e: any) => setValue(maskMoneyInput(e.target.value))}
           required
         />
         {error && <div className="alert">{error}</div>}
@@ -2917,6 +2922,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
                       <b>
                         #{o.number} · {o.client.name}
                       </b>
+                      {o.client.nickname && <small className="arl-client-nickname">{o.client.nickname}</small>}
                       <small>{o.reported_problem}</small>
                     </button>
                   ))}
@@ -3173,6 +3179,7 @@ function OrderView({ id, back }: any) {
         <section>
           <h2>Cliente</h2>
           <b>{o.client.name}</b>
+          {o.client.nickname && <small className="arl-client-nickname">{o.client.nickname}</small>}
           <p>
             {masks.document(o.client.document)} · {masks.phone(o.client.phone)}
           </p>
@@ -3910,7 +3917,7 @@ function BudgetBox({ order }: any) {
     [proposal, setProposal] = useState(""),
     [description, setDescription] = useState(""),
     [quantity, setQuantity] = useState(1),
-    [price, setPrice] = useState("0"),
+    [price, setPrice] = useState("0,00"),
     [warranty, setWarranty] = useState(false),
     [term, setTerm] = useState(30),
     [unit, setUnit] = useState("days");
@@ -3933,7 +3940,7 @@ function BudgetBox({ order }: any) {
           {
             description,
             quantity,
-            unit_price_cents: Math.round(Number(price.replace(",", ".")) * 100),
+            unit_price_cents: centsFromMoneyInput(price),
             warranty_enabled: warranty,
             warranty_term: warranty ? term : null,
             warranty_unit: warranty ? unit : null,
@@ -3999,7 +4006,7 @@ function BudgetBox({ order }: any) {
             <Field
               label="Valor unitário"
               value={price}
-              onChange={(e: any) => setPrice(e.target.value)}
+              onChange={(e: any) => setPrice(maskMoneyInput(e.target.value))}
               required
             />
             <label className="field">
@@ -4470,7 +4477,7 @@ function PushSettings() {
 function CatalogAdmin({ catalog, title }: any) {
   const [items, setItems] = useState<any[]>([]),
     [name, setName] = useState(""),
-    [price, setPrice] = useState("0"),
+    [price, setPrice] = useState("0,00"),
     [category, setCategory] = useState("service"),
     [warranty, setWarranty] = useState(false),
     [term, setTerm] = useState(30),
@@ -4489,7 +4496,7 @@ function CatalogAdmin({ catalog, title }: any) {
         active: true,
         ...(service
           ? {
-              price_cents: Math.round(Number(price.replace(",", ".")) * 100),
+              price_cents: centsFromMoneyInput(price),
               category,
               warranty_enabled: warranty,
               warranty_term: warranty ? term : null,
@@ -4499,7 +4506,7 @@ function CatalogAdmin({ catalog, title }: any) {
       }),
     });
     setName("");
-    setPrice("0");
+    setPrice("0,00");
     setWarranty(false);
     setTerm(30);
     setUnit("days");
@@ -4511,9 +4518,7 @@ function CatalogAdmin({ catalog, title }: any) {
       body: JSON.stringify({
         name: edit.name,
         category: edit.category,
-        price_cents: Math.round(
-          Number(String(edit.price).replace(",", ".")) * 100,
-        ),
+        price_cents: centsFromMoneyInput(String(edit.price)),
         warranty_enabled: !!edit.warranty_enabled,
         warranty_term: edit.warranty_enabled ? +edit.warranty_term : null,
         warranty_unit: edit.warranty_enabled ? edit.warranty_unit : null,
@@ -4539,7 +4544,7 @@ function CatalogAdmin({ catalog, title }: any) {
             <input
               aria-label="Valor em R$"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={(e) => setPrice(maskMoneyInput(e.target.value))}
               placeholder="Valor em R$"
             />
             <label className="field">

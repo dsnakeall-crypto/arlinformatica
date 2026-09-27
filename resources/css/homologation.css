@@ -88,7 +88,7 @@
 
 .opening-item {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 72px;
+    grid-template-columns: minmax(0, 1fr) 92px 72px;
     gap: 8px;
     align-items: center;
     padding: 11px;
@@ -308,7 +308,7 @@
 
 @media (min-width: 720px) {
     .opening-item {
-        grid-template-columns: minmax(0, 1fr) 80px auto;
+        grid-template-columns: minmax(0, 1fr) 100px 80px auto;
     }
 
     .opening-item button {

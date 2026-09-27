@@ -108,5 +108,6 @@ class FinalShareTest extends TestCase
     {
         $html = view('documents.final', ['company' => [], 'order' => ['number' => '0000001', 'received_at' => now(), 'attendance_type' => 'bench', 'reported_problem' => 'Falha', 'intake_condition' => null, 'client' => ['name' => 'Cliente', 'document' => '52998224725', 'phone' => '35999999999', 'street' => 'Rua A', 'number' => '1', 'district' => '', 'city' => 'Cidade', 'state' => 'MG']], 'finalization' => ['completed_at' => now(), 'technical_report' => 'Laudo', 'subtotal_cents' => 1000, 'discount_cents' => 0, 'total_cents' => 1000], 'photos' => [], 'items' => [], 'result_label' => 'Reparo realizado', 'technical_signature' => null])->render();
         $this->assertStringContainsString('Proteção de Dados: Os dados deste documento são tratados pela ARL Informática', $html);
+        $this->assertStringNotContainsString('Resultado:', $html);
     }
 }

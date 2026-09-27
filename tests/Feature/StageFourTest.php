@@ -33,7 +33,8 @@ class StageFourTest extends TestCase
     public function test_direct_completion_is_rejected_and_completed_order_can_be_soft_deleted_with_history_preserved(): void
     {
         $this->actingAs($this->user)->patchJson("/api/orders/{$this->order->id}/status", ['status' => 'completed'])->assertUnprocessable();
-        $this->finalize(['result' => 'no_fault', 'technical_report' => 'Nenhum defeito foi constatado.', 'items' => [], 'discount_cents' => 0])->assertCreated()->assertJsonPath('order.status', 'completed');
+        $this->finalize(['technical_report' => 'Reparo concluído.', 'items' => [['description' => 'Reparo', 'quantity' => 1, 'unit_price_cents' => 100, 'warranty_enabled' => false]], 'discount_cents' => 0])
+            ->assertCreated()->assertJsonPath('order.status', 'completed')->assertJsonPath('finalization.result', 'repair_completed');
 
         $this->actingAs($this->user)
             ->deleteJson("/api/orders/{$this->order->id}")
@@ -66,6 +67,16 @@ class StageFourTest extends TestCase
     public function test_discount_cannot_make_total_negative(): void
     {
         $this->finalize(['result' => 'repair_completed', 'technical_report' => 'Reparo', 'discount_cents' => 101, 'items' => [['description' => 'Serviço', 'quantity' => 1, 'unit_price_cents' => 100, 'warranty_enabled' => false]]])->assertUnprocessable()->assertJsonValidationErrors('discount_cents');
+    }
+
+    public function test_finalization_requires_a_non_blank_technical_report(): void
+    {
+        $payload = ['discount_cents' => 0, 'items' => [['description' => 'Serviço', 'quantity' => 1, 'unit_price_cents' => 100, 'warranty_enabled' => false]]];
+
+        $this->finalize($payload)->assertUnprocessable()->assertJsonValidationErrors('technical_report');
+        $this->finalize([...$payload, 'technical_report' => '   '])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.technical_report.0', 'Preencha o laudo para concluir a OS.');
     }
 
     public function test_finalization_can_register_full_payment_and_requires_one_of_the_supported_methods(): void

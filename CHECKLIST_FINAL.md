@@ -173,3 +173,41 @@
 - [OK] Sintaxe PHP e Pint nos arquivos PHP alterados.
 - [PENDENTE] Testes PHP e E2E, por instrução expressa deste bloco.
 - [PENDENTE] Push, por instrução expressa deste bloco.
+
+# Checklist final — lote de botões, finalização, valores e preço livre
+
+- [OK] Botões de ação e conclusão receberam o alinhamento e o destaque solicitados.
+- [OK] Nomes e apelidos das listas foram centralizados e equilibrados.
+- [OK] Finalização exige laudo, oferece melhoria por IA e não exibe Resultado do atendimento no formulário ou PDF.
+- [OK] Valor combinado bloqueia divergências e pode ser atualizado com auditoria.
+- [OK] Mensagem de validade do link informa 30 dias.
+- [OK] Campos monetários usam entrada contínua com duas casas decimais.
+- [OK] Serviços podem ser cadastrados com preço livre; preço fixo é imposto pelo servidor e preço livre exige valor positivo na OS.
+- [OK] Migração adiciona somente a coluna booleana de configuração solicitada, sem remover ou renomear dados.
+
+## Validação executada
+
+- [OK] TypeScript typecheck, sintaxe PHP e Pint dos arquivos PHP alterados.
+- [PENDENTE] Testes PHP e E2E, por instrução expressa deste lote.
+- [PENDENTE] Push, por instrução expressa deste lote.
+
+## Ajustes pós-lote de preço livre
+
+- [OK] A finalização permite editar o valor de qualquer item e preserva a exigência de valor positivo para serviço de preço livre.
+- [OK] Nova OS envia valor unitário somente para serviços de preço livre.
+- [OK] Limpeza da marcação de valor combinado é testada com total correspondente; divergência permanece coberta separadamente.
+- [OK] Fluxos E2E de conclusão preenchem o laudo obrigatório antes do envio.
+
+## Correções após teste do usuário
+
+- [OK] Cadastro de serviço mantém Nome, Valor e Adicionar na linha principal, com Preço livre em linha própria.
+- [OK] Apelido e etiquetas permanecem centralizados e as etiquetas de Ordens usam disposição horizontal com quebra responsiva.
+- [OK] Serviço de preço livre permite editar e salvar o valor na ficha da OS, preservando o valor até a finalização.
+- [OK] Laudo Final é preenchido e melhorado somente na ficha; texto vazio bloqueia e focaliza o campo antes de abrir a finalização.
+- [OK] Finalização usa o texto atual da ficha, inclusive antes de o usuário acionar Salvar Laudo Final.
+
+### Validação executada
+
+- [OK] TypeScript typecheck.
+- [PENDENTE] Testes PHP e E2E, por instrução expressa deste lote.
+- [PENDENTE] Push, por instrução expressa deste lote.

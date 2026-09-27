@@ -10,7 +10,7 @@ class OfficialLetterhead
 
     public const HEIGHT = 1491;
 
-    public const SHA256 = '3aaa083837bcd3489df9904ae247cfa360a11f0b5e247ba6a0e322d40e90a70e';
+    public const SHA256 = '47e3b260bd34547d486ddf54af777e085ff7ed73448f8b5985e5e4c1476b8336';
 
     public static function path(): string
     {

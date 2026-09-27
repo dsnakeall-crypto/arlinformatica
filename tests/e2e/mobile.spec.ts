@@ -102,6 +102,20 @@ test('painel de notificações fecha fora e com Esc, mas permanece aberto ao int
   await expect(panel).toHaveCount(0);
 });
 
+test('Nova OS Mobile mostra sugestão de melhoria sem trocar o relato automaticamente', async ({ page }) => {
+  await page.route('**/api/text-improvements', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ suggestions: { simples: 'Relato simples.', tecnica: 'Relato técnico.' } }) }));
+  await login(page);
+  await page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).getByRole('button', { name: 'Nova OS', exact: true }).click();
+  const problem = page.getByLabel('Problema relatado *');
+  await problem.fill('relato original');
+  const tools = problem.locator('..');
+  await tools.getByRole('button', { name: 'Melhorar texto' }).click();
+  await expect(tools.getByText('Relato simples.', { exact: true })).toBeVisible();
+  await expect(tools.getByText('Relato técnico.', { exact: true })).toBeVisible();
+  await tools.getByRole('button', { name: 'Manter o meu' }).click();
+  await expect(problem).toHaveValue('relato original');
+});
+
 test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Status ou Finalizar', async ({ page }) => {
   await login(page);
   const client = await api(page, '/clients', 'POST', {

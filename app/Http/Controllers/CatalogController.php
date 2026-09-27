@@ -53,7 +53,7 @@ class CatalogController extends Controller
         abort_unless(in_array($catalog, ['equipment', 'manufacturers', 'services', 'products'], true), 404);
         $rules = ['name' => ['required', 'string', 'max:255', Rule::unique($table)], 'active' => 'boolean'];
         if (in_array($catalog, ['services', 'products'], true)) {
-            $rules += ['price_cents' => 'required|integer|min:0', 'warranty_enabled' => 'boolean', 'warranty_term' => 'nullable|integer|min:1', 'warranty_unit' => 'nullable|in:days,months,years'];
+            $rules += ['price_cents' => 'required|integer|min:0', 'free_price' => 'sometimes|boolean', 'warranty_enabled' => 'boolean', 'warranty_term' => 'nullable|integer|min:1', 'warranty_unit' => 'nullable|in:days,months,years'];
         }
         if ($catalog === 'products') {
             $rules['stock_quantity'] = 'required|integer|min:0|max:4294967295';
@@ -63,6 +63,7 @@ class CatalogController extends Controller
         $this->validateWarranty($data, $catalog);
         if (in_array($catalog, ['services', 'products'], true)) {
             $data['category'] = $catalog === 'products' ? 'product' : 'service';
+            $data['free_price'] = $catalog === 'services' && (bool) ($data['free_price'] ?? false);
         }
         $initialStock = $catalog === 'products' ? (int) ($data['stock_quantity'] ?? 0) : 0;
         if ($catalog === 'products') {
@@ -121,10 +122,13 @@ class CatalogController extends Controller
             $recordQuery->where('category', 'product');
         }
         abort_unless($recordQuery->exists(), 404);
-        $rules = ['name' => ['sometimes', 'string', 'max:255', Rule::unique($table)->ignore($id)], 'active' => 'sometimes|boolean', 'price_cents' => 'sometimes|integer|min:0'];
+        $rules = ['name' => ['sometimes', 'string', 'max:255', Rule::unique($table)->ignore($id)], 'active' => 'sometimes|boolean', 'price_cents' => 'sometimes|integer|min:0', 'free_price' => 'sometimes|boolean'];
         $this->addWarrantyRules($rules, $catalog, true);
         $data = $request->validate($rules);
         $this->validateWarranty($data, $catalog);
+        if ($catalog === 'products') {
+            $data['free_price'] = false;
+        }
         $before = DB::table($table)->find($id);
         DB::table($table)->where('id', $id)->update($data + ['updated_at' => now()]);
         $record = DB::table($table)->find($id);
