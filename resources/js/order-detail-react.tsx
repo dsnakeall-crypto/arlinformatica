@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   Camera,
   Check,
+  Eye,
   FileText,
   History,
   MapPin,
@@ -2236,7 +2237,11 @@ export default function OrderDetailPage({
     [camera, setCamera] = useState(false),
     [pdfActionsOpen, setPdfActionsOpen] = useState(false),
     [finalLinkStatus, setFinalLinkStatus] = useState<any>(null),
-    [finalLinkBusy, setFinalLinkBusy] = useState(false);
+    [finalLinkBusy, setFinalLinkBusy] = useState(false),
+    [systemPasswordOpen, setSystemPasswordOpen] = useState(false),
+    [systemPassword, setSystemPassword] = useState(""),
+    [systemPasswordBusy, setSystemPasswordBusy] = useState(false),
+    [systemPasswordError, setSystemPasswordError] = useState("");
   const fileInput = useRef<HTMLInputElement>(null),
     finalReportInput = useRef<HTMLTextAreaElement>(null),
     pendingServicesSave = useRef<null | (() => Promise<any>)>(null),
@@ -2379,6 +2384,48 @@ export default function OrderDetailPage({
     }
   };
   const canAdminister = ["Master", "Administrador"].includes(role);
+  const openSystemPassword = async () => {
+    setSystemPasswordOpen(true);
+    setSystemPassword("");
+    setSystemPasswordError("");
+    setSystemPasswordBusy(true);
+    try {
+      const result = await api(`/orders/${order.id}/system-password`);
+      setSystemPassword(result.password || "");
+    } catch (reason: any) {
+      setSystemPasswordError(
+        reason.message || "Não foi possível consultar a senha do sistema.",
+      );
+    } finally {
+      setSystemPasswordBusy(false);
+    }
+  };
+  const systemPasswordDialog = systemPasswordOpen ? (
+    <div className="modal">
+      <section
+        className="modal-card arl-system-password-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Senha do sistema da OS #${order.number}`}
+      >
+        <h2>Senha do sistema</h2>
+        {systemPasswordBusy ? (
+          <p>Consultando…</p>
+        ) : systemPasswordError ? (
+          <div className="alert">{systemPasswordError}</div>
+        ) : (
+          <div className="arl-system-password-value" aria-label="Senha cadastrada">
+            {systemPassword}
+          </div>
+        )}
+        <div className="actions">
+          <button type="button" onClick={() => setSystemPasswordOpen(false)}>
+            Fechar
+          </button>
+        </div>
+      </section>
+    </div>
+  ) : null;
   const openClosingReference = () => {
     setClosingValue(
       order.closing_reference_cents != null
@@ -2648,7 +2695,20 @@ export default function OrderDetailPage({
           </button>
           <div>
             <span>ORDEM DE SERVIÇO</span>
-            <h1>OS #{order.number}</h1>
+            <div className="arl-order-number-row">
+              <h1>OS #{order.number}</h1>
+              {canAdminister && order.has_system_password && (
+                <button
+                  type="button"
+                  className="arl-system-password-view"
+                  aria-label="Ver senha do sistema"
+                  title="Ver senha do sistema"
+                  onClick={() => void openSystemPassword()}
+                >
+                  <Eye aria-hidden="true" />
+                </button>
+              )}
+            </div>
             <span className="arl-order-markers">
               {reopened && (
                 <span className="arl-reopened-marker status-paid arl-order-reopened-marker">
@@ -2837,6 +2897,7 @@ export default function OrderDetailPage({
           </div>
         )}
         {closingDialog}
+        {systemPasswordDialog}
       </div>
     );
   const stages = [
@@ -2878,7 +2939,20 @@ export default function OrderDetailPage({
           </button>
           <div className="arl-order-header-identity">
             <span className="arl-eyebrow">ORDEM DE SERVIÇO</span>
-            <h1>OS #{order.number}</h1>
+            <div className="arl-order-number-row">
+              <h1>OS #{order.number}</h1>
+              {canAdminister && order.has_system_password && (
+                <button
+                  type="button"
+                  className="arl-system-password-view"
+                  aria-label="Ver senha do sistema"
+                  title="Ver senha do sistema"
+                  onClick={() => void openSystemPassword()}
+                >
+                  <Eye aria-hidden="true" />
+                </button>
+              )}
+            </div>
             <span className="arl-order-markers">
               {reopened && (
                 <span className="arl-reopened-marker status-paid arl-order-reopened-marker">
@@ -3362,6 +3436,7 @@ export default function OrderDetailPage({
         />
       )}
       {closingDialog}
+      {systemPasswordDialog}
       {order.status === "completed" && (
         <FinalShareCard
           order={order}

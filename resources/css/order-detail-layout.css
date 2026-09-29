@@ -7,6 +7,12 @@
 [data-arl-order-detail-react="1"] .arl-order-header-identity{display:grid;gap:2px;min-width:0}
 [data-arl-order-detail-react="1"] .arl-order-header-identity .arl-eyebrow{margin:0 0 3px}
 [data-arl-order-detail-react="1"] .arl-order-header-identity h1{margin:0;font-size:24px;letter-spacing:-.5px;color:var(--arl-ink)}
+[data-arl-order-detail-react="1"] .arl-order-number-row{display:flex;align-items:center;gap:8px;min-width:0}
+[data-arl-order-detail-react="1"] .arl-system-password-view{width:30px;height:30px;display:grid;place-items:center;flex:0 0 auto;border:1px solid #ded9dc;border-radius:50%;background:#fff;color:var(--arl-primary-dark);cursor:pointer}
+[data-arl-order-detail-react="1"] .arl-system-password-view:hover{background:var(--arl-primary-soft)}
+[data-arl-order-detail-react="1"] .arl-system-password-view svg{width:16px;height:16px}
+[data-arl-order-detail-react="1"] .arl-system-password-dialog{width:min(420px,calc(100vw - 28px))}
+[data-arl-order-detail-react="1"] .arl-system-password-value{margin-top:12px;padding:14px;border:1px solid #ded9dc;border-radius:10px;background:#f7f7f8;color:var(--arl-ink);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:15px;font-weight:700;overflow-wrap:anywhere;white-space:pre-wrap}
 [data-arl-order-detail-react="1"] .arl-order-header-meta{display:flex;gap:8px 12px;align-items:baseline;flex-wrap:wrap;min-width:0;font-size:12px}
 [data-arl-order-detail-react="1"] .arl-order-header-meta strong{color:var(--arl-ink)}
 [data-arl-order-detail-react="1"] .arl-order-header-meta span{min-width:0;color:var(--arl-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

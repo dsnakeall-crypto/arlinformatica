@@ -111,6 +111,8 @@ class ServiceOrderController extends Controller
             'manufacturer_id' => 'nullable|exists:manufacturers,id',
             'equipment_description' => 'nullable|string|max:500',
             'equipment_details' => 'nullable|string|max:500',
+            'system_password' => 'nullable|string|max:500',
+            'system_password_absent' => 'required|boolean',
             'attendance_type' => 'required|in:bench,external',
             'reported_problem' => 'required|string|max:10000',
             'intake_condition' => 'nullable|string|max:10000',
@@ -125,6 +127,11 @@ class ServiceOrderController extends Controller
         ]);
         $data['equipment_description'] = trim((string) ($data['equipment_description'] ?? '')) ?: null;
         $data['equipment_details'] = trim((string) ($data['equipment_details'] ?? '')) ?: null;
+        if (! $data['system_password_absent'] && trim((string) ($data['system_password'] ?? '')) === '') {
+            throw ValidationException::withMessages(['system_password' => 'Informe a senha ou marque Sem senha']);
+        }
+        $data['system_password'] = $data['system_password_absent'] ? null : $data['system_password'];
+        unset($data['system_password_absent']);
         $manualEquipment = DB::table('equipment_types')->where('id', $data['equipment_type_id'])->value('name') === 'Informado manualmente';
         if ($manualEquipment && blank($data['equipment_description'])) {
             abort(422, 'Descreva o equipamento informado manualmente.');
@@ -170,6 +177,7 @@ class ServiceOrderController extends Controller
             $payload['client'] = $order->snapshot->client;
         }
         $payload['display_status'] = $this->displayStatus($order, $this->paidCentsForOrder($order));
+        $payload['has_system_password'] = $order->system_password !== null;
         $payload['reopened'] = $order->histories->contains(fn ($history) => $history->from_status === 'completed' && $history->to_status === 'analysis');
         $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;
         $payload['interruption_work_done'] = $order->status === 'interrupted' ? $order->interruption_work_done : null;
@@ -361,6 +369,7 @@ class ServiceOrderController extends Controller
                     'result' => null,
                     'technical_report' => $reason,
                     'interruption_work_done' => $workDone,
+                    'system_password' => null,
                     'subtotal_cents' => 0,
                     'discount_cents' => 0,
                     'total_cents' => 0,

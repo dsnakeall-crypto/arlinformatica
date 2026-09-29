@@ -65,6 +65,7 @@ class ServiceOrderAuditController extends Controller
             'service_order.reopened' => 'Reabertura da OS',
             'service_order.final_pdf_replaced' => 'Substituição de PDF final',
             'service_order.interrupted' => 'Interrupção e fechamento da OS',
+            'service_order.system_password_viewed' => 'Senha do sistema visualizada',
             'service_order.deleted' => 'Remoção da OS',
             'service_order.refund_created' => 'Estorno da OS',
             default => 'Registro da OS',
@@ -89,6 +90,9 @@ class ServiceOrderAuditController extends Controller
                 'Motivo: '.$this->text($after['reason'] ?? null),
                 'O que já foi feito: '.$this->text($after['work_done'] ?? null),
                 'OS fechada sem lançamento financeiro; serviços removidos e total zerado.',
+            ],
+            'service_order.system_password_viewed' => [
+                'Senha visualizada por '.$this->text($after['viewer'] ?? null).'.',
             ],
             'service_order.deleted' => ['OS removida da operação; histórico financeiro, auditoria e documentos foram preservados.'],
             'service_order.refund_created' => [

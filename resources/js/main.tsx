@@ -919,6 +919,8 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
     [intakeCondition, setIntakeCondition] = useState(""),
     [equipmentDescription, setEquipmentDescription] = useState(""),
     [equipmentDetails, setEquipmentDetails] = useState(""),
+    [systemPassword, setSystemPassword] = useState(""),
+    [withoutSystemPassword, setWithoutSystemPassword] = useState(false),
     [photos, setPhotos] = useState<File[]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -1020,6 +1022,8 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
         throw new Error(
           "Não foi possível carregar o tipo interno de equipamento.",
         );
+      if (!withoutSystemPassword && !systemPassword.trim())
+        throw new Error("Informe a senha ou marque Sem senha");
       const checklist: any[] = [];
       const items = orderItems.map((x) => ({
         catalog_id: x.catalog_id,
@@ -1034,6 +1038,8 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
           manufacturer_id: null,
           equipment_description: equipmentDescription.trim(),
           equipment_details: equipmentDetails.trim() || null,
+          system_password: withoutSystemPassword ? null : systemPassword,
+          system_password_absent: withoutSystemPassword,
           attendance_type: attendance,
           reported_problem: problem,
           intake_condition: intakeCondition,
@@ -1133,6 +1139,31 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
                   placeholder="Ex.: Dell Inspiron 15 + carregador"
                 />
               </label>
+              <div className="arl-system-password-field">
+                <label className="field">
+                  <span>Senha do sistema *</span>
+                  <input
+                    type="password"
+                    maxLength={500}
+                    autoComplete="new-password"
+                    disabled={withoutSystemPassword}
+                    value={systemPassword}
+                    onChange={(e) => setSystemPassword(e.target.value)}
+                    aria-label="Senha do sistema"
+                  />
+                </label>
+                <label className="arl-system-password-absent">
+                  <input
+                    type="checkbox"
+                    checked={withoutSystemPassword}
+                    onChange={(e) => {
+                      setWithoutSystemPassword(e.target.checked);
+                      if (e.target.checked) setSystemPassword("");
+                    }}
+                  />
+                  <span>Sem senha</span>
+                </label>
+              </div>
               <p className="arl-manual-equipment-help">
                 Descreva o equipamento e, se necessário, complemente com fabricante, modelo e acessórios.
               </p>

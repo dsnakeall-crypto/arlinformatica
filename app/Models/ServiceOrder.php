@@ -13,11 +13,13 @@ class ServiceOrder extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['number', 'client_id', 'equipment_type_id', 'manufacturer_id', 'equipment_description', 'equipment_details', 'attendance_type', 'status', 'reported_problem', 'intake_condition', 'received_at', 'completed_at', 'result', 'technical_report', 'interruption_work_done', 'final_report', 'subtotal_cents', 'discount_cents', 'total_cents', 'closing_reference_cents', 'closing_marked_by', 'closing_marked_at', 'created_by'];
+    protected $fillable = ['number', 'client_id', 'equipment_type_id', 'manufacturer_id', 'equipment_description', 'equipment_details', 'system_password', 'attendance_type', 'status', 'reported_problem', 'intake_condition', 'received_at', 'completed_at', 'result', 'technical_report', 'interruption_work_done', 'final_report', 'subtotal_cents', 'discount_cents', 'total_cents', 'closing_reference_cents', 'closing_marked_by', 'closing_marked_at', 'created_by'];
+
+    protected $hidden = ['system_password'];
 
     protected function casts(): array
     {
-        return ['received_at' => 'datetime', 'completed_at' => 'datetime', 'closing_marked_at' => 'datetime', 'archived' => 'boolean'];
+        return ['received_at' => 'datetime', 'completed_at' => 'datetime', 'closing_marked_at' => 'datetime', 'archived' => 'boolean', 'system_password' => 'encrypted'];
     }
 
     public function client(): BelongsTo

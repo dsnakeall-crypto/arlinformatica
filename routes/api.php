@@ -19,6 +19,7 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\ServiceOrderAuditController;
 use App\Http\Controllers\ServiceOrderController;
 use App\Http\Controllers\ServiceOrderMaintenanceController;
+use App\Http\Controllers\ServiceOrderPasswordController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\TechnicalReportController;
@@ -75,6 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/desk', [ServiceOrderController::class, 'desk']);
     Route::post('/orders', [ServiceOrderController::class, 'store']);
     Route::get('/orders/{order}', [ServiceOrderController::class, 'show']);
+    Route::get('/orders/{order}/system-password', [ServiceOrderPasswordController::class, 'show'])->middleware('role:Master,Administrador');
     Route::get('/orders/{order}/audit-history', [ServiceOrderAuditController::class, 'index']);
     Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
     Route::middleware('role:Master,Administrador')->group(function () {
