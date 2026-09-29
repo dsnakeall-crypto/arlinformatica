@@ -45,6 +45,11 @@ test('Mesa redireciona e as cinco abas React são a única fonte do filtro de Or
   const orderTable = page.locator('.orders-order-list');
   await expect(orderTable.locator('thead th')).toHaveText(['# OS', 'CLIENTE', 'DISPOSITIVO', 'STATUS', 'RELATO', 'VALOR', 'AÇÕES']);
   const analysisRow = page.locator('.order-row').filter({ hasText: `#${orders[0].number}` });
+  const expectedOpenedAt = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(new Date(orders[0].received_at));
+  await expect(analysisRow.locator('.arl-order-opened-at')).toHaveText(expectedOpenedAt);
   await expect(analysisRow.locator('.order-client-report')).toHaveText('Teste analysis');
   await expect(analysisRow.locator('.order-client-report')).toHaveAttribute('title', 'Teste analysis');
   await expect(analysisRow.locator('.order-value-pending')).toHaveText('A orçar');

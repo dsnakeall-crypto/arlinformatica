@@ -485,7 +485,12 @@ function OrderTable({
               const displayStatus = o.display_status || o.status;
               return (
                 <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
-                  <td><b>#{o.number}</b></td>
+                  <td>
+                    <span className="arl-order-number">
+                      <b>#{o.number}</b>
+                      <small className="arl-order-opened-at">{formatBrasiliaDateTime(o.received_at)}</small>
+                    </span>
+                  </td>
                   <td>
                     <span className="order-customer">
                       <strong>{o.client.name}</strong>
@@ -561,7 +566,7 @@ function OrderTable({
           const closed = Boolean(o.completed_at) || interrupted;
           return (
             <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
-              <td><b>#{o.number}</b></td>
+              <td><span className="arl-order-number"><b>#{o.number}</b><small className="arl-order-opened-at">{formatBrasiliaDateTime(o.received_at)}</small></span></td>
               <td><span className="order-customer"><strong>{o.client.name}</strong>{o.client.nickname && <small className="arl-client-nickname">{o.client.nickname}</small>}<span className="arl-order-markers">{external && <span className="arl-external-attendance-marker status-awaiting_payment">Externo</span>}{reopened && <span className="arl-reopened-marker status-paid" aria-label="OS reaberta">Reaberta</span>}{o.closing_reference_cents != null && <span className="arl-closing-marker" aria-label="OS precisa fechar">⚑ Fechar · {money(o.closing_reference_cents)}</span>}</span>{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
               <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
               <td><label className={`row-status status-${displayStatus}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={displayStatus} disabled={closed && !canSetPaid} onChange={(e) => onStatus(o, e.target.value)}>{awaitingPayment ? <><option value="awaiting_payment">Aguardando PGTO</option>{canSetPaid && <option value="paid">PAGO</option>}</> : displayStatus === "paid" ? <option value="paid">Pago</option> : <><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</>}</select></label></td>
@@ -2225,6 +2230,15 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
   );
 }
 const money = (c: number = 0) => `R$ ${(c / 100).toFixed(2).replace(".", ",")}`;
+const formatBrasiliaDateTime = (value: string) => new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Sao_Paulo",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+}).format(new Date(value));
 const expenseCategoryLabel = (category?: string | null) =>
   category === "merchandise_purchase"
     ? "Compra de mercadoria"
