@@ -76,20 +76,14 @@ export default function OrderDetailPage(props: Props) {
     props.back();
   };
 
-  const openEditor = useCallback(() => setEditorOpen(true), []);
+  const openEditor = useCallback(() => {
+    if (detailDirty && !window.confirm(UNSAVED_MESSAGE)) return;
+    setDetailDirty(false);
+    setEditorOpen(true);
+  }, [detailDirty]);
 
   return <div data-arl-unified-order-editor-host="1">
-    <OrderDetailReact
-      key={`${props.id}-${detailRevision}`}
-      id={props.id}
-      reopenOnLoad={props.initialAction === 'reopen'}
-      back={guardBack}
-      readOnly={props.readOnly}
-      onEdit={openEditor}
-      onDirtyChange={setDetailDirty}
-      onOpenClientHistory={props.onOpenClientHistory}
-    />
-    {!props.readOnly && editorOpen && <UnifiedOrderEditor
+    {!props.readOnly && editorOpen ? <UnifiedOrderEditor
       orderId={props.id}
       onDirtyChange={setEditorDirty}
       onClose={() => { setEditorDirty(false); setEditorOpen(false); }}
@@ -98,6 +92,15 @@ export default function OrderDetailPage(props: Props) {
         setEditorOpen(false);
         setDetailRevision((current) => current + 1);
       }}
+    /> : <OrderDetailReact
+      key={`${props.id}-${detailRevision}`}
+      id={props.id}
+      reopenOnLoad={props.initialAction === 'reopen'}
+      back={guardBack}
+      readOnly={props.readOnly}
+      onEdit={openEditor}
+      onDirtyChange={setDetailDirty}
+      onOpenClientHistory={props.onOpenClientHistory}
     />}
   </div>;
 }

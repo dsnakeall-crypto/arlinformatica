@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ClipboardList, FileText, Save, X } from 'lucide-react';
-import ServiceProductSearch, { type ServiceProductCatalogItem } from './service-product-search';
+import { FileText, Save, X } from 'lucide-react';
 import TextImprovement from './text-improvement';
-import { centsFromMoneyInput, moneyInputFromCents } from './money-input';
 
 type Props = {
   orderId: number;
@@ -12,7 +10,6 @@ type Props = {
 };
 
 type ApiError = Error & { errors?: Record<string, string[]> };
-type ServiceLine = { catalog_id: number; description: string; quantity: number; unit_price_cents: number; free_price?: boolean };
 
 const UNSAVED_MESSAGE = 'Existem alterações não salvas. Deseja sair sem salvar?';
 const csrf = () => document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
@@ -32,18 +29,23 @@ const api = async (url: string, options: RequestInit = {}) => {
   return body;
 };
 
-const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+const formatOptionalDate = (value: unknown, fallback = '—') => {
+  if (typeof value !== 'string' || !value.trim()) return fallback;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? fallback : date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+};
 
 export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyChange }: Props) {
   const [order, setOrder] = useState<any>();
-  const [catalog, setCatalog] = useState<ServiceProductCatalogItem[]>([]);
   const [termIssued, setTermIssued] = useState(false);
   const [equipment, setEquipment] = useState('');
   const [equipmentDetails, setEquipmentDetails] = useState('');
   const [attendance, setAttendance] = useState('bench');
   const [problem, setProblem] = useState('');
   const [intakeCondition, setIntakeCondition] = useState('');
-  const [items, setItems] = useState<ServiceLine[]>([]);
+  const [systemPassword, setSystemPassword] = useState('');
+  const [withoutSystemPassword, setWithoutSystemPassword] = useState(false);
+  const [systemPasswordTouched, setSystemPasswordTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [dirty, setDirty] = useState(false);
@@ -55,31 +57,24 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     let active = true;
     void (async () => {
       try {
-        const nextOrder = await api(`/orders/${orderId}`);
-        const [serviceRows, documents] = await Promise.all([
-          api('/catalogs/items'),
+        const [nextOrder, documents] = await Promise.all([
+          api(`/orders/${orderId}`),
           api(`/orders/${orderId}/documents`),
         ]);
         if (!active) return;
-
-        const nextItems = (nextOrder.items || [])
-          .filter((row: any) => !row.finalization_id && row.catalog_id)
-          .map((row: any) => ({
-            catalog_id: Number(row.catalog_id),
-            description: row.description,
-            quantity: Number(row.quantity),
-            unit_price_cents: Number(row.unit_price_cents),
-          }));
-
+        if (nextOrder.archived || ['completed', 'interrupted'].includes(nextOrder.status)) {
+          throw new Error('Somente uma OS aberta pode ser editada.');
+        }
         setOrder(nextOrder);
-        setCatalog(Array.isArray(serviceRows) ? serviceRows.filter((row: any) => row.active !== false) : []);
         setTermIssued(Array.isArray(documents) && documents.some((row: any) => row.type === 'term'));
         setEquipment(nextOrder.equipment_description || '');
         setEquipmentDetails(nextOrder.equipment_details || '');
         setAttendance(nextOrder.attendance_type);
         setProblem(nextOrder.reported_problem || '');
         setIntakeCondition(nextOrder.intake_condition || '');
-        setItems(nextItems);
+        setSystemPassword('');
+        setWithoutSystemPassword(false);
+        setSystemPasswordTouched(false);
         setDirty(false);
       } catch (reason: any) {
         if (active) setError(reason.message);
@@ -88,23 +83,7 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     return () => { active = false; };
   }, [orderId]);
 
-  if (!order) {
-    return <div className="modal"><section className="modal-card arl-od-card" role="dialog" aria-modal="true" aria-label="Editar OS"><h2>Editar OS</h2><p>{error || 'Carregando dados…'}</p><div className="arl-od-actions"><button type="button" onClick={onClose}>Fechar</button></div></section></div>;
-  }
-
-  const equipmentChanged = equipment.trim() !== String(order.equipment_description || '').trim();
-  const equipmentDetailsChanged = equipmentDetails.trim() !== String(order.equipment_details || '').trim();
   const markDirty = () => setDirty(true);
-
-  const addService = (entry: ServiceProductCatalogItem, quantity = 1) => {
-    markDirty();
-    setItems((current) => {
-      const found = current.find((row) => row.catalog_id === Number(entry.id));
-      if (found) return current.map((row) => row.catalog_id === Number(entry.id) ? { ...row, quantity: Math.min(999, row.quantity + quantity) } : row);
-      return [...current, { catalog_id: Number(entry.id), description: entry.name, quantity, unit_price_cents: Number(entry.price_cents), free_price: !!entry.free_price }];
-    });
-  };
-
   const close = () => {
     if (dirty && !window.confirm(UNSAVED_MESSAGE)) return;
     setDirty(false);
@@ -112,9 +91,17 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     onClose();
   };
 
+  if (!order) return <div className="state error">{error || 'Carregando dados…'}</div>;
+
+  const equipmentChanged = equipment.trim() !== String(order.equipment_description || '').trim();
+  const equipmentDetailsChanged = equipmentDetails.trim() !== String(order.equipment_details || '').trim();
+
   const save = async () => {
-    if (!problem.trim()) { setError('Informe o problema relatado.'); return; }
-    if (!equipment.trim()) { setError('Informe o Equipamento.'); return; }
+    if (!problem.trim()) return setError('Informe o problema relatado.');
+    if (!equipment.trim()) return setError('Informe o Equipamento.');
+    if ((!order.has_system_password || systemPasswordTouched) && !withoutSystemPassword && !systemPassword.trim()) {
+      return setError('Informe a senha ou marque Sem senha');
+    }
 
     setBusy(true);
     setError('');
@@ -126,43 +113,58 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
       };
       if (equipmentChanged) payload.equipment_description = equipment.trim();
       if (equipmentDetailsChanged) payload.equipment_details = equipmentDetails.trim() || null;
-      payload.items = items.map((row) => ({ catalog_id: row.catalog_id, quantity: row.quantity, unit_price_cents: row.unit_price_cents }));
+      if (withoutSystemPassword) {
+        payload.system_password = null;
+        payload.system_password_absent = true;
+      } else if (systemPasswordTouched || !order.has_system_password) {
+        payload.system_password = systemPassword;
+        payload.system_password_absent = false;
+      }
 
       await api(`/orders/${orderId}`, { method: 'PATCH', body: JSON.stringify(payload) });
       setDirty(false);
       onDirtyChange?.(false);
       onSaved();
     } catch (reason: any) {
-      setError(Object.values(reason.errors || {}).flat()[0] as string || reason.message);
+      setError((Object.values(reason.errors || {}).flat()[0] as string) || reason.message);
     } finally {
       setBusy(false);
     }
   };
 
-  const subtotal = items.reduce((sum, row) => sum + row.quantity * row.unit_price_cents, 0);
-
-  return <div className="modal"><section className="modal-card arl-od-card arl-unified-editor" role="dialog" aria-modal="true" aria-label={`Editar OS #${order.number}`}>
-    <header className="arl-unified-editor-header"><div className="arl-unified-editor-heading"><span className="arl-unified-editor-icon"><FileText/></span><div><h2>Editar OS #{order.number}</h2><p>Atualize os dados técnicos, o atendimento, o estado físico e os serviços desta OS.</p></div></div><button type="button" className="arl-unified-editor-close" aria-label="Fechar" onClick={close}><X/></button></header>
+  return <section data-arl-order-detail-react="1" className="panel arl-unified-editor arl-unified-editor-inline" aria-labelledby="arl-edit-order-title">
+    <header className="arl-unified-editor-header">
+      <div className="arl-unified-editor-heading">
+        <span className="arl-unified-editor-icon"><FileText /></span>
+        <div><span className="arl-eyebrow">ENTRADA</span><h2 id="arl-edit-order-title">Ficha de entrada — edição</h2><p>Edite os dados desta OS sem sair da ficha.</p></div>
+      </div>
+      <button type="button" className="arl-unified-editor-close" aria-label="Cancelar edição" onClick={close}><X /></button>
+    </header>
+    <div className="arl-intake-dates arl-edit-intake-dates">
+      <span><b>Entrada</b> {formatOptionalDate(order.received_at)}</span>
+      <i aria-hidden="true">|</i>
+      <span><b>Saída</b> Em aberto</span>
+      <i aria-hidden="true">|</i>
+      <label><b>Atendimento</b><select aria-label="Atendimento" value={attendance} onChange={(event) => { markDirty(); setAttendance(event.target.value); }}><option value="bench">Interno</option><option value="external">Externo</option></select></label>
+    </div>
     <div className="arl-unified-editor-columns">
       <div className="arl-unified-editor-column">
-        <label>Equipamento<textarea aria-label="Equipamento" spellCheck={true} required maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }}/></label>
-        <label>Fabricante / Modelo / Acessórios<textarea aria-label="Fabricante / Modelo / Acessórios" spellCheck={true} maxLength={500} value={equipmentDetails} onChange={(event) => { markDirty(); setEquipmentDetails(event.target.value); }}/></label>
+        <label>Equipamento<textarea aria-label="Equipamento" spellCheck={true} required maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }} /></label>
+        <label>Fabricante / Modelo / Acessórios<textarea aria-label="Fabricante / Modelo / Acessórios" spellCheck={true} maxLength={500} value={equipmentDetails} onChange={(event) => { markDirty(); setEquipmentDetails(event.target.value); }} /></label>
         {termIssued && (equipmentChanged || equipmentDetailsChanged) && <div className="notice">O Termo de Recebimento já emitido mantém os dados anteriores do equipamento.</div>}
-        <label>Problema relatado<textarea aria-label="Problema relatado" spellCheck={true} value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }}/><TextImprovement value={problem} onUse={(text) => { markDirty(); setProblem(text); }}/></label>
+        <div className="arl-system-password-field">
+          <label>Senha do sistema<input type="password" aria-label="Senha do sistema" autoComplete="new-password" maxLength={500} disabled={withoutSystemPassword} value={systemPassword} placeholder={order.has_system_password ? 'Senha já cadastrada — digite para substituir' : ''} onChange={(event) => { markDirty(); setSystemPasswordTouched(true); setSystemPassword(event.target.value); }} /></label>
+          <label className="arl-system-password-absent"><input type="checkbox" checked={withoutSystemPassword} onChange={(event) => { markDirty(); setSystemPasswordTouched(true); setWithoutSystemPassword(event.target.checked); if (event.target.checked) setSystemPassword(''); }} /><span>Sem senha</span></label>
+        </div>
+        {order.has_system_password && !systemPasswordTouched && <p className="arl-unified-editor-help">Há uma senha cadastrada. Digite uma nova somente se quiser substituí-la.</p>}
       </div>
       <div className="arl-unified-editor-column">
-        <label>Atendimento<select aria-label="Atendimento" value={attendance} onChange={(event) => { markDirty(); setAttendance(event.target.value); }}><option value="bench">Bancada</option><option value="external">Externo</option></select></label>
-        <div className="arl-unified-editor-section-title"><span className="arl-unified-editor-icon"><ClipboardList/></span><h3>Estado físico na entrada</h3></div>
-        <label className="arl-unified-editor-intake-condition">Avarias aparentes (opcional)<textarea aria-label="Estado físico na entrada" maxLength={10000} spellCheck={true} value={intakeCondition} onChange={(event) => { markDirty(); setIntakeCondition(event.target.value); }} placeholder="Ex.: riscos, trincas, peça faltando ou marcas de queda"/></label>
+        <label>Problema relatado<textarea aria-label="Problema relatado" spellCheck={true} value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }} /><TextImprovement value={problem} onUse={(text) => { markDirty(); setProblem(text); }} /></label>
+        <label className="arl-unified-editor-intake-condition">Estado físico na entrada<textarea aria-label="Estado físico na entrada" maxLength={10000} spellCheck={true} value={intakeCondition} onChange={(event) => { markDirty(); setIntakeCondition(event.target.value); }} placeholder="Ex.: riscos, trincas, peça faltando ou marcas de queda" /></label>
         <p className="arl-unified-editor-help">Deixe vazio quando o equipamento chegar aparentemente sem avarias.</p>
-        <div className="arl-unified-editor-section-title"><span className="arl-unified-editor-icon"><FileText/></span><h3>Serviços / Produtos</h3></div>
-        <ServiceProductSearch items={catalog} ariaLabel="Pesquisar Serviço / Produto no editor" onSelect={addService}/>
-        <div className="arl-od-lines">{items.length ? items.map((row, index) => { const freePrice = row.free_price ?? !!catalog.find((entry) => entry.id === row.catalog_id)?.free_price; return <div className="arl-od-line" key={`${row.catalog_id}-${index}`}><b>{row.description}</b><input aria-label={`Quantidade no editor de ${row.description}`} type="number" min="1" max="999" value={row.quantity} onChange={(event) => { markDirty(); setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: Math.max(1, Math.min(999, Number(event.target.value) || 1)) } : item)); }}/><input aria-label={`Valor unitário no editor de ${row.description}`} inputMode="decimal" disabled={!freePrice} value={moneyInputFromCents(row.unit_price_cents)} onChange={(event) => { markDirty(); setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, unit_price_cents: centsFromMoneyInput(event.target.value) } : item)); }}/><span>{money(row.quantity * row.unit_price_cents)}</span><button type="button" aria-label={`Remover ${row.description} do editor`} onClick={() => { markDirty(); setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)); }}>×</button></div>; }) : <p>Nenhum serviço adicionado.</p>}</div>
-        <div className="arl-od-foot"><span/><strong>Subtotal: {money(subtotal)}</strong></div>
       </div>
     </div>
-
     {error && <div className="alert">{error}</div>}
-    <div className="arl-od-actions"><button type="button" onClick={close}>Cancelar</button><button type="button" className="primary arl-od-save" disabled={busy} onClick={save}><Save/>{busy ? 'Salvando…' : 'Salvar alterações'}</button></div>
-  </section></div>;
+    <div className="arl-od-actions"><button type="button" onClick={close}>Cancelar</button><button type="button" className="primary arl-od-save" disabled={busy} onClick={() => void save()}><Save />{busy ? 'Salvando…' : 'Salvar'}</button></div>
+  </section>;
 }

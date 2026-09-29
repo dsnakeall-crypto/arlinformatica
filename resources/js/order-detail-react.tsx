@@ -3133,6 +3133,11 @@ export default function OrderDetailPage({
               ? formatOptionalDate(order.completed_at)
               : "Em aberto"}
           </span>
+          <i aria-hidden="true">|</i>
+          <span>
+            <b>Atendimento</b>{" "}
+            {order.attendance_type === "external" ? "Externo" : "Interno"}
+          </span>
         </div>
         <div className="arl-intake-grid">
           <section className="arl-intake-field arl-intake-client-field">
