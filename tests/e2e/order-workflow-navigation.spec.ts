@@ -134,7 +134,7 @@ test('lápis da lista abre a edição na ficha ou o fluxo existente de reabertur
   const reopenedEditor = page.locator('.arl-unified-editor-inline');
   await expect(reopenedEditor).toBeVisible();
   await expect(reopenedEditor.getByLabel('Cliente da OS')).toHaveCount(0);
-  await expect(reopenedEditor.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
+  await expect(reopenedEditor.getByRole('heading', { name: 'Ficha de entrada — edição', exact: true })).toBeVisible();
   await expect(reopenedEditor.getByLabel('Estado físico na entrada')).toBeVisible();
   await expect(reopenedEditor.getByText('Serviços / Produtos', { exact: true })).toHaveCount(0);
   await reopenedEditor.getByLabel('Equipamento').fill('Equipamento corrigido após reabertura');
