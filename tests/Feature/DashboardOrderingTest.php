@@ -73,6 +73,48 @@ class DashboardOrderingTest extends TestCase
         $this->getJson('/api/orders?tab=all')->assertOk()->assertJsonPath('data.0.number', '8200002');
     }
 
+    public function test_order_tab_counts_use_the_same_server_filters_as_each_list(): void
+    {
+        $user = User::create([
+            'role_id' => Role::where('name', 'Master')->value('id'),
+            'name' => 'Master Contadores',
+            'login' => 'tab-counters',
+            'password' => 'Senha#Forte123',
+            'active' => true,
+        ]);
+        $client = $this->client('Cliente Contadores', '39053344705');
+        $equipment = DB::table('equipment_types')->value('id');
+        $base = [
+            'client_id' => $client->id,
+            'equipment_type_id' => $equipment,
+            'attendance_type' => 'bench',
+            'reported_problem' => 'Contagem das abas',
+            'received_at' => now(),
+            'created_by' => $user->id,
+        ];
+
+        $analysis = ServiceOrder::create([...$base, 'number' => '8300001', 'status' => 'analysis']);
+        ServiceOrder::create([...$base, 'number' => '8300002', 'status' => 'waiting_part']);
+        ServiceOrder::create([...$base, 'number' => '8300003', 'status' => 'completed', 'completed_at' => now(), 'total_cents' => 10000]);
+        ServiceOrder::create([...$base, 'number' => '8300004', 'status' => 'completed', 'completed_at' => now(), 'total_cents' => 0]);
+        ServiceOrder::create([...$base, 'number' => '8300005', 'status' => 'interrupted', 'completed_at' => now()]);
+
+        $this->actingAs($user)->getJson('/api/orders?tab=progress&per_page=1')
+            ->assertOk()
+            ->assertJsonPath('tab_counts.progress', 2)
+            ->assertJsonPath('tab_counts.awaiting_payment', 1)
+            ->assertJsonPath('tab_counts.finalized', 1)
+            ->assertJsonPath('tab_counts.interrupted', 1)
+            ->assertJsonPath('tab_counts.all', 5);
+
+        $analysis->update(['status' => 'interrupted', 'completed_at' => now()]);
+        $this->getJson('/api/orders?tab=interrupted&per_page=1')
+            ->assertOk()
+            ->assertJsonPath('tab_counts.progress', 1)
+            ->assertJsonPath('tab_counts.interrupted', 2)
+            ->assertJsonPath('tab_counts.all', 5);
+    }
+
     private function client(string $name, string $document): Client
     {
         return Client::create([

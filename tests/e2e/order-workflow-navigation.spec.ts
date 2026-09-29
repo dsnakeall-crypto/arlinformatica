@@ -41,7 +41,15 @@ test('Mesa redireciona e as cinco abas React são a única fonte do filtro de Or
   await page.locator('aside').getByRole('button', { name: 'Ordens' }).click();
   await page.getByPlaceholder('Número da OS ou nome do cliente…').fill(client.name);
   const tabs = page.getByRole('tablist', { name: 'Filtrar ordens' });
-  await expect(tabs.getByRole('button')).toHaveText(['Em Andamento', 'Aguardando PGTO', 'Finalizadas', 'Interrompidas', 'Todas']);
+  const countResponse = await api(page, '/orders?tab=all&per_page=1');
+  for (const [label, key] of [
+    ['Em Andamento', 'progress'], ['Aguardando PGTO', 'awaiting_payment'], ['Finalizadas', 'finalized'],
+    ['Interrompidas', 'interrupted'], ['Todas', 'all'],
+  ] as const) {
+    const tabButton = tabs.getByRole('button', { name: label, exact: true });
+    await expect(tabButton).toBeVisible();
+    await expect(tabButton.locator('.order-tab-count')).toHaveText(String(countResponse.body.tab_counts[key]));
+  }
   const orderTable = page.locator('.orders-order-list');
   await expect(orderTable.locator('thead th')).toHaveText(['# OS', 'CLIENTE', 'DISPOSITIVO', 'STATUS', 'RELATO', 'VALOR', 'AÇÕES']);
   const analysisRow = page.locator('.order-row').filter({ hasText: `#${orders[0].number}` });

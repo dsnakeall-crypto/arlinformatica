@@ -12,6 +12,7 @@ use App\Services\NotificationService;
 use App\Services\OrderNumber;
 use App\Services\PhotoOptimizer;
 use App\Services\PostSaleService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,20 +41,7 @@ class ServiceOrderController extends Controller
         if ($requestedStatus === 'paid') {
             $q->where('status', 'completed')->where('archived', true);
         }
-        match ($tab) {
-            'progress' => $q->whereIn('status', ['analysis', 'waiting_part', 'in_service']),
-            'awaiting_payment' => $q
-                ->where('status', 'completed')
-                ->whereRaw('COALESCE(payment_status.paid_cents, 0) < service_orders.total_cents'),
-            'finalized' => $q
-                ->where('status', 'completed')
-                ->whereRaw('COALESCE(payment_status.paid_cents, 0) >= service_orders.total_cents'),
-            'interrupted' => $q->where('status', 'interrupted'),
-            'closed_week' => $q
-                ->whereIn('status', ['completed', 'interrupted'])
-                ->where('completed_at', '>=', now('America/Sao_Paulo')->startOfWeek()),
-            default => null,
-        };
+        $this->applyTabFilter($q, $tab);
         if ($requestedStatus !== '' && in_array($requestedStatus, ['analysis', 'waiting_part', 'in_service', 'interrupted'], true)) {
             $q->where('status', $requestedStatus);
         }
@@ -86,7 +74,7 @@ class ServiceOrderController extends Controller
             return $order;
         });
 
-        return response()->json([...$orders->toArray(), 'summary' => $summary]);
+        return response()->json([...$orders->toArray(), 'summary' => $summary, 'tab_counts' => $this->tabCounts()]);
     }
 
     public function desk(PostSaleService $postSales): JsonResponse
@@ -484,6 +472,38 @@ class ServiceOrderController extends Controller
             ->where('ft.origin', 'service_order')
             ->groupBy('p.service_order_id')
             ->select('p.service_order_id', DB::raw('SUM(COALESCE(adjustment.new_cents, ft.amount_cents)) as paid_cents'));
+    }
+
+    private function applyTabFilter(Builder $query, string $tab): void
+    {
+        match ($tab) {
+            'progress' => $query->whereIn('status', ['analysis', 'waiting_part', 'in_service']),
+            'awaiting_payment' => $query
+                ->where('status', 'completed')
+                ->whereRaw('COALESCE(payment_status.paid_cents, 0) < service_orders.total_cents'),
+            'finalized' => $query
+                ->where('status', 'completed')
+                ->whereRaw('COALESCE(payment_status.paid_cents, 0) >= service_orders.total_cents'),
+            'interrupted' => $query->where('status', 'interrupted'),
+            'closed_week' => $query
+                ->whereIn('status', ['completed', 'interrupted'])
+                ->where('completed_at', '>=', now('America/Sao_Paulo')->startOfWeek()),
+            default => null,
+        };
+    }
+
+    private function tabCounts(): array
+    {
+        $counts = [];
+
+        foreach (['progress', 'awaiting_payment', 'finalized', 'interrupted', 'all'] as $tab) {
+            $query = ServiceOrder::query()
+                ->leftJoinSub($this->effectivePaymentsByOrder(), 'payment_status', 'payment_status.service_order_id', '=', 'service_orders.id');
+            $this->applyTabFilter($query, $tab);
+            $counts[$tab] = $query->count('service_orders.id');
+        }
+
+        return $counts;
     }
 
     private function displayStatus(ServiceOrder $order, int $paidCents): string

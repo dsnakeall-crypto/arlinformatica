@@ -790,7 +790,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
               setPage(1);
             }}
           >
-            Em Andamento
+            Em Andamento <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.progress ?? 0}</small>
           </button>
           <button
             className={tab === "awaiting_payment" ? "active" : ""}
@@ -799,7 +799,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
               setPage(1);
             }}
           >
-            Aguardando PGTO
+            Aguardando PGTO <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.awaiting_payment ?? 0}</small>
           </button>
           <button
             className={tab === "finalized" ? "active" : ""}
@@ -808,7 +808,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
               setPage(1);
             }}
           >
-            Finalizadas
+            Finalizadas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.finalized ?? 0}</small>
           </button>
           <button
             className={tab === "interrupted" ? "active" : ""}
@@ -817,7 +817,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
               setPage(1);
             }}
           >
-            Interrompidas
+            Interrompidas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.interrupted ?? 0}</small>
           </button>
           <button
             className={tab === "all" ? "active" : ""}
@@ -826,7 +826,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
               setPage(1);
             }}
           >
-            Todas
+            Todas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.all ?? 0}</small>
           </button>
         </div>
         <div className="filters">
