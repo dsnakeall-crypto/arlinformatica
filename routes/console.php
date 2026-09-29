@@ -25,7 +25,7 @@ $backup = Schedule::call(fn () => Artisan::call('backup:run'))
     ->withoutOverlapping(120);
 
 match ($frequency) {
-    'weekly' => $backup->weeklyOn(1, '02:00'),
-    'monthly' => $backup->monthlyOn(1, '02:00'),
-    default => $backup->dailyAt('02:00'),
+    'weekly' => $backup->weeklyOn(1, '02:05'),
+    'monthly' => $backup->monthlyOn(1, '02:05'),
+    default => $backup->dailyAt('02:05'),
 };
