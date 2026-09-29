@@ -27,7 +27,7 @@ class FinalShareTest extends TestCase
         $this->seed(DatabaseSeeder::class);
         $this->user = User::create(['role_id' => Role::where('name', 'Master')->value('id'), 'name' => 'Master Link Final', 'login' => 'master-final-share', 'password' => bcrypt('safe-password'), 'active' => true]);
         $client = $this->actingAs($this->user)->postJson('/api/clients', ['name' => 'Cliente Link Final', 'document' => '52998224725', 'phone' => '35999999999', 'street' => 'Rua Principal'])->assertCreated()->json();
-        $created = $this->postJson('/api/orders', ['client_id' => $client['id'], 'equipment_type_id' => DB::table('equipment_types')->where('name', 'Notebook')->value('id'), 'attendance_type' => 'bench', 'reported_problem' => 'Teste de link temporário.', 'checklist' => []])->assertCreated()->json();
+        $created = $this->postJson('/api/orders', ['client_id' => $client['id'], 'equipment_type_id' => DB::table('equipment_types')->where('name', 'Notebook')->value('id'), 'attendance_type' => 'bench', 'reported_problem' => 'Teste de link temporário.', 'system_password_absent' => true, 'checklist' => []])->assertCreated()->json();
         $this->order = ServiceOrder::findOrFail($created['id']);
         $this->order->forceFill(['status' => 'completed', 'archived' => true, 'completed_at' => now()])->save();
 

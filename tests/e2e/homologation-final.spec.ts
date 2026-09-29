@@ -52,6 +52,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await form.getByLabel('Equipamento *').fill('Notebook');
   await form.getByLabel('Fabricante / Modelo / Acessórios').fill('Dell Inspiron 15 + carregador');
   await form.getByLabel('Problema relatado *').fill('Teste final de itens opcionais na abertura.');
+  await form.getByLabel('Sem senha').check();
   await form.locator('.opening-catalog button').filter({ hasText: service.name }).click();
   await expect(form.locator('.opening-item').filter({ hasText: service.name })).toBeVisible();
 

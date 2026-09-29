@@ -75,30 +75,24 @@ test('Mesa redireciona e as cinco abas React são a única fonte do filtro de Or
   expect(requests.every(url => !url.searchParams.has('finalized'))).toBe(true);
 });
 
-test('lápis da lista abre edição completa ou o fluxo existente de reabertura', async ({ page }) => {
+test('lápis da lista abre a edição na ficha ou o fluxo existente de reabertura', async ({ page }) => {
   await login(page);
   const { client, orders } = await fixture(page);
   await page.goto('/orders');
   await page.getByPlaceholder('Número da OS ou nome do cliente…').fill(client.name);
   await page.locator('.order-row').filter({ hasText: `#${orders[0].number}` }).getByRole('button', { name: 'Editar OS', exact: true }).click();
-  const editor = page.getByRole('dialog', { name: `Editar OS #${orders[0].number}` });
+  const editor = page.locator('.arl-unified-editor-inline');
+  await expect(editor).toBeVisible();
+  await expect(page.getByRole('dialog', { name: /Editar OS/ })).toHaveCount(0);
   await expect(editor.getByLabel('Cliente da OS')).toHaveCount(0);
-  await expect(editor).not.toContainText('Cliente, equipamento, atendimento, relato, checklist e serviços são salvos juntos nesta OS');
-  await expect(editor.locator('.arl-unified-editor-close')).toHaveCSS('border-radius', '50%');
-  await expect(editor.locator('textarea').first()).toHaveCSS('background-color', 'rgb(250, 250, 251)');
-  const editorGeometry = await editor.evaluate((element) => ({
-    clientWidth: element.clientWidth,
-    scrollWidth: element.scrollWidth,
-    viewportWidth: window.innerWidth,
-  }));
-  expect(editorGeometry.clientWidth).toBeGreaterThanOrEqual(editorGeometry.viewportWidth * 0.88);
-  expect(editorGeometry.scrollWidth).toBe(editorGeometry.clientWidth);
+  await expect(editor.getByRole('heading', { name: 'Ficha de entrada — edição' })).toBeVisible();
   await expect(editor.getByLabel('Equipamento')).toBeVisible();
-  await expect(editor.getByText('Serviços / Produtos', { exact: true })).toBeVisible();
+  await expect(editor.getByText('Serviços / Produtos', { exact: true })).toHaveCount(0);
   await expect(page.locator('.arl-maintenance-modal')).toHaveCount(0);
   await editor.getByLabel('Equipamento').fill('Equipamento corrigido pelo lápis da lista');
-  await editor.getByRole('button', { name: 'Salvar alterações' }).click();
-  await expect(editor).toHaveCount(0);
+  await editor.getByLabel('Sem senha').check();
+  await editor.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(editor).toBeHidden();
   const editedOpenOrder = (await api(page, `/orders/${orders[0].id}`)).body;
   expect(editedOpenOrder.equipment_description).toBe('Equipamento corrigido pelo lápis da lista');
   expect(Number(editedOpenOrder.client_id)).toBe(Number(client.id));
@@ -137,14 +131,16 @@ test('lápis da lista abre edição completa ou o fluxo existente de reabertura'
     await expect(reopenedRoot.locator(`[data-order-action="${action}"]`), `Ação ${action} deve continuar disponível após reabrir`).toBeVisible();
   }
   await reopenedRoot.getByRole('button', { name: 'Editar', exact: true }).click();
-  const reopenedEditor = page.getByRole('dialog', { name: `Editar OS #${orders[1].number}` });
+  const reopenedEditor = page.locator('.arl-unified-editor-inline');
+  await expect(reopenedEditor).toBeVisible();
   await expect(reopenedEditor.getByLabel('Cliente da OS')).toHaveCount(0);
   await expect(reopenedEditor.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
   await expect(reopenedEditor.getByLabel('Estado físico na entrada')).toBeVisible();
-  await expect(reopenedEditor.getByLabel('Pesquisar Serviço / Produto no editor')).toBeVisible();
+  await expect(reopenedEditor.getByText('Serviços / Produtos', { exact: true })).toHaveCount(0);
   await reopenedEditor.getByLabel('Equipamento').fill('Equipamento corrigido após reabertura');
-  await reopenedEditor.getByRole('button', { name: 'Salvar alterações' }).click();
-  await expect(reopenedEditor).toHaveCount(0);
+  await reopenedEditor.getByLabel('Sem senha').check();
+  await reopenedEditor.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(reopenedEditor).toBeHidden();
   const editedReopenedOrder = (await api(page, `/orders/${orders[1].id}`)).body;
   expect(editedReopenedOrder.equipment_description).toBe('Equipamento corrigido após reabertura');
   expect(Number(editedReopenedOrder.client_id)).toBe(Number(client.id));

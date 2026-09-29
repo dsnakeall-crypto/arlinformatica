@@ -28,6 +28,7 @@ class OperationFlowTest extends TestCase
         $order = $this->postJson('/api/orders', [
             'client_id' => $client['id'], 'equipment_type_id' => $equipment,
             'attendance_type' => 'bench', 'reported_problem' => 'Não inicializa.', 'checklist' => [],
+            'system_password_absent' => true,
         ])->assertCreated()->json();
 
         $this->assertDatabaseHas('service_orders', ['id' => $order['id'], 'status' => 'analysis']);

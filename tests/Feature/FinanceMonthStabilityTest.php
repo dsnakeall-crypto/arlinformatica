@@ -92,6 +92,7 @@ class FinanceMonthStabilityTest extends TestCase
             'equipment_type_id' => $equipment,
             'attendance_type' => 'bench',
             'reported_problem' => 'OS aberta com item provisório',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [['catalog_id' => $catalog, 'quantity' => 1]],
         ])->assertCreated();

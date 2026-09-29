@@ -60,6 +60,7 @@ class ServiceCatalogUsageTest extends TestCase
                 'equipment_type_id' => DB::table('equipment_types')->value('id'),
                 'attendance_type' => 'bench',
                 'reported_problem' => 'Uso do catálogo '.$quantity,
+                'system_password_absent' => true,
                 'checklist' => [],
                 'items' => [['catalog_id' => $catalogId, 'quantity' => $quantity]],
             ])->assertCreated()->json();

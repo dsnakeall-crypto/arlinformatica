@@ -162,7 +162,7 @@ class StageSixTest extends TestCase
     {
         $payload = ['name' => 'Maria', 'document' => '11144477735', 'phone' => '35999990000', 'postal_code' => '37160000', 'street' => 'Rua B', 'number' => '1', 'district' => 'Centro', 'city' => 'Cidade', 'state' => 'MG'];
         $client = $this->actingAs($this->user)->postJson('/api/clients', $payload)->assertCreated()->json();
-        $orderPayload = ['client_id' => $client['id'], 'equipment_type_id' => DB::table('equipment_types')->value('id'), 'attendance_type' => 'bench', 'reported_problem' => 'Teste', 'checklist' => []];
+        $orderPayload = ['client_id' => $client['id'], 'equipment_type_id' => DB::table('equipment_types')->value('id'), 'attendance_type' => 'bench', 'reported_problem' => 'Teste', 'system_password_absent' => true, 'checklist' => []];
         $this->postJson('/api/orders', $orderPayload)->assertCreated();
         $this->assertDatabaseHas('notifications', ['type' => 'client_created', 'user_id' => $this->user->id]);
         $this->assertDatabaseHas('notifications', ['type' => 'order_created', 'user_id' => $this->user->id]);

@@ -167,6 +167,6 @@ class StageSevenTest extends TestCase
 
     private function orderPayload(): array
     {
-        return ['client_id' => $this->client()->id, 'equipment_type_id' => DB::table('equipment_types')->where('name', 'Notebook')->value('id'), 'attendance_type' => 'bench', 'reported_problem' => 'Teste'];
+        return ['client_id' => $this->client()->id, 'equipment_type_id' => DB::table('equipment_types')->where('name', 'Notebook')->value('id'), 'attendance_type' => 'bench', 'reported_problem' => 'Teste', 'system_password_absent' => true];
     }
 }

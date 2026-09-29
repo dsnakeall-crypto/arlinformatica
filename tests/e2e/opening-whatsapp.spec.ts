@@ -26,6 +26,7 @@ test('abertura da OS vai direto à ficha e mantém a mensagem fixa no menu de PD
   await selectNewOrderClient(page, createdClient.body.id);
   await page.getByLabel('Equipamento *').fill('Notebook homologação WhatsApp');
   await page.getByLabel('Problema relatado *').fill('Teste da mensagem fixa de abertura');
+  await page.getByLabel('Sem senha').check();
   const createdResponse = page.waitForResponse((response) => response.url().endsWith('/api/orders') && response.request().method() === 'POST');
   await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
   const order = await (await createdResponse).json();

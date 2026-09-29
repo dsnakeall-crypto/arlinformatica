@@ -65,6 +65,7 @@ class ActiveOrderEditingTest extends TestCase
             'equipment_type_id' => $equipmentId,
             'attendance_type' => 'bench',
             'reported_problem' => 'Relato inicial',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [],
         ])->assertCreated()->json();
@@ -146,6 +147,7 @@ class ActiveOrderEditingTest extends TestCase
             'equipment_description' => 'Notebook Dell antigo + carregador',
             'attendance_type' => 'bench',
             'reported_problem' => 'Não liga',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [],
         ])->assertCreated()->json();
@@ -206,6 +208,7 @@ class ActiveOrderEditingTest extends TestCase
             'equipment_description' => 'Notebook Lenovo + fonte',
             'attendance_type' => 'bench',
             'reported_problem' => 'Sem vídeo',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [],
         ])->assertCreated()->json();
@@ -245,7 +248,7 @@ class ActiveOrderEditingTest extends TestCase
         $this->assertSame('Cliente Corrigido', $after['client']['name']);
     }
 
-    public function test_finalized_and_paid_orders_allow_only_administrative_metadata_corrections(): void
+    public function test_finalized_and_paid_orders_reject_all_edits(): void
     {
         $user = $this->master('immutable-editor', 'Editor imutável');
         $client = $this->client('Cliente Imutável', '93541134780', '35999990005');
@@ -258,45 +261,32 @@ class ActiveOrderEditingTest extends TestCase
             'equipment_description' => 'Notebook finalizado',
             'attendance_type' => 'bench',
             'reported_problem' => 'Teste',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [],
         ])->assertCreated()->json();
         DB::table('service_orders')->where('id', $finalized['id'])->update(['status' => 'completed', 'completed_at' => now()]);
 
-        $this->patchJson("/api/orders/{$finalized['id']}", [
-            'attendance_type' => 'external',
-        ])->assertOk()->assertJsonPath('attendance_type', 'external');
-
-        $this->patchJson("/api/orders/{$finalized['id']}", [
-            'reported_problem' => 'Problema corrigido após finalização',
-        ])->assertOk()->assertJsonPath('reported_problem', 'Problema corrigido após finalização');
-
-        $this->patchJson("/api/orders/{$finalized['id']}", [
-            'equipment_description' => 'Notebook finalizado corrigido',
-        ])->assertOk()->assertJsonPath('equipment_description', 'Notebook finalizado corrigido');
-
-        $this->patchJson("/api/orders/{$finalized['id']}", [
-            'client_id' => $replacement->id,
-        ])->assertStatus(422);
-
-        $this->patchJson("/api/orders/{$finalized['id']}", [
-            'items' => [],
-        ])->assertStatus(422);
-
-        $this->patchJson("/api/orders/{$finalized['id']}", [
-            'final_report' => 'Tentativa de alterar laudo finalizado',
-        ])->assertStatus(422);
-
-        $this->patchJson("/api/orders/{$finalized['id']}", [
-            'checklist' => [],
-        ])->assertStatus(422);
+        foreach ([
+            ['attendance_type' => 'external'],
+            ['reported_problem' => 'Problema corrigido após finalização'],
+            ['equipment_description' => 'Notebook finalizado corrigido'],
+            ['client_id' => $replacement->id],
+            ['items' => []],
+            ['final_report' => 'Tentativa de alterar laudo finalizado'],
+            ['checklist' => []],
+        ] as $change) {
+            $this->patchJson("/api/orders/{$finalized['id']}", $change)
+                ->assertStatus(409)
+                ->assertJsonPath('message', 'Somente uma OS aberta pode ser editada.');
+        }
 
         $this->assertDatabaseHas('service_orders', [
             'id' => $finalized['id'],
             'client_id' => $client->id,
-            'attendance_type' => 'external',
-            'reported_problem' => 'Problema corrigido após finalização',
-            'equipment_description' => 'Notebook finalizado corrigido',
+            'attendance_type' => 'bench',
+            'reported_problem' => 'Teste',
+            'equipment_description' => 'Notebook finalizado',
         ]);
 
         $paid = $this->postJson('/api/orders', [
@@ -305,6 +295,7 @@ class ActiveOrderEditingTest extends TestCase
             'equipment_description' => 'Notebook pago',
             'attendance_type' => 'bench',
             'reported_problem' => 'Teste pago',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [],
         ])->assertCreated()->json();
@@ -314,40 +305,26 @@ class ActiveOrderEditingTest extends TestCase
             'archived' => true,
         ]);
 
-        $this->patchJson("/api/orders/{$paid['id']}", [
-            'attendance_type' => 'external',
-        ])->assertOk()->assertJsonPath('attendance_type', 'external');
-
-        $this->patchJson("/api/orders/{$paid['id']}", [
-            'reported_problem' => 'Problema corrigido após pagamento',
-        ])->assertOk()->assertJsonPath('reported_problem', 'Problema corrigido após pagamento');
-
-        $this->patchJson("/api/orders/{$paid['id']}", [
-            'equipment_description' => 'Notebook pago corrigido',
-        ])->assertOk()->assertJsonPath('equipment_description', 'Notebook pago corrigido');
-
-        $this->patchJson("/api/orders/{$paid['id']}", [
-            'client_id' => $replacement->id,
-        ])->assertStatus(422);
-
-        $this->patchJson("/api/orders/{$paid['id']}", [
-            'items' => [],
-        ])->assertStatus(422);
-
-        $this->patchJson("/api/orders/{$paid['id']}", [
-            'final_report' => 'Tentativa de alterar laudo pago',
-        ])->assertStatus(422);
-
-        $this->patchJson("/api/orders/{$paid['id']}", [
-            'checklist' => [],
-        ])->assertStatus(422);
+        foreach ([
+            ['attendance_type' => 'external'],
+            ['reported_problem' => 'Problema corrigido após pagamento'],
+            ['equipment_description' => 'Notebook pago corrigido'],
+            ['client_id' => $replacement->id],
+            ['items' => []],
+            ['final_report' => 'Tentativa de alterar laudo pago'],
+            ['checklist' => []],
+        ] as $change) {
+            $this->patchJson("/api/orders/{$paid['id']}", $change)
+                ->assertStatus(409)
+                ->assertJsonPath('message', 'Somente uma OS aberta pode ser editada.');
+        }
 
         $this->assertDatabaseHas('service_orders', [
             'id' => $paid['id'],
             'client_id' => $client->id,
-            'attendance_type' => 'external',
-            'reported_problem' => 'Problema corrigido após pagamento',
-            'equipment_description' => 'Notebook pago corrigido',
+            'attendance_type' => 'bench',
+            'reported_problem' => 'Teste pago',
+            'equipment_description' => 'Notebook pago',
         ]);
     }
 

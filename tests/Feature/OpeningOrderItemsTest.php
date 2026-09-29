@@ -34,6 +34,7 @@ class OpeningOrderItemsTest extends TestCase
             'manufacturer_id' => null,
             'attendance_type' => 'bench',
             'reported_problem' => 'Teste de itens na abertura',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [[
                 'catalog_id' => $catalogId,
@@ -73,6 +74,7 @@ class OpeningOrderItemsTest extends TestCase
             'equipment_type_id' => DB::table('equipment_types')->value('id'),
             'attendance_type' => 'bench',
             'reported_problem' => 'Finalizar item provisório',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [['catalog_id' => $catalogId, 'quantity' => 1]],
         ])->assertCreated()->json();

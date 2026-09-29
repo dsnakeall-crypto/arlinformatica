@@ -110,6 +110,7 @@ class FreePriceServiceTest extends TestCase
             'client_id' => $clientId,
             'equipment_type_id' => DB::table('equipment_types')->value('id'),
             'attendance_type' => 'bench', 'reported_problem' => 'Teste de preço livre',
+            'system_password_absent' => true,
             'items' => $items, 'checklist' => [],
         ];
     }

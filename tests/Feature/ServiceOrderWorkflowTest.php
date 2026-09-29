@@ -47,6 +47,7 @@ class ServiceOrderWorkflowTest extends TestCase
             'equipment_type_id' => $equipment,
             'attendance_type' => 'bench',
             'reported_problem' => 'Equipamento em teste de fluxo.',
+            'system_password_absent' => true,
             'checklist' => [],
         ])->assertCreated()->json();
 

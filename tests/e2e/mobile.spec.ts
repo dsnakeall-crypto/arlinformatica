@@ -237,6 +237,7 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
   const manualDescription = 'Notebook para validação mobile';
   await page.getByLabel('Equipamento *').fill(manualDescription);
   await page.getByLabel('Problema relatado *').fill('Validação do botão de salvar no mobile');
+  await page.getByLabel('Sem senha').check();
   const createOrder = page.getByRole('button', { name: 'Criar ordem de serviço' });
   await assertAboveBottomBar(createOrder);
   const createdResponse = page.waitForResponse((response) => response.url().endsWith('/api/orders') && response.request().method() === 'POST');

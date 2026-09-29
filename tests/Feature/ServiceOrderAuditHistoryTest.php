@@ -20,7 +20,7 @@ class ServiceOrderAuditHistoryTest extends TestCase
         $this->seed(DatabaseSeeder::class);
     }
 
-    public function test_history_is_read_only_human_readable_and_includes_client_and_completed_order_corrections(): void
+    public function test_history_is_read_only_human_readable_and_closed_order_rejects_corrections(): void
     {
         $user = User::create([
             'role_id' => Role::where('name', 'Master')->value('id'),
@@ -38,6 +38,7 @@ class ServiceOrderAuditHistoryTest extends TestCase
             'equipment_type_id' => $equipmentId,
             'attendance_type' => 'bench',
             'reported_problem' => 'Falha inicial',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [],
         ])->assertCreated()->json();
@@ -50,25 +51,29 @@ class ServiceOrderAuditHistoryTest extends TestCase
             'client_id' => $replacement->id,
         ])->assertOk();
 
+        $this->patchJson("/api/orders/{$order['id']}", [
+            'attendance_type' => 'external',
+            'reported_problem' => 'Problema corrigido antes da finalização',
+            'equipment_description' => 'Notebook corrigido antes da finalização',
+        ])->assertOk();
+
         DB::table('service_orders')->where('id', $order['id'])->update([
             'status' => 'completed',
             'completed_at' => now(),
         ]);
 
         $this->patchJson("/api/orders/{$order['id']}", [
-            'attendance_type' => 'external',
             'reported_problem' => 'Problema corrigido após finalização',
-            'equipment_description' => 'Notebook finalizado corrigido',
-        ])->assertOk();
+        ])->assertStatus(409);
 
         $response = $this->getJson("/api/orders/{$order['id']}/audit-history")->assertOk();
         $history = $response->json();
         $changes = collect($history)->pluck('changes')->flatten()->all();
 
         $this->assertContains('Cliente alterado de Cliente Anterior para Cliente Novo', $changes);
-        $this->assertContains('Equipamento alterado de Notebook inicial + carregador para Notebook finalizado corrigido', $changes);
+        $this->assertContains('Equipamento alterado de Notebook inicial + carregador para Notebook corrigido antes da finalização', $changes);
         $this->assertContains('Atendimento alterado de Bancada para Externo', $changes);
-        $this->assertContains('Problema relatado alterado de Falha inicial para Problema corrigido após finalização', $changes);
+        $this->assertContains('Problema relatado alterado de Falha inicial para Problema corrigido antes da finalização', $changes);
         $this->assertTrue(collect($history)->contains(fn ($entry) => $entry['user'] === 'Responsável pelo histórico'));
         $this->assertTrue(collect($history)->every(fn ($entry) => ! empty($entry['created_at']) && ! empty($entry['action'])));
 

@@ -235,6 +235,7 @@ class InventoryStockTest extends TestCase
             'equipment_type_id' => DB::table('equipment_types')->value('id'),
             'attendance_type' => 'bench',
             'reported_problem' => 'Teste controlado de estoque',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => $product ? [['catalog_id' => $product, 'quantity' => $quantity]] : [],
         ];
