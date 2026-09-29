@@ -46,11 +46,7 @@ class ServiceOrderMaintenanceController extends Controller
 
     public function update(Request $request, ServiceOrder $order, InventoryService $inventory): JsonResponse
     {
-        abort_if(
-            $order->archived || in_array($order->status, ['completed', 'interrupted'], true),
-            409,
-            'Somente uma OS aberta pode ser editada.'
-        );
+        abort_if($order->archived, 409, 'Somente uma OS não arquivada pode ser editada.');
 
         $data = $request->validate([
             'client_id' => ['sometimes', 'required', 'integer', 'exists:clients,id'],
@@ -78,6 +74,8 @@ class ServiceOrderMaintenanceController extends Controller
             throw ValidationException::withMessages(['system_password' => 'Informe a senha ou marque Sem senha']);
         }
 
+        $this->guardClosedOrderCorrection($request, $order, $data);
+
         if ($request->user()->hasRole('Funcionário')) {
             abort_if(
                 array_intersect(array_keys($data), ['client_id']) !== [],
@@ -101,11 +99,8 @@ class ServiceOrderMaintenanceController extends Controller
         DB::transaction(function () use ($request, $order, $data, $before, $newClient, $checklist, $items, $termIssued, $inventory, $passwordChangeRequested) {
             ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             $order->refresh();
-            abort_if(
-                $order->archived || in_array($order->status, ['completed', 'interrupted'], true),
-                409,
-                'Somente uma OS aberta pode ser editada.'
-            );
+            abort_if($order->archived, 409, 'Somente uma OS não arquivada pode ser editada.');
+            $this->guardClosedOrderCorrection($request, $order, $data);
             $scalar = [];
             foreach (['client_id', 'equipment_description', 'equipment_details', 'attendance_type', 'reported_problem', 'intake_condition', 'final_report'] as $field) {
                 if (! array_key_exists($field, $data)) {
@@ -197,6 +192,33 @@ class ServiceOrderMaintenanceController extends Controller
         });
 
         return response()->json($order->fresh()->load(['client', 'checklists', 'items', 'photos', 'histories.user:id,name', 'snapshot']));
+    }
+
+    private function guardClosedOrderCorrection(Request $request, ServiceOrder $order, array $data): void
+    {
+        if (! in_array($order->status, ['completed', 'interrupted'], true)) {
+            return;
+        }
+
+        abort_unless(
+            $request->user()->hasRole('Master'),
+            409,
+            'Somente o Master pode corrigir os dados de uma OS encerrada.'
+        );
+
+        $allowed = [
+            'attendance_type',
+            'reported_problem',
+            'equipment_description',
+            'equipment_details',
+            'intake_condition',
+        ];
+
+        abort_if(
+            array_diff(array_keys($data), $allowed) !== [],
+            422,
+            'Em OS concluída ou interrompida, somente os dados da ficha podem ser corrigidos pelo Master.'
+        );
     }
 
     public function destroy(Request $request, ServiceOrder $order, NotificationService $notifications, InventoryService $inventory): JsonResponse

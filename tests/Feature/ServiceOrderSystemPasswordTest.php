@@ -141,9 +141,10 @@ class ServiceOrderSystemPasswordTest extends TestCase
         $this->assertNull(DB::table('service_orders')->where('id', $interrupted['id'])->value('system_password'));
     }
 
-    public function test_active_order_fields_attendance_and_password_can_be_edited_but_closed_order_is_rejected(): void
+    public function test_active_order_can_be_edited_and_closed_order_corrections_are_restricted_to_master(): void
     {
         $employee = $this->user('Funcionário', 'password-edit-employee');
+        $master = $this->user('Master', 'password-edit-master');
         $order = $this->actingAs($employee)->postJson('/api/orders', [
             ...$this->orderPayload(),
             'system_password_absent' => true,
@@ -169,16 +170,32 @@ class ServiceOrderSystemPasswordTest extends TestCase
         DB::table('service_orders')->where('id', $order['id'])->update(['status' => 'completed', 'completed_at' => now()]);
         $this->patchJson("/api/orders/{$order['id']}", ['reported_problem' => 'Tentativa tardia'])
             ->assertStatus(409)
-            ->assertJsonPath('message', 'Somente uma OS aberta pode ser editada.');
+            ->assertJsonPath('message', 'Somente o Master pode corrigir os dados de uma OS encerrada.');
+        $this->actingAs($master)->patchJson("/api/orders/{$order['id']}", [
+            'system_password' => 'Senha tardia',
+            'system_password_absent' => false,
+        ])->assertStatus(422);
+        $this->patchJson("/api/orders/{$order['id']}", [
+            'reported_problem' => 'Correção administrativa do relato.',
+            'attendance_type' => 'bench',
+        ])->assertOk()
+            ->assertJsonPath('status', 'completed')
+            ->assertJsonPath('reported_problem', 'Correção administrativa do relato.');
 
-        $interrupted = $this->postJson('/api/orders', [
+        $interrupted = $this->actingAs($employee)->postJson('/api/orders', [
             ...$this->orderPayload('OS interrompida não pode ser editada'),
             'system_password_absent' => true,
         ])->assertCreated()->json();
         DB::table('service_orders')->where('id', $interrupted['id'])->update(['status' => 'interrupted', 'completed_at' => now()]);
         $this->patchJson("/api/orders/{$interrupted['id']}", ['attendance_type' => 'external'])
             ->assertStatus(409)
-            ->assertJsonPath('message', 'Somente uma OS aberta pode ser editada.');
+            ->assertJsonPath('message', 'Somente o Master pode corrigir os dados de uma OS encerrada.');
+        $this->actingAs($master)->patchJson("/api/orders/{$interrupted['id']}", [
+            'equipment_details' => 'Acessórios corrigidos pelo Master',
+            'intake_condition' => 'Risco na tampa',
+        ])->assertOk()
+            ->assertJsonPath('status', 'interrupted')
+            ->assertJsonPath('equipment_details', 'Acessórios corrigidos pelo Master');
     }
 
     private function orderPayload(string $problem = 'Equipamento não inicia'): array

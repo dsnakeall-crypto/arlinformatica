@@ -63,8 +63,8 @@ class ServiceOrderAuditHistoryTest extends TestCase
         ]);
 
         $this->patchJson("/api/orders/{$order['id']}", [
-            'reported_problem' => 'Problema corrigido após finalização',
-        ])->assertStatus(409);
+            'client_id' => $original->id,
+        ])->assertStatus(422);
 
         $response = $this->getJson("/api/orders/{$order['id']}/audit-history")->assertOk();
         $history = $response->json();
