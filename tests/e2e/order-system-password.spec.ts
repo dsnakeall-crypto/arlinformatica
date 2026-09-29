@@ -33,6 +33,8 @@ test('Nova OS exige escolha de senha e o olho fica restrito ao Administrador e M
   await expect(page.getByText('Informe a senha ou marque Sem senha', { exact: true })).toBeVisible();
 
   const secret = 'Windows#Cliente-31';
+  await expect(page.getByLabel('Senha do sistema')).toHaveAttribute('type', 'text');
+  await expect(page.getByLabel('Senha do sistema')).toHaveAttribute('autocomplete', 'off');
   await page.getByLabel('Senha do sistema').fill(secret);
   const createdResponse = page.waitForResponse((response) => response.url().endsWith('/api/orders') && response.request().method() === 'POST');
   await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
@@ -40,8 +42,10 @@ test('Nova OS exige escolha de senha e o olho fica restrito ao Administrador e M
   expect(created.status()).toBe(201);
   const order = await created.json();
 
-  const reveal = page.getByRole('button', { name: 'Ver senha do sistema' });
+  const intakeDates = page.locator('.arl-intake-dates');
+  const reveal = intakeDates.getByRole('button', { name: 'Ver senha do usuário' });
   await expect(reveal).toBeVisible();
+  await expect(page.locator('.arl-order-sticky-header').getByRole('button', { name: 'Ver senha do usuário' })).toHaveCount(0);
   const passwordResponse = page.waitForResponse((response) => new URL(response.url()).pathname === `/api/orders/${order.id}/system-password`);
   await reveal.click();
   expect((await passwordResponse).status()).toBe(200);
@@ -56,7 +60,7 @@ test('Nova OS exige escolha de senha e o olho fica restrito ao Administrador e M
   await login(page, 'e2e.funcionario');
   await page.goto(`/orders/${order.id}`);
   await expect(page.getByRole('heading', { name: `OS #${order.number}`, exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Ver senha do sistema' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Ver senha do usuário' })).toHaveCount(0);
   expect((await api(page, `/orders/${order.id}/system-password`)).status).toBe(403);
 
   await page.locator('aside').getByRole('button', { name: 'Nova OS', exact: true }).click();
@@ -68,5 +72,5 @@ test('Nova OS exige escolha de senha e o olho fica restrito ao Administrador e M
   const withoutPasswordResponse = page.waitForResponse((response) => response.url().endsWith('/api/orders') && response.request().method() === 'POST');
   await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
   expect((await withoutPasswordResponse).status()).toBe(201);
-  await expect(page.getByRole('button', { name: 'Ver senha do sistema' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Ver senha do usuário' })).toHaveCount(0);
 });

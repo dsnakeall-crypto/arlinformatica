@@ -2695,20 +2695,7 @@ export default function OrderDetailPage({
           </button>
           <div>
             <span>ORDEM DE SERVIÇO</span>
-            <div className="arl-order-number-row">
-              <h1>OS #{order.number}</h1>
-              {canAdminister && order.has_system_password && (
-                <button
-                  type="button"
-                  className="arl-system-password-view"
-                  aria-label="Ver senha do sistema"
-                  title="Ver senha do sistema"
-                  onClick={() => void openSystemPassword()}
-                >
-                  <Eye aria-hidden="true" />
-                </button>
-              )}
-            </div>
+            <h1>OS #{order.number}</h1>
             <span className="arl-order-markers">
               {reopened && (
                 <span className="arl-reopened-marker status-paid arl-order-reopened-marker">
@@ -2726,6 +2713,14 @@ export default function OrderDetailPage({
         </header>
         <div className="arl-read-only-banner">
           Somente leitura · edite pelo PC
+        </div>
+        <div className="arl-intake-dates">
+          <span><b>Entrada</b> {formatOptionalDate(order.received_at)}</span>
+          <i aria-hidden="true">|</i>
+          <span><b>Saída</b> {['completed', 'interrupted'].includes(order.status) ? formatOptionalDate(order.completed_at) : 'Em aberto'}</span>
+          <i aria-hidden="true">|</i>
+          <span><b>Atendimento</b> {order.attendance_type === 'external' ? 'Externo' : 'Interno'}</span>
+          {canAdminister && order.has_system_password && <><i aria-hidden="true">|</i><button type="button" className="arl-system-password-view" aria-label="Ver senha do usuário" title="Ver senha do usuário" onClick={() => void openSystemPassword()}><Eye aria-hidden="true" /><span>Senha do usuário</span></button></>}
         </div>
         <div className="arl-mobile-read-only-actions">
           {openingWhatsapp && (
@@ -2939,20 +2934,7 @@ export default function OrderDetailPage({
           </button>
           <div className="arl-order-header-identity">
             <span className="arl-eyebrow">ORDEM DE SERVIÇO</span>
-            <div className="arl-order-number-row">
-              <h1>OS #{order.number}</h1>
-              {canAdminister && order.has_system_password && (
-                <button
-                  type="button"
-                  className="arl-system-password-view"
-                  aria-label="Ver senha do sistema"
-                  title="Ver senha do sistema"
-                  onClick={() => void openSystemPassword()}
-                >
-                  <Eye aria-hidden="true" />
-                </button>
-              )}
-            </div>
+            <h1>OS #{order.number}</h1>
             <span className="arl-order-markers">
               {reopened && (
                 <span className="arl-reopened-marker status-paid arl-order-reopened-marker">
@@ -3138,6 +3120,7 @@ export default function OrderDetailPage({
             <b>Atendimento</b>{" "}
             {order.attendance_type === "external" ? "Externo" : "Interno"}
           </span>
+          {canAdminister && order.has_system_password && <><i aria-hidden="true">|</i><button type="button" className="arl-system-password-view" aria-label="Ver senha do usuário" title="Ver senha do usuário" onClick={() => void openSystemPassword()}><Eye aria-hidden="true" /><span>Senha do usuário</span></button></>}
         </div>
         <div className="arl-intake-grid">
           <section className="arl-intake-field arl-intake-client-field">

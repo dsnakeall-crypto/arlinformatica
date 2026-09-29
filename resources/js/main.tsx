@@ -1143,9 +1143,9 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
                 <label className="field">
                   <span>Senha do sistema *</span>
                   <input
-                    type="password"
+                    type="text"
                     maxLength={500}
-                    autoComplete="new-password"
+                    autoComplete="off"
                     disabled={withoutSystemPassword}
                     value={systemPassword}
                     onChange={(e) => setSystemPassword(e.target.value)}
