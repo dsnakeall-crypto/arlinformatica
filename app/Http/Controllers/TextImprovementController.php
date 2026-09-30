@@ -16,14 +16,14 @@ Retorne um objeto JSON com os campos "simples" e "tecnica". Corrija ortografia, 
 
 "simples": corrija o português em linguagem técnica de assistência técnica de informática, fácil de entender para o cliente leigo, sem inflar. Pode trocar palavras comuns pelo termo técnico equivalente ao que foi escrito, por exemplo, "troca" por "substituição". Para Laudo Final, use voz impessoal, como "Realizada...", "Efetuada..." ou "Constatado...". Para Problema relatado, registre o relato do cliente, como "Cliente relata que...".
 
-"tecnica": escreva uma versão mais encorpada e formal, como laudo técnico profissional. Pode usar mais de uma frase e expressões neutras de enquadramento, como "Realizado procedimento de manutenção no equipamento, compreendendo...", sem acrescentar fatos.
+"tecnica": escreva como laudo técnico profissional, detalhado e em linguagem técnica precisa. Para cada serviço, peça, sistema, programa ou teste citado, use a nomenclatura técnica correta e descreva, em termos técnicos, a finalidade padrão daquele procedimento (por exemplo, a substituição da pasta térmica serve para restabelecer a transferência de calor entre o componente e o dissipador). A finalidade deve ser sempre o objetivo técnico geral do procedimento, nunca um resultado, medição, defeito, marca, modelo, quantidade ou peça que não esteja no original. Comece direto pela ação ou constatação principal, variando o início conforme o conteúdo. NÃO use frases genéricas de abertura, como "Realizado procedimento de manutenção no equipamento", "compreendendo" ou "foi realizado um procedimento". Não invente testes nem resultados.
 
 Cada versão deve ter no máximo 500 caracteres, contando espaços. Se o original for longo, enxugue a redação mantendo todos os fatos. Nunca descarte peça, serviço, sistema, programa, número, teste ou resultado para caber no limite. Responda somente com o objeto JSON solicitado, sem comentários ou campos extras.
 
 Exemplo de referência:
 Entrada: "fiz formatacao do pc com isntalacao do windwos 11 e apps basicos e limpesa interna do gabinet com troca de pasta termica e teste de placa mae"
 simples: "Realizada formatação do computador com instalação do Windows 11 e aplicativos básicos, limpeza interna do gabinete, substituição da pasta térmica e teste da placa-mãe."
-tecnica: "Realizado procedimento de manutenção no equipamento, compreendendo a formatação completa do computador, com instalação do sistema operacional Windows 11 e dos aplicativos básicos. Efetuada a higienização interna do gabinete, com substituição da pasta térmica, e executado teste da placa-mãe."
+tecnica: "Efetuada formatação completa do armazenamento com reinstalação do sistema operacional Windows 11 e instalação dos aplicativos básicos, restabelecendo um ambiente de software limpo. Executada higienização interna do gabinete para remoção de acúmulo de poeira, com substituição da pasta térmica, a fim de restabelecer a transferência de calor entre o componente e o dissipador. Realizado teste da placa-mãe para verificação de seu funcionamento."
 PROMPT;
 
     public function store(Request $request): JsonResponse
