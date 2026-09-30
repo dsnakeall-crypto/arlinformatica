@@ -191,6 +191,17 @@
 - [PENDENTE] Testes PHP e E2E, por instrução expressa deste lote.
 - [PENDENTE] Push, por instrução expressa deste lote.
 
+# Checklist final — senha do sistema e edição da OS
+
+- [OK] A OS exige senha do sistema ou a escolha explícita Sem senha e armazena a senha com criptografia do Laravel.
+- [OK] A senha não integra a resposta comum da OS e possui consulta separada, restrita a Master e Administrador, com auditoria sem o segredo.
+- [OK] Conclusão e interrupção removem a senha automaticamente.
+- [OK] A ficha permite editar os campos técnicos solicitados e o tipo de atendimento sem sair da tela.
+- [OK] OS concluída, interrompida ou arquivada é bloqueada também no backend.
+- [OK] Testes de regressão foram escritos e os testes antigos de criação e edição foram atualizados sem remoções.
+- [PENDENTE] Migração local e testes PHP/E2E, por instrução expressa deste lote.
+- [PENDENTE] Push, por instrução expressa deste lote.
+
 ## Ajustes pós-lote de preço livre
 
 - [OK] A finalização permite editar o valor de qualquer item e preserva a exigência de valor positivo para serviço de preço livre.

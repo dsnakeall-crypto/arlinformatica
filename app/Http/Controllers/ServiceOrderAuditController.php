@@ -65,6 +65,7 @@ class ServiceOrderAuditController extends Controller
             'service_order.reopened' => 'Reabertura da OS',
             'service_order.final_pdf_replaced' => 'Substituição de PDF final',
             'service_order.interrupted' => 'Interrupção e fechamento da OS',
+            'service_order.system_password_viewed' => 'Senha do sistema visualizada',
             'service_order.deleted' => 'Remoção da OS',
             'service_order.refund_created' => 'Estorno da OS',
             default => 'Registro da OS',
@@ -90,6 +91,9 @@ class ServiceOrderAuditController extends Controller
                 'O que já foi feito: '.$this->text($after['work_done'] ?? null),
                 'OS fechada sem lançamento financeiro; serviços removidos e total zerado.',
             ],
+            'service_order.system_password_viewed' => [
+                'Senha visualizada por '.$this->text($after['viewer'] ?? null).'.',
+            ],
             'service_order.deleted' => ['OS removida da operação; histórico financeiro, auditoria e documentos foram preservados.'],
             'service_order.refund_created' => [
                 'Estorno de '.$this->money((int) ($after['amount_cents'] ?? 0)).' via '.$this->refundMethod($after['method'] ?? null).'.',
@@ -112,6 +116,11 @@ class ServiceOrderAuditController extends Controller
 
         $this->appendScalarChange($changes, 'Equipamento', $before['equipment_description'] ?? null, $after['equipment_description'] ?? null);
         $this->appendScalarChange($changes, 'Fabricante / Modelo / Acessórios', $before['equipment_details'] ?? null, $after['equipment_details'] ?? null);
+        if (! empty($after['system_password_updated'])) {
+            $changes[] = ! empty($after['has_system_password'])
+                ? 'Senha do sistema cadastrada ou substituída.'
+                : 'Senha do sistema removida.';
+        }
 
         $beforeAttendance = $this->attendance($before['attendance_type'] ?? null);
         $afterAttendance = $this->attendance($after['attendance_type'] ?? null);

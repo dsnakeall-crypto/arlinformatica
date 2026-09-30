@@ -485,7 +485,12 @@ function OrderTable({
               const displayStatus = o.display_status || o.status;
               return (
                 <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
-                  <td><b>#{o.number}</b></td>
+                  <td>
+                    <span className="arl-order-number">
+                      <b>#{o.number}</b>
+                      <small className="arl-order-opened-at">{formatBrasiliaDateTime(o.received_at)}</small>
+                    </span>
+                  </td>
                   <td>
                     <span className="order-customer">
                       <strong>{o.client.name}</strong>
@@ -561,7 +566,7 @@ function OrderTable({
           const closed = Boolean(o.completed_at) || interrupted;
           return (
             <tr className={`order-row${reopened ? " order-row-reopened" : ""}`} key={o.id}>
-              <td><b>#{o.number}</b></td>
+              <td><span className="arl-order-number"><b>#{o.number}</b><small className="arl-order-opened-at">{formatBrasiliaDateTime(o.received_at)}</small></span></td>
               <td><span className="order-customer"><strong>{o.client.name}</strong>{o.client.nickname && <small className="arl-client-nickname">{o.client.nickname}</small>}<span className="arl-order-markers">{external && <span className="arl-external-attendance-marker status-awaiting_payment">Externo</span>}{reopened && <span className="arl-reopened-marker status-paid" aria-label="OS reaberta">Reaberta</span>}{o.closing_reference_cents != null && <span className="arl-closing-marker" aria-label="OS precisa fechar">⚑ Fechar · {money(o.closing_reference_cents)}</span>}</span>{interrupted && <span className="arl-reopened-marker arl-interrupted-marker" aria-label="OS interrompida">Interrompida</span>}</span></td>
               <td><span className="order-device" title={o.equipment_description || undefined}><Box aria-hidden="true" />{o.equipment_description || ""}</span></td>
               <td><label className={`row-status status-${displayStatus}`}><span className="sr-only">Alterar status da OS {o.number}</span><CircleDot className="row-status-icon" aria-hidden="true" /><select aria-label={`Status da OS ${o.number}`} value={displayStatus} disabled={closed && !canSetPaid} onChange={(e) => onStatus(o, e.target.value)}>{awaitingPayment ? <><option value="awaiting_payment">Aguardando PGTO</option>{canSetPaid && <option value="paid">PAGO</option>}</> : displayStatus === "paid" ? <option value="paid">Pago</option> : <><option value="analysis">Em Análise</option><option value="waiting_part">Aguardando Peça</option><option value="in_service">Em Serviço</option>{(role !== "Funcionário" || interrupted) && <option value="interrupted">Interrompido</option>}{o.status === "completed" && <option value="completed">Concluído</option>}</>}</select></label></td>
@@ -785,7 +790,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
               setPage(1);
             }}
           >
-            Em Andamento
+            Em Andamento <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.progress ?? 0}</small>
           </button>
           <button
             className={tab === "awaiting_payment" ? "active" : ""}
@@ -794,7 +799,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
               setPage(1);
             }}
           >
-            Aguardando PGTO
+            Aguardando PGTO <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.awaiting_payment ?? 0}</small>
           </button>
           <button
             className={tab === "finalized" ? "active" : ""}
@@ -803,7 +808,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
               setPage(1);
             }}
           >
-            Finalizadas
+            Finalizadas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.finalized ?? 0}</small>
           </button>
           <button
             className={tab === "interrupted" ? "active" : ""}
@@ -812,7 +817,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
               setPage(1);
             }}
           >
-            Interrompidas
+            Interrompidas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.interrupted ?? 0}</small>
           </button>
           <button
             className={tab === "all" ? "active" : ""}
@@ -821,7 +826,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
               setPage(1);
             }}
           >
-            Todas
+            Todas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.all ?? 0}</small>
           </button>
         </div>
         <div className="filters">
@@ -919,6 +924,8 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
     [intakeCondition, setIntakeCondition] = useState(""),
     [equipmentDescription, setEquipmentDescription] = useState(""),
     [equipmentDetails, setEquipmentDetails] = useState(""),
+    [systemPassword, setSystemPassword] = useState(""),
+    [withoutSystemPassword, setWithoutSystemPassword] = useState(false),
     [photos, setPhotos] = useState<File[]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -1020,6 +1027,8 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
         throw new Error(
           "Não foi possível carregar o tipo interno de equipamento.",
         );
+      if (!withoutSystemPassword && !systemPassword.trim())
+        throw new Error("Informe a senha ou marque Sem senha");
       const checklist: any[] = [];
       const items = orderItems.map((x) => ({
         catalog_id: x.catalog_id,
@@ -1034,6 +1043,8 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
           manufacturer_id: null,
           equipment_description: equipmentDescription.trim(),
           equipment_details: equipmentDetails.trim() || null,
+          system_password: withoutSystemPassword ? null : systemPassword,
+          system_password_absent: withoutSystemPassword,
           attendance_type: attendance,
           reported_problem: problem,
           intake_condition: intakeCondition,
@@ -1133,6 +1144,31 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
                   placeholder="Ex.: Dell Inspiron 15 + carregador"
                 />
               </label>
+              <div className="arl-system-password-field">
+                <label className="field">
+                  <span>Senha do sistema *</span>
+                  <input
+                    type="text"
+                    maxLength={500}
+                    autoComplete="off"
+                    disabled={withoutSystemPassword}
+                    value={systemPassword}
+                    onChange={(e) => setSystemPassword(e.target.value)}
+                    aria-label="Senha do sistema"
+                  />
+                </label>
+                <label className="arl-system-password-absent">
+                  <input
+                    type="checkbox"
+                    checked={withoutSystemPassword}
+                    onChange={(e) => {
+                      setWithoutSystemPassword(e.target.checked);
+                      if (e.target.checked) setSystemPassword("");
+                    }}
+                  />
+                  <span>Sem senha</span>
+                </label>
+              </div>
               <p className="arl-manual-equipment-help">
                 Descreva o equipamento e, se necessário, complemente com fabricante, modelo e acessórios.
               </p>
@@ -2194,6 +2230,15 @@ function ExpenseEntry({ open, onClose, onSaved, item }: any) {
   );
 }
 const money = (c: number = 0) => `R$ ${(c / 100).toFixed(2).replace(".", ",")}`;
+const formatBrasiliaDateTime = (value: string) => new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Sao_Paulo",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+}).format(new Date(value));
 const expenseCategoryLabel = (category?: string | null) =>
   category === "merchandise_purchase"
     ? "Compra de mercadoria"

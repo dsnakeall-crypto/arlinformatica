@@ -39,6 +39,7 @@ class FinalizationApiParityTest extends TestCase
                 'client_id' => $client['id'],
                 'equipment_type_id' => DB::table('equipment_types')->value('id'),
                 'attendance_type' => $attendanceType, 'reported_problem' => 'Teste de paridade',
+                'system_password_absent' => true,
                 'items' => [], 'checklist' => [],
             ])->assertCreated()->json();
             $service = $this->validService();

@@ -46,10 +46,14 @@ class ServiceOrderMaintenanceController extends Controller
 
     public function update(Request $request, ServiceOrder $order, InventoryService $inventory): JsonResponse
     {
+        abort_if($order->archived, 409, 'Somente uma OS não arquivada pode ser editada.');
+
         $data = $request->validate([
             'client_id' => ['sometimes', 'required', 'integer', 'exists:clients,id'],
             'equipment_description' => ['sometimes', 'required', 'string', 'max:500'],
             'equipment_details' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'system_password' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'system_password_absent' => ['sometimes', 'boolean'],
             'attendance_type' => ['sometimes', 'required', 'in:bench,external'],
             'reported_problem' => ['sometimes', 'required', 'string', 'max:10000'],
             'intake_condition' => ['sometimes', 'nullable', 'string', 'max:10000'],
@@ -65,26 +69,20 @@ class ServiceOrderMaintenanceController extends Controller
 
         abort_if($data === [], 422, 'Informe ao menos uma alteração para a OS.');
 
+        $passwordChangeRequested = array_key_exists('system_password', $data) || array_key_exists('system_password_absent', $data);
+        if ($passwordChangeRequested && ! ($data['system_password_absent'] ?? false) && trim((string) ($data['system_password'] ?? '')) === '') {
+            throw ValidationException::withMessages(['system_password' => 'Informe a senha ou marque Sem senha']);
+        }
+
+        $this->guardClosedOrderCorrection($request, $order, $data);
+
         if ($request->user()->hasRole('Funcionário')) {
-            abort_if(
-                $order->archived || in_array($order->status, ['completed', 'interrupted'], true),
-                403,
-                'Funcionário só pode editar uma OS ativa em que está trabalhando.'
-            );
             abort_if(
                 array_intersect(array_keys($data), ['client_id']) !== [],
                 403,
                 'Funcionário não pode trocar o cliente vinculado à OS.'
             );
         }
-
-        $protectedAfterCompletion = ['client_id', 'final_report', 'checklist', 'items'];
-        $changesProtectedAfterCompletion = array_intersect_key($data, array_flip($protectedAfterCompletion)) !== [];
-        abort_if(
-            ($order->archived || in_array($order->status, ['completed', 'interrupted'], true)) && $changesProtectedAfterCompletion,
-            422,
-            'Em OS finalizada ou paga, apenas atendimento, problema relatado e equipamento podem ser corrigidos administrativamente.'
-        );
 
         $newClient = array_key_exists('client_id', $data)
             ? Client::query()->findOrFail((int) $data['client_id'])
@@ -98,9 +96,11 @@ class ServiceOrderMaintenanceController extends Controller
         $before = $this->auditState($order);
         $termIssued = $this->termIssued($order);
 
-        DB::transaction(function () use ($request, $order, $data, $before, $newClient, $checklist, $items, $termIssued, $inventory) {
+        DB::transaction(function () use ($request, $order, $data, $before, $newClient, $checklist, $items, $termIssued, $inventory, $passwordChangeRequested) {
             ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             $order->refresh();
+            abort_if($order->archived, 409, 'Somente uma OS não arquivada pode ser editada.');
+            $this->guardClosedOrderCorrection($request, $order, $data);
             $scalar = [];
             foreach (['client_id', 'equipment_description', 'equipment_details', 'attendance_type', 'reported_problem', 'intake_condition', 'final_report'] as $field) {
                 if (! array_key_exists($field, $data)) {
@@ -118,6 +118,11 @@ class ServiceOrderMaintenanceController extends Controller
                     $value = null;
                 }
                 $scalar[$field] = $value;
+            }
+            if ($passwordChangeRequested) {
+                $scalar['system_password'] = ($data['system_password_absent'] ?? false)
+                    ? null
+                    : $data['system_password'];
             }
             if ($scalar !== []) {
                 $order->forceFill($scalar)->save();
@@ -170,19 +175,50 @@ class ServiceOrderMaintenanceController extends Controller
             }
 
             $fresh = $order->fresh()->load(['client', 'checklists', 'items', 'snapshot']);
+            $after = $this->auditState($fresh);
+            if ($passwordChangeRequested) {
+                $after['system_password_updated'] = true;
+            }
             DB::table('audit_logs')->insert([
                 'user_id' => $request->user()->id,
                 'action' => 'service_order.edited',
                 'subject_type' => 'service_order',
                 'subject_id' => $order->id,
                 'before' => json_encode($before),
-                'after' => json_encode($this->auditState($fresh)),
+                'after' => json_encode($after),
                 'ip_address' => $request->ip(),
                 'created_at' => now(),
             ]);
         });
 
         return response()->json($order->fresh()->load(['client', 'checklists', 'items', 'photos', 'histories.user:id,name', 'snapshot']));
+    }
+
+    private function guardClosedOrderCorrection(Request $request, ServiceOrder $order, array $data): void
+    {
+        if (! in_array($order->status, ['completed', 'interrupted'], true)) {
+            return;
+        }
+
+        abort_unless(
+            $request->user()->hasRole('Master'),
+            409,
+            'Somente o Master pode corrigir os dados de uma OS encerrada.'
+        );
+
+        $allowed = [
+            'attendance_type',
+            'reported_problem',
+            'equipment_description',
+            'equipment_details',
+            'intake_condition',
+        ];
+
+        abort_if(
+            array_diff(array_keys($data), $allowed) !== [],
+            422,
+            'Em OS concluída ou interrompida, somente os dados da ficha podem ser corrigidos pelo Master.'
+        );
     }
 
     public function destroy(Request $request, ServiceOrder $order, NotificationService $notifications, InventoryService $inventory): JsonResponse
@@ -348,6 +384,7 @@ class ServiceOrderMaintenanceController extends Controller
             ],
             'equipment_description' => $order->equipment_description,
             'equipment_details' => $order->equipment_details,
+            'has_system_password' => $order->system_password !== null,
             'attendance_type' => $order->attendance_type,
             'reported_problem' => $order->reported_problem,
             'final_report' => $order->final_report,

@@ -36,6 +36,7 @@ class EmployeeAuthorizationTest extends TestCase
             'client_id' => $client['id'],
             'equipment_type_id' => DB::table('equipment_types')->where('name', 'Notebook')->value('id'),
             'attendance_type' => 'bench', 'reported_problem' => 'Não liga.', 'checklist' => [],
+            'system_password_absent' => true,
         ])->assertCreated()->json();
         $this->order = ServiceOrder::findOrFail($created['id']);
     }

@@ -70,6 +70,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const intakeField = page.getByLabel('Estado físico do equipamento na entrada');
     await expect(intakeField).toHaveAttribute('spellcheck', 'true');
     await intakeField.fill(intakeCondition);
+    await page.getByLabel('Sem senha').check();
     await page.locator('input[type=file]').setInputFiles({ name: 'equipamento.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
     await page.getByRole('button', { name: 'Criar ordem de serviço' }).click();
     await expect(page.getByText('Notebook não liga durante homologação')).toBeVisible();

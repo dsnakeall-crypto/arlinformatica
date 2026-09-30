@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   Camera,
   Check,
+  Eye,
   FileText,
   History,
   MapPin,
@@ -2236,7 +2237,11 @@ export default function OrderDetailPage({
     [camera, setCamera] = useState(false),
     [pdfActionsOpen, setPdfActionsOpen] = useState(false),
     [finalLinkStatus, setFinalLinkStatus] = useState<any>(null),
-    [finalLinkBusy, setFinalLinkBusy] = useState(false);
+    [finalLinkBusy, setFinalLinkBusy] = useState(false),
+    [systemPasswordOpen, setSystemPasswordOpen] = useState(false),
+    [systemPassword, setSystemPassword] = useState(""),
+    [systemPasswordBusy, setSystemPasswordBusy] = useState(false),
+    [systemPasswordError, setSystemPasswordError] = useState("");
   const fileInput = useRef<HTMLInputElement>(null),
     finalReportInput = useRef<HTMLTextAreaElement>(null),
     pendingServicesSave = useRef<null | (() => Promise<any>)>(null),
@@ -2379,6 +2384,48 @@ export default function OrderDetailPage({
     }
   };
   const canAdminister = ["Master", "Administrador"].includes(role);
+  const openSystemPassword = async () => {
+    setSystemPasswordOpen(true);
+    setSystemPassword("");
+    setSystemPasswordError("");
+    setSystemPasswordBusy(true);
+    try {
+      const result = await api(`/orders/${order.id}/system-password`);
+      setSystemPassword(result.password || "");
+    } catch (reason: any) {
+      setSystemPasswordError(
+        reason.message || "Não foi possível consultar a senha do sistema.",
+      );
+    } finally {
+      setSystemPasswordBusy(false);
+    }
+  };
+  const systemPasswordDialog = systemPasswordOpen ? (
+    <div className="modal">
+      <section
+        className="modal-card arl-system-password-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Senha do sistema da OS #${order.number}`}
+      >
+        <h2>Senha do sistema</h2>
+        {systemPasswordBusy ? (
+          <p>Consultando…</p>
+        ) : systemPasswordError ? (
+          <div className="alert">{systemPasswordError}</div>
+        ) : (
+          <div className="arl-system-password-value" aria-label="Senha cadastrada">
+            {systemPassword}
+          </div>
+        )}
+        <div className="actions">
+          <button type="button" onClick={() => setSystemPasswordOpen(false)}>
+            Fechar
+          </button>
+        </div>
+      </section>
+    </div>
+  ) : null;
   const openClosingReference = () => {
     setClosingValue(
       order.closing_reference_cents != null
@@ -2667,6 +2714,14 @@ export default function OrderDetailPage({
         <div className="arl-read-only-banner">
           Somente leitura · edite pelo PC
         </div>
+        <div className="arl-intake-dates">
+          <span><b>Entrada</b> {formatOptionalDate(order.received_at)}</span>
+          <i aria-hidden="true">|</i>
+          <span><b>Saída</b> {['completed', 'interrupted'].includes(order.status) ? formatOptionalDate(order.completed_at) : 'Em aberto'}</span>
+          <i aria-hidden="true">|</i>
+          <span><b>Atendimento</b> {order.attendance_type === 'external' ? 'Externo' : 'Interno'}</span>
+          {canAdminister && order.has_system_password && <><i aria-hidden="true">|</i><button type="button" className="arl-system-password-view" aria-label="Ver senha do usuário" title="Ver senha do usuário" onClick={() => void openSystemPassword()}><Eye aria-hidden="true" /><span>Senha do usuário</span></button></>}
+        </div>
         <div className="arl-mobile-read-only-actions">
           {openingWhatsapp && (
             <a href={openingWhatsapp} target="_blank" rel="noreferrer">
@@ -2837,6 +2892,7 @@ export default function OrderDetailPage({
           </div>
         )}
         {closingDialog}
+        {systemPasswordDialog}
       </div>
     );
   const stages = [
@@ -3059,6 +3115,12 @@ export default function OrderDetailPage({
               ? formatOptionalDate(order.completed_at)
               : "Em aberto"}
           </span>
+          <i aria-hidden="true">|</i>
+          <span>
+            <b>Atendimento</b>{" "}
+            {order.attendance_type === "external" ? "Externo" : "Interno"}
+          </span>
+          {canAdminister && order.has_system_password && <><i aria-hidden="true">|</i><button type="button" className="arl-system-password-view" aria-label="Ver senha do usuário" title="Ver senha do usuário" onClick={() => void openSystemPassword()}><Eye aria-hidden="true" /><span>Senha do usuário</span></button></>}
         </div>
         <div className="arl-intake-grid">
           <section className="arl-intake-field arl-intake-client-field">
@@ -3362,6 +3424,7 @@ export default function OrderDetailPage({
         />
       )}
       {closingDialog}
+      {systemPasswordDialog}
       {order.status === "completed" && (
         <FinalShareCard
           order={order}

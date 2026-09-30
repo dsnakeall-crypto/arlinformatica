@@ -20,6 +20,9 @@ export async function login(page: Page, login = 'e2e.master') {
 }
 
 export async function api(page: Page, path: string, method = 'GET', body?: unknown) {
+  const requestBody = path === '/orders' && method === 'POST' && body && typeof body === 'object' && !Array.isArray(body)
+    ? { system_password_absent: true, ...(body as Record<string, unknown>) }
+    : body;
   return page.evaluate(async ({ path, method, body }) => {
     const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
     const response = await fetch(`/api${path}`, {
@@ -28,7 +31,7 @@ export async function api(page: Page, path: string, method = 'GET', body?: unkno
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     return { status: response.status, body: await response.json().catch(() => null) };
-  }, { path, method, body });
+  }, { path, method, body: requestBody });
 }
 
 export async function validServiceItem(page: Page) {

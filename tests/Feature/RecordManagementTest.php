@@ -33,6 +33,7 @@ class RecordManagementTest extends TestCase
             'manufacturer_id' => null,
             'attendance_type' => 'bench',
             'reported_problem' => 'Equipamento recebido antes da exclusão do cadastro.',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [],
         ])->assertCreated()->json();
@@ -63,6 +64,7 @@ class RecordManagementTest extends TestCase
             'equipment_type_id' => DB::table('equipment_types')->value('id'),
             'attendance_type' => 'bench',
             'reported_problem' => 'OS ativa para exclusão lógica.',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [],
         ])->assertCreated()->json();
@@ -76,6 +78,7 @@ class RecordManagementTest extends TestCase
             'equipment_type_id' => DB::table('equipment_types')->value('id'),
             'attendance_type' => 'external',
             'reported_problem' => 'OS finalizada para exclusão lógica.',
+            'system_password_absent' => true,
             'checklist' => [],
             'items' => [],
         ])->assertCreated()->json();

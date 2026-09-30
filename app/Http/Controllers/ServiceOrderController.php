@@ -12,6 +12,7 @@ use App\Services\NotificationService;
 use App\Services\OrderNumber;
 use App\Services\PhotoOptimizer;
 use App\Services\PostSaleService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,20 +41,7 @@ class ServiceOrderController extends Controller
         if ($requestedStatus === 'paid') {
             $q->where('status', 'completed')->where('archived', true);
         }
-        match ($tab) {
-            'progress' => $q->whereIn('status', ['analysis', 'waiting_part', 'in_service']),
-            'awaiting_payment' => $q
-                ->where('status', 'completed')
-                ->whereRaw('COALESCE(payment_status.paid_cents, 0) < service_orders.total_cents'),
-            'finalized' => $q
-                ->where('status', 'completed')
-                ->whereRaw('COALESCE(payment_status.paid_cents, 0) >= service_orders.total_cents'),
-            'interrupted' => $q->where('status', 'interrupted'),
-            'closed_week' => $q
-                ->whereIn('status', ['completed', 'interrupted'])
-                ->where('completed_at', '>=', now('America/Sao_Paulo')->startOfWeek()),
-            default => null,
-        };
+        $this->applyTabFilter($q, $tab);
         if ($requestedStatus !== '' && in_array($requestedStatus, ['analysis', 'waiting_part', 'in_service', 'interrupted'], true)) {
             $q->where('status', $requestedStatus);
         }
@@ -86,7 +74,7 @@ class ServiceOrderController extends Controller
             return $order;
         });
 
-        return response()->json([...$orders->toArray(), 'summary' => $summary]);
+        return response()->json([...$orders->toArray(), 'summary' => $summary, 'tab_counts' => $this->tabCounts()]);
     }
 
     public function desk(PostSaleService $postSales): JsonResponse
@@ -111,6 +99,8 @@ class ServiceOrderController extends Controller
             'manufacturer_id' => 'nullable|exists:manufacturers,id',
             'equipment_description' => 'nullable|string|max:500',
             'equipment_details' => 'nullable|string|max:500',
+            'system_password' => 'nullable|string|max:500',
+            'system_password_absent' => 'required|boolean',
             'attendance_type' => 'required|in:bench,external',
             'reported_problem' => 'required|string|max:10000',
             'intake_condition' => 'nullable|string|max:10000',
@@ -125,6 +115,11 @@ class ServiceOrderController extends Controller
         ]);
         $data['equipment_description'] = trim((string) ($data['equipment_description'] ?? '')) ?: null;
         $data['equipment_details'] = trim((string) ($data['equipment_details'] ?? '')) ?: null;
+        if (! $data['system_password_absent'] && trim((string) ($data['system_password'] ?? '')) === '') {
+            throw ValidationException::withMessages(['system_password' => 'Informe a senha ou marque Sem senha']);
+        }
+        $data['system_password'] = $data['system_password_absent'] ? null : $data['system_password'];
+        unset($data['system_password_absent']);
         $manualEquipment = DB::table('equipment_types')->where('id', $data['equipment_type_id'])->value('name') === 'Informado manualmente';
         if ($manualEquipment && blank($data['equipment_description'])) {
             abort(422, 'Descreva o equipamento informado manualmente.');
@@ -170,6 +165,7 @@ class ServiceOrderController extends Controller
             $payload['client'] = $order->snapshot->client;
         }
         $payload['display_status'] = $this->displayStatus($order, $this->paidCentsForOrder($order));
+        $payload['has_system_password'] = $order->system_password !== null;
         $payload['reopened'] = $order->histories->contains(fn ($history) => $history->from_status === 'completed' && $history->to_status === 'analysis');
         $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;
         $payload['interruption_work_done'] = $order->status === 'interrupted' ? $order->interruption_work_done : null;
@@ -361,6 +357,7 @@ class ServiceOrderController extends Controller
                     'result' => null,
                     'technical_report' => $reason,
                     'interruption_work_done' => $workDone,
+                    'system_password' => null,
                     'subtotal_cents' => 0,
                     'discount_cents' => 0,
                     'total_cents' => 0,
@@ -475,6 +472,38 @@ class ServiceOrderController extends Controller
             ->where('ft.origin', 'service_order')
             ->groupBy('p.service_order_id')
             ->select('p.service_order_id', DB::raw('SUM(COALESCE(adjustment.new_cents, ft.amount_cents)) as paid_cents'));
+    }
+
+    private function applyTabFilter(Builder $query, string $tab): void
+    {
+        match ($tab) {
+            'progress' => $query->whereIn('status', ['analysis', 'waiting_part', 'in_service']),
+            'awaiting_payment' => $query
+                ->where('status', 'completed')
+                ->whereRaw('COALESCE(payment_status.paid_cents, 0) < service_orders.total_cents'),
+            'finalized' => $query
+                ->where('status', 'completed')
+                ->whereRaw('COALESCE(payment_status.paid_cents, 0) >= service_orders.total_cents'),
+            'interrupted' => $query->where('status', 'interrupted'),
+            'closed_week' => $query
+                ->whereIn('status', ['completed', 'interrupted'])
+                ->where('completed_at', '>=', now('America/Sao_Paulo')->startOfWeek()),
+            default => null,
+        };
+    }
+
+    private function tabCounts(): array
+    {
+        $counts = [];
+
+        foreach (['progress', 'awaiting_payment', 'finalized', 'interrupted', 'all'] as $tab) {
+            $query = ServiceOrder::query()
+                ->leftJoinSub($this->effectivePaymentsByOrder(), 'payment_status', 'payment_status.service_order_id', '=', 'service_orders.id');
+            $this->applyTabFilter($query, $tab);
+            $counts[$tab] = $query->count('service_orders.id');
+        }
+
+        return $counts;
     }
 
     private function displayStatus(ServiceOrder $order, int $paidCents): string
