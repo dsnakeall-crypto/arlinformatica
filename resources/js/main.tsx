@@ -3693,36 +3693,11 @@ function SettingsPage({ role }: any) {
   const [logo, setLogo] = useState<File | null>(null);
   const [signature, setSignature] = useState<File | null>(null);
   const [removingSignature, setRemovingSignature] = useState(false);
-  const [appBackground, setAppBackground] = useState<any>({
-    configured: false,
-    soften: true,
-    version: null,
-    url: null,
-  });
-  const [backgroundMode, setBackgroundMode] = useState<"original" | "custom">("original");
-  const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
-  const [backgroundPreview, setBackgroundPreview] = useState<string | null>(null);
-  const [backgroundBusy, setBackgroundBusy] = useState(false);
   useEffect(() => {
     api("/settings")
       .then((settings: any) => setData(formatCompanySettings(settings)))
       .catch((e) => setMessage(e.message));
-    api("/app-background")
-      .then((background: any) => {
-        setAppBackground(background);
-        setBackgroundMode(background.configured ? "custom" : "original");
-      })
-      .catch((e) => setMessage(e.message));
   }, []);
-  useEffect(() => {
-    if (!backgroundFile) {
-      setBackgroundPreview(null);
-      return;
-    }
-    const url = URL.createObjectURL(backgroundFile);
-    setBackgroundPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [backgroundFile]);
   if (!data) return <div className="state">Carregando configurações…</div>;
   const save = async (e: FormEvent) => {
     e.preventDefault();
@@ -3748,26 +3723,6 @@ function SettingsPage({ role }: any) {
         setData((current: any) => ({ ...current, technical_signature_configured: true }));
         setSignature(null);
       }
-      let savedBackground = appBackground;
-      if (backgroundMode === "original" && appBackground.configured) {
-        savedBackground = await api("/settings/app-background", { method: "DELETE" });
-      } else if (backgroundMode === "custom" && backgroundFile) {
-        const fd = new FormData();
-        fd.append("image", backgroundFile);
-        fd.append("soften", appBackground.soften ? "1" : "0");
-        savedBackground = await api("/settings/app-background", { method: "POST", body: fd });
-      } else if (backgroundMode === "custom" && appBackground.configured) {
-        savedBackground = await api("/settings/app-background", {
-          method: "PATCH",
-          body: JSON.stringify({ soften: appBackground.soften }),
-        });
-      } else if (backgroundMode === "custom") {
-        throw new Error("Selecione uma imagem para o fundo do app.");
-      }
-      setAppBackground(savedBackground);
-      setBackgroundMode(savedBackground.configured ? "custom" : "original");
-      setBackgroundFile(null);
-      window.dispatchEvent(new CustomEvent("arl-app-background-changed", { detail: savedBackground }));
       setMessage(
         "Configurações salvas com segurança. Documentos antigos permanecem preservados.",
       );
@@ -3802,23 +3757,6 @@ function SettingsPage({ role }: any) {
       setMessage(error.message || "Não foi possível remover a assinatura técnica.");
     } finally {
       setRemovingSignature(false);
-    }
-  };
-  const restoreOriginalBackground = async () => {
-    if (!window.confirm("Voltar ao fundo original e apagar a imagem personalizada?")) return;
-    setBackgroundBusy(true);
-    setMessage("");
-    try {
-      const restored = await api("/settings/app-background", { method: "DELETE" });
-      setAppBackground(restored);
-      setBackgroundMode("original");
-      setBackgroundFile(null);
-      window.dispatchEvent(new CustomEvent("arl-app-background-changed", { detail: restored }));
-      setMessage("Fundo original restaurado.");
-    } catch (error: any) {
-      setMessage(error.message || "Não foi possível restaurar o fundo original.");
-    } finally {
-      setBackgroundBusy(false);
     }
   };
   const tabs = [
@@ -3986,70 +3924,6 @@ function SettingsPage({ role }: any) {
                   </button>
                 </div>
               )}
-              <section className="app-background-settings" aria-labelledby="app-background-title">
-                <div>
-                  <h3 id="app-background-title">Fundo do app</h3>
-                  <p>Escolha o fundo da área interna do sistema. A tela de login não é alterada.</p>
-                </div>
-                <div className="app-background-options" role="radiogroup" aria-label="Tipo de fundo do app">
-                  <label>
-                    <input
-                      type="radio"
-                      name="app_background_mode"
-                      value="original"
-                      checked={backgroundMode === "original"}
-                      onChange={() => setBackgroundMode("original")}
-                    />
-                    Original
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="app_background_mode"
-                      value="custom"
-                      checked={backgroundMode === "custom"}
-                      onChange={() => setBackgroundMode("custom")}
-                    />
-                    Imagem personalizada
-                  </label>
-                </div>
-                {backgroundMode === "custom" && (
-                  <div className="app-background-custom">
-                    <label className="upload">
-                      <Camera aria-hidden="true" />
-                      <span>{backgroundFile ? backgroundFile.name : appBackground.configured ? "Trocar imagem de fundo" : "Enviar imagem de fundo"}</span>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={(event) => setBackgroundFile(event.target.files?.[0] || null)}
-                      />
-                    </label>
-                    {(backgroundPreview || appBackground.url) && (
-                      <figure className="app-background-preview">
-                        <img src={backgroundPreview || appBackground.url} alt="Prévia do fundo personalizado" />
-                        <figcaption>Prévia da imagem atual</figcaption>
-                      </figure>
-                    )}
-                    <label className="app-background-soften">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(appBackground.soften)}
-                        onChange={(event) => setAppBackground((current: any) => ({ ...current, soften: event.target.checked }))}
-                      />
-                      <span>
-                        <b>Suavizar imagem</b>
-                        <small>Aplica uma camada clara para manter os textos legíveis.</small>
-                      </span>
-                    </label>
-                  </div>
-                )}
-                {appBackground.configured && (
-                  <button type="button" className="app-background-reset" disabled={backgroundBusy} onClick={() => void restoreOriginalBackground()}>
-                    <RotateCcw aria-hidden="true" />
-                    {backgroundBusy ? "Restaurando…" : "Voltar ao original"}
-                  </button>
-                )}
-              </section>
             </>
           )}
           {section === "documents" && (
