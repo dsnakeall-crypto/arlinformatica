@@ -5255,12 +5255,6 @@ function App() {
     open_orders: 0,
     available_post_sales: 0,
   });
-  const [appBackground, setAppBackground] = useState<any>({
-    configured: false,
-    soften: true,
-    version: null,
-    url: null,
-  });
   useEffect(() => {
     document.documentElement.dataset.layout = layout;
     localStorage.setItem("arl-layout-mode", layout);
@@ -5295,19 +5289,6 @@ function App() {
         if (user.sidebar_pinned) setSidebarCollapsed(false);
       })
       .catch(() => {});
-  }, []);
-  useEffect(() => {
-    if (!me) return;
-    api("/app-background")
-      .then(setAppBackground)
-      .catch(() => setAppBackground({ configured: false, soften: true, version: null, url: null }));
-  }, [me]);
-  useEffect(() => {
-    const updateBackground = (event: Event) => {
-      setAppBackground((event as CustomEvent).detail);
-    };
-    window.addEventListener("arl-app-background-changed", updateBackground);
-    return () => window.removeEventListener("arl-app-background-changed", updateBackground);
   }, []);
   const toggleSidebarPinned = async () => {
     const next = !sidebarPinned;
@@ -5567,13 +5548,6 @@ function App() {
         </div>
       </aside>
       <main
-        className={appBackground.configured ? "arl-app-custom-background" : undefined}
-        style={appBackground.configured && appBackground.url ? {
-          backgroundImage: `${appBackground.soften ? "linear-gradient(rgba(255,255,255,.72),rgba(255,255,255,.72))," : ""}url("${appBackground.url}")`,
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-        } : undefined}
         data-arl-orders-react={!detail && page === "orders" ? "1" : undefined}
         data-arl-new-order-react={!detail && page === "new" ? "1" : undefined}
         data-arl-settings-react={
