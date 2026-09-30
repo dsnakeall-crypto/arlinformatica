@@ -27,7 +27,6 @@ class CompanySettings
         unset($values['layout_mode']);
         $values['technical_signature_configured'] = filled($values['technical_signature'] ?? null);
         unset($values['technical_signature']);
-        unset($values['app_background'], $values['app_background_version'], $values['app_background_soften']);
         $values['term_text'] = (string) DB::table('versioned_templates')->where('type', 'term')->where('active', true)->latest('version')->value('body');
 
         return $values;

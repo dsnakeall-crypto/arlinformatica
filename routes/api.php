@@ -116,16 +116,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/settings/logo', [SettingsController::class, 'logo']);
         Route::post('/settings/signature', [SettingsController::class, 'signature']);
         Route::delete('/settings/signature', [SettingsController::class, 'destroySignature']);
-        Route::post('/settings/app-background', [SettingsController::class, 'storeAppBackground']);
-        Route::patch('/settings/app-background', [SettingsController::class, 'updateAppBackground']);
-        Route::delete('/settings/app-background', [SettingsController::class, 'destroyAppBackground']);
         Route::get('/post-sales/settings', [PostSaleController::class, 'settings']);
         Route::put('/post-sales/settings', [PostSaleController::class, 'updateSettings']);
     });
     Route::get('/settings/logo/{variant}', [SettingsController::class, 'logoFile']);
     Route::get('/settings/signature', [SettingsController::class, 'signatureFile']);
-    Route::get('/app-background', [SettingsController::class, 'appBackground']);
-    Route::get('/app-background/file', [SettingsController::class, 'appBackgroundFile']);
     Route::get('/operational-settings', [SettingsController::class, 'operational']);
     Route::get('/orders/{order}/term', [DocumentController::class, 'term']);
     Route::get('/orders/{order}/budgets', [BudgetController::class, 'index']);

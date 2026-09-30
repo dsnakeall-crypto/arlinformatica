@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Services\Audit;
-use App\Services\AppBackgroundProcessor;
 use App\Services\CompanySettings;
 use App\Services\LogoProcessor;
 use App\Services\SignatureProcessor;
@@ -11,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class SettingsController extends Controller
 {
@@ -158,119 +156,5 @@ class SettingsController extends Controller
         }
 
         return response()->json(['configured' => false]);
-    }
-
-    public function appBackground(): JsonResponse
-    {
-        return response()->json($this->appBackgroundState());
-    }
-
-    public function appBackgroundFile()
-    {
-        $path = DB::table('settings')->where('key', 'app_background')->value('value');
-        abort_unless($path && Storage::disk('local')->exists($path), 404);
-
-        return Storage::disk('local')->response($path, 'fundo-do-app.jpg', [
-            'Content-Type' => 'image/jpeg',
-            'Cache-Control' => 'private, max-age=31536000, immutable',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
-    }
-
-    public function storeAppBackground(Request $request, AppBackgroundProcessor $processor, Audit $audit): JsonResponse
-    {
-        $request->validate([
-            'image' => ['required', 'file', 'max:5120'],
-            'soften' => ['required', 'boolean'],
-        ], [
-            'image.max' => 'A imagem deve ter no máximo 5 MB.',
-        ]);
-
-        $data = $processor->process($request->file('image'));
-        $path = 'company/backgrounds/'.Str::uuid().'.jpg';
-        $version = hash('sha256', $data);
-        $previous = DB::table('settings')->where('key', 'app_background')->value('value');
-        Storage::disk('local')->put($path, $data);
-
-        try {
-            DB::transaction(function () use ($audit, $path, $request, $version) {
-                $this->storeSetting('app_background', $path, 'private_file');
-                $this->storeSetting('app_background_version', $version);
-                $this->storeSetting('app_background_soften', $request->boolean('soften') ? '1' : '0', 'bool');
-                $audit->record($request, 'settings.app_background_updated', 'settings', null, null, [
-                    'configured' => true,
-                    'soften' => $request->boolean('soften'),
-                    'version' => $version,
-                ]);
-            });
-        } catch (\Throwable $exception) {
-            Storage::disk('local')->delete($path);
-            throw $exception;
-        }
-
-        if ($previous && $previous !== $path) {
-            Storage::disk('local')->delete($previous);
-        }
-
-        return response()->json($this->appBackgroundState(), 201);
-    }
-
-    public function updateAppBackground(Request $request, Audit $audit): JsonResponse
-    {
-        $data = $request->validate(['soften' => ['required', 'boolean']]);
-        abort_unless(DB::table('settings')->where('key', 'app_background')->whereNotNull('value')->exists(), 422, 'Envie uma imagem personalizada primeiro.');
-
-        $before = $this->appBackgroundState();
-        $this->storeSetting('app_background_soften', $data['soften'] ? '1' : '0', 'bool');
-        $audit->record($request, 'settings.app_background_soften_updated', 'settings', null, $before, $this->appBackgroundState());
-
-        return response()->json($this->appBackgroundState());
-    }
-
-    public function destroyAppBackground(Request $request, Audit $audit): JsonResponse
-    {
-        $path = DB::table('settings')->where('key', 'app_background')->value('value');
-        $before = $this->appBackgroundState();
-
-        DB::transaction(function () use ($audit, $before, $request) {
-            DB::table('settings')->whereIn('key', ['app_background', 'app_background_version', 'app_background_soften'])->delete();
-            $audit->record($request, 'settings.app_background_removed', 'settings', null, $before, [
-                'configured' => false,
-                'soften' => true,
-                'version' => null,
-                'url' => null,
-            ]);
-        });
-
-        if ($path) {
-            Storage::disk('local')->delete($path);
-        }
-
-        return response()->json($this->appBackgroundState());
-    }
-
-    private function appBackgroundState(): array
-    {
-        $settings = DB::table('settings')
-            ->whereIn('key', ['app_background', 'app_background_version', 'app_background_soften'])
-            ->pluck('value', 'key');
-        $configured = filled($settings['app_background'] ?? null)
-            && Storage::disk('local')->exists((string) $settings['app_background']);
-        $version = $configured ? (string) ($settings['app_background_version'] ?? '') : null;
-
-        return [
-            'configured' => $configured,
-            'soften' => ! isset($settings['app_background_soften']) || $settings['app_background_soften'] !== '0',
-            'version' => $version,
-            'url' => $configured ? '/api/app-background/file?v='.rawurlencode((string) $version) : null,
-        ];
-    }
-
-    private function storeSetting(string $key, string $value, string $type = 'string'): void
-    {
-        DB::table('settings')->updateOrInsert(
-            ['key' => $key],
-            ['value' => $value, 'type' => $type, 'created_at' => now(), 'updated_at' => now()],
-        );
     }
 }
