@@ -52,3 +52,11 @@ O backup original `ficha-orcamento-20261002-011216` foi mantido. Antes desta rec
 Capturas reais: `output/popups-3d/ficha-referencia.png` e `output/popups-3d/orcamento-referencia.png`, inspecionadas em comparação com as referências.
 
 Validação desta reconstrução: PHP 212 testes / 1774 asserções; 12 unitários frontend, ESLint, Pint, TypeScript e build passaram. A suíte geral Playwright executou 105 cenários: 99 passaram, um identificou o raio de borda ausente no resultado da busca e cinco dependentes ficaram bloqueados. Corrigido o estilo, a repetição completa do fluxo operacional e do compartilhamento passou nos 11 cenários (incluindo o que falhou e os cinco dependentes). Assim todos os 105 cenários foram cobertos com sucesso entre as execuções. A repetição acrescentou verificações de foco, Escape e geometria em 390px; capturas desktop/mobile inspecionadas. Logs em `output/diagnostico/popups-3d-*.log`. CI remota e publicação continuam pendentes.
+
+## Ajuste de densidade solicitado após aprovação visual
+
+Mantida a composição aprovada, foram reduzidos apenas tamanhos de fontes, campos, ícones, botões e espaçamentos internos no Web/PC. A densidade aumenta em telas de até 800px de altura. Os dois popups cabem sem rolagem interna em 1366×768 e 1280×720 com o formulário padrão; o orçamento também foi validado em 1280×720 com um serviço, observação e total. Conteúdo extenso ou vários itens ainda pode exigir rolagem para manter tudo acessível. Em celular permanecem os alvos de toque e fontes de preenchimento de pelo menos 16px.
+
+Backup anterior ao ajuste: `C:\Users\Allan\ARL-backups\popups-compactos-20261002-083913`, com código, patch/status e histórico Git completo verificado. SHA-256 do TAR: `3db1ff8ac73ee48cd35efd3e8574038ea272c72746490c71dd205e63f76db11a`. Os backups anteriores foram mantidos.
+
+Validação: build, ESLint, TypeScript, Pint, 212 testes PHP (1774 asserções), 12 unitários frontend e os cinco cenários de edição/navegação/envio aprovados. Após o ajuste final da altura do orçamento, o cenário de envio foi repetido com asserções de ausência de rolagem nas duas resoluções e com um serviço selecionado, além das verificações de teclado e celular. Evidências em `output/popups-compactos/` e `output/ficha-orcamento/modal-orcamento-720.png`. Nenhuma regra de negócio, migration ou dado foi alterado por este ajuste.

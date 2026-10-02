@@ -84,3 +84,39 @@
 .arl-3d-popup .arl-3d-improve .arl-text-improvement-action{padding-left:46px!important;font-size:14px!important;min-height:42px}
 .arl-3d-popup .arl-3d-header{box-shadow:inset 0 2px 3px #fff,0 3px 10px #53505e16}
 @media(max-width:760px){.arl-3d-overlay[data-arl-order-detail-react="1"] .arl-3d-popup .arl-service-product-browse{flex:1;width:auto}.arl-3d-editor .arl-3d-field{font-size:14px}}
+/* Densidade compacta no Web/PC: preserva a composição e o acabamento 3D. */
+@media(min-width:761px){
+.arl-3d-header{min-height:100px;padding:18px 80px 16px;gap:16px}
+.arl-3d-budget .arl-3d-header{min-height:96px;padding:16px 80px 14px 30px}
+.arl-3d-heading-icon{width:48px;height:48px;border-radius:16px}.arl-3d-heading-icon svg{width:26px;height:26px}
+.arl-3d-popup .arl-3d-heading h2{font-size:26px!important;margin:4px 0 3px!important}.arl-3d-heading p{font-size:14px}.arl-3d-popup .arl-eyebrow{font-size:10px;letter-spacing:4px}
+.arl-3d-popup .arl-3d-close{width:40px;height:40px;top:22px;right:22px;padding:8px}.arl-3d-close svg{width:24px;height:24px}
+.arl-3d-editor-body{padding:0 20px 14px}.arl-3d-meta{padding:8px 24px;gap:18px;margin-bottom:14px}.arl-3d-meta>div,.arl-3d-meta>label{padding:4px 6px;gap:9px;font-size:13px}.arl-3d-meta>i{height:32px}.arl-3d-meta>div>svg,.arl-3d-meta>label>svg{width:25px;height:25px}
+.arl-3d-readonly,.arl-3d-popup .arl-3d-meta select{min-height:34px;min-width:140px;padding:6px 10px!important;font-size:14px!important}.arl-3d-readonly svg{width:18px;height:18px}
+.arl-3d-editor-columns{gap:18px}.arl-3d-panel{padding:18px 24px;gap:12px}.arl-3d-section-heading{gap:16px}.arl-3d-number{width:36px;height:36px;font-size:15px;border-radius:13px}
+.arl-3d-editor .arl-3d-section-heading h3,.arl-3d-popup h3{font-size:17px}.arl-3d-section-heading p,.arl-3d-field-heading p{font-size:12px;margin-top:2px}
+.arl-3d-field,.arl-3d-editor .arl-3d-field{font-size:13px;gap:6px}.arl-3d-field>span{gap:12px}.arl-3d-field>span>svg{width:19px;height:19px}
+.arl-3d-popup textarea,.arl-3d-popup input:not([type=checkbox]){padding:8px 14px!important;font-size:14px!important;line-height:1.4}
+.arl-3d-popup textarea,.arl-3d-editor .arl-3d-field textarea,.arl-3d-budget .arl-3d-field>textarea{height:56px;min-height:56px}
+.arl-3d-password{padding-top:10px;gap:14px}.arl-3d-no-password{min-height:34px;padding:6px 10px;gap:8px;font-size:12px}.arl-3d-no-password input{width:17px;height:17px}.arl-3d-help{font-size:12px}.arl-3d-help svg{width:18px;height:18px}
+.arl-3d-footer,.arl-3d-budget .arl-3d-footer{padding:10px 20px 12px;gap:14px}.arl-3d-popup .arl-3d-footer>button{min-height:38px;min-width:120px;padding:8px 16px;font-size:14px;gap:10px}.arl-3d-footer svg{width:20px;height:20px}.arl-3d-budget .arl-3d-primary{min-width:196px}
+.arl-3d-budget-body{padding:12px 20px;gap:10px}.arl-3d-budget .arl-3d-panel{padding:10px 18px;gap:0}.arl-3d-field-heading{font-size:15px;min-height:34px;gap:12px}.arl-3d-field-heading>i{width:34px;height:34px;border-radius:11px}.arl-3d-field-heading svg{width:20px;height:20px}
+.arl-3d-popup .arl-3d-validity input{min-height:34px!important;padding:6px 14px!important;max-width:240px}.arl-3d-services .arl-service-product-search{margin-top:10px}.arl-3d-services .services-search{min-height:36px}.arl-3d-services .services-search input{padding:6px 4px!important}
+.arl-3d-overlay[data-arl-order-detail-react="1"] .arl-3d-popup .arl-service-product-browse{min-height:36px;padding:8px 18px!important;flex-basis:210px;width:210px;font-size:14px!important}.arl-3d-overlay[data-arl-order-detail-react="1"] .arl-3d-popup .arl-service-product-browse span{font-size:14px!important}
+.arl-3d-popup .finish-item{padding:8px 0;gap:10px;font-size:13px}.arl-3d-popup .finish-item button{padding:6px}.arl-3d-total{padding:8px 14px;font-size:14px}
+.arl-3d-popup .arl-3d-improve .arl-text-improvement-action{min-height:34px;font-size:12px!important;padding:7px 14px 7px 36px!important}.arl-3d-improve>svg{width:16px;height:16px;left:13px;top:9px}
+}
+@media(min-width:761px) and (max-height:800px){
+.arl-3d-header,.arl-3d-budget .arl-3d-header{min-height:80px;padding-top:10px;padding-bottom:10px}.arl-3d-popup .arl-3d-heading h2{font-size:24px!important}.arl-3d-heading p{font-size:12px}.arl-3d-popup .arl-3d-close{top:18px}
+.arl-3d-budget-body{padding:8px 16px;gap:6px}.arl-3d-budget .arl-3d-panel{padding:7px 16px}.arl-3d-field-heading{min-height:26px;font-size:14px;gap:10px}.arl-3d-field-heading>i{width:26px;height:26px;border-radius:9px}.arl-3d-field-heading svg{width:17px;height:17px}
+.arl-3d-budget .arl-3d-field>textarea{height:40px;min-height:40px;padding:5px 12px!important;font-size:13px!important}.arl-3d-services .arl-service-product-search{margin-top:6px}.arl-3d-popup .arl-3d-validity input{min-height:30px!important;padding:4px 12px!important}
+.arl-3d-services .services-search{min-height:32px}.arl-3d-services .services-search input{padding:4px!important}.arl-3d-overlay[data-arl-order-detail-react="1"] .arl-3d-popup .arl-service-product-browse{min-height:32px;padding:6px 16px!important}
+.arl-3d-budget .arl-3d-footer{padding:8px 16px}.arl-3d-popup .finish-item{padding:5px 0}.arl-3d-total{padding:5px 12px}
+}
+@media(min-width:761px) and (max-height:800px){
+.arl-3d-budget .arl-3d-header{padding-top:6px;padding-bottom:6px}
+.arl-3d-budget .arl-3d-panel{padding-top:3px;padding-bottom:3px}
+.arl-3d-budget-body{gap:5px}
+.arl-3d-services .services-search{min-height:32px!important;padding:2px 10px!important}
+.arl-3d-services .services-search svg{width:18px;height:18px}
+}

@@ -21,6 +21,11 @@ test('orçamento usa link protegido, download e confirmação humana de envio', 
   await expect(editor.getByRole('heading', { name: 'Equipamento e acesso' })).toBeVisible();
   await expect(editor.getByLabel('Estado físico na entrada')).toHaveValue('Pequeno risco na tampa.');
   await page.screenshot({ path: 'output/popups-3d/ficha-referencia.png' });
+  for (const viewport of [{ width: 1366, height: 768 }, { width: 1280, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    expect(await editor.locator('.arl-3d-editor-body').evaluate(element => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
+  }
+  await page.screenshot({ path: 'output/popups-compactos/ficha-720.png' });
   await page.keyboard.press('Tab');
   await expect(editor.getByRole('button', { name: 'Cancelar edição' })).toBeFocused();
   await page.keyboard.press('Shift+Tab');
@@ -37,6 +42,11 @@ test('orçamento usa link protegido, download e confirmação humana de envio', 
   await expect(form).toBeVisible();
   await page.setViewportSize({ width: 1320, height: 1250 });
   await page.screenshot({ path: 'output/popups-3d/orcamento-referencia.png' });
+  for (const viewport of [{ width: 1366, height: 768 }, { width: 1280, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    expect(await form.locator('.arl-3d-budget-body').evaluate(element => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
+  }
+  await page.screenshot({ path: 'output/popups-compactos/orcamento-720.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   const budgetBounds = await form.boundingBox();
   expect(budgetBounds!.x + budgetBounds!.width).toBeLessThanOrEqual(390);
@@ -58,6 +68,7 @@ test('orçamento usa link protegido, download e confirmação humana de envio', 
   await expect(saveButton).toBeVisible();
   const saveBounds = await saveButton.boundingBox();
   expect(saveBounds!.y + saveBounds!.height).toBeLessThanOrEqual(720);
+  expect(await form.locator('.arl-3d-budget-body').evaluate(element => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
   await page.screenshot({ path: 'output/ficha-orcamento/modal-orcamento-720.png' });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({ path: 'output/ficha-orcamento/modal-orcamento.png' });

@@ -1,3 +1,12 @@
+# Checklist final — compactação dos popups aprovados
+
+- [OK] Novo backup de código, alterações locais e histórico verificado; backups anteriores preservados.
+- [OK] Mesma composição, cores, sombras e acabamentos; somente dimensões e espaçamentos internos reduzidos no Web/PC.
+- [OK] Edição e orçamento padrão sem rolagem interna em 1366×768 e 1280×720; orçamento com um serviço e total também validado em 1280×720.
+- [OK] Acesso aos campos e ações preservado em celular e para conteúdo maior que a tela.
+- [OK] 212 testes PHP, 12 unitários frontend, cinco E2E relacionados e repetição do cenário com verificações de geometria aprovados; build, lint, TypeScript e Pint aprovados.
+- [PENDENTE] CI remota e publicação deste ajuste na KingHost.
+
 # Checklist final — reconstrução dos popups 3D em 02/10/2026
 
 - [OK] Backup original anterior à edição mantido e checksum conferido; novo backup de código, alterações locais, referências e histórico completo criado antes da reconstrução.
