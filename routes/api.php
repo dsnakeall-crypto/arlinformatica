@@ -23,6 +23,7 @@ use App\Http\Controllers\ServiceOrderMaintenanceController;
 use App\Http\Controllers\ServiceOrderPasswordController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StorageController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TechnicalReportController;
 use App\Http\Controllers\TechnicalReportTemplateController;
 use App\Http\Controllers\TextImprovementController;
@@ -43,6 +44,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/catalogs/checklist', [CatalogController::class, 'checklist']);
     Route::get('/catalogs/{catalog}', [CatalogController::class, 'index']);
     Route::middleware('role:Master,Administrador')->group(function () {
+        Route::get('/suppliers', [SupplierController::class, 'index']);
+        Route::post('/suppliers', [SupplierController::class, 'store']);
+        Route::get('/suppliers/{supplier}', [SupplierController::class, 'show']);
+        Route::put('/suppliers/{supplier}', [SupplierController::class, 'update']);
+        Route::post('/suppliers/{supplier}/purchases', [SupplierController::class, 'storePurchase']);
+        Route::get('/supplier-purchases/{id}', [SupplierController::class, 'purchase'])->whereNumber('id');
+        Route::post('/supplier-purchases/{id}/receipts', [SupplierController::class, 'receive'])->whereNumber('id');
+        Route::post('/supplier-purchases/{id}/cancel', [SupplierController::class, 'cancel'])->whereNumber('id');
+
         Route::get('/catalogs/products/{id}/stock-movements', [CatalogController::class, 'stockMovements'])->whereNumber('id');
         Route::post('/catalogs/{catalog}', [CatalogController::class, 'store']);
         Route::patch('/catalogs/{catalog}/{id}', [CatalogController::class, 'update']);

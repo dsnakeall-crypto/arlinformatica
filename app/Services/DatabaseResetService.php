@@ -13,6 +13,11 @@ class DatabaseResetService
 {
     private const DELETE_ORDER = [
         'final_share_tokens',
+        'stock_entry_details',
+        'supplier_purchase_receipts',
+        'supplier_purchase_items',
+        'supplier_purchases',
+        'suppliers',
         'stock_movements',
         'service_order_refunds',
         'financial_adjustments',
@@ -46,6 +51,9 @@ class DatabaseResetService
             'service_orders' => $this->count('service_orders'),
             'order_items' => $this->count('service_order_items'),
             'budgets' => $this->count('budgets'),
+            'suppliers' => $this->count('suppliers'),
+            'supplier_purchases' => $this->count('supplier_purchases'),
+            'stock_entries' => $this->count('stock_entry_details'),
             'services_and_products' => $this->count('service_catalog'),
             'financial_records' => $this->count('payments') + $this->count('financial_transactions') + $this->count('financial_adjustments') + $this->count('financial_expenses') + $this->count('service_order_refunds'),
             'documents' => $this->count('generated_documents'),

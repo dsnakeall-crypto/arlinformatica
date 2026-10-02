@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Supplier;
 use App\Services\Audit;
 use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CatalogController extends Controller
 {
@@ -72,7 +74,7 @@ class CatalogController extends Controller
         $record = DB::transaction(function () use ($data, $table, $catalog, $initialStock, $request, $audit, $inventory) {
             $id = DB::table($table)->insertGetId($data + ['active' => true, 'created_at' => now(), 'updated_at' => now()]);
             if ($catalog === 'products' && $initialStock > 0) {
-                $inventory->addStock($id, $initialStock, 'Saldo inicial do cadastro do produto', $request->user()->id);
+                $inventory->addStock($id, $initialStock, 'Saldo inicial do cadastro do produto', $request->user()->id, ['origin' => 'initial']);
             }
             $created = DB::table($table)->find($id);
             $audit->record($request, 'catalog.created', $table, $id, null, $created);
@@ -89,10 +91,11 @@ class CatalogController extends Controller
 
         return response()->json(DB::table('stock_movements')
             ->leftJoin('users', 'users.id', '=', 'stock_movements.user_id')
+            ->leftJoin('stock_entry_details', 'stock_entry_details.stock_movement_id', '=', 'stock_movements.id')
             ->where('product_id', $id)
             ->latest('stock_movements.id')
             ->limit(100)
-            ->get(['stock_movements.*', 'users.name as user_name']));
+            ->get(['stock_movements.*', 'users.name as user_name', 'stock_entry_details.origin', 'stock_entry_details.unit_cost_cents', 'stock_entry_details.supplier_snapshot', 'stock_entry_details.receipt_id']));
     }
 
     public function stockEntry(Request $request, int $id, InventoryService $inventory): JsonResponse
@@ -100,12 +103,25 @@ class CatalogController extends Controller
         $data = $request->validate([
             'quantity' => 'required|integer|min:1|max:4294967295',
             'reason' => 'required|string|max:500',
+            'origin' => 'sometimes|in:purchase,gift,initial,unspecified',
+            'unit_cost_cents' => 'nullable|integer|min:0|max:999999999',
+            'supplier_id' => ['nullable', 'integer', Rule::exists('suppliers', 'id')->where('active', true)],
+            'request_key' => 'nullable|uuid',
         ]);
+        if (isset($data['unit_cost_cents'])) {
+            $data['unit_cost_cents'] = (int) $data['unit_cost_cents'];
+        }
+        if (($data['origin'] ?? null) === 'gift' && ! in_array($data['unit_cost_cents'] ?? null, [null, 0], true)) {
+            throw ValidationException::withMessages(['unit_cost_cents' => 'Uma entrada de brinde possui custo de aquisição zero.']);
+        }
+        $supplier = isset($data['supplier_id']) ? Supplier::find($data['supplier_id']) : null;
+        $details = ['origin' => $data['origin'] ?? 'unspecified', 'unit_cost_cents' => ($data['origin'] ?? null) === 'gift' ? 0 : ($data['unit_cost_cents'] ?? null), 'supplier_id' => $supplier?->id, 'supplier_snapshot' => $supplier?->toJson(), 'request_key' => $data['request_key'] ?? null];
         $record = $inventory->addStock(
             $id,
             (int) $data['quantity'],
             trim($data['reason']),
             $request->user()->id,
+            $details,
         );
 
         return response()->json($record);

@@ -9,15 +9,24 @@ use Illuminate\Validation\ValidationException;
 
 class InventoryService
 {
-    public function addStock(int $productId, int $quantity, string $reason, int $userId): object
+    public function addStock(int $productId, int $quantity, string $reason, int $userId, array $details = []): object
     {
-        return DB::transaction(function () use ($productId, $quantity, $reason, $userId) {
+        return DB::transaction(function () use ($productId, $quantity, $reason, $userId, $details) {
             $product = DB::table('service_catalog')
                 ->where('id', $productId)
                 ->where('category', 'product')
                 ->lockForUpdate()
                 ->first();
             abort_unless($product, 404);
+
+            if (! empty($details['request_key'])) {
+                $previous = DB::table('stock_entry_details')->join('stock_movements', 'stock_movements.id', '=', 'stock_entry_details.stock_movement_id')->where('stock_entry_details.request_key', $details['request_key'])->first();
+                if ($previous) {
+                    abort_unless((int) $previous->product_id === $productId && (int) $previous->quantity === $quantity && $previous->reason === $reason && $previous->origin === ($details['origin'] ?? 'unspecified') && ($previous->unit_cost_cents === null ? null : (int) $previous->unit_cost_cents) === ($details['unit_cost_cents'] ?? null) && ($previous->supplier_id === null ? null : (int) $previous->supplier_id) === ($details['supplier_id'] ?? null), 409, 'Esta solicitação já registrou outra entrada. Confira as movimentações.');
+
+                    return $product;
+                }
+            }
 
             $balance = (int) $product->stock_quantity + $quantity;
             if ($balance > 4294967295) {
@@ -27,7 +36,8 @@ class InventoryService
                 'stock_quantity' => $balance,
                 'updated_at' => now(),
             ]);
-            $this->record($productId, null, $userId, 'entry', $quantity, $balance, $reason);
+            $movementId = $this->record($productId, null, $userId, 'entry', $quantity, $balance, $reason);
+            DB::table('stock_entry_details')->insert($details + ['stock_movement_id' => $movementId, 'origin' => 'unspecified', 'unit_cost_cents' => null, 'created_at' => now(), 'updated_at' => now()]);
 
             return DB::table('service_catalog')->find($productId);
         });
@@ -207,9 +217,9 @@ class InventoryService
         }
     }
 
-    private function record(int $productId, ?int $orderId, int $userId, string $type, int $quantity, int $balance, string $reason): void
+    private function record(int $productId, ?int $orderId, int $userId, string $type, int $quantity, int $balance, string $reason): int
     {
-        DB::table('stock_movements')->insert([
+        return DB::table('stock_movements')->insertGetId([
             'product_id' => $productId,
             'service_order_id' => $orderId,
             'user_id' => $userId,
