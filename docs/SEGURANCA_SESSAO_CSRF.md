@@ -36,4 +36,6 @@ As suítes locais usam SQLite descartável; esta validação não comprova os co
 
 ## Escopo
 
+A auditoria Composer da CI identificou os avisos `GHSA-97jj-33gv-5xf9` e `GHSA-3q6v-r5mr-hxv8` na dependência transitiva `league/commonmark` 2.10.0. O lock foi atualizado somente para a versão de correção 2.10.2. A auditoria de dependências de produção passou sem avisos e os 203 testes PHP passaram novamente. A [release oficial 2.10.2](https://github.com/thephpleague/commonmark/releases/tag/2.10.2) contém as duas correções.
+
 Estas correções tratam os achados confirmados de sessão/CSRF do relatório `analise.txt`. Os nomes “Segurança A” e “Segurança B” não possuem uma especificação detalhada no repositório; esta entrega não declara uma auditoria completa de segurança nem conclui automaticamente esses blocos do roteiro. Publicação, demais funcionalidades e homologação em produção permanecem etapas separadas.

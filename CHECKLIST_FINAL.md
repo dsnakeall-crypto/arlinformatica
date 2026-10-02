@@ -8,6 +8,7 @@
 - [OK] Middleware CSRF exercitado de verdade nos testes, inclusive login/logout e lançamento financeiro.
 - [OK] Suíte PHP completa: 203 testes e 1648 asserções aprovados em SQLite em memória.
 - [OK] ESLint, Pint, TypeScript/build e 12 testes unitários frontend aprovados.
+- [OK] league/commonmark atualizado de 2.10.0 para 2.10.2; auditoria Composer sem avisos de vulnerabilidade e 203 testes PHP aprovados novamente.
 - [OK] Quatro E2E novos aprovados no backend real; aviso conferido em 390 px.
 - [OK] Suíte completa Playwright: 103 testes aprovados em 9,6 minutos, com retries 0.
 - [PENDENTE] CI no head final, publicação e smoke test de sessão/cookies/HTTPS na KingHost.
