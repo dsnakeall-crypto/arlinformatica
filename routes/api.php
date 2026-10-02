@@ -24,6 +24,7 @@ use App\Http\Controllers\ServiceOrderPasswordController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SupplierInvoiceController;
 use App\Http\Controllers\TechnicalReportController;
 use App\Http\Controllers\TechnicalReportTemplateController;
 use App\Http\Controllers\TextImprovementController;
@@ -46,9 +47,14 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:Master,Administrador')->group(function () {
         Route::get('/suppliers', [SupplierController::class, 'index']);
         Route::post('/suppliers', [SupplierController::class, 'store']);
+        Route::post('/supplier-document/lookup', [SupplierController::class, 'lookupDocument'])->middleware('throttle:20,1');
         Route::get('/suppliers/{supplier}', [SupplierController::class, 'show']);
         Route::put('/suppliers/{supplier}', [SupplierController::class, 'update']);
         Route::post('/suppliers/{supplier}/purchases', [SupplierController::class, 'storePurchase']);
+        Route::post('/supplier-purchases/{id}/invoices', [SupplierInvoiceController::class, 'store'])->whereNumber('id');
+        Route::get('/supplier-invoices/{invoice}/download', [SupplierInvoiceController::class, 'download'])->whereNumber('invoice');
+        Route::post('/supplier-payables/{id}/pay', [SupplierController::class, 'pay'])->whereNumber('id');
+        Route::post('/supplier-payables/{id}/cancel', [SupplierController::class, 'voidPayable'])->whereNumber('id');
         Route::get('/supplier-purchases/{id}', [SupplierController::class, 'purchase'])->whereNumber('id');
         Route::post('/supplier-purchases/{id}/receipts', [SupplierController::class, 'receive'])->whereNumber('id');
         Route::post('/supplier-purchases/{id}/cancel', [SupplierController::class, 'cancel'])->whereNumber('id');

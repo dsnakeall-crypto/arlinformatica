@@ -104,3 +104,5 @@ O head documental criado após esta atualização precisa passar pela CI novamen
 A Etapa 10 fecha Painel/Mesa, status e finalização, histórico do cliente, orçamento com fonte autoritativa no servidor, Financeiro com relatório mensal sob demanda, perfis/menu, garantias, atendimento externo mobile, layout local por dispositivo e backup automático persistido/auditado, além de endurecer a restauração por snapshot.
 
 A interface segue **mobile first**. O fluxo externo mobile possui WhatsApp, Maps, Foto, Status e Finalizar com alvos de toque validados; Clientes também possui regressão de contenção/overflow mobile. O E2E usa cliques normais, sem `force: true` ou clique JavaScript para contornar defeitos de interface.
+
+Fornecedores: [cadastro obrigatório, pagamentos, vencimentos e notas fiscais](docs/FORNECEDORES_PAGAMENTOS_NOTAS.md).

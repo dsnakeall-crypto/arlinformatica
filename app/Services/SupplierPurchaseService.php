@@ -41,6 +41,7 @@ class SupplierPurchaseService
             foreach ($rows as $row) {
                 DB::table('supplier_purchase_items')->insert($row + ['purchase_id' => $id]);
             }
+            app(SupplierPayables::class)->create($id, $total, $data, $request);
             $this->audit->record($request, 'supplier.purchase_created', 'supplier_purchases', $id, null, ['supplier_id' => $supplier->id, 'total_cents' => $total]);
             if ($data['received_now'] ?? false) {
                 $items = DB::table('supplier_purchase_items')->where('purchase_id', $id)->get()->map(fn ($item) => ['item_id' => $item->id, 'quantity' => $item->quantity])->all();

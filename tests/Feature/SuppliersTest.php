@@ -45,20 +45,23 @@ class SuppliersTest extends TestCase
         return ['request_key' => (string) Str::uuid(), 'purchased_on' => today()->toDateString(), 'received_now' => $received, 'items' => [['product_id' => $product, 'quantity' => 3, 'unit_cost_cents' => 20000]]];
     }
 
-    public function test_supplier_directory_validates_optional_document_and_preserves_history_when_inactivated(): void
+    public function test_supplier_directory_requires_complete_registration_and_preserves_history_when_inactivated(): void
     {
-        $id = $this->postJson('/api/suppliers', ['name' => 'Empresa parceira', 'document' => '11.222.333/0001-81', 'email' => 'compras@example.test'])->assertCreated()->json('id');
-        $this->postJson('/api/suppliers', ['name' => 'Duplicado', 'document' => '11222333000181'])->assertUnprocessable()->assertJsonValidationErrors('document');
-        $this->postJson('/api/suppliers', ['name' => 'Inválido', 'document' => '123'])->assertUnprocessable();
-        foreach ([['document' => 'letras'], ['document' => ['123']], ['postal_code' => 'letras'], ['state' => ['MG']]] as $invalid) {
-            $this->postJson('/api/suppliers', ['name' => 'Dados inválidos'] + $invalid)->assertUnprocessable();
+        $valid = ['name' => 'Empresa parceira', 'trade_name' => 'Parceira', 'document' => '11.222.333/0001-81', 'phone' => '(35) 99999-1234', 'whatsapp' => '35999991234', 'landline' => '(35) 3234-5678', 'postal_code' => '37160-000', 'street' => 'Rua Um', 'number' => '10', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG'];
+        $id = $this->postJson('/api/suppliers', $valid)->assertCreated()->assertJsonPath('phone', '35999991234')->json('id');
+        $this->postJson('/api/suppliers', $valid)->assertUnprocessable()->assertJsonValidationErrors('document');
+        $this->postJson('/api/suppliers', ['name' => 'Incompleto'])->assertUnprocessable();
+        foreach (['trade_name', 'document', 'postal_code', 'street', 'number', 'district', 'city', 'state', 'phone', 'whatsapp'] as $required) {
+            $incomplete = $valid;
+            unset($incomplete[$required]);
+            $this->putJson('/api/suppliers/'.$id, $incomplete)->assertUnprocessable()->assertJsonValidationErrors($required);
         }
-        $this->postJson('/api/suppliers', ['name' => 'Sem documento'])->assertCreated();
-        $this->postJson('/api/suppliers', ['name' => 'Sem documento dois'])->assertCreated();
-        $this->getJson('/api/suppliers?q=Empresa')->assertOk()->assertJsonPath('data.0.name', 'Empresa parceira')->assertJsonPath('data.0.purchase_count', 0);
-        $this->putJson('/api/suppliers/'.$id, ['name' => 'Empresa alterada', 'document' => '11222333000181', 'active' => false])->assertOk();
+        foreach ([['document' => '123'], ['document' => ['123']], ['phone' => '123'], ['whatsapp' => 'abc'], ['landline' => '35999991234'], ['postal_code' => 'letras'], ['state' => ['MG']]] as $invalid) {
+            $this->putJson('/api/suppliers/'.$id, array_replace($valid, $invalid))->assertUnprocessable();
+        }
+        $this->putJson('/api/suppliers/'.$id, $valid + ['active' => false])->assertOk();
         $this->getJson('/api/suppliers/'.$id)->assertOk()->assertJsonPath('supplier.active', false);
-        $this->assertDatabaseCount('suppliers', 3);
+        $this->assertDatabaseCount('suppliers', 1);
     }
 
     public function test_pending_purchase_receives_partially_then_fully_without_duplicate_stock_or_financial_expense(): void

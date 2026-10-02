@@ -427,7 +427,7 @@
 }
 .supplier-purchase-list > button {
   display: grid;
-  grid-template-columns: 1fr auto 130px 20px;
+  grid-template-columns: minmax(130px, 1fr) auto minmax(170px, 1fr) 110px 20px;
   align-items: center;
   gap: 20px;
   text-align: left;
@@ -922,4 +922,81 @@
   .supplier-page .supplier-primary {
     min-height: 44px;
   }
+}
+
+.supplier-installment-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+.supplier-payment-history {
+  margin-top: 24px;
+  border-top: 1px solid #eadfe2;
+  padding-top: 20px;
+}
+.supplier-payment-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 16px;
+  background: #fff3f5;
+  border-radius: 14px;
+}
+.supplier-payment-totals span {
+  display: flex;
+  gap: 12px;
+}
+.supplier-installment-history {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+.supplier-installment-history button,
+.supplier-payment-history form > button {
+  border: 1px solid #ded3d7;
+  border-radius: 10px;
+  background: white;
+  padding: 8px 12px;
+  margin: 4px;
+  cursor: pointer;
+}
+.supplier-invoice-link {
+  display: block;
+  margin: 10px 0;
+  color: #a40020;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .supplier-installment-row {
+    grid-template-columns: 1fr;
+  }
+  .supplier-installment-history {
+    flex-direction: column;
+  }
+}
+
+.supplier-purchase-payment-status {
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .supplier-purchase-payment-status {
+    grid-column: 1;
+  }
+}
+
+.supplier-purchase-fields {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+}
+.supplier-purchase-fields:disabled {
+  opacity: 0.75;
 }

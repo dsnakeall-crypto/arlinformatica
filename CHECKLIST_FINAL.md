@@ -342,3 +342,19 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Recuperação do incidente local: 35 tabelas e 123 arquivos privados conferidos por hash com o backup; migração nova preservada e tabelas novas vazias.
 - [OK] As 22 tabelas da outra aplicação acessível conferem com o backup anterior.
 - [OK] Suíte E2E repetida com arquivos privados isolados: 106 aprovados. Conferência final preservou as 35 tabelas, os 123 arquivos privados e a migração nova; somente a auditoria legítima do novo backup foi acrescentada.
+
+## Fornecedores — cadastro, pagamentos e notas (02/10/2026)
+
+- [OK] Backup de código, banco e arquivos validado antes da edição/migração.
+- [OK] CPF/CNPJ, razão social, nome fantasia, celular, WhatsApp e endereço completo obrigatórios; fixo opcional.
+- [OK] Máscaras de contato e validação no backend; CEP preenche cidade/UF/endereço com fallback manual.
+- [OK] Dígitos de CPF/CNPJ numérico/alfanumérico e duplicidade validados no servidor.
+- [OK] Consulta assistida de CNPJ numérico na base pública, sem falsa confirmação oficial; links de consulta da Receita.
+- [PENDENTE] Consulta automática oficial de existência/situação do CPF: exige contratação e credenciais; não simulada.
+- [OK] Condições à vista, a prazo, parcelada e duplicata; oito formas de pagamento; parcelas com valor/vencimento.
+- [OK] Quitação auditada por parcela e cancelamento de título em aberto; sem duplicação automática de despesas.
+- [OK] Lembretes no sino para Master/Admin, com catch-up e encerramento ao pagar/cancelar.
+- [OK] Notas fiscais privadas PDF/imagem, validação real de arquivo, download autorizado e inclusão em backups.
+- [PENDENTE] Publicação desta extensão no servidor: alteração/testes locais; produção não atualizada.
+
+- [OK] Verificações desta extensão: 230 testes PHP, 25 em MySQL isolado, 106 E2E gerais, 2 fluxos finais de fornecedores, 12 unitários de frontend, lint, TypeScript, Pint e build. Dados locais/arquivos privados conferidos por hash.

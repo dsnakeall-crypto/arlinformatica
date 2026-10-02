@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import PageHeader from "./page-header";
+import PurchasePayments from "./supplier-purchase-payments";
 import OrderPopup from "./order-popup";
 import { centsFromMoneyInput, maskMoneyInput } from "./money-input";
 import "../css/suppliers.css";
@@ -30,6 +31,8 @@ type Supplier = {
   document: string | null;
   contact_name: string | null;
   phone: string | null;
+  whatsapp: string | null;
+  landline: string | null;
   email: string | null;
   postal_code: string | null;
   street: string | null;
@@ -74,6 +77,14 @@ type Purchase = {
   cancellation_reason: string | null;
   supplier_snapshot: Supplier;
   items: Item[];
+  open_amount_cents?: number;
+  paid_amount_cents?: number;
+  payable_count?: number;
+  next_due_on?: string | null;
+  payment_terms: string | null;
+  payment_method: string | null;
+  installments: Payable[];
+  invoices: { id: number; original_name: string; bytes: number }[];
   receipts: {
     id: number;
     received_on: string;
@@ -92,6 +103,54 @@ type Detail = {
     received_value_cents: number;
     stock_quantity: number;
   }[];
+};
+type Payable = {
+  id: number;
+  installment: number;
+  amount_cents: number;
+  due_on: string;
+  paid_on: string | null;
+  paid_method: string | null;
+  voided_at: string | null;
+  void_reason: string | null;
+};
+const paymentMethods: Record<string, string> = {
+  pix: "Pix",
+  cash: "Dinheiro",
+  bank_transfer: "Transferência bancária",
+  boleto: "Boleto",
+  debit_card: "Cartão de débito",
+  credit_card: "Cartão de crédito",
+  cheque: "Cheque",
+  other: "Outro",
+};
+const paymentTerms: Record<string, string> = {
+  cash: "À vista",
+  deferred: "A prazo (parcela única)",
+  installments: "Parcelada",
+  duplicata: "Duplicata / títulos",
+};
+const phoneMask = (value: string, fixed = false) => {
+  const n = value.replace(/\D/g, "").slice(0, fixed ? 10 : 11);
+  if (n.length <= 2) return n;
+  const cut = fixed ? 6 : 7;
+  return `(${n.slice(0, 2)}) ${n.slice(2, cut)}${n.length > cut ? "-" + n.slice(cut) : ""}`;
+};
+const documentMask = (value: string) => {
+  const n = value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 14);
+  if (n.length <= 11 && !/[A-Z]/.test(n))
+    return n
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3}\.\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3}\.\d{3}\.\d{3})(\d)/, "$1-$2");
+  return n
+    .replace(/^(.{2})(.)/, "$1.$2")
+    .replace(/^(.{6})(.)/, "$1.$2")
+    .replace(/^(.{10})(.)/, "$1/$2")
+    .replace(/^(.{15})(.)/, "$1-$2");
 };
 const money = (value = 0) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
@@ -119,6 +178,8 @@ const blankSupplier = (): SupplierDraft => ({
   document: "",
   contact_name: "",
   phone: "",
+  whatsapp: "",
+  landline: "",
   email: "",
   postal_code: "",
   street: "",
@@ -136,7 +197,9 @@ async function api(path: string, options: RequestInit = {}) {
     ...options,
     headers: {
       Accept: "application/json",
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(options.body && !(options.body instanceof FormData)
+        ? { "Content-Type": "application/json" }
+        : {}),
       "X-CSRF-TOKEN":
         document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
           ?.content || "",
@@ -204,6 +267,51 @@ function SupplierForm({
   const [draft, setDraft] = useState(initial),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [cepNote, setCepNote] = useState("");
+  const [documentNote, setDocumentNote] = useState("");
+  const documentRequest = useRef(0);
+  const documentValue = (draft.document || "").replace(/[^a-zA-Z0-9]/g, "");
+  useEffect(() => {
+    documentRequest.current++;
+    setDocumentNote("");
+  }, [documentValue]);
+  const cep = (draft.postal_code || "").replace(/\D/g, "");
+  useEffect(() => {
+    if (cep.length !== 8) return;
+    const controller = new AbortController();
+    let live = true;
+    const timer = setTimeout(async () => {
+      setCepNote("Consultando CEP…");
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error();
+        const address = await response.json();
+        if (!live) return;
+        if (address.erro) {
+          setCepNote("CEP não encontrado. Confira ou preencha manualmente.");
+          return;
+        }
+        setDraft((current) => ({
+          ...current,
+          street: address.logradouro || current.street,
+          district: address.bairro || current.district,
+          city: address.localidade,
+          state: address.uf,
+        }));
+        setCepNote("Endereço preenchido. Informe o número e confira os dados.");
+      } catch {
+        if (live)
+          setCepNote("Consulta indisponível. Preencha o endereço manualmente.");
+      }
+    }, 450);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [cep]);
   const initialValue = useRef(JSON.stringify(initial));
   const dismiss = () => {
     if (
@@ -229,8 +337,44 @@ function SupplierForm({
         type={type}
         required={required}
         maxLength={max}
-        value={String(draft[key] ?? "")}
-        onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
+        value={
+          key === "document"
+            ? documentMask(String(draft[key] ?? ""))
+            : ["phone", "whatsapp", "landline"].includes(key)
+              ? phoneMask(String(draft[key] ?? ""), key === "landline")
+              : String(draft[key] ?? "")
+        }
+        onChange={(e) => {
+          const value = e.target.value;
+          setDraft({
+            ...draft,
+            [key]:
+              key === "document"
+                ? value
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9]/g, "")
+                    .slice(0, 14)
+                : ["phone", "whatsapp", "landline", "postal_code"].includes(key)
+                  ? value
+                      .replace(/\D/g, "")
+                      .slice(
+                        0,
+                        key === "postal_code"
+                          ? 8
+                          : key === "landline"
+                            ? 10
+                            : 11,
+                      )
+                  : value,
+          });
+        }}
+        pattern={
+          key === "phone" || key === "whatsapp"
+            ? "\\([1-9][0-9]\\) 9[0-9]{4}-[0-9]{4}"
+            : key === "landline"
+              ? "\\([1-9][0-9]\\) [2-5][0-9]{3}-[0-9]{4}"
+              : undefined
+        }
       />
     </label>
   );
@@ -266,30 +410,86 @@ function SupplierForm({
           <section>
             <h3>Identificação</h3>
             <div className="supplier-form-grid">
-              {fields("name", "Nome / razão social", "text", true)}
-              {fields("trade_name", "Nome fantasia")}
-              {fields("document", "CPF / CNPJ", "text", false, 18)}
+              {fields("name", "Razão social / nome completo", "text", true)}
+              {fields("trade_name", "Nome fantasia", "text", true)}
+              {fields("document", "CPF / CNPJ", "text", true, 18)}
               {fields("contact_name", "Pessoa de contato")}
             </div>
           </section>
           <section>
+            <p className="supplier-help">
+              Os dígitos do documento são validados ao salvar. A existência e a
+              situação cadastral exigem consulta à Receita.{" "}
+              <a
+                href="https://www.gov.br/pt-br/servicos/consultar-cadastro-de-pessoas-fisicas"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Consultar CPF
+              </a>{" "}
+              ·{" "}
+              <a
+                href="https://solucoes.receita.fazenda.gov.br/servicos/cnpjreva/cnpjreva_solicitacao.asp"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Consultar CNPJ
+              </a>
+            </p>
+            <button
+              type="button"
+              disabled={busy || !documentValue}
+              onClick={async () => {
+                const sequence = ++documentRequest.current;
+                setDocumentNote("Consultando cadastro…");
+                try {
+                  const result = await api("/supplier-document/lookup", {
+                    method: "POST",
+                    body: JSON.stringify({ document: documentValue }),
+                  });
+                  if (sequence !== documentRequest.current) return;
+                  setDocumentNote(
+                    result.status === "found"
+                      ? `${result.name} · Situação: ${result.registration_status}. ${result.message}`
+                      : result.message,
+                  );
+                } catch (e) {
+                  if (sequence === documentRequest.current)
+                    setDocumentNote(errorMessage(e));
+                }
+              }}
+            >
+              Verificar documento
+            </button>
+            <p className="supplier-help" role="status">
+              {documentNote}
+            </p>
             <h3>Contato</h3>
             <div className="supplier-form-grid">
-              {fields("phone", "Telefone / WhatsApp", "tel", false, 30)}
+              {fields("phone", "Telefone celular", "tel", true, 16)}
+              {fields("whatsapp", "WhatsApp", "tel", true, 16)}
+              {fields("landline", "Telefone fixo (opcional)", "tel", false, 15)}
               {fields("email", "E-mail", "email")}
+              <button
+                type="button"
+                onClick={() => setDraft({ ...draft, whatsapp: draft.phone })}
+              >
+                Usar celular no WhatsApp
+              </button>
             </div>
           </section>
           <section>
             <h3>Endereço</h3>
             <div className="supplier-form-grid">
-              {fields("postal_code", "CEP", "text", false, 9)}
-              {fields("street", "Rua / avenida")}
-              {fields("number", "Número", "text", false, 30)}
-              {fields("district", "Bairro")}
-              {fields("city", "Cidade")}
+              {fields("postal_code", "CEP", "text", true, 9)}
+              {fields("street", "Rua / avenida", "text", true)}
+              {fields("number", "Número", "text", true, 30)}
+              {fields("district", "Bairro", "text", true)}
+              {fields("city", "Cidade", "text", true)}
               <label>
-                <span>UF</span>
+                <span>UF *</span>
                 <select
+                  required
                   aria-label="UF"
                   value={draft.state || ""}
                   onChange={(e) =>
@@ -305,6 +505,9 @@ function SupplierForm({
                 </select>
               </label>
               {fields("complement", "Complemento")}
+              <p className="supplier-help" role="status">
+                {cepNote}
+              </p>
             </div>
           </section>
           <label>
@@ -374,6 +577,18 @@ function PurchaseForm({
   const [newProduct, setNewProduct] = useState(false),
     [newName, setNewName] = useState(""),
     [salePrice, setSalePrice] = useState("");
+  const [terms, setTerms] = useState("cash"),
+    [method, setMethod] = useState("pix"),
+    [count, setCount] = useState(1),
+    [firstDue, setFirstDue] = useState(today),
+    [paidNow, setPaidNow] = useState(false),
+    [paidOn, setPaidOn] = useState(today);
+  const [customDates, setCustomDates] = useState<Record<number, string>>({}),
+    [customAmounts, setCustomAmounts] = useState<Record<number, string>>({});
+  const [invoice, setInvoice] = useState<File | null>(null);
+  const createdPurchase = useRef<number | null>(null);
+  const [committed, setCommitted] = useState(false);
+  const invoiceKey = useRef(crypto.randomUUID());
   const requestKey = useRef(crypto.randomUUID());
   useEffect(() => {
     api("/catalogs/products")
@@ -386,6 +601,15 @@ function PurchaseForm({
     setQuery("");
   };
   const dismiss = () => {
+    if (!busy && createdPurchase.current) {
+      if (
+        window.confirm(
+          "A compra já foi registrada. Fechar sem anexar a nota? Você pode anexá-la depois na ficha.",
+        )
+      )
+        saved();
+      return;
+    }
     if (
       !busy &&
       (!(rows.length || reference || notes || newName) ||
@@ -429,7 +653,7 @@ function PurchaseForm({
     setBusy(true);
     setError("");
     try {
-      await api(`/suppliers/${supplier.id}/purchases`, {
+      const purchase = await api(`/suppliers/${supplier.id}/purchases`, {
         method: "POST",
         body: JSON.stringify({
           request_key: requestKey.current,
@@ -438,6 +662,17 @@ function PurchaseForm({
           reference,
           notes,
           received_now: receivedNow,
+          payment_terms: terms,
+          payment_method: method,
+          installments: Array.from({ length: count }, (_, i) => ({
+            due_on: customDates[i] || dueDate(i),
+            amount_cents:
+              customAmounts[i] !== undefined
+                ? centsFromMoneyInput(customAmounts[i])
+                : Math.floor(total / count) +
+                  (i === count - 1 ? total % count : 0),
+            paid_on: paidNow ? paidOn : null,
+          })),
           items: rows.map((row) => ({
             product_id: row.product.id,
             quantity: row.quantity,
@@ -445,12 +680,37 @@ function PurchaseForm({
           })),
         }),
       });
+      createdPurchase.current = purchase.id;
+      setCommitted(true);
+      if (invoice) {
+        const form = new FormData();
+        form.append("invoice", invoice);
+        form.append("request_key", invoiceKey.current);
+        await api(`/supplier-purchases/${purchase.id}/invoices`, {
+          method: "POST",
+          body: form,
+        });
+      }
       saved();
     } catch (reason) {
-      setError(errorMessage(reason));
+      setError(
+        (createdPurchase.current
+          ? "Compra registrada. Falha no anexo; tente anexar novamente sem duplicar a compra. "
+          : "") + errorMessage(reason),
+      );
     } finally {
       setBusy(false);
     }
+  };
+  const dueDate = (index: number) => {
+    const d = new Date(`${firstDue}T12:00:00`);
+    const day = d.getDate();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + index);
+    d.setDate(
+      Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()),
+    );
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
   const total = rows.reduce(
     (sum, row) => sum + row.quantity * centsFromMoneyInput(row.cost),
@@ -467,228 +727,400 @@ function PurchaseForm({
     >
       <form className="supplier-form supplier-purchase-form" onSubmit={submit}>
         <div className="supplier-form-body">
-          <div className="supplier-form-grid">
-            <label>
-              <span>Data da compra *</span>
-              <input
-                type="date"
-                required
-                max={today()}
-                value={purchasedOn}
-                onChange={(e) => setPurchasedOn(e.target.value)}
-              />
-            </label>
-            <label>
-              <span>Nota / referência</span>
-              <input
-                maxLength={100}
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-                placeholder="Opcional"
-              />
-            </label>
-          </div>
-          <section>
-            <div className="supplier-section-top">
-              <div>
-                <h3>Produtos da compra</h3>
-                <p>Selecione o produto e informe o custo de aquisição.</p>
-              </div>
-              <button type="button" onClick={() => setNewProduct(!newProduct)}>
-                <Plus />
-                Cadastrar produto
-              </button>
+          <fieldset className="supplier-purchase-fields" disabled={committed}>
+            <div className="supplier-form-grid">
+              <label>
+                <span>Data da compra *</span>
+                <input
+                  type="date"
+                  required
+                  max={today()}
+                  value={purchasedOn}
+                  onChange={(e) => setPurchasedOn(e.target.value)}
+                />
+              </label>
+              <label>
+                <span>Nota / referência</span>
+                <input
+                  maxLength={100}
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  placeholder="Opcional"
+                />
+              </label>
             </div>
-            {newProduct && (
-              <div className="supplier-quick-product">
-                <label>
-                  <span>Nome do novo produto</span>
-                  <input
-                    maxLength={255}
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                  />
-                </label>
-                <label>
-                  <span>Preço de venda (R$)</span>
-                  <input
-                    inputMode="decimal"
-                    value={salePrice}
-                    onChange={(e) =>
-                      setSalePrice(maskMoneyInput(e.target.value))
-                    }
-                  />
-                </label>
+            <section>
+              <div className="supplier-section-top">
+                <div>
+                  <h3>Produtos da compra</h3>
+                  <p>Selecione o produto e informe o custo de aquisição.</p>
+                </div>
                 <button
                   type="button"
-                  disabled={busy || !newName.trim() || !salePrice}
-                  onClick={() => void createProduct()}
+                  onClick={() => setNewProduct(!newProduct)}
                 >
-                  Criar e adicionar
+                  <Plus />
+                  Cadastrar produto
                 </button>
-                <small>
-                  O cadastro começa sem estoque; a quantidade entra no
-                  recebimento.
-                </small>
               </div>
-            )}
-            <label className="supplier-search">
-              <Search />
-              <input
-                aria-label="Buscar produto para a compra"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Pesquisar produto do catálogo…"
-              />
-            </label>
-            {query.trim() && (
-              <div className="supplier-product-results">
-                {products
-                  .filter(
+              {newProduct && (
+                <div className="supplier-quick-product">
+                  <label>
+                    <span>Nome do novo produto</span>
+                    <input
+                      maxLength={255}
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Preço de venda (R$)</span>
+                    <input
+                      inputMode="decimal"
+                      value={salePrice}
+                      onChange={(e) =>
+                        setSalePrice(maskMoneyInput(e.target.value))
+                      }
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={busy || !newName.trim() || !salePrice}
+                    onClick={() => void createProduct()}
+                  >
+                    Criar e adicionar
+                  </button>
+                  <small>
+                    O cadastro começa sem estoque; a quantidade entra no
+                    recebimento.
+                  </small>
+                </div>
+              )}
+              <label className="supplier-search">
+                <Search />
+                <input
+                  aria-label="Buscar produto para a compra"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Pesquisar produto do catálogo…"
+                />
+              </label>
+              {query.trim() && (
+                <div className="supplier-product-results">
+                  {products
+                    .filter(
+                      (product) =>
+                        !rows.some((row) => row.product.id === product.id) &&
+                        product.name
+                          .toLocaleLowerCase("pt-BR")
+                          .includes(query.toLocaleLowerCase("pt-BR")),
+                    )
+                    .slice(0, 15)
+                    .map((product) => (
+                      <button
+                        type="button"
+                        key={product.id}
+                        onClick={() => add(product)}
+                      >
+                        <PackagePlus />
+                        <span>
+                          {product.name}
+                          <small>
+                            Estoque atual: {product.stock_quantity} · Venda:{" "}
+                            {money(product.price_cents)}
+                          </small>
+                        </span>
+                        <Plus />
+                      </button>
+                    ))}
+                  {!products.some(
                     (product) =>
                       !rows.some((row) => row.product.id === product.id) &&
                       product.name
                         .toLocaleLowerCase("pt-BR")
                         .includes(query.toLocaleLowerCase("pt-BR")),
-                  )
-                  .slice(0, 15)
-                  .map((product) => (
-                    <button
-                      type="button"
-                      key={product.id}
-                      onClick={() => add(product)}
+                  ) && (
+                    <p>
+                      Nenhum produto encontrado. Você pode cadastrá-lo acima.
+                    </p>
+                  )}
+                </div>
+              )}
+              <div className="supplier-purchase-lines">
+                {rows.length ? (
+                  rows.map((row, index) => (
+                    <div
+                      className="supplier-purchase-line"
+                      key={row.product.id}
                     >
-                      <PackagePlus />
-                      <span>
-                        {product.name}
+                      <strong>
+                        {row.product.name}
                         <small>
-                          Estoque atual: {product.stock_quantity} · Venda:{" "}
-                          {money(product.price_cents)}
+                          Venda cadastrada: {money(row.product.price_cents)}
                         </small>
-                      </span>
-                      <Plus />
-                    </button>
-                  ))}
-                {!products.some(
-                  (product) =>
-                    !rows.some((row) => row.product.id === product.id) &&
-                    product.name
-                      .toLocaleLowerCase("pt-BR")
-                      .includes(query.toLocaleLowerCase("pt-BR")),
-                ) && (
-                  <p>Nenhum produto encontrado. Você pode cadastrá-lo acima.</p>
+                      </strong>
+                      <label>
+                        <span>Quantidade</span>
+                        <input
+                          aria-label={`Quantidade de ${row.product.name}`}
+                          type="number"
+                          min={1}
+                          max={999999}
+                          step={1}
+                          required
+                          value={row.quantity}
+                          onChange={(e) =>
+                            setRows(
+                              rows.map((r, i) =>
+                                i === index
+                                  ? { ...r, quantity: Number(e.target.value) }
+                                  : r,
+                              ),
+                            )
+                          }
+                        />
+                      </label>
+                      <label>
+                        <span>Custo unitário (R$)</span>
+                        <input
+                          aria-label={`Custo de ${row.product.name}`}
+                          inputMode="decimal"
+                          required
+                          value={row.cost}
+                          onChange={(e) =>
+                            setRows(
+                              rows.map((r, i) =>
+                                i === index
+                                  ? {
+                                      ...r,
+                                      cost: maskMoneyInput(e.target.value),
+                                    }
+                                  : r,
+                              ),
+                            )
+                          }
+                        />
+                      </label>
+                      <b>
+                        {money(row.quantity * centsFromMoneyInput(row.cost))}
+                      </b>
+                      <button
+                        type="button"
+                        aria-label={`Remover ${row.product.name}`}
+                        onClick={() =>
+                          setRows(rows.filter((_, i) => i !== index))
+                        }
+                      >
+                        <X />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="supplier-empty-small">
+                    Os produtos adicionados aparecerão aqui.
+                  </p>
                 )}
               </div>
-            )}
-            <div className="supplier-purchase-lines">
-              {rows.length ? (
-                rows.map((row, index) => (
-                  <div className="supplier-purchase-line" key={row.product.id}>
-                    <strong>
-                      {row.product.name}
-                      <small>
-                        Venda cadastrada: {money(row.product.price_cents)}
-                      </small>
-                    </strong>
-                    <label>
-                      <span>Quantidade</span>
-                      <input
-                        aria-label={`Quantidade de ${row.product.name}`}
-                        type="number"
-                        min={1}
-                        max={999999}
-                        step={1}
-                        required
-                        value={row.quantity}
-                        onChange={(e) =>
-                          setRows(
-                            rows.map((r, i) =>
-                              i === index
-                                ? { ...r, quantity: Number(e.target.value) }
-                                : r,
-                            ),
-                          )
-                        }
-                      />
-                    </label>
-                    <label>
-                      <span>Custo unitário (R$)</span>
-                      <input
-                        aria-label={`Custo de ${row.product.name}`}
-                        inputMode="decimal"
-                        required
-                        value={row.cost}
-                        onChange={(e) =>
-                          setRows(
-                            rows.map((r, i) =>
-                              i === index
-                                ? { ...r, cost: maskMoneyInput(e.target.value) }
-                                : r,
-                            ),
-                          )
-                        }
-                      />
-                    </label>
-                    <b>{money(row.quantity * centsFromMoneyInput(row.cost))}</b>
-                    <button
-                      type="button"
-                      aria-label={`Remover ${row.product.name}`}
-                      onClick={() =>
-                        setRows(rows.filter((_, i) => i !== index))
-                      }
-                    >
-                      <X />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="supplier-empty-small">
-                  Os produtos adicionados aparecerão aqui.
-                </p>
-              )}
-            </div>
-          </section>
-          <section>
-            <label className="supplier-check">
-              <input
-                type="checkbox"
-                checked={receivedNow}
-                onChange={(e) => setReceivedNow(e.target.checked)}
-              />
-              Mercadoria recebida agora
-            </label>
-            <p>
-              {receivedNow
-                ? "Ao confirmar, as quantidades serão somadas ao estoque."
-                : "A compra ficará pendente. O estoque só será somado ao registrar o recebimento."}
-            </p>
-            {!receivedNow && (
-              <label>
-                <span>Previsão de entrega</span>
+            </section>
+            <section>
+              <label className="supplier-check">
                 <input
-                  type="date"
-                  min={purchasedOn}
-                  value={expectedOn}
-                  onChange={(e) => setExpectedOn(e.target.value)}
+                  type="checkbox"
+                  checked={receivedNow}
+                  onChange={(e) => setReceivedNow(e.target.checked)}
                 />
+                Mercadoria recebida agora
               </label>
-            )}
+              <p>
+                {receivedNow
+                  ? "Ao confirmar, as quantidades serão somadas ao estoque."
+                  : "A compra ficará pendente. O estoque só será somado ao registrar o recebimento."}
+              </p>
+              {!receivedNow && (
+                <label>
+                  <span>Previsão de entrega</span>
+                  <input
+                    type="date"
+                    min={purchasedOn}
+                    value={expectedOn}
+                    onChange={(e) => setExpectedOn(e.target.value)}
+                  />
+                </label>
+              )}
+            </section>
+            <section className="supplier-payment-plan">
+              <h3>Pagamento ao fornecedor</h3>
+              <div className="supplier-form-grid">
+                <label>
+                  <span>Condição de pagamento *</span>
+                  <select
+                    value={terms}
+                    onChange={(e) => {
+                      setTerms(e.target.value);
+                      setCount(1);
+                      setCustomAmounts({});
+                      setCustomDates({});
+                    }}
+                  >
+                    {Object.entries(paymentTerms).map(([key, label]) => (
+                      <option value={key} key={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Forma de pagamento *</span>
+                  <select
+                    value={method}
+                    onChange={(e) => setMethod(e.target.value)}
+                  >
+                    {Object.entries(paymentMethods).map(([key, label]) => (
+                      <option value={key} key={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Primeiro vencimento *</span>
+                  <input
+                    type="date"
+                    required
+                    min={purchasedOn}
+                    value={firstDue}
+                    onChange={(e) => {
+                      setFirstDue(e.target.value);
+                      setCustomDates({});
+                    }}
+                  />
+                </label>
+                <label>
+                  <span>Número de parcelas *</span>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    max={60}
+                    disabled={["cash", "deferred"].includes(terms)}
+                    value={count}
+                    onChange={(e) => {
+                      setCount(
+                        Math.max(1, Math.min(60, Number(e.target.value))),
+                      );
+                      setCustomAmounts({});
+                      setCustomDates({});
+                    }}
+                  />
+                </label>
+              </div>
+              <p className="supplier-help">
+                Vencimentos mensais sugeridos; ajuste cada parcela. No cartão de
+                crédito, informe o vencimento da fatura. Duplicata é um título;
+                escolha também como será paga.
+              </p>
+              {Array.from({ length: count }, (_, i) => (
+                <div className="supplier-installment-row" key={i}>
+                  <b>
+                    Parcela {i + 1}/{count}
+                  </b>
+                  <label>
+                    <span>Vencimento {i + 1}</span>
+                    <input
+                      type="date"
+                      required
+                      min={purchasedOn}
+                      value={customDates[i] || dueDate(i)}
+                      onChange={(e) =>
+                        setCustomDates({ ...customDates, [i]: e.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    <span>Valor da parcela {i + 1} (R$)</span>
+                    <input
+                      inputMode="decimal"
+                      value={
+                        customAmounts[i] ??
+                        money(
+                          Math.floor(total / count) +
+                            (i === count - 1 ? total % count : 0),
+                        ).replace(/[^0-9,.]/g, "")
+                      }
+                      onChange={(e) =>
+                        setCustomAmounts({
+                          ...customAmounts,
+                          [i]: maskMoneyInput(e.target.value),
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+              ))}
+              <label className="supplier-check">
+                <input
+                  type="checkbox"
+                  checked={paidNow}
+                  onChange={(e) => setPaidNow(e.target.checked)}
+                />
+                Compra já paga integralmente
+              </label>
+              {paidNow && (
+                <label>
+                  <span>Data do pagamento *</span>
+                  <input
+                    type="date"
+                    required
+                    min={purchasedOn}
+                    max={today()}
+                    value={paidOn}
+                    onChange={(e) => setPaidOn(e.target.value)}
+                  />
+                </label>
+              )}
+            </section>
+            <label>
+              <span>Observações da compra</span>
+              <textarea
+                maxLength={5000}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </label>
+            <div className="supplier-purchase-total">
+              <span>Total da compra</span>
+              <strong>{money(total)}</strong>
+            </div>
+            <p className="supplier-help">
+              O controle de vencimentos fica nesta compra e gera lembretes no
+              sino. Não lança despesas automaticamente no Financeiro, evitando
+              duplicar lançamentos manuais.
+            </p>
+          </fieldset>
+          <section>
+            <h3>Nota fiscal da compra</h3>
+            <label>
+              <span>Anexar imagem ou PDF da nota fiscal</span>
+              <input
+                type="file"
+                accept="application/pdf,image/jpeg,image/png,image/webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  if (file && file.size > 10 * 1024 * 1024) {
+                    setError("A nota deve ter no máximo 10 MB.");
+                    e.target.value = "";
+                    return;
+                  }
+                  setInvoice(file);
+                  invoiceKey.current = crypto.randomUUID();
+                }}
+              />
+            </label>
+            <p className="supplier-help">
+              PDF, JPG, PNG ou WebP · até 10 MB. Anexo privado, disponível no
+              histórico da compra.
+            </p>
           </section>
-          <label>
-            <span>Observações da compra</span>
-            <textarea
-              maxLength={5000}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </label>
-          <div className="supplier-purchase-total">
-            <span>Total da compra</span>
-            <strong>{money(total)}</strong>
-          </div>
-          <p className="supplier-help">
-            O registro da compra não cria pagamento ou despesa no Financeiro.
-          </p>
           {error && (
             <div className="supplier-error" role="alert">
               {error}
@@ -703,9 +1135,11 @@ function PurchaseForm({
             <Check />
             {busy
               ? "Registrando…"
-              : receivedNow
-                ? "Registrar e receber"
-                : "Registrar compra"}
+              : committed
+                ? "Reenviar anexo"
+                : receivedNow
+                  ? "Registrar e receber"
+                  : "Registrar compra"}
           </button>
         </footer>
       </form>
@@ -933,7 +1367,12 @@ export default function SuppliersPage() {
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
     [revision, setRevision] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null),
+  const [selected, setSelected] = useState<number | null>(() => {
+      const n = Number(
+        new URLSearchParams(window.location.search).get("supplier"),
+      );
+      return n > 0 ? n : null;
+    }),
     [detail, setDetail] = useState<Detail | null>(null),
     [historyPage, setHistoryPage] = useState(1),
     [tab, setTab] = useState("purchases"),
@@ -1005,6 +1444,18 @@ export default function SuppliersPage() {
       setPurchaseLoading(false);
     }
   };
+  const initialPurchase = useRef(
+    Number(new URLSearchParams(window.location.search).get("purchase")),
+  );
+  useEffect(() => {
+    if (detail && initialPurchase.current > 0) {
+      const id = initialPurchase.current;
+      initialPurchase.current = 0;
+      void api(`/supplier-purchases/${id}`)
+        .then(setPurchase)
+        .catch((reason) => setError(errorMessage(reason)));
+    }
+  }, [detail]);
   const received = async () => {
     setReceive(false);
     setCancel(false);
@@ -1012,7 +1463,8 @@ export default function SuppliersPage() {
     if (purchase) await openPurchase(purchase.id);
   };
   const supplier = detail?.supplier;
-  const phone = supplier?.phone?.replace(/\D/g, "") || "";
+  const phone =
+    (supplier?.whatsapp || supplier?.phone)?.replace(/\D/g, "") || "";
   const whatsapp = phone
     ? `https://wa.me/${phone.startsWith("55") && phone.length > 11 ? phone : "55" + phone}`
     : "";
@@ -1246,7 +1698,20 @@ export default function SuppliersPage() {
                     {whatsapp && (
                       <a href={whatsapp} target="_blank" rel="noreferrer">
                         <Phone />
-                        {supplier.phone}
+                        WhatsApp:{" "}
+                        {phoneMask(supplier.whatsapp || supplier.phone || "")}
+                      </a>
+                    )}
+                    {supplier.phone && (
+                      <a href={`tel:+55${supplier.phone}`}>
+                        <Phone />
+                        Celular: {phoneMask(supplier.phone)}
+                      </a>
+                    )}
+                    {supplier.landline && (
+                      <a href={`tel:+55${supplier.landline}`}>
+                        <Phone />
+                        Fixo: {phoneMask(supplier.landline, true)}
                       </a>
                     )}
                     {supplier.email && (
@@ -1329,6 +1794,24 @@ export default function SuppliersPage() {
                             </small>
                           </span>
                           <Badge status={row.status} />
+                          <span className="supplier-purchase-payment-status">
+                            <small>
+                              {paymentTerms[row.payment_terms || ""] ||
+                                "Condição não informada"}{" "}
+                              ·{" "}
+                              {paymentMethods[row.payment_method || ""] || "—"}
+                            </small>
+                            <small>
+                              {Number(row.payable_count) > 0
+                                ? Number(row.open_amount_cents) > 0
+                                  ? `Em aberto: ${money(row.open_amount_cents)} · vence ${date(row.next_due_on)}`
+                                  : Number(row.paid_amount_cents) >=
+                                      Number(row.total_cents)
+                                    ? "Paga integralmente"
+                                    : "Títulos encerrados (confira histórico)"
+                                : "Pagamento não cadastrado"}
+                            </small>
+                          </span>
                           <strong>{money(row.total_cents)}</strong>
                           <ChevronRight />
                         </button>
@@ -1452,6 +1935,18 @@ export default function SuppliersPage() {
                       </button>
                     </div>
                   )}
+                  <PurchasePayments
+                    purchase={purchase}
+                    refresh={async () => {
+                      await openPurchase(purchase.id);
+                      if (selected)
+                        setDetail(
+                          await api(
+                            `/suppliers/${selected}?page=${historyPage}`,
+                          ),
+                        );
+                    }}
+                  />
                   <h3>Recebimentos registrados</h3>
                   {purchase.receipts.length ? (
                     purchase.receipts.map((receipt) => (

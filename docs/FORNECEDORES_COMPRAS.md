@@ -5,7 +5,7 @@ Implementação de 02/10/2026 autorizada pelo proprietário. Atende à instalaç
 ## Uso
 
 1. Acesse **Cadastros → Fornecedores** como Master ou Administrador.
-2. Cadastre nome/razão social, CPF/CNPJ opcional, contato, endereço e observações.
+2. Cadastre razão social/nome completo, nome fantasia, CPF/CNPJ, celular, WhatsApp e endereço completo obrigatórios; fixo, e-mail, contato e observações opcionais.
 3. Abra a ficha e escolha **Registrar compra**. Selecione produtos existentes ou cadastre um produto com preço de venda e saldo inicial zero.
 4. Informe quantidade e custo unitário, independente do preço de venda.
 5. Se a mercadoria chegou, mantenha **Mercadoria recebida agora** selecionado. Caso contrário, desmarque e informe uma previsão opcional.
@@ -64,7 +64,7 @@ Não usar `migrate:fresh`, reset ou restauração de backup antigo para publicar
 
 ## Limites desta etapa
 
-Compra não cria despesa/pagamento automaticamente no Financeiro, evitando duplicação. Contas a pagar, parcelas, devoluções ao fornecedor e anexos de nota são etapas futuras.
+Compra não cria despesa/pagamento automaticamente no Financeiro, evitando duplicação. Contas a pagar, parcelas, vencimentos, lembretes e anexos de nota foram acrescentados em `FORNECEDORES_PAGAMENTOS_NOTAS.md`. Devoluções ao fornecedor permanecem para uma etapa futura.
 
 Custos são registrados por entrada. Baixa por lote/FIFO/custo médio e margem por venda ainda não foram implementadas. O indicador de valor recebido é custo histórico de entradas recebidas, não valor do estoque restante ou lucro.
 
@@ -73,3 +73,5 @@ Não foi criada arquitetura para várias empresas ou cobrança de assinatura. O 
 ## Validação
 
 PHP: 222 testes aprovados, 1.873 asserções, incluindo os testes do módulo e de isolamento. Frontend: 12 testes unitários aprovados. E2E próprio aprovado com cadastro, produto novo, compra pendente, duas entregas, repetição sem duplicar, brinde sem fornecedor e CSRF real. Capturas desktop/mobile em `output/fornecedores`, sem dados reais. Lint, typecheck, Pint e build aprovados. Suíte E2E completa: 106 testes aprovados, sem retries. Fornecedores/estoque também aprovados em MySQL isolado: 17 testes, 138 asserções. Ajustes finais restritos ao módulo reconferidos pelo seu E2E.
+
+Atualização do cadastro: documento, razão social/nome completo, nome fantasia, celular, WhatsApp e endereço completo são obrigatórios em novos cadastros/edições; telefone fixo opcional. Consulte as regras e limites de verificação cadastral em `FORNECEDORES_PAGAMENTOS_NOTAS.md`.

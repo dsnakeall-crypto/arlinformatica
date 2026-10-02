@@ -925,10 +925,12 @@ Criar CHECKLIST_FINAL.md marcando cada requisito como [OK] ou [PENDENTE]. Não m
 
 ## 52. Fornecedores e compras — extensão autorizada em 02/10/2026
 
-Adicionar Fornecedores em Cadastros, restrito a Master e Administrador também no backend. Cadastro com documento opcional, contatos, endereço, observações, inativação e histórico. Na ficha, registrar compras de produtos existentes ou cadastrar produto novo com saldo zero. Custo de aquisição independente do preço de venda.
+Adicionar Fornecedores em Cadastros, restrito a Master e Administrador também no backend. Cadastro com CPF/CNPJ, razão social/nome completo, nome fantasia, celular, WhatsApp e endereço completo obrigatórios; fixo opcional, observações, inativação e histórico. CEP com consulta automática e validação de documentos no servidor. Dígitos válidos não comprovam existência; consulta pública de CNPJ e consulta oficial manual para CPF, até haver integração contratada. Na ficha, registrar compras de produtos existentes ou cadastrar produto novo com saldo zero. Custo de aquisição independente do preço de venda.
 
 Produto não exige fornecedor. O vínculo pertence à compra/entrada; o mesmo produto pode receber compras de fornecedores diferentes e brindes sem fornecedor. Brinde possui custo zero; custo antigo desconhecido permanece desconhecido.
 
 Compra pendente não soma estoque. Recebimento completo ou parcial soma somente unidades confirmadas, preserva custos/dados históricos e impede duplicação da mesma solicitação. Cancelar o restante pendente preserva mercadorias já recebidas. Não alterar OS, documentos, saldos antigos ou lançamentos financeiros ao instalar o módulo.
 
-Evolução aditiva com backup verificado antes da migração. Pagamentos de fornecedores, margem por lote e futura cópia comercial serão etapas próprias. Regras, modelagem e validação em `docs/FORNECEDORES_COMPRAS.md`.
+Evolução aditiva com backup verificado antes da migração. Pagamentos de fornecedores possuem condições, formas, parcelas, vencimentos, confirmação auditada e lembretes internos restritos a Master/Admin. Notas fiscais privadas (PDF/imagem) podem ser anexadas à compra. Sem despesa automática duplicada no Financeiro. Margem por lote e futura cópia comercial serão etapas próprias. Regras, modelagem e validação em `docs/FORNECEDORES_COMPRAS.md`.
+
+Detalhes desta extensão: `docs/FORNECEDORES_PAGAMENTOS_NOTAS.md`.

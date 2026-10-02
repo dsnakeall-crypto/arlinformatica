@@ -1,5 +1,103 @@
 import { test, expect } from "@playwright/test";
 import { api, login, uniqueDocument } from "./helpers";
+
+test("falha ao anexar nota permite repetir sem duplicar compra ou estoque", async ({
+  page,
+}) => {
+  await login(page);
+  const stamp = Date.now();
+  const supplierResult = await api(page, "/suppliers", "POST", {
+    name: `Fornecedor anexo ${stamp}`,
+    trade_name: `Parceiro ${stamp}`,
+    document: uniqueDocument(),
+    phone: "35999991234",
+    whatsapp: "35999991234",
+    postal_code: "37160000",
+    street: "Rua Teste",
+    number: "1",
+    district: "Centro",
+    city: "Campos Gerais",
+    state: "MG",
+  });
+  expect(supplierResult.status).toBe(201);
+  const productResult = await api(page, "/catalogs/products", "POST", {
+    name: `SSD anexo ${stamp}`,
+    price_cents: 48000,
+    stock_quantity: 0,
+    active: true,
+    warranty_enabled: false,
+  });
+  expect(productResult.status).toBe(201);
+  await page.goto(`/suppliers?supplier=${supplierResult.body.id}`);
+  await page
+    .getByRole("button", { name: "Registrar compra", exact: true })
+    .click();
+  const modal = page.getByRole("dialog", {
+    name: "Registrar compra",
+    exact: true,
+  });
+  await modal
+    .getByLabel("Buscar produto para a compra")
+    .fill(productResult.body.name);
+  await modal.locator(".supplier-product-results button").first().click();
+  await modal
+    .getByLabel(`Custo de ${productResult.body.name}`, { exact: true })
+    .fill("20000");
+  await modal.getByLabel("Anexar imagem ou PDF da nota fiscal").setInputFiles({
+    name: "nota-retry.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from(
+      "%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF",
+    ),
+  });
+  let calls = 0;
+  await page.route("**/api/supplier-purchases/*/invoices", (route) => {
+    calls++;
+    return calls === 1
+      ? route.fulfill({
+          status: 422,
+          json: { message: "Falha simulada no upload" },
+        })
+      : route.continue();
+  });
+  await modal
+    .getByRole("button", { name: "Registrar e receber", exact: true })
+    .click();
+  await expect(modal.getByRole("alert")).toContainText("Compra registrada");
+  await expect(modal.getByLabel("Data da compra")).toBeDisabled();
+  await modal
+    .getByRole("button", { name: "Reenviar anexo", exact: true })
+    .click();
+  await expect(modal).not.toBeVisible();
+  expect(calls).toBe(2);
+  const detail = (await api(page, `/suppliers/${supplierResult.body.id}`)).body;
+  expect(detail.purchases.data).toHaveLength(1);
+  const purchase = (
+    await api(page, `/supplier-purchases/${detail.purchases.data[0].id}`)
+  ).body;
+  expect(purchase.invoices).toHaveLength(1);
+  expect(purchase.receipts).toHaveLength(1);
+  const products = (await api(page, "/catalogs/products")).body;
+  expect(
+    products.find((p: any) => p.id === productResult.body.id).stock_quantity,
+  ).toBe(1);
+  await page.reload();
+  await page.getByRole("button", { name: "Notificações", exact: true }).click();
+  await page
+    .locator(".notification-wrap button")
+    .filter({ hasText: `Compra #${purchase.id} · parcela 1` })
+    .click();
+  await expect(page).toHaveURL(
+    new RegExp(
+      `/suppliers\\?supplier=${supplierResult.body.id}&purchase=${purchase.id}$`,
+    ),
+  );
+  await expect(
+    page
+      .locator(".supplier-purchase-detail")
+      .getByRole("heading", { name: /Compra #/ }),
+  ).toBeVisible();
+});
 test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva brindes sem fornecedor", async ({
   page,
 }) => {
@@ -19,13 +117,30 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   });
   const supplierName = `Distribuidora E2E ${Date.now()}`,
     productName = `SSD Fornecedor E2E ${Date.now()}`;
-  await supplierModal.getByLabel("Nome / razão social").fill(supplierName);
+  await supplierModal
+    .getByLabel("Razão social / nome completo")
+    .fill(supplierName);
   await supplierModal.getByLabel("CPF / CNPJ").fill(uniqueDocument());
   await supplierModal.getByLabel("Pessoa de contato").fill("Equipe comercial");
-  await supplierModal.getByLabel("Telefone / WhatsApp").fill("35999991234");
+  await supplierModal.getByLabel("Telefone celular").fill("35999991234");
+  await supplierModal.getByLabel("Nome fantasia").fill(supplierName);
   await supplierModal
-    .getByLabel("Cidade", { exact: true })
-    .fill("Campos Gerais");
+    .getByRole("button", { name: "Usar celular no WhatsApp" })
+    .click();
+  await page.route("https://viacep.com.br/ws/37160000/json/", (route) =>
+    route.fulfill({
+      json: {
+        logradouro: "Rua Um",
+        bairro: "Centro",
+        localidade: "Campos Gerais",
+        uf: "MG",
+      },
+    }),
+  );
+  await supplierModal.getByLabel("CEP").fill("37160000");
+  await expect(supplierModal.getByLabel("Rua / avenida")).toHaveValue("Rua Um");
+  await supplierModal.getByLabel("Número").fill("10");
+  await supplierModal.getByLabel("Cidade").fill("Campos Gerais");
   await supplierModal.getByLabel("UF", { exact: true }).selectOption("MG");
   await page.screenshot({ path: "output/fornecedores/cadastro-desktop.png" });
   await supplierModal
@@ -59,6 +174,25 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
     .fill("20000");
   await purchaseModal.getByLabel("Mercadoria recebida agora").uncheck();
   await purchaseModal.getByLabel("Nota / referência").fill("NF-1001");
+  await expect(supplierModal).not.toBeVisible();
+  await purchaseModal
+    .getByLabel("Condição de pagamento")
+    .selectOption("installments");
+  await purchaseModal.getByLabel("Forma de pagamento").selectOption("boleto");
+  await purchaseModal.getByLabel("Número de parcelas").fill("2");
+  await expect(purchaseModal.getByLabel("Valor da parcela 1 (R$)")).toHaveValue(
+    "300,00",
+  );
+  await purchaseModal
+    .getByLabel("Anexar imagem ou PDF da nota fiscal")
+    .setInputFiles({
+      name: "nota-e2e.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from(
+        "%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF",
+      ),
+    });
+
   await page.screenshot({ path: "output/fornecedores/compra-desktop.png" });
   await purchaseModal
     .getByRole("button", { name: "Registrar compra", exact: true })
@@ -74,6 +208,26 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await expect(
     purchaseSection.getByRole("heading", { name: /Compra #/ }),
   ).toBeVisible();
+  await expect(
+    purchaseSection.getByRole("link", { name: /nota-e2e.pdf/ }),
+  ).toBeVisible();
+  await expect(
+    purchaseSection.locator(".supplier-installment-history"),
+  ).toHaveCount(2);
+  await purchaseSection
+    .getByRole("button", { name: "Registrar pagamento" })
+    .first()
+    .click();
+  await purchaseSection.getByLabel("Forma utilizada").selectOption("pix");
+  await purchaseSection
+    .getByRole("button", { name: "Confirmar pagamento", exact: true })
+    .click();
+  await expect(
+    purchaseSection.locator(".supplier-installment-history").first(),
+  ).toContainText("Paga em");
+  await page.screenshot({
+    path: "output/fornecedores/pagamentos-nota-desktop.png",
+  });
   await purchaseSection
     .getByRole("button", { name: "Receber mercadoria" })
     .click();
@@ -158,9 +312,9 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
     name: "Editar fornecedor",
     exact: true,
   });
-  await expect(editModal.getByLabel("Nome / razão social")).toHaveValue(
-    supplierName,
-  );
+  await expect(
+    editModal.getByLabel("Razão social / nome completo"),
+  ).toHaveValue(supplierName);
   await page.screenshot({ path: "output/fornecedores/cadastro-mobile.png" });
   await editModal
     .getByRole("button", { name: "Cancelar", exact: true })

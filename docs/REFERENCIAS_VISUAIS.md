@@ -57,3 +57,7 @@ As duas referências mais recentes substituem o desenho anterior da ficha de edi
 ## Fornecedores — 02/10/2026
 
 Nova área sem imagem específica fornecida. Reutiliza PageHeader, identidade branca/vermelha, painéis arredondados, sombras discretas e os popups com cabeçalho branco aprovados pelo proprietário. Campos e ações responsivos, com rodapé acessível no diálogo. Capturas de conferência em `output/fornecedores`; regras em `docs/FORNECEDORES_COMPRAS.md`.
+
+### Fornecedores: cadastro e compras
+
+A extensão de pagamentos/notas mantém os popups brancos arredondados e os cards existentes. Campos obrigatórios possuem indicação, máscaras e consulta de CEP. Na ficha da compra, condições, parcelas e anexos ficam em seções, com ações compactas; quebra de linhas no mobile, preservando as áreas aprovadas de OS/orçamento. Capturas de teste em `output/fornecedores` (dados fictícios).

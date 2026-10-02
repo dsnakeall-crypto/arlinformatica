@@ -4414,6 +4414,10 @@ function NotificationBell({ go }: any) {
     if (!n.read_at)
       await api(`/notifications/${n.id}/read`, { method: "PATCH", body: "{}" });
     setOpen(false);
+    if (n.type === "supplier_due" && /^\/suppliers\?supplier=\d+&purchase=\d+$/.test(n.url || "")) {
+      window.location.assign(n.url);
+      return;
+    }
     if (n.url === "/post-sale") go("post-sale");
     else if (n.data?.service_order_id || n.url?.startsWith("/orders/"))
       go("orders", n.data?.service_order_id || +n.url.split("/").pop());

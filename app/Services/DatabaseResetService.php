@@ -16,6 +16,8 @@ class DatabaseResetService
         'stock_entry_details',
         'supplier_purchase_receipts',
         'supplier_purchase_items',
+        'supplier_invoices',
+        'supplier_payables',
         'supplier_purchases',
         'suppliers',
         'stock_movements',
@@ -86,6 +88,7 @@ class DatabaseResetService
         $this->assertUsableBackup($master, $backup);
         $counts = $this->preview($master);
         $photoPaths = Schema::hasTable('service_order_photos') ? DB::table('service_order_photos')->pluck('path')->all() : [];
+        $invoicePaths = Schema::hasTable('supplier_invoices') ? DB::table('supplier_invoices')->pluck('path')->all() : [];
         $documentPaths = Schema::hasTable('generated_documents') ? DB::table('generated_documents')->pluck('path')->all() : [];
 
         DB::transaction(function () use ($master, $backup, $counts, $ipAddress): void {
@@ -119,7 +122,7 @@ class DatabaseResetService
         });
 
         $disk = Storage::disk('local');
-        $disk->delete(array_values(array_unique([...$photoPaths, ...$documentPaths])));
+        $disk->delete(array_values(array_unique([...$photoPaths, ...$documentPaths, ...$invoicePaths])));
         $disk->deleteDirectory('orders');
         $disk->deleteDirectory('documents/orders');
         $disk->deleteDirectory('documents/finance');

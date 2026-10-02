@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\BackupService;
+use App\Services\SupplierPayables;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
@@ -29,3 +30,5 @@ match ($frequency) {
     'monthly' => $backup->monthlyOn(1, '02:05'),
     default => $backup->dailyAt('02:05'),
 };
+
+Schedule::call(fn () => app(SupplierPayables::class)->remind())->name('supplier-payables:remind')->hourly()->withoutOverlapping();
