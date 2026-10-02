@@ -214,6 +214,7 @@ test('Financeiro renderiza gráfico com eixos, valores e mais de um dia sem vaza
   await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
   const overviewMethods = page.getByRole('heading', { name: 'Formas de pagamento' }).locator('..');
   await expect(overviewMethods.getByText('Dinheiro', { exact: true })).toBeVisible();
+  await page.getByLabel('Mês exibido').fill('2026-09');
   await page.getByRole('button', { name: 'Relatórios', exact: true }).click();
   const chart = page.getByTestId('daily-revenue-chart');
   await expect(chart).toBeVisible();
