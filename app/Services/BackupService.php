@@ -27,7 +27,7 @@ class BackupService
 
         try {
             $tables = array_values(array_filter(
-                Schema::getTableListing(),
+                $this->currentDatabaseTables(),
                 fn (string $table) => ! in_array($this->logicalTableName($table), self::EXCLUDED_TABLES, true)
             ));
             sort($tables);
@@ -126,8 +126,10 @@ class BackupService
             try {
                 DB::transaction(function () use ($zip) {
                     $tables = array_values(array_filter(
-                        Schema::getTableListing(),
-                        fn (string $table) => ! in_array($this->logicalTableName($table), self::EXCLUDED_TABLES, true)
+                        $this->currentDatabaseTables(),
+                        // Restoring data must not rewind the ledger of the schema actually installed.
+                        fn (string $table) => $this->logicalTableName($table) !== 'migrations'
+                            && ! in_array($this->logicalTableName($table), self::EXCLUDED_TABLES, true)
                     ));
                     foreach (array_reverse($tables) as $table) {
                         DB::table($table)->delete();
@@ -291,6 +293,13 @@ class BackupService
     private function logicalTableName(string $table): string
     {
         return Str::afterLast($table, '.');
+    }
+
+    private function currentDatabaseTables(): array
+    {
+        // Laravel may list every accessible MySQL schema when no schema is given.
+        // A backup and restore must only touch the configured application database.
+        return Schema::getTableListing(Schema::getCurrentSchemaListing());
     }
 
     private function primaryKey(string $table): string

@@ -70,6 +70,7 @@ const environment = {
   SESSION_DRIVER: 'file',
   CACHE_STORE: 'array',
   QUEUE_CONNECTION: 'sync',
+  PRIVATE_STORAGE_PATH: path.join(root, 'storage', 'framework', 'testing', 'e2e-private'),
 };
 
 run(php, ['artisan', 'migrate', '--seed', '--force'], environment);
