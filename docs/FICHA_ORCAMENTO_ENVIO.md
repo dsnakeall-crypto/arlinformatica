@@ -60,3 +60,9 @@ Mantida a composição aprovada, foram reduzidos apenas tamanhos de fontes, camp
 Backup anterior ao ajuste: `C:\Users\Allan\ARL-backups\popups-compactos-20261002-083913`, com código, patch/status e histórico Git completo verificado. SHA-256 do TAR: `3db1ff8ac73ee48cd35efd3e8574038ea272c72746490c71dd205e63f76db11a`. Os backups anteriores foram mantidos.
 
 Validação: build, ESLint, TypeScript, Pint, 212 testes PHP (1774 asserções), 12 unitários frontend e os cinco cenários de edição/navegação/envio aprovados. Após o ajuste final da altura do orçamento, o cenário de envio foi repetido com asserções de ausência de rolagem nas duas resoluções e com um serviço selecionado, além das verificações de teclado e celular. Evidências em `output/popups-compactos/` e `output/ficha-orcamento/modal-orcamento-720.png`. Nenhuma regra de negócio, migration ou dado foi alterado por este ajuste.
+
+## Cabeçalhos brancos
+
+A pedido do proprietário, os dois cabeçalhos passam a ter fundo branco uniforme. Removido apenas o SVG decorativo das laterais (faixas pretas/vermelhas e circuitos); títulos, ícones, botão de fechar, dimensões compactas e acabamentos dos demais blocos permanecem. Backup anterior: `C:\Users\Allan\ARL-backups\cabecalhos-brancos-20261002-084755`, com TAR, patch/status e histórico Git verificado. SHA-256 do TAR: `3788a7e9ea9ad802ab9aff2eb931f5fefc64876342b348628ab2844e08a1da9d`.
+
+Validação dos cabeçalhos: build/TypeScript, ESLint e cenário E2E de edição/orçamento/envio passaram; capturas dos dois popups conferidas, incluindo geometria sem rolagem no desktop e comportamento no celular.

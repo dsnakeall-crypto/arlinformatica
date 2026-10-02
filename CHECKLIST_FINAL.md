@@ -1,3 +1,11 @@
+# Checklist final — cabeçalhos brancos dos popups
+
+- [OK] Backup de código, alterações locais e histórico Git criado e verificado; backups anteriores preservados.
+- [OK] Cabeçalhos brancos nos dois popups; removidos os detalhes decorativos das laterais.
+- [OK] Dimensões compactas, títulos, ícones, botão de fechar e demais acabamentos mantidos.
+- [OK] Build/TypeScript, lint e cenário E2E de edição/orçamento/envio aprovados; capturas desktop/mobile conferidas.
+- [PENDENTE] CI remota e publicação.
+
 # Checklist final — compactação dos popups aprovados
 
 - [OK] Novo backup de código, alterações locais e histórico verificado; backups anteriores preservados.
