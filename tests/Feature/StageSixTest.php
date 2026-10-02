@@ -194,6 +194,67 @@ class StageSixTest extends TestCase
         $this->assertStringContainsString('query=Rua%20A%2C%2010%2C%20Centro%2C%20Campos%20Gerais%2C%20MG%2C%2037160000', ContactLinks::maps(['street' => 'Rua A', 'number' => '10', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG', 'postal_code' => '37160000']));
     }
 
+    public function test_bulk_removal_archives_ten_selected_cards_atomically_and_preserves_their_history(): void
+    {
+        $ids = $this->bulkCycles(11);
+        $selected = array_slice($ids, 0, 10);
+        $actions = DB::table('post_sale_actions')->orderBy('id')->get()->toJson();
+        $orders = DB::table('service_orders')->orderBy('id')->get()->toJson();
+
+        $this->actingAs($this->user)->postJson('/api/post-sales/bulk-delete', ['ids' => $selected])
+            ->assertOk()->assertJsonPath('count', 10)->assertJsonPath('ids', $selected);
+
+        $this->assertSame($actions, DB::table('post_sale_actions')->orderBy('id')->get()->toJson());
+        $this->assertSame($orders, DB::table('service_orders')->orderBy('id')->get()->toJson());
+        foreach ($selected as $id) {
+            $this->assertDatabaseHas('post_sale_cycles', ['id' => $id, 'active' => false, 'archive_reason' => PostSaleService::MANUAL_EXCLUSION_REASON]);
+            $this->assertDatabaseHas('audit_logs', ['subject_id' => $id, 'action' => 'post_sale.card_deleted', 'user_id' => $this->user->id]);
+            $this->assertDatabaseHas('notifications', ['deduplication_key' => "post-sale:$id", 'active' => false]);
+        }
+        $this->assertDatabaseHas('post_sale_cycles', ['id' => $ids[10], 'active' => true]);
+        $this->getJson('/api/post-sales')->assertOk()->assertJsonCount(1)->assertJsonPath('0.id', $ids[10]);
+    }
+
+    public function test_bulk_removal_with_an_unavailable_card_does_not_remove_any_other_card(): void
+    {
+        $ids = $this->bulkCycles(3);
+        $this->actingAs($this->user)->deleteJson("/api/post-sales/{$ids[1]}")->assertOk();
+        $before = DB::table('notifications')->orderBy('id')->get()->toJson();
+        $auditCount = DB::table('audit_logs')->count();
+        $this->postJson('/api/post-sales/bulk-delete', ['ids' => $ids])->assertConflict();
+        $this->postJson('/api/post-sales/bulk-delete', ['ids' => [$ids[0], 999999]])->assertConflict();
+        foreach ([$ids[0], $ids[2]] as $id) {
+            $this->assertDatabaseHas('post_sale_cycles', ['id' => $id, 'active' => true]);
+        }
+        $this->assertSame($before, DB::table('notifications')->orderBy('id')->get()->toJson());
+        $this->assertSame($auditCount, DB::table('audit_logs')->count());
+    }
+
+    public function test_bulk_removal_validates_selection_and_requires_authentication(): void
+    {
+        $ids = $this->bulkCycles(1);
+        $this->postJson('/api/post-sales/bulk-delete', ['ids' => $ids])->assertUnauthorized();
+        $this->actingAs($this->user);
+        foreach ([[], ['ids' => []], ['ids' => [$ids[0], $ids[0]]], ['ids' => ['invalid']], ['ids' => [-1]], ['ids' => range(1, 501)]] as $payload) {
+            $this->postJson('/api/post-sales/bulk-delete', $payload)->assertUnprocessable();
+        }
+        $this->assertDatabaseHas('post_sale_cycles', ['id' => $ids[0], 'active' => true]);
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'post_sale.card_deleted']);
+    }
+
+    private function bulkCycles(int $count): array
+    {
+        $template = (array) DB::table('clients')->where('id', $this->client)->first();
+        unset($template['id']);
+        for ($index = 0; $index < $count; $index++) {
+            $this->client = DB::table('clients')->insertGetId([...$template, 'document' => (string) (12000000000 + $index), 'name' => "Cliente lote $index"]);
+            $this->order((string) (8000000 + $index), now()->subDays(8), 'repair_completed');
+        }
+        app(PostSaleService::class)->catchUp();
+
+        return DB::table('post_sale_cycles')->orderBy('id')->pluck('id')->all();
+    }
+
     private function order(string $number, Carbon $completed, string $result): ServiceOrder
     {
         return ServiceOrder::create(['number' => $number, 'client_id' => $this->client, 'equipment_type_id' => DB::table('equipment_types')->value('id'), 'attendance_type' => 'bench', 'status' => 'completed', 'result' => $result, 'reported_problem' => 'Teste', 'received_at' => $completed->copy()->subDay(), 'completed_at' => $completed, 'created_by' => $this->user->id]);

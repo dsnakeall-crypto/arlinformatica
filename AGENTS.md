@@ -26,6 +26,8 @@ O `docs/PROJETO_MESTRE.md` é a especificação funcional oficial do sistema.
 
 ## Fluxo de trabalho
 
+Antes de editar, criar e verificar um backup local do estado atual (arquivos, alterações não commitadas e histórico Git), fora do repositório. Registrar o caminho para permitir retorno. Antes de mudanças de dados ou publicação em produção, criar e validar também o backup do banco e dos arquivos privados do servidor. Não incluir backups ou credenciais em commits ou pacotes de publicação.
+
 1. Analise requisitos e referências.
 2. Planeje arquitetura/modelagem.
 3. Implemente em etapas funcionais.

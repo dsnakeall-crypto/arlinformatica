@@ -4145,6 +4145,7 @@ function BudgetBox({ order }: any) {
   );
 }
 function PostSalePage() {
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [rows, setRows] = useState<any[]>([]),
     [loading, setLoading] = useState(true),
     [pending, setPending] = useState<any>(),
@@ -4171,14 +4172,23 @@ function PostSalePage() {
     if (!removal || removing) return;
     setRemoving(true);
     try {
-      await api(`/post-sales/${removal.id}`, { method: "DELETE" });
-      setRows((current) => current.filter((row) => row.id !== removal.id));
+      const ids: number[] = removal.ids || [removal.id];
+      if (removal.ids) {
+        await api("/post-sales/bulk-delete", { method: "POST", body: JSON.stringify({ ids }) });
+      } else {
+        await api(`/post-sales/${removal.id}`, { method: "DELETE" });
+      }
+      setRows((current) => current.filter((row) => !ids.includes(row.id)));
+      setSelectedIds((current) => current.filter((id) => !ids.includes(id)));
       setRemoval(null);
     } catch (error) {
       setRemovalError(error instanceof Error ? error.message : "Não foi possível excluir o card.");
     } finally {
       setRemoving(false);
     }
+  };
+  const toggleSelection = (id: number) => {
+    setSelectedIds((current) => current.includes(id) ? current.filter((selected) => selected !== id) : [...current, id]);
   };
   const visibleRows = rows.filter((row) => `${row.number} ${row.name}`.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")));
   const avatarTone = (name: string) => {
@@ -4221,6 +4231,17 @@ function PostSalePage() {
           <span className="sr-only">Buscar por cliente ou OS</span>
           <input value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Buscar por cliente ou número da OS…" />
         </label>
+        {selectedIds.length > 0 && (
+          <div className="post-sale-selection" role="region" aria-label="Cards selecionados">
+            <strong role="status">{selectedIds.length} {selectedIds.length === 1 ? "card selecionado" : "cards selecionados"}</strong>
+            <div className="actions">
+              <button type="button" disabled={removing} onClick={() => setSelectedIds([])}>Limpar seleção</button>
+              <button className="primary" type="button" disabled={removing} onClick={() => { setRemovalError(""); setRemoval({ ids: [...selectedIds] }); }}>
+                <Trash2 /> Excluir selecionados
+              </button>
+            </div>
+          </div>
+        )}
         {!visibleRows.length ? (
           <div className="post-sale-empty">
             <Phone />
@@ -4234,7 +4255,7 @@ function PostSalePage() {
         ) : (
           <div className="post-sale-grid">
           {visibleRows.map((row) => (
-            <article className="post-sale-card" key={row.id}>
+            <article className={`post-sale-card${selectedIds.includes(row.id) ? " post-sale-card-selected" : ""}`} key={row.id}>
               <header>
                 <span className={`post-sale-avatar post-sale-avatar-${avatarTone(row.name)}`}>{row.name.trim().slice(0, 1).toUpperCase()}</span>
                 <div className="post-sale-card-title">
@@ -4244,12 +4265,21 @@ function PostSalePage() {
                 <details className="post-sale-menu">
                   <summary aria-label={`Ações da OS ${row.number}`}><EllipsisVertical /></summary>
                   <div>
+                    <button className="post-sale-mark" type="button" disabled={removing} onClick={(event) => { toggleSelection(row.id); event.currentTarget.closest("details")?.removeAttribute("open"); }}>
+                      <CheckCircle2 /> {selectedIds.includes(row.id) ? "Desmarcar card" : "Marcar card"}
+                    </button>
                     <button className="post-sale-delete" type="button" onClick={() => { setRemovalError(""); setRemoval({ id: row.id, number: row.number, name: row.name }); }}>
                       <Trash2 /> Excluir card
                     </button>
                   </div>
                 </details>
               </header>
+              {selectedIds.length > 0 && (
+                <label className="post-sale-checkbox">
+                  <input type="checkbox" checked={selectedIds.includes(row.id)} disabled={removing} onChange={() => toggleSelection(row.id)} aria-label={`Marcar card da OS ${row.number}`} />
+                  <span>{selectedIds.includes(row.id) ? "Selecionado" : "Marcar card"}</span>
+                </label>
+              )}
               <div className={`post-sale-state ${row.available ? "post-sale-state-ready" : "post-sale-state-waiting"}`}>
                 <Clock3 />
                 <span>{stateLabel(row)}</span>
@@ -4283,15 +4313,16 @@ function PostSalePage() {
       {removal && (
         <div className="modal">
           <div className="modal-card confirm-send" role="dialog" aria-modal="true" aria-labelledby="post-sale-delete-title">
-            <h2 id="post-sale-delete-title">Excluir card de Pós-Venda?</h2>
+            <h2 id="post-sale-delete-title">{removal.ids ? `Excluir ${removal.ids.length} cards de Pós-Venda?` : "Excluir card de Pós-Venda?"}</h2>
             <p>
-              A OS {removal.number} de {removal.name} deixará apenas esta lista de acompanhamento. A Ordem de Serviço, documentos e histórico de mensagens continuarão preservados.
+              {removal.ids ? "Os cards selecionados deixarão apenas esta lista de acompanhamento. As Ordens de Serviço, documentos e histórico de mensagens continuarão preservados." : <>A OS {removal.number} de {removal.name} deixará apenas esta lista de acompanhamento. A Ordem de Serviço, documentos e histórico de mensagens continuarão preservados.</>}
             </p>
+            {removal.ids && <ul className="post-sale-removal-list">{rows.filter((row) => removal.ids.includes(row.id)).map((row) => <li key={row.id}>OS {row.number} — {row.name}</li>)}</ul>}
             {removalError && <p className="notice error">{removalError}</p>}
             <div className="actions">
               <button disabled={removing} onClick={() => { setRemovalError(""); setRemoval(null); }}>Cancelar</button>
               <button className="primary" disabled={removing} onClick={removeCard}>
-                {removing ? "Excluindo…" : "Excluir card"}
+                {removing ? "Excluindo…" : removal.ids ? "Excluir selecionados" : "Excluir card"}
               </button>
             </div>
           </div>

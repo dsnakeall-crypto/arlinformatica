@@ -125,6 +125,34 @@ class PostSaleController extends Controller
         return response()->json(['deleted' => true, 'id' => $cycle]);
     }
 
+    public function destroyMany(Request $request, NotificationService $notifications): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:500'],
+            'ids.*' => ['required', 'integer', 'min:1', 'distinct'],
+        ]);
+        $ids = array_map('intval', $validated['ids']);
+        sort($ids);
+
+        DB::transaction(function () use ($request, $ids, $notifications) {
+            $records = DB::table('post_sale_cycles')
+                ->whereIn('id', $ids)
+                ->where('active', true)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+            abort_unless($records->count() === count($ids), 409, 'Um dos cards selecionados não está mais disponível. Atualize a lista e revise a seleção; nenhum card foi excluído.');
+
+            foreach ($ids as $id) {
+                // Reuse the individual action, including its audit and 35-day exclusion rule.
+                // The outer transaction also rolls back notification resolution on failure.
+                $this->destroy($request, $id, $notifications);
+            }
+        });
+
+        return response()->json(['deleted' => true, 'ids' => $ids, 'count' => count($ids)]);
+    }
+
     private function message(string $type): string
     {
         abort_unless(array_key_exists($type, self::MESSAGES), 404);

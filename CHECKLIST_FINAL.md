@@ -1,3 +1,17 @@
+# Checklist final — seleção de Pós-Venda em lote em 02/10/2026
+
+- [OK] Backup local completo dos arquivos e histórico Git criado e verificado antes de editar; caminho registrado em docs/POS_VENDA_SELECAO_EM_LOTE.md.
+- [OK] Regra permanente de backup antes de editar registrada em AGENTS.md.
+- [OK] Marcar/Desmarcar card pelo menu de três pontos; caixas de seleção, contagem e Limpar seleção.
+- [OK] Excluir selecionados abre confirmação com os números das OS e clientes; cancelar não envia exclusão.
+- [OK] Busca preserva a seleção; exclusão individual continua funcionando.
+- [OK] Lote atômico autenticado, protegido por CSRF, validado e auditado por card; card indisponível cancela todo o lote.
+- [OK] OS, PDFs e histórico de mensagens preservados; regras existentes de Pós-Venda mantidas, sem migrations.
+- [OK] 206 testes PHP / 1703 asserções, 12 unitários frontend, lint, Pint, TypeScript e build aprovados.
+- [OK] Cenários relacionados do navegador aprovados: fluxo operacional/exclusão individual, navegação e novo fluxo real de seleção/exclusão de 10 cards com preservação de PDFs.
+- [OK] Capturas Web/PC em 1280px e 1180px conferidas, mantendo o padrão dos cards existentes.
+- [PENDENTE] CI remota e publicação desta alteração na KingHost. A versão publicada anteriormente ainda não possui seleção em lote.
+
 # Checklist final — Sessões e CSRF em 01/10/2026
 
 - [OK] Conta desativada perde acesso web/API em sessão existente e lembrança de login.
