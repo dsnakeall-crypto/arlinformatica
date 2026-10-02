@@ -1,0 +1,6 @@
+.arl-session-notice{position:fixed;top:16px;right:16px;z-index:10000;width:min(420px,calc(100vw - 32px));padding:18px;border:1px solid #c9001c;border-radius:14px;background:#fff;color:#15151a;box-shadow:0 12px 32px rgba(35,0,7,.2);font-size:14px;line-height:1.5}
+.arl-session-notice strong{display:block;color:#980018;font-size:17px}
+.arl-session-notice p{margin:8px 0 14px}
+.arl-session-notice>div{display:flex;gap:10px;flex-wrap:wrap}
+.arl-session-notice a,.arl-session-notice button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 12px;border:1px solid #c9001c;border-radius:8px;background:#fff;color:#980018;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+.arl-session-notice button:disabled{opacity:.6;cursor:wait}

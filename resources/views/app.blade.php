@@ -74,7 +74,7 @@
             const form = document.getElementById('login-form');
             const button = document.getElementById('login-button');
             const errorBox = document.getElementById('login-error');
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
@@ -90,7 +90,7 @@
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrf,
+                            'X-CSRF-TOKEN': csrf(),
                         },
                         body: JSON.stringify({
                             login: document.getElementById('login').value,
@@ -99,6 +99,17 @@
                         }),
                     });
                     const payload = await response.json().catch(() => ({}));
+                    if (response.status === 419) {
+                        const fresh = await fetch('/session/csrf-token', {
+                            credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' },
+                        });
+                        const session = await fresh.json();
+                        if (!fresh.ok || typeof session.csrf_token !== 'string') {
+                            throw new Error('Não foi possível verificar a sessão. Atualize a página antes de tentar entrar.');
+                        }
+                        document.querySelector('meta[name="csrf-token"]').content = session.csrf_token;
+                        throw new Error('A sessão de login expirou. Seus campos foram mantidos; clique em Entrar novamente.');
+                    }
                     if (!response.ok) {
                         throw new Error(payload?.errors?.login?.[0] || payload?.message || 'Não foi possível entrar.');
                     }
