@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\BudgetShareController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientImportController;
@@ -123,6 +124,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/signature', [SettingsController::class, 'signatureFile']);
     Route::get('/operational-settings', [SettingsController::class, 'operational']);
     Route::get('/orders/{order}/term', [DocumentController::class, 'term']);
+    Route::post('/orders/{order}/budgets/{revision}/share', [BudgetShareController::class, 'store'])->whereNumber('revision');
     Route::get('/orders/{order}/budgets', [BudgetController::class, 'index']);
     Route::post('/orders/{order}/budgets', [BudgetController::class, 'store']);
     Route::patch('/orders/{order}/budgets/{revision}/status', [BudgetController::class, 'status']);

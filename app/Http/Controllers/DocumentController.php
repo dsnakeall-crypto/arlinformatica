@@ -42,9 +42,14 @@ class DocumentController extends Controller
         return $documents->response($order, 'term');
     }
 
-    public function budget(ServiceOrder $order, int $revision, DocumentService $documents)
+    public function budget(Request $request, ServiceOrder $order, int $revision, DocumentService $documents)
     {
-        return $documents->response($order, 'budget', $revision);
+        $response = $documents->response($order, 'budget', $revision);
+        if ($request->boolean('download')) {
+            $response->headers->set('Content-Disposition', $response->headers->makeDisposition('attachment', "Orcamento-OS-{$order->number}-R{$revision}.pdf"));
+        }
+
+        return $response;
     }
 
     public function finalDocument(ServiceOrder $order, int $revision, DocumentService $documents)

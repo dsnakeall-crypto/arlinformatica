@@ -794,6 +794,11 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
     [catalog, setCatalog] = useState<ServiceProductCatalogItem[]>([]),
     [items, setItems] = useState<any[]>([]),
     [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sharePrompt, setSharePrompt] = useState<any>(null);
+  const [shareLink, setShareLink] = useState("");
+  const [shareOpened, setShareOpened] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
   const [diagnosis, setDiagnosis] = useState(""),
     [proposal, setProposal] = useState(""),
     [observation, setObservation] = useState("");
@@ -835,13 +840,15 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
     });
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setError("");
     if (!items.length) {
       setError("Adicione ao menos um serviço ou produto do catálogo.");
       return;
     }
+    setBusy(true);
     try {
-      await api(`/orders/${order.id}/budgets`, {
+      const created = await api(`/orders/${order.id}/budgets`, {
         method: "POST",
         body: JSON.stringify({
           diagnosis,
@@ -857,10 +864,15 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
       setProposal("");
       setObservation("");
       await load();
+      setSharePrompt(created.budget);
+      setShareLink("");
+      setShareOpened(false);
     } catch (e: any) {
       setError(
         (Object.values(e.errors || {}).flat()[0] as string) || e.message,
       );
+    } finally {
+      setBusy(false);
     }
   };
   const remove = async (budget: any) => {
@@ -881,8 +893,52 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
       setError(e.message);
     }
   };
+  const changeStatus = async (budget: any, status: string) => {
+    setError("");
+    try {
+      await api(`/orders/${order.id}/budgets/${budget.revision}/status`, {
+        method: "PATCH", body: JSON.stringify({ status }),
+      });
+      await load();
+      return true;
+    } catch (reason: any) {
+      setError(reason.message);
+      return false;
+    }
+  };
+  const send = async (budget: any) => {
+    if (shareBusy) return;
+    const conversation = window.open("about:blank", "_blank");
+    if (conversation) conversation.opener = null;
+    setSharePrompt(budget);
+    setShareOpened(false);
+    setShareLink("");
+    setShareBusy(true);
+    setError("");
+    try {
+      const share = await api(`/orders/${order.id}/budgets/${budget.revision}/share`, { method: "POST" });
+      setShareLink(share.whatsapp_url);
+      if (conversation) {
+        conversation.location.replace(share.whatsapp_url);
+        setShareOpened(true);
+      }
+    } catch (reason: any) {
+      conversation?.close();
+      setError(reason.message);
+    } finally {
+      setShareBusy(false);
+    }
+  };
+  const confirmSent = async () => {
+    if (!sharePrompt || shareBusy) return;
+    setShareBusy(true);
+    try {
+      if (!isFinalized && sharePrompt.status === "draft" && !await changeStatus(sharePrompt, "sent")) return;
+      setSharePrompt(null);
+    } finally { setShareBusy(false); }
+  };
   return (
-    <section className="wide">
+    <section className="wide arl-budgets-section">
       <div className="section-title">
         <h2>Orçamentos</h2>
         {!isFinalized && (
@@ -913,7 +969,8 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
             >
               <X />
             </button>
-            <h1>Gerar orçamento</h1>
+            <header className="arl-budget-heading"><span className="arl-budget-heading-icon"><ReceiptText /></span><div><span className="arl-eyebrow">PROPOSTA · OS #{order.number}</span><h1>Gerar orçamento</h1><p>Organize o diagnóstico, os serviços e as condições para o cliente.</p></div></header>
+            <div className="arl-budget-description-grid">
             <label className="field">
               <span>Diagnóstico</span>
               <textarea
@@ -932,12 +989,15 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
                 onChange={(e) => setProposal(e.target.value)}
               />
             </label>
-            <TextField
+            </div>
+            <div className="arl-budget-validity"><TextField
               label="Validade (dias)"
               value={validity}
               onChange={(e: any) => setValidity(+e.target.value)}
               required
             />
+            </div>
+            <div className="arl-budget-items-heading"><h2>Serviços e produtos</h2><p>Selecione os itens e ajuste as quantidades e os valores.</p></div>
             <ServiceProductSearch
               items={catalog}
               ariaLabel="Buscar serviço ou produto para o orçamento"
@@ -1004,7 +1064,7 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
                 onChange={(e) => setObservation(e.target.value)}
               />
             </label>
-            <strong>
+            <strong className="arl-budget-total">
               Total:{" "}
               {money(
                 items.reduce(
@@ -1018,75 +1078,36 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
               <button type="button" onClick={() => setOpen(false)}>
                 Cancelar
               </button>
-              <button className="primary">Salvar e gerar PDF</button>
+              <button className="primary" disabled={busy}>{busy ? "Gerando orçamento…" : "Salvar e gerar PDF"}</button>
             </div>
           </form>
         </div>
       )}
       {error && !open && <div className="alert">{error}</div>}
+      {sharePrompt && (
+        <div className="modal"><div className="modal-card arl-budget-share" role="dialog" aria-modal="true" aria-label="Enviar orçamento ao cliente">
+          <button type="button" className="modal-close" aria-label="Fechar envio do orçamento" disabled={shareBusy} onClick={() => setSharePrompt(null)}><X /></button>
+          <header className="arl-budget-heading"><span className="arl-budget-heading-icon"><Phone /></span><div><span className="arl-eyebrow">ORÇAMENTO · REVISÃO {sharePrompt.revision}</span><h2>{shareOpened ? "Confirme o envio" : "Orçamento pronto para enviar"}</h2><p>{shareOpened ? "A conversa foi aberta no WhatsApp com a mensagem e o link do PDF." : "Envie ao cliente a proposta com a mensagem e o link de acesso ao PDF."}</p></div></header>
+          <p className="arl-budget-share-note">{shareOpened ? "Depois de enviar a mensagem no WhatsApp, confirme abaixo. Apenas abrir a conversa não marca o orçamento como enviado." : "O link de acesso é protegido e válido por 30 dias. A validade comercial do orçamento permanece a que você definiu."}</p>
+          {error && <div className="alert">{error}</div>}
+          <div className="actions"><button type="button" disabled={shareBusy} onClick={() => setSharePrompt(null)}>{shareOpened ? "Ainda não enviei" : "Agora não"}</button>
+            {shareOpened ? <button className="primary" type="button" disabled={shareBusy} onClick={() => void confirmSent()}>Mensagem enviada</button> : shareLink ? <a className="primary" href={shareLink} target="_blank" rel="noreferrer" onClick={() => setShareOpened(true)}>Abrir WhatsApp</a> : <button className="primary" type="button" disabled={shareBusy} onClick={() => void send(sharePrompt)}>{shareBusy ? "Preparando link…" : "Enviar Orçamento"}</button>}
+          </div>
+        </div></div>
+      )}
       {list.length ? (
         list.map((budget) => (
-          <p className="arl-budget-row" key={budget.id}>
-            Revisão {budget.revision} ·{" "}
-            {statusName[budget.status] || budget.status} ·{" "}
-            {money(budget.total_cents)} ·{" "}
-            <a
-              target="_blank"
-              rel="noreferrer"
-              href={`/api/orders/${order.id}/budgets/${budget.revision}/pdf`}
-            >
-              Abrir PDF
-            </a>{" "}
-            {!isFinalized && budget.status === "draft" && (
-              <button
-                onClick={() =>
-                  api(`/orders/${order.id}/budgets/${budget.revision}/status`, {
-                    method: "PATCH",
-                    body: JSON.stringify({ status: "sent" }),
-                  }).then(load)
-                }
-              >
-                Marcar enviado
-              </button>
-            )}
-            {!isFinalized && budget.status === "sent" && (
-              <>
-                <button
-                  onClick={() =>
-                    api(
-                      `/orders/${order.id}/budgets/${budget.revision}/status`,
-                      {
-                        method: "PATCH",
-                        body: JSON.stringify({ status: "approved" }),
-                      },
-                    ).then(load)
-                  }
-                >
-                  Aprovar orçamento
-                </button>
-                <button
-                  onClick={() =>
-                    api(
-                      `/orders/${order.id}/budgets/${budget.revision}/status`,
-                      {
-                        method: "PATCH",
-                        body: JSON.stringify({ status: "refused" }),
-                      },
-                    ).then(load)
-                  }
-                >
-                  Recusar
-                </button>
-              </>
-            )}
-            {!isFinalized &&
-              ["Master", "Administrador"].includes(role) &&
-              !budget.used_in_finalization && (
-                <button type="button" onClick={() => void remove(budget)}>
-                  Excluir orçamento
-                </button>
-              )}
-          </p>
+          <div className="arl-budget-row arl-budget-card" key={budget.id}>
+            <div className="arl-budget-summary"><span className="arl-budget-document-icon"><ReceiptText /></span><div><strong>Orçamento · Revisão {budget.revision}</strong><span className={`arl-budget-status arl-budget-status-${budget.status}`}>{statusName[budget.status] || budget.status}</span></div><b className="arl-budget-amount">{money(budget.total_cents)}</b></div>
+            <div className="arl-budget-row-footer">
+              {!isFinalized && budget.status === "sent" && <label className="arl-budget-decision">Resposta do cliente<select aria-label={`Situação do orçamento Revisão ${budget.revision}`} value={budget.status} onChange={(event) => void changeStatus(budget, event.target.value)}><option value="sent">Aguardando resposta</option><option value="approved">Aprovado</option><option value="refused">Recusado</option></select></label>}
+              <div className="arl-budget-compact-actions">
+                <button type="button" disabled={shareBusy} onClick={() => void send(budget)}><Phone />Enviar Orçamento</button>
+                <a href={`/api/orders/${order.id}/budgets/${budget.revision}/pdf?download=1`} download><FileText />Baixar PDF</a>
+                {!isFinalized && ["Master", "Administrador"].includes(role) && !budget.used_in_finalization && <button className="arl-budget-delete" type="button" onClick={() => void remove(budget)}><Trash2 />Excluir Orçamento</button>}
+              </div>
+            </div>
+          </div>
         ))
       ) : (
         <p>Nenhum orçamento criado.</p>

@@ -222,3 +222,70 @@ main:has([data-arl-order-detail-react="1"]) .device-layout>.arl-layout-label{dis
 .arl-unified-editor .arl-edit-intake-dates{margin:0 -24px 22px;padding-inline:24px;border-top:1px solid var(--arl-test-border)}
 .arl-unified-editor .arl-edit-intake-dates label{display:flex;grid-auto-flow:column;align-items:center;gap:7px}.arl-unified-editor .arl-edit-intake-dates select{width:auto;min-width:110px;padding:6px 9px}
 @media(max-width:760px){.arl-unified-editor-columns{grid-template-columns:1fr;gap:18px}.modal-card.arl-od-card.arl-unified-editor{width:100%!important;max-width:100%;padding:20px 16px!important}.arl-unified-editor-header{margin-bottom:18px}}
+/* Ficha de entrada e orçamento: superfícies organizadas, com ações compactas. */
+.arl-editor-refined.arl-unified-editor{border-radius:24px!important;box-shadow:0 18px 48px #20101a0d!important;overflow:hidden}
+.arl-editor-refined .arl-unified-editor-header{padding-bottom:24px;border-bottom:1px solid #ede7ea;margin-bottom:0}
+.arl-editor-refined .arl-edit-intake-dates{margin:0 0 24px!important;padding:18px 0!important;border-top:0!important;gap:20px;flex-wrap:wrap;background:transparent}
+.arl-editor-refined .arl-edit-intake-dates>span{padding:9px 14px;background:#f7f5f6;border-radius:10px}
+.arl-editor-refined .arl-edit-intake-dates>i{display:none}
+.arl-editor-refined .arl-edit-intake-dates select{min-height:36px;border-radius:10px!important;padding:5px 14px;margin-left:10px;background:white}
+.arl-editor-refined .arl-unified-editor-columns{gap:24px}
+.arl-editor-refined .arl-editor-group{padding:24px;border:1px solid #e9e3e7;border-radius:20px;background:linear-gradient(160deg,#fff,#fbfafb);gap:18px}
+.arl-editor-group-heading{display:flex;gap:12px;align-items:center;margin-bottom:4px}
+.arl-editor-group-heading>span{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:12px;color:#a60025;background:#fff0f3;font-size:12px;font-weight:800}
+.arl-editor-group-heading h3{margin:0;font-size:16px;color:#1b1720;line-height:1.4}
+.arl-editor-group-heading p{margin:4px 0 0;color:#7b8392;font-size:12px;line-height:1.5}
+.arl-editor-refined label{font-size:12px;font-weight:600;color:#35303c}
+.arl-editor-refined textarea,.arl-editor-refined input[type=text]{background:#fff!important;border:1px solid #dfdce3!important;border-radius:12px!important;padding:12px 14px!important;font-size:13px!important;line-height:1.6;box-shadow:0 2px 5px #29172603;transition:border-color .15s,box-shadow .15s}
+.arl-editor-refined textarea{min-height:94px}
+.arl-editor-refined textarea:focus,.arl-editor-refined input:focus{outline:0;border-color:#c50830!important;box-shadow:0 0 0 3px #c5083010}
+.arl-editor-refined .arl-system-password-field{padding-top:18px;border-top:1px dashed #e3dfe5;align-items:center;gap:14px}
+.arl-editor-refined .arl-system-password-absent{display:flex!important;flex-direction:row!important;align-items:center;gap:8px;white-space:nowrap;padding:10px;border-radius:10px;background:#f3f1f5}
+.arl-editor-refined .arl-system-password-absent input{width:17px;height:17px;accent-color:#c50830}
+.arl-editor-refined .arl-unified-editor-help{font-weight:400;line-height:1.6;margin-top:0}
+.arl-editor-refined .arl-od-actions{padding-top:22px;border-top:1px solid #eee8ec;margin-top:24px}
+[data-arl-order-detail-react="1"] .modal-card.budget-form,[data-arl-order-detail-react="1"] .modal-card.arl-budget-share{border-radius:26px!important;border:1px solid #ffffffb3;padding:30px!important;box-shadow:0 30px 90px #16091040,0 4px 18px #16091020;background:#fff;max-height:calc(100dvh - 48px);overflow:auto}
+.arl-budget-heading{display:flex;align-items:flex-start;gap:14px;padding:0 36px 22px 0;margin-bottom:24px;border-bottom:1px solid #e8dfe4;position:relative}
+.arl-budget-heading::after{content:"";position:absolute;left:0;bottom:-1px;width:96px;height:2px;background:linear-gradient(90deg,#d30032,#f7b4c4)}
+.arl-budget-heading-icon{display:grid;place-items:center;width:46px;height:46px;flex-shrink:0;border-radius:14px;background:#fff0f3;color:#bb002d}
+.arl-budget-heading-icon svg{width:23px;height:23px}
+[data-arl-order-detail-react="1"] .arl-budget-heading h1,[data-arl-order-detail-react="1"] .arl-budget-heading h2{margin:5px 0 6px!important;font-size:25px!important;line-height:1.25;font-weight:750;color:#201924}
+.arl-budget-heading p{margin:0;font-size:12px;color:#7b8392;line-height:1.6}
+.arl-budget-description-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+[data-arl-order-detail-react="1"] .budget-form .field{gap:8px;margin-bottom:18px}
+[data-arl-order-detail-react="1"] .budget-form .field>span{font-size:12px;font-weight:650;color:#433b47}
+[data-arl-order-detail-react="1"] .budget-form textarea,[data-arl-order-detail-react="1"] .budget-form .field input{border:1px solid #ded9e1!important;border-radius:12px!important;background:#fcfbfc!important;padding:12px 14px!important;font-size:13px!important;line-height:1.5;min-height:44px;box-shadow:inset 0 1px 3px #24142503}
+[data-arl-order-detail-react="1"] .budget-form textarea{min-height:100px;resize:vertical}
+[data-arl-order-detail-react="1"] .budget-form textarea:focus,[data-arl-order-detail-react="1"] .budget-form .field input:focus{outline:0;border-color:#bf0030!important;box-shadow:0 0 0 3px #bf003010}
+.arl-budget-validity{max-width:200px}
+.arl-budget-items-heading{margin:2px 0 14px}
+[data-arl-order-detail-react="1"] .arl-budget-items-heading h2{margin:0 0 4px;font-size:15px}
+.arl-budget-items-heading p{font-size:12px;color:#7b8392;margin:0}
+[data-arl-order-detail-react="1"] .budget-form .arl-od-lines{margin:16px 0}
+.arl-budget-total{display:flex;align-items:center;justify-content:space-between;background:#f7f3f5;border:1px solid #ece4e9;border-radius:14px;padding:16px 18px;color:#391b29;font-size:17px}
+[data-arl-order-detail-react="1"] .budget-form .actions,[data-arl-order-detail-react="1"] .arl-budget-share .actions{padding-top:20px;margin-top:20px;border-top:1px solid #eee8ec;gap:10px}
+[data-arl-order-detail-react="1"] .budget-form .modal-close,[data-arl-order-detail-react="1"] .arl-budget-share .modal-close{width:32px;height:32px;top:20px;right:20px;border:1px solid #e8e1e7;border-radius:50%;background:#fff;color:#77707c;display:grid;place-items:center;padding:6px}
+.arl-budget-share{width:560px!important;max-width:calc(100vw - 32px)!important}
+.arl-budget-share-note{background:#f6f4f7;border-radius:12px;padding:16px;color:#68616d;font-size:13px;line-height:1.7}
+[data-arl-order-detail-react="1"] .arl-budget-card{margin:14px 0 0;border:1px solid #e8e3e8;border-radius:16px;background:#fff;padding:16px 18px;box-shadow:0 4px 14px #25142104}
+.arl-budget-summary{display:flex;align-items:center;gap:12px;min-width:0}
+.arl-budget-document-icon{width:36px;height:40px;border-radius:10px;background:#f6f3f7;color:#8a5368;display:grid;place-items:center;flex-shrink:0}
+.arl-budget-document-icon svg{width:18px;height:18px}
+.arl-budget-summary>div{display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1}
+.arl-budget-summary strong{font-size:13px;font-weight:650;color:#302636}
+.arl-budget-status{font-size:10px;padding:4px 9px;border-radius:20px;background:#f0edf3;color:#776b84;line-height:1.4}
+.arl-budget-status-sent{background:#eef4fd;color:#32669e}.arl-budget-status-approved{background:#eaf8ee;color:#258046}.arl-budget-status-refused{background:#fff0f1;color:#b03e4e}
+.arl-budget-amount{font-size:14px;color:#342536;white-space:nowrap}
+.arl-budget-row-footer{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid #f0ecf1;flex-wrap:wrap}
+.arl-budget-decision{margin-right:auto;display:flex;gap:8px;align-items:center;font-size:11px;color:#7a7182}
+[data-arl-order-detail-react="1"] .arl-budget-decision select{font-size:11px!important;border:1px solid #e7dfe8!important;border-radius:8px!important;padding:5px 8px!important;background:#fcfafc;min-height:30px}
+.arl-budget-compact-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+[data-arl-order-detail-react="1"] .arl-budget-compact-actions>button,[data-arl-order-detail-react="1"] .arl-budget-compact-actions>a{display:inline-flex!important;align-items:center;justify-content:center;gap:6px;margin:0!important;min-height:34px!important;border:1px solid #a7dfb8!important;border-radius:9px!important;background:#f1fbf4!important;color:#087d37!important;padding:7px 11px!important;font-size:11px!important;font-weight:650!important;text-decoration:none;box-shadow:none!important;line-height:1.3;cursor:pointer}
+[data-arl-order-detail-react="1"] .arl-budget-compact-actions>button:hover,[data-arl-order-detail-react="1"] .arl-budget-compact-actions>a:hover{background:#e3f6e9!important;border-color:#65c488!important}
+[data-arl-order-detail-react="1"] .arl-budget-compact-actions svg{width:13px;height:13px}
+[data-arl-order-detail-react="1"] .arl-budget-compact-actions .arl-budget-delete{background:#fff7f8!important;color:#a54150!important;border-color:#ebc5cb!important}
+@media(max-width:760px){.arl-editor-refined .arl-editor-group{padding:18px}.arl-budget-description-grid{grid-template-columns:1fr;gap:0}[data-arl-order-detail-react="1"] .modal-card.budget-form{padding:22px 18px!important;max-height:calc(100dvh - 24px)}.arl-budget-heading{gap:10px;padding-right:30px}.arl-budget-heading-icon{width:38px;height:38px}[data-arl-order-detail-react="1"] .arl-budget-heading h1,[data-arl-order-detail-react="1"] .arl-budget-heading h2{font-size:21px!important}.arl-budget-summary{flex-wrap:wrap}.arl-budget-decision{flex-wrap:wrap}.arl-budget-compact-actions{width:100%}.arl-budget-compact-actions>button,.arl-budget-compact-actions>a{flex:1}}
+[data-arl-order-detail-react="1"] .budget-form .finish-item{padding:14px;border:1px solid #e8e1e8;border-radius:12px;background:#fcfafc;gap:10px}
+[data-arl-order-detail-react="1"] .budget-form .finish-item input{min-height:38px;border:1px solid #ded8e1;border-radius:9px;background:white;padding:8px 10px;font-size:13px}
+[data-arl-order-detail-react="1"] .budget-form .finish-item>button{border:1px solid #e9cbd2;border-radius:8px;color:#a43e50;background:#fff5f7;padding:7px 10px;font-size:11px;min-height:32px;cursor:pointer}
+[data-arl-order-detail-react="1"] .budget-form .actions{position:sticky;bottom:0;z-index:2;background:#fff;box-shadow:0 -12px 16px #ffffffed}

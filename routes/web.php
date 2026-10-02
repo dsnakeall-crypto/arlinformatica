@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BudgetShareController;
 use App\Http\Controllers\FinalShareController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SettingsController;
@@ -16,6 +17,10 @@ Route::get('/share/final/{token}', [FinalShareController::class, 'download'])
     ->where('token', '[A-Fa-f0-9]{64}')
     ->name('orders.final.public');
 Route::redirect('/orders/{order}/reports', '/orders/{order}');
+Route::get('/share/budget/{token}', [BudgetShareController::class, 'download'])
+    ->where('token', '[a-f0-9]{64}')
+    ->middleware('throttle:60,1')
+    ->name('orders.budget.public');
 Route::redirect('/desk', '/');
 Route::redirect('/settings/checklist', '/settings');
 Route::view('/{path?}', 'app')->where('path', '^(?!api|up|share).*$');

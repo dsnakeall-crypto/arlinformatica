@@ -1,3 +1,20 @@
+# Checklist final — ficha de edição e orçamento em 02/10/2026
+
+- [OK] Backup de código/alterações locais verificado antes de editar; backup adicional do banco e arquivos privados validado antes da migração local.
+- [OK] Ficha de edição organizada em blocos com bordas arredondadas, sombra e todos os campos existentes; senha, proteção de rascunho e snapshots preservados.
+- [OK] Modal de orçamento com título/divisor, campos organizados, itens e total destacados e rodapé acessível em viewport de 720px.
+- [OK] Ações compactas Enviar Orçamento, Baixar PDF e Excluir Orçamento, mantendo autorização e bloqueios do backend.
+- [OK] WhatsApp com nome, mensagem solicitada e link protegido para a revisão correta do PDF; alternativa quando o navegador bloqueia a nova janela.
+- [OK] Envio confirmado manualmente; resposta/aprovação do cliente continua funcionando na finalização da OS, com seletor somente enquanto aguarda decisão.
+- [OK] Revisão adicional conferiu backups, vínculos entre OS/documentos e rejeição real 419 sem CSRF; tokens e PDFs públicos têm headers de privacidade.
+- [OK] Link público sem login válido por 30 dias, token aleatório armazenado somente como hash, sem expor outros documentos; exclusão/expiração invalidam acesso.
+- [OK] PDF histórico preservado e download autenticado com nome de arquivo e Content-Disposition attachment.
+- [OK] Migração aditiva aplicada no MySQL local após backup validado, sem alterações em dados comerciais.
+- [OK] Suíte PHP: 212 testes / 1774 asserções; 12 unitários frontend, lint, Pint, TypeScript e build aprovados.
+- [OK] 15 cenários E2E relacionados aprovados, incluindo orçamento/WhatsApp/PDF real sem login, download, edição, navegação e conclusão com orçamento aprovado; captura adicional em 720px aprovada.
+- [OK] Capturas das três alterações inspecionadas e decisões documentadas em docs/FICHA_ORCAMENTO_ENVIO.md.
+- [PENDENTE] CI remota, merge e publicação na KingHost, incluindo backup de produção e execução da nova migration. Esta tarefa altera somente o ambiente local.
+
 # Checklist final — seleção de Pós-Venda em lote em 02/10/2026
 
 - [OK] Backup local completo dos arquivos e histórico Git criado e verificado antes de editar; caminho registrado em docs/POS_VENDA_SELECAO_EM_LOTE.md.

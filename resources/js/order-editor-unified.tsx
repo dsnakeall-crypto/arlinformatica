@@ -132,11 +132,11 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     }
   };
 
-  return <section data-arl-order-detail-react="1" className="panel arl-unified-editor arl-unified-editor-inline" aria-labelledby="arl-edit-order-title">
+  return <section data-arl-order-detail-react="1" className="panel arl-unified-editor arl-unified-editor-inline arl-editor-refined" aria-labelledby="arl-edit-order-title">
     <header className="arl-unified-editor-header">
       <div className="arl-unified-editor-heading">
         <span className="arl-unified-editor-icon"><FileText /></span>
-        <div><span className="arl-eyebrow">ENTRADA</span><h2 id="arl-edit-order-title">Ficha de entrada — edição</h2><p>Edite os dados desta OS sem sair da ficha.</p></div>
+        <div><span className="arl-eyebrow">ENTRADA · OS #{order.number}</span><h2 id="arl-edit-order-title">Ficha de entrada — edição</h2><p>Atualize o atendimento e os dados de entrada do equipamento.</p></div>
       </div>
       <button type="button" className="arl-unified-editor-close" aria-label="Cancelar edição" onClick={close}><X /></button>
     </header>
@@ -148,7 +148,8 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
       <label><b>Atendimento</b><select aria-label="Atendimento" value={attendance} onChange={(event) => { markDirty(); setAttendance(event.target.value); }}><option value="bench">Interno</option><option value="external">Externo</option></select></label>
     </div>
     <div className="arl-unified-editor-columns">
-      <div className="arl-unified-editor-column">
+      <div className="arl-unified-editor-column arl-editor-group">
+        <div className="arl-editor-group-heading"><span>01</span><div><h3>Equipamento e acesso</h3><p>Identificação, acessórios e senha do sistema.</p></div></div>
         <label>Equipamento<textarea aria-label="Equipamento" spellCheck={true} required maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }} /></label>
         <label>Fabricante / Modelo / Acessórios<textarea aria-label="Fabricante / Modelo / Acessórios" spellCheck={true} maxLength={500} value={equipmentDetails} onChange={(event) => { markDirty(); setEquipmentDetails(event.target.value); }} /></label>
         {termIssued && (equipmentChanged || equipmentDetailsChanged) && <div className="notice">O Termo de Recebimento já emitido mantém os dados anteriores do equipamento.</div>}
@@ -158,7 +159,8 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
         </div>
         {order.has_system_password && !systemPasswordTouched && <p className="arl-unified-editor-help">Há uma senha cadastrada. Digite uma nova somente se quiser substituí-la.</p>}
       </div>
-      <div className="arl-unified-editor-column">
+      <div className="arl-unified-editor-column arl-editor-group">
+        <div className="arl-editor-group-heading"><span>02</span><div><h3>Relato e condição de entrada</h3><p>Registre o que o cliente informou e o estado do equipamento.</p></div></div>
         <label>Problema relatado<textarea aria-label="Problema relatado" spellCheck={true} value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }} /><TextImprovement value={problem} onUse={(text) => { markDirty(); setProblem(text); }} /></label>
         <label className="arl-unified-editor-intake-condition">Estado físico na entrada<textarea aria-label="Estado físico na entrada" maxLength={10000} spellCheck={true} value={intakeCondition} onChange={(event) => { markDirty(); setIntakeCondition(event.target.value); }} placeholder="Ex.: riscos, trincas, peça faltando ou marcas de queda" /></label>
         <p className="arl-unified-editor-help">Deixe vazio quando o equipamento chegar aparentemente sem avarias.</p>

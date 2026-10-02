@@ -442,19 +442,24 @@ Status:
 
 Registrar usuário/data/hora. Ao aprovar, oferecer copiar itens para a OS. Nunca sobrescrever orçamento antigo; manter histórico e PDFs.
 
+Atualização solicitada pelo proprietário em 02/10/2026: após gerar o orçamento, oferecer o envio ao WhatsApp com o PDF acessível por link protegido, específico da revisão e válido por 30 dias. O prazo do link não altera a validade comercial do orçamento. A geração exige sessão e CSRF; o cliente acessa somente o PDF vinculado ao token, sem precisar entrar no sistema. Excluir o orçamento encerra esse acesso público, preservando o PDF histórico privado.
+
+Ações compactas: **Enviar Orçamento**, **Baixar PDF** e **Excluir Orçamento**, respeitando as permissões e bloqueios existentes. Abrir o WhatsApp não confirma envio; o operador confirma após enviar a mensagem. Aprovação/recusa continuam registradas no seletor **Resposta do cliente** e preservam o fluxo de conclusão da OS.
+
 Mensagem padrão de orçamento:
 
-Olá, {{nome_cliente}}.
+Olá, {{nome_cliente}}. Tudo bem?
 
-Finalizamos a análise da sua OS nº {{numero_os}}.
+Gostariamos de informar que o seu orçamento já está disponível. Você pode visualizá-lo através do seguinte link:
 
-Segue o orçamento para avaliação.
+{{link_orcamento}}
 
-Valor: R$ {{valor_orcamento}}
+Assim que analisar as condições, por favor, entre em contato conosco por este WhatsApp para confirmar o agendamento/execução do serviço ou esclarecer qualquer dúvida.
 
-Qualquer dúvida, estamos à disposição.
+Agradecemos a preferência e aguardamos o seu retorno.
 
-ARL Informática
+Atenciosamente
+*Arl Informática*
 
 ## 27. Finalização da OS
 
