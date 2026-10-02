@@ -27,6 +27,9 @@ async function api(path: string, options: RequestInit = {}) {
 
 const labels: Record<string, string> = {
   clients: "Clientes",
+  suppliers: "Fornecedores",
+  supplier_purchases: "Compras de fornecedores",
+  stock_entries: "Origens e custos de entradas de estoque",
   service_orders: "Ordens de serviço",
   order_items: "Itens de OS",
   budgets: "Orçamentos",

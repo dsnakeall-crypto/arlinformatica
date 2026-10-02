@@ -29,3 +29,6 @@ As 22 tabelas da outra aplicação acessível no MySQL foram comparadas com o ba
 Backup original preservado em `C:\Users\Allan\ARL-backups\fornecedores-20261002-092132`. Os scripts de conferência/recovery ficam em `output/diagnostico`, fora dos commits e da publicação. Logs e contagens finais estão no checklist.
 
 Depois da correção, a suíte PHP inteira e os testes de fornecedores/estoque em MySQL descartável foram repetidos; a suíte de navegador também foi repetida usando o diretório privado separado. Os dados/arquivos locais são conferidos novamente ao finalizar.
+
+
+Validação final: 222 testes PHP (1.873 asserções), 17 testes MySQL isolados (138 asserções), 12 testes unitários frontend e 106 E2E completos repetidos após a correção. Hashes dos dados originais e dos 123 arquivos privados mantidos após essa rodada; a auditoria possui o registro legítimo adicional do backup final. Novo ZIP validado, protegido e copiado para o backup externo: `banco-final-recuperado-e-validado.zip`.

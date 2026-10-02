@@ -38,6 +38,9 @@ type StockMovement = {
   reason: string;
   user_name?: string | null;
   created_at: string;
+  origin?: string | null;
+  unit_cost_cents?: number | null;
+  supplier_snapshot?: string | null;
 };
 
 const emptyDraft = (): Draft => ({
@@ -109,7 +112,8 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [stockEntry, setStockEntry] = useState<{ item: ServiceItem; quantity: number; reason: string } | null>(null);
+  const [stockEntry, setStockEntry] = useState<{ item: ServiceItem; quantity: number; reason: string; origin: string; cost: string; supplier_id: string; request_key: string } | null>(null);
+  const [stockSuppliers, setStockSuppliers] = useState<{ id: number; name: string }[]>([]);
   const [stockHistory, setStockHistory] = useState<{ item: ServiceItem; rows: StockMovement[] } | null>(null);
 
   const load = async () => {
@@ -236,6 +240,11 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
     }
   };
 
+  useEffect(() => {
+    if (!stockEntry) return;
+    api('/suppliers?status=active&per_page=100').then(result => setStockSuppliers(result.data)).catch(() => setStockSuppliers([]));
+  }, [stockEntry?.item.id]);
+
   const saveStockEntry = async (event: FormEvent) => {
     event.preventDefault();
     if (!stockEntry) return;
@@ -245,7 +254,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
     try {
       await api(`/catalogs/products/${stockEntry.item.id}/stock-entries`, {
         method: 'POST',
-        body: JSON.stringify({ quantity: stockEntry.quantity, reason: stockEntry.reason.trim() }),
+        body: JSON.stringify({ quantity: stockEntry.quantity, reason: stockEntry.reason.trim(), origin: stockEntry.origin, unit_cost_cents: stockEntry.origin === 'gift' ? 0 : stockEntry.cost ? cents(stockEntry.cost) : null, supplier_id: stockEntry.supplier_id ? Number(stockEntry.supplier_id) : null, request_key: stockEntry.request_key }),
       });
       setStockEntry(null);
       setMessage('Entrada de estoque registrada e somada ao saldo atual.');
@@ -335,7 +344,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
           </div>
           <span className="services-usage"><b>{usage(item)}</b><small>uso em OS</small></span>
           <div className="services-row-actions">
-            {product && <button type="button" className="services-stock-entry" onClick={() => setStockEntry({ item, quantity: 1, reason: '' })}><PackagePlus aria-hidden="true" />Entrada de estoque</button>}
+            {product && <button type="button" className="services-stock-entry" onClick={() => setStockEntry({ item, quantity: 1, reason: '', origin: 'unspecified', cost: '', supplier_id: '', request_key: crypto.randomUUID() })}><PackagePlus aria-hidden="true" />Entrada de estoque</button>}
             {product && <button type="button" className="services-history" disabled={busy} onClick={() => void openStockHistory(item)}><History aria-hidden="true" />Movimentações</button>}
             <button type="button" className="services-edit" onClick={() => openEdit(item)}><Pencil aria-hidden="true" />Editar</button>
             <button type="button" className={item.active ? 'services-disable' : 'services-reactivate'} disabled={busy} onClick={() => void toggleActive(item)}>{item.active ? <Ban aria-hidden="true" /> : <RotateCcw aria-hidden="true" />}{item.active ? 'Desativar' : 'Reativar'}</button>
@@ -363,6 +372,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
         <button type="button" className="modal-close" aria-label="Fechar entrada de estoque" onClick={() => setStockEntry(null)}><X aria-hidden="true" /></button>
         <div className="services-section-heading"><span className="services-heading-icon"><PackagePlus aria-hidden="true" /></span><div><h2>Entrada de estoque</h2><p>{stockEntry.item.name} · saldo atual: {stockEntry.item.stock_quantity}</p></div></div>
         <label className="services-field"><span>Quantidade a somar</span><input aria-label="Quantidade da entrada" type="number" min="1" step="1" value={stockEntry.quantity} onChange={(event) => setStockEntry({ ...stockEntry, quantity: Math.max(1, Number(event.target.value) || 1) })} /></label>
+        <div className="supplier-stock-fields"><label className="services-field"><span>Origem da entrada</span><select aria-label="Origem da entrada" value={stockEntry.origin} onChange={event => setStockEntry({ ...stockEntry, origin: event.target.value, cost: event.target.value === 'gift' ? '0,00' : stockEntry.cost })}><option value="unspecified">Não informada</option><option value="purchase">Compra</option><option value="gift">Brinde / doação</option><option value="initial">Saldo inicial</option></select></label><label className="services-field"><span>Custo por unidade (R$)</span><input aria-label="Custo por unidade da entrada" inputMode="decimal" disabled={stockEntry.origin === 'gift'} value={stockEntry.cost} onChange={event => setStockEntry({ ...stockEntry, cost: maskMoneyInput(event.target.value) })} placeholder="Não informado" /><small>{stockEntry.origin === 'gift' ? 'Brinde: custo de aquisição zero.' : 'Vazio significa custo desconhecido, não custo zero.'}</small></label><label className="services-field"><span>Fornecedor (opcional)</span><select aria-label="Fornecedor da entrada" value={stockEntry.supplier_id} onChange={event => setStockEntry({ ...stockEntry, supplier_id: event.target.value })}><option value="">Sem fornecedor</option>{stockSuppliers.map(supplier => <option value={supplier.id} key={supplier.id}>{supplier.name}</option>)}</select><small>Para uma compra com histórico de recebimentos, use o menu Fornecedores.</small></label></div>
         <label className="services-field"><span>Motivo</span><input aria-label="Motivo da entrada" spellCheck={true} required maxLength={500} value={stockEntry.reason} onChange={(event) => setStockEntry({ ...stockEntry, reason: event.target.value })} placeholder="Ex.: compra de mercadoria ou brinde recebido" /></label>
         <div className="actions"><button type="button" onClick={() => setStockEntry(null)}>Cancelar</button><button className="primary" disabled={busy || !stockEntry.reason.trim()}><PackagePlus aria-hidden="true" />{busy ? 'Registrando…' : 'Somar ao estoque'}</button></div>
       </form>
@@ -372,7 +382,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
       <div className="modal-card services-edit-card services-stock-history">
         <button type="button" className="modal-close" aria-label="Fechar movimentações" onClick={() => setStockHistory(null)}><X aria-hidden="true" /></button>
         <div className="services-section-heading"><span className="services-heading-icon"><History aria-hidden="true" /></span><div><h2>Movimentações de estoque</h2><p>{stockHistory.item.name}</p></div></div>
-        {stockHistory.rows.length ? <div className="services-stock-history-list">{stockHistory.rows.map((row) => <article key={row.id}><div><b>{row.type === 'entry' ? 'Entrada' : row.type === 'order_out' ? 'Baixa em OS' : 'Devolução de OS'}</b><small>{new Date(row.created_at).toLocaleString('pt-BR')} · {row.user_name || 'Usuário'}</small></div><strong>{row.type === 'order_out' ? '-' : '+'}{row.quantity}</strong><p>{row.reason}</p><small>Saldo após movimento: {row.balance_after}</small></article>)}</div> : <div className="services-empty">Nenhuma movimentação registrada.</div>}
+        {stockHistory.rows.length ? <div className="services-stock-history-list">{stockHistory.rows.map((row) => <article key={row.id}><div><b>{row.type === 'entry' ? 'Entrada' : row.type === 'order_out' ? 'Baixa em OS' : 'Devolução de OS'}</b><small>{new Date(row.created_at).toLocaleString('pt-BR')} · {row.user_name || 'Usuário'}</small></div><strong>{row.type === 'order_out' ? '-' : '+'}{row.quantity}</strong><p>{row.reason}</p><small>Saldo após movimento: {row.balance_after}</small>{row.type === 'entry' && <small>Origem: {({ gift: 'Brinde / doação', purchase: 'Compra', initial: 'Saldo inicial', unspecified: 'Não informada' } as Record<string, string>)[row.origin || 'unspecified']} · Custo unitário: {row.unit_cost_cents == null ? 'Não informado' : money(row.unit_cost_cents)}{row.supplier_snapshot && (() => { try { return ` · Fornecedor: ${JSON.parse(row.supplier_snapshot).name}`; } catch { return ''; } })()}</small>}</article>)}</div> : <div className="services-empty">Nenhuma movimentação registrada.</div>}
         <div className="actions"><button type="button" onClick={() => setStockHistory(null)}>Fechar</button></div>
       </div>
     </div>}

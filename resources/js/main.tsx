@@ -45,6 +45,7 @@ import {
   CircleDollarSign,
   ReceiptText,
   FileSignature,
+  Truck,
 } from "lucide-react";
 import "../css/app.css";
 import "../css/homologation.css";
@@ -52,6 +53,7 @@ import "../css/arl-ui-system.css";
 import "../css/action-icons.css";
 import ServicesCatalogPage, { ProductsCatalogPage } from "./services-page";
 import ClientsPage from "./clients-page";
+import SuppliersPage from "./suppliers-page";
 import DatabaseResetPanel from "./database-reset";
 import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
@@ -72,6 +74,7 @@ type Page =
   | "post-sale"
   | "settings"
   | "services"
+  | "suppliers"
   | "products"
   | "users";
 type Client = {
@@ -5218,6 +5221,7 @@ function App() {
       settings: "settings",
       services: "services",
       products: "products",
+      suppliers: "suppliers",
       users: "users",
     } as Record<string, Page>
   )[location.pathname.replace(/^\//, "")];
@@ -5297,7 +5301,7 @@ function App() {
   const roleAllowed = (p: Page) =>
     p === "users"
       ? me?.role === "Master"
-      : ["finance", "services", "products", "settings"].includes(p)
+      : ["finance", "services", "products", "suppliers", "settings"].includes(p)
         ? me?.role === "Master" || me?.role === "Administrador"
         : true;
   useEffect(() => {
@@ -5321,6 +5325,7 @@ function App() {
         ["Clientes", "clients", Users],
         ["Serviços", "services", Box],
         ["Produtos", "products", PackageSearch],
+        ["Fornecedores", "suppliers", Truck],
       ],
     },
     {
@@ -5561,6 +5566,8 @@ function App() {
           <ServicesCatalogPage />
         ) : page === "products" ? (
           <ProductsCatalogPage />
+        ) : page === "suppliers" ? (
+          <SuppliersPage />
         ) : page === "users" ? (
           <UsersAdmin />
         ) : page === "settings" ? (

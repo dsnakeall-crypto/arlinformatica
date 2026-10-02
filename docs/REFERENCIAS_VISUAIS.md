@@ -52,3 +52,8 @@ A comparação visual automatizada de layout está concluída para as referênci
 ## Popups da OS — referências 3D de 02/10/2026
 
 As duas referências mais recentes substituem o desenho anterior da ficha de edição e do formulário de orçamento. Usar moldura branca arredondada, cabeçalho branco liso (atualização posterior aprovada pelo proprietário), painéis com bordas duplas e relevo, campos reais organizados e ações compactas com acabamento preto/vermelho. Edição em diálogo com dois blocos; orçamento em diálogo com cinco blocos. Manter responsividade, rolagem do conteúdo e acesso às ações. Cópias das referências foram preservadas no backup externo `popups-3d-20261002-073026`; detalhes e capturas da implementação em `docs/FICHA_ORCAMENTO_ENVIO.md`.
+
+
+## Fornecedores — 02/10/2026
+
+Nova área sem imagem específica fornecida. Reutiliza PageHeader, identidade branca/vermelha, painéis arredondados, sombras discretas e os popups com cabeçalho branco aprovados pelo proprietário. Campos e ações responsivos, com rodapé acessível no diálogo. Capturas de conferência em `output/fornecedores`; regras em `docs/FORNECEDORES_COMPRAS.md`.

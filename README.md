@@ -77,6 +77,10 @@ O workflow manual **Preparar release** executa as auditorias/testes/build/E2E no
 
 ## Produção
 
+O módulo **Fornecedores** permite cadastro, compras e recebimentos parciais vinculados ao estoque existente, mantendo produtos e brindes sem fornecedor. Consulte [`docs/FORNECEDORES_COMPRAS.md`](docs/FORNECEDORES_COMPRAS.md) para uso, migração aditiva, backup e limites desta etapa.
+
+Backup/restauração são limitados ao banco configurado. Testes PHP e E2E usam diretórios privados separados dos arquivos de uso; detalhes da correção e da conferência local em [`docs/ISOLAMENTO_BACKUPS_TESTES.md`](docs/ISOLAMENTO_BACKUPS_TESTES.md).
+
 As correções de sessão de conta desativada, headers CSRF e reconexão explícita estão documentadas em [`docs/SEGURANCA_SESSAO_CSRF.md`](docs/SEGURANCA_SESSAO_CSRF.md), com seus testes e limites de homologação.
 
 Nunca publique `.env`, banco, backups, fotos ou PDFs. O document root é `public/`; use HTTPS. O guia detalhado para hospedagem compartilhada está em [`docs/KINGHOST_DEPLOY.md`](docs/KINGHOST_DEPLOY.md).

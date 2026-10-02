@@ -311,3 +311,34 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] TypeScript typecheck.
 - [PENDENTE] Testes PHP e E2E, por instrução expressa deste lote.
 - [PENDENTE] Push, por instrução expressa deste lote.
+
+
+# Checklist final — Fornecedores e compras (02/10/2026)
+
+- [OK] Backup externo verificado de código, alterações locais, histórico Git, banco e arquivos privados antes da edição/migração.
+- [OK] Menu Fornecedores, cadastro, busca, filtro de situação, paginação, edição e inativação.
+- [OK] Ficha com contatos, compras, recebimentos e produtos adquiridos, usando dados reais do servidor.
+- [OK] Compra com produto existente ou novo, quantidade e custo independente do preço de venda.
+- [OK] Compra pendente não altera saldo; recebimentos totais/parciais integram o estoque existente.
+- [OK] Repetir a mesma confirmação não duplica compra/recebimento/entrada.
+- [OK] Produto e entrada manual podem ficar sem fornecedor; brinde tem custo zero, distinto de custo desconhecido.
+- [OK] Snapshots históricos, cancelamento somente do saldo pendente e autorização/auditoria no backend.
+- [OK] Backup, restauração e limpeza futura do banco contemplam o módulo, com testes isolados.
+- [OK] Migração aditiva local e hashes dos dados existentes preservados; sem alteração em produção.
+- [OK] PHP completo: 222 testes, 1.873 asserções. Frontend unitário: 12 testes. E2E próprio aprovado.
+- [OK] Pint, lint, typecheck e build; conferência visual desktop/mobile.
+- [OK] Suíte E2E completa: 106 testes aprovados, sem retries. MySQL isolado: 17 testes de fornecedores/estoque/backup, 138 asserções.
+- [PENDENTE] Publicação na KingHost, CI do novo commit e validação real de produção.
+- [PENDENTE] Próximas etapas: contas a pagar, devoluções ao fornecedor e custo/margem por baixa de lote.
+- [PENDENTE] Cópia comercial, remoção global de marca, assinatura e estratégia de isolamento entre empresas.
+
+
+## Correção de isolamento descoberta na validação de Fornecedores
+
+- [OK] Backup/restauração limitados ao banco configurado, sem enumerar bancos de outras aplicações.
+- [OK] Teste com outro schema acessível comprova que seus registros não integram o backup e não são alterados pela restauração.
+- [OK] Restaurar dados preserva o registro de migrações correspondente às tabelas instaladas.
+- [OK] Testes MySQL bloqueados em banco de uso; arquivos PHPunit/E2E separados dos arquivos privados locais.
+- [OK] Recuperação do incidente local: 35 tabelas e 123 arquivos privados conferidos por hash com o backup; migração nova preservada e tabelas novas vazias.
+- [OK] As 22 tabelas da outra aplicação acessível conferem com o backup anterior.
+- [OK] Suíte E2E repetida com arquivos privados isolados: 106 aprovados. Conferência final preservou as 35 tabelas, os 123 arquivos privados e a migração nova; somente a auditoria legítima do novo backup foi acrescentada.
