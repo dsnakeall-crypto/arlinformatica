@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FinalShareController;
+use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -10,6 +11,7 @@ Route::put('/api/theme', [SettingsController::class, 'updateTheme'])->middleware
 Route::view('/login', 'app')->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
+Route::get('/session/csrf-token', [SessionController::class, 'csrfToken'])->middleware('throttle:60,1');
 Route::get('/share/final/{token}', [FinalShareController::class, 'download'])
     ->where('token', '[A-Fa-f0-9]{64}')
     ->name('orders.final.public');

@@ -1,4 +1,6 @@
 import NewOrderClientPicker from "./new-order-client-picker";
+import "./session-security";
+import "../css/session-security.css";
 import ClientImport from "./client-import";
 import TermTextEditor from "./term-text-editor";
 import { isReopenedOrder } from "./order-reopened";
@@ -142,15 +144,14 @@ const api = async (url: string, options: RequestInit = {}) => {
   )?.content;
   const r = await fetch("/api" + url, {
     credentials: "same-origin",
-    headers: {
-      Accept: "application/json",
-      ...(options.body instanceof FormData
-        ? {}
-        : { "Content-Type": "application/json" }),
-      ...(token ? { "X-CSRF-TOKEN": token } : {}),
-      ...options.headers,
-    },
     ...options,
+    headers: (() => {
+      const headers = new Headers(options.headers);
+      if (!headers.has('Accept')) headers.set('Accept', 'application/json');
+      if (!(options.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+      if (token) headers.set('X-CSRF-TOKEN', token);
+      return headers;
+    })(),
   });
   const json = await r
     .json()
@@ -5235,7 +5236,7 @@ function App() {
       headers: {
         Accept: "application/json",
         "X-CSRF-TOKEN":
-          document.querySelector<HTMLMetaElement>('meta[name=\"csrf-token\"]')
+          document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
             ?.content || "",
       },
     });

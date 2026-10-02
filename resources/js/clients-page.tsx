@@ -588,7 +588,7 @@ export default function ClientsPage({
   const filtered = useMemo(() => {
     const raw = q.trim(),
       needle = normalized(raw),
-      numericOnly = /^[\d\s().+\/-]+$/.test(raw) && digits(raw).length > 0,
+      numericOnly = /^[\d\s().+/-]+$/.test(raw) && digits(raw).length > 0,
       needleDigits = numericOnly ? digits(raw) : "";
     const selected = !needle
       ? items

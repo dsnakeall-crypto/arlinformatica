@@ -1,3 +1,32 @@
+# Checklist final — Sessões e CSRF em 01/10/2026
+
+- [OK] Conta desativada perde acesso web/API em sessão existente e lembrança de login.
+- [OK] Desativação administrativa revoga o token antigo de lembrar acesso.
+- [OK] Headers personalizados preservam CSRF; uploads mantêm o Content-Type do navegador.
+- [OK] Aviso 401/419 mantém o formulário e permite verificar a sessão sem repetir gravações.
+- [OK] Login expirado renova token, mantém campos e exige novo envio explícito.
+- [OK] Middleware CSRF exercitado de verdade nos testes, inclusive login/logout e lançamento financeiro.
+- [OK] Suíte PHP completa: 203 testes e 1648 asserções aprovados em SQLite em memória.
+- [OK] ESLint, Pint, TypeScript/build e 12 testes unitários frontend aprovados.
+- [OK] league/commonmark atualizado de 2.10.0 para 2.10.2; auditoria Composer sem avisos de vulnerabilidade e 203 testes PHP aprovados novamente.
+- [OK] Quatro E2E novos aprovados no backend real; aviso conferido em 390 px.
+- [OK] Suíte completa Playwright: 103 testes aprovados em 9,6 minutos, com retries 0.
+- [PENDENTE] CI no head final, publicação e smoke test de sessão/cookies/HTTPS na KingHost.
+- [PENDENTE] Demais itens dos blocos Segurança A/B: especificação detalhada ainda não consta no repositório.
+
+Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
+
+# Checklist final — Correções de verificações em 01/10/2026
+
+- [OK] Teste de estorno fixa setembro antes de criar pagamento e transação.
+- [OK] E2E do gráfico escolhe setembro antes de verificar dias e valores.
+- [OK] Suíte PHP: 195 testes e 1612 asserções aprovados em SQLite em memória.
+- [OK] ESLint configurado, sem erros/avisos, e incluído na CI frontend.
+- [OK] TypeScript, build e 7 testes unitários frontend aprovados.
+- [OK] Pint aprovado; finais PHP em LF definidos no Git.
+- [OK] Suíte completa Playwright: 99 testes aprovados em 9,3 minutos, com retries 0.
+- [PENDENTE] Push/publicação, fora do escopo desta correção.
+
 # Checklist final — Bloco B: Financeiro
 
 ## Estornos

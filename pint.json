@@ -1,0 +1,4 @@
+{
+    "preset": "laravel",
+    "exclude": ["output", "storage", "visual-artifacts"]
+}

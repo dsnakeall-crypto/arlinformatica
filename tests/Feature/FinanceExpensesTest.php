@@ -122,6 +122,8 @@ class FinanceExpensesTest extends TestCase
 
     public function test_refund_is_a_current_outflow_preserves_order_total_and_is_limited_to_effective_payment(): void
     {
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-10 10:00:00', 'America/Sao_Paulo'));
+
         $client = DB::table('clients')->insertGetId([
             'name' => 'Cliente Estorno', 'document' => '12345678909', 'phone' => '35999999999', 'postal_code' => '37130000',
             'street' => 'Rua A', 'number' => '1', 'district' => 'Centro', 'city' => 'Alfenas', 'state' => 'MG', 'created_at' => now(), 'updated_at' => now(),

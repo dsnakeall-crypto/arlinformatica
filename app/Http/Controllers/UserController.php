@@ -36,6 +36,9 @@ class UserController extends Controller
         $data = $this->validated($request, $user, false);
         $this->protectLastMaster($user, $data);
         $user->update($data);
+        if (! $user->active) {
+            $user->forceFill(['remember_token' => null])->save();
+        }
         $after = $user->fresh()->only(array_keys($before));
         $audit->record($request, $before['role_id'] !== $after['role_id'] ? 'user.role_changed' : 'user.updated', User::class, $user->id, $before, $after);
 
