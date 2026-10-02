@@ -1,3 +1,14 @@
+# Checklist final — Correções de verificações em 01/10/2026
+
+- [OK] Teste de estorno fixa setembro antes de criar pagamento e transação.
+- [OK] E2E do gráfico escolhe setembro antes de verificar dias e valores.
+- [OK] Suíte PHP: 195 testes e 1612 asserções aprovados em SQLite em memória.
+- [OK] ESLint configurado, sem erros/avisos, e incluído na CI frontend.
+- [OK] TypeScript, build e 7 testes unitários frontend aprovados.
+- [OK] Pint aprovado; finais PHP em LF definidos no Git.
+- [OK] Suíte completa Playwright: 99 testes aprovados em 9,3 minutos, com retries 0.
+- [PENDENTE] Push/publicação, fora do escopo desta correção.
+
 # Checklist final — Bloco B: Financeiro
 
 ## Estornos
