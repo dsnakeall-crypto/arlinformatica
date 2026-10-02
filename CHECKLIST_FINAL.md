@@ -1,3 +1,15 @@
+# Checklist final — reconstrução dos popups 3D em 02/10/2026
+
+- [OK] Backup original anterior à edição mantido e checksum conferido; novo backup de código, alterações locais, referências e histórico completo criado antes da reconstrução.
+- [OK] Ficha de edição convertida em popup com os dois blocos, faixa de informações, cantos pretos/vermelhos, relevos, bordas e sombras conforme as novas referências.
+- [OK] Popup de orçamento reconstruído em cinco blocos, mantendo itens, valores, total quando há itens, PDF e envio por WhatsApp.
+- [OK] Rolagem interna e rodapé acessível em desktop, 720px de altura e celular de 390px; foco e Escape verificados no navegador.
+- [OK] Proteção de alterações não salvas, senha cadastrada e documentos históricos preservadas; nenhuma migration nesta reconstrução visual.
+- [OK] 212 testes PHP / 1774 asserções e 12 unitários frontend aprovados; ESLint, Pint, TypeScript e build aprovados.
+- [OK] Todos os 105 cenários E2E cobertos: 99 passaram na suíte geral; defeito visual encontrado corrigido e 11 cenários relacionados passaram na repetição, incluindo o cenário que falhou e os cinco dependentes.
+- [OK] Capturas reais dos dois popups em desktop e celular inspecionadas; documentação e referências atualizadas.
+- [PENDENTE] Homologação visual pelo proprietário, CI remota e publicação na KingHost.
+
 # Checklist final — ficha de edição e orçamento em 02/10/2026
 
 - [OK] Backup de código/alterações locais verificado antes de editar; backup adicional do banco e arquivos privados validado antes da migração local.

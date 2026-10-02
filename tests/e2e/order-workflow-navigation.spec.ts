@@ -94,7 +94,7 @@ test('lápis da lista abre a edição na ficha ou o fluxo existente de reabertur
   await page.goto('/orders');
   await page.getByPlaceholder('Número da OS ou nome do cliente…').fill(client.name);
   await page.locator('.order-row').filter({ hasText: `#${orders[0].number}` }).getByRole('button', { name: 'Editar OS', exact: true }).click();
-  const editor = page.locator('.arl-unified-editor-inline');
+  const editor = page.locator('.arl-3d-editor');
   await expect(editor).toBeVisible();
   await expect(page.getByRole('dialog', { name: /Editar OS/ })).toHaveCount(0);
   await expect(editor.getByLabel('Cliente da OS')).toHaveCount(0);
@@ -144,7 +144,7 @@ test('lápis da lista abre a edição na ficha ou o fluxo existente de reabertur
     await expect(reopenedRoot.locator(`[data-order-action="${action}"]`), `Ação ${action} deve continuar disponível após reabrir`).toBeVisible();
   }
   await reopenedRoot.getByRole('button', { name: 'Editar', exact: true }).click();
-  const reopenedEditor = page.locator('.arl-unified-editor-inline');
+  const reopenedEditor = page.locator('.arl-3d-editor');
   await expect(reopenedEditor).toBeVisible();
   await expect(reopenedEditor.getByLabel('Cliente da OS')).toHaveCount(0);
   await expect(reopenedEditor.getByRole('heading', { name: 'Ficha de entrada — edição', exact: true })).toBeVisible();

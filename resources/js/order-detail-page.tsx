@@ -78,12 +78,13 @@ export default function OrderDetailPage(props: Props) {
 
   const openEditor = useCallback(() => {
     if (detailDirty && !window.confirm(UNSAVED_MESSAGE)) return;
+    if (detailDirty) setDetailRevision((current) => current + 1);
     setDetailDirty(false);
     setEditorOpen(true);
   }, [detailDirty]);
 
   return <div data-arl-unified-order-editor-host="1">
-    {!props.readOnly && editorOpen ? <UnifiedOrderEditor
+    {!props.readOnly && editorOpen && <UnifiedOrderEditor
       orderId={props.id}
       onDirtyChange={setEditorDirty}
       onClose={() => { setEditorDirty(false); setEditorOpen(false); }}
@@ -92,7 +93,8 @@ export default function OrderDetailPage(props: Props) {
         setEditorOpen(false);
         setDetailRevision((current) => current + 1);
       }}
-    /> : <OrderDetailReact
+    />}
+    <OrderDetailReact
       key={`${props.id}-${detailRevision}`}
       id={props.id}
       reopenOnLoad={props.initialAction === 'reopen'}
@@ -101,6 +103,6 @@ export default function OrderDetailPage(props: Props) {
       onEdit={openEditor}
       onDirtyChange={setDetailDirty}
       onOpenClientHistory={props.onOpenClientHistory}
-    />}
+    />
   </div>;
 }

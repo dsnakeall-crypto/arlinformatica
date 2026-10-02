@@ -446,6 +446,8 @@ Atualização solicitada pelo proprietário em 02/10/2026: após gerar o orçame
 
 Ações compactas: **Enviar Orçamento**, **Baixar PDF** e **Excluir Orçamento**, respeitando as permissões e bloqueios existentes. Abrir o WhatsApp não confirma envio; o operador confirma após enviar a mensagem. Aprovação/recusa continuam registradas no seletor **Resposta do cliente** e preservam o fluxo de conclusão da OS.
 
+Atualização visual solicitada em 02/10/2026: a ficha de edição e o formulário de orçamento abrem em popups com acabamento 3D, conforme as duas referências mais recentes. A edição organiza equipamento/acesso e relato/condição em dois blocos; orçamento organiza diagnóstico, serviço proposto, validade, serviços/produtos e observação em cinco blocos. Preservar todos os campos, cálculos, validações, snapshots e ações de compartilhamento. Em telas pequenas, permitir rolagem do conteúdo e manter as ações acessíveis.
+
 Mensagem padrão de orçamento:
 
 Olá, {{nome_cliente}}. Tudo bem?

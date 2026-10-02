@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { api, login, uniqueDocument, validServiceItem } from './helpers';
 
 test('orçamento usa link protegido, download e confirmação humana de envio', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.setViewportSize({ width: 1680, height: 1000 });
   await login(page);
   const name = `Cliente Orçamento ${Date.now()}`;
   const client = await api(page, '/clients', 'POST', { name, document: uniqueDocument(), phone: '35999991234', street: 'Rua do Orçamento' });
@@ -11,20 +11,42 @@ test('orçamento usa link protegido, download e confirmação humana de envio', 
   const order = await api(page, '/orders', 'POST', {
     client_id: client.body.id, equipment_type_id: equipment.body[0].id,
     equipment_description: 'Notebook Dell Inspiron', equipment_details: 'Carregador original e mochila',
-    attendance_type: 'bench', reported_problem: 'Não liga ao conectar o carregador.', intake_condition: 'Pequeno risco na tampa.', checklist: [],
+    attendance_type: 'bench', reported_problem: 'Não liga ao conectar o carregador.', intake_condition: 'Pequeno risco na tampa.', system_password: 'Senha-apenas-E2E!', system_password_absent: false, checklist: [],
   });
   expect(order.status).toBe(201);
   await page.goto(`/orders/${order.body.id}`);
   const root = page.locator('[data-arl-unified-order-editor-host="1"]');
   await root.getByRole('button', { name: 'Editar', exact: true }).click();
-  const editor = page.locator('.arl-editor-refined');
+  const editor = page.locator('.arl-3d-editor');
   await expect(editor.getByRole('heading', { name: 'Equipamento e acesso' })).toBeVisible();
   await expect(editor.getByLabel('Estado físico na entrada')).toHaveValue('Pequeno risco na tampa.');
-  await page.screenshot({ path: 'output/ficha-orcamento/ficha-edicao.png', fullPage: true });
+  await page.screenshot({ path: 'output/popups-3d/ficha-referencia.png' });
+  await page.keyboard.press('Tab');
+  await expect(editor.getByRole('button', { name: 'Cancelar edição' })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(editor.getByRole('button', { name: 'Salvar', exact: true })).toBeFocused();
+  await page.setViewportSize({ width: 390, height: 844 });
+  const editorBounds = await editor.boundingBox();
+  expect(editorBounds!.x + editorBounds!.width).toBeLessThanOrEqual(390);
+  await expect(editor.getByRole('button', { name: 'Salvar', exact: true })).toBeInViewport();
+  await page.screenshot({ path: 'output/popups-3d/ficha-mobile.png' });
   await editor.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(root.getByRole('button', { name: 'Editar', exact: true })).toBeFocused();
   await root.locator('[data-order-action="budget"]').click();
   const form = page.getByRole('dialog', { name: 'Gerar orçamento' });
   await expect(form).toBeVisible();
+  await page.setViewportSize({ width: 1320, height: 1250 });
+  await page.screenshot({ path: 'output/popups-3d/orcamento-referencia.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const budgetBounds = await form.boundingBox();
+  expect(budgetBounds!.x + budgetBounds!.width).toBeLessThanOrEqual(390);
+  await expect(form.getByRole('button', { name: 'Salvar e gerar PDF' })).toBeInViewport();
+  await page.screenshot({ path: 'output/popups-3d/orcamento-mobile.png' });
+  await page.keyboard.press('Escape');
+  await expect(form).toHaveCount(0);
+  await root.locator('[data-order-action="budget"]').click();
+  await expect(form).toBeVisible();
+  await page.setViewportSize({ width: 1320, height: 1250 });
   await form.getByLabel('Diagnóstico').fill('Falha no circuito de alimentação.');
   await form.getByLabel('Serviço proposto').fill('Reparo do circuito e testes de funcionamento.');
   await form.getByLabel('Observação (opcional)').fill('Execução após aprovação do cliente.');

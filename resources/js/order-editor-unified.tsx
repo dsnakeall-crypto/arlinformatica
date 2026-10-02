@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { FileText, Save, X } from 'lucide-react';
+import { FileText, Save, X, CalendarDays, Clock3, Wrench, Box, Tag, LockKeyhole, ClipboardList, Info, WandSparkles, ChevronDown } from 'lucide-react';
 import TextImprovement from './text-improvement';
+import OrderPopup from './order-popup';
 
 type Props = {
   orderId: number;
@@ -132,41 +133,33 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
     }
   };
 
-  return <section data-arl-order-detail-react="1" className="panel arl-unified-editor arl-unified-editor-inline arl-editor-refined" aria-labelledby="arl-edit-order-title">
-    <header className="arl-unified-editor-header">
-      <div className="arl-unified-editor-heading">
-        <span className="arl-unified-editor-icon"><FileText /></span>
-        <div><span className="arl-eyebrow">ENTRADA · OS #{order.number}</span><h2 id="arl-edit-order-title">Ficha de entrada — edição</h2><p>Atualize o atendimento e os dados de entrada do equipamento.</p></div>
+  return <OrderPopup variant="editor" title="Ficha de entrada — edição" eyebrow={`ENTRADA · OS #${order.number}`} description="Atualize o atendimento e os dados de entrada do equipamento." icon={FileText} onClose={() => { if (!busy) close(); }}>
+    <div className="arl-3d-editor-body">
+      <div className="arl-3d-meta">
+        <div><CalendarDays /><b>Entrada</b><span className="arl-3d-readonly">{formatOptionalDate(order.received_at)}<CalendarDays /></span></div>
+        <i /><div><Clock3 /><b>Saída</b><span className="arl-3d-readonly">Em aberto<ChevronDown aria-hidden="true" /></span></div>
+        <i /><label><Wrench /><b>Atendimento</b><select aria-label="Atendimento" value={attendance} onChange={(event) => { markDirty(); setAttendance(event.target.value); }}><option value="bench">Interno</option><option value="external">Externo</option></select></label>
       </div>
-      <button type="button" className="arl-unified-editor-close" aria-label="Cancelar edição" onClick={close}><X /></button>
-    </header>
-    <div className="arl-intake-dates arl-edit-intake-dates">
-      <span><b>Entrada</b> {formatOptionalDate(order.received_at)}</span>
-      <i aria-hidden="true">|</i>
-      <span><b>Saída</b> Em aberto</span>
-      <i aria-hidden="true">|</i>
-      <label><b>Atendimento</b><select aria-label="Atendimento" value={attendance} onChange={(event) => { markDirty(); setAttendance(event.target.value); }}><option value="bench">Interno</option><option value="external">Externo</option></select></label>
+      <div className="arl-3d-editor-columns">
+        <section className="arl-3d-panel">
+          <div className="arl-3d-section-heading"><span className="arl-3d-number">01</span><div><h3>Equipamento e acesso</h3><p>Identificação, acessórios e senha do sistema.</p></div></div>
+          <label className="arl-3d-field"><span><Box />Equipamento</span><textarea aria-label="Equipamento" spellCheck required maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }} /></label>
+          <label className="arl-3d-field"><span><Tag />Fabricante / Modelo / Acessórios</span><textarea aria-label="Fabricante / Modelo / Acessórios" spellCheck maxLength={500} value={equipmentDetails} onChange={(event) => { markDirty(); setEquipmentDetails(event.target.value); }} /></label>
+          {termIssued && (equipmentChanged || equipmentDetailsChanged) && <div className="notice">O Termo de Recebimento já emitido mantém os dados anteriores do equipamento.</div>}
+          <div className="arl-3d-password"><label className="arl-3d-field"><span><LockKeyhole />Senha do sistema</span><input type="text" aria-label="Senha do sistema" autoComplete="off" maxLength={500} disabled={withoutSystemPassword} value={systemPassword} placeholder={order.has_system_password ? 'Senha já cadastrada — digite para substituir' : ''} onChange={(event) => { markDirty(); setSystemPasswordTouched(true); setSystemPassword(event.target.value); }} /></label>
+            <label className="arl-3d-no-password"><input type="checkbox" checked={withoutSystemPassword} onChange={(event) => { markDirty(); setSystemPasswordTouched(true); setWithoutSystemPassword(event.target.checked); if (event.target.checked) setSystemPassword(''); }} />Sem senha</label></div>
+          {order.has_system_password && !systemPasswordTouched && <p className="arl-3d-help"><Info />Há uma senha cadastrada. Digite uma nova somente se quiser substituí-la.</p>}
+        </section>
+        <section className="arl-3d-panel">
+          <div className="arl-3d-section-heading"><span className="arl-3d-number">02</span><div><h3>Relato e condição de entrada</h3><p>Registre o que o cliente informou e o estado do equipamento.</p></div></div>
+          <label className="arl-3d-field"><span><FileText />Problema relatado</span><textarea aria-label="Problema relatado" spellCheck value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }} /></label>
+          <div className="arl-3d-improve"><WandSparkles aria-hidden="true" /><TextImprovement value={problem} onUse={(text) => { markDirty(); setProblem(text); }} /></div>
+          <label className="arl-3d-field"><span><ClipboardList />Estado físico na entrada</span><textarea aria-label="Estado físico na entrada" maxLength={10000} spellCheck value={intakeCondition} onChange={(event) => { markDirty(); setIntakeCondition(event.target.value); }} placeholder="Ex.: riscos, trincas, peça faltando ou marcas de queda" /></label>
+          <p className="arl-3d-help">Deixe vazio quando o equipamento chegar aparentemente sem avarias.</p>
+        </section>
+      </div>
+      {error && <div className="alert" role="alert">{error}</div>}
     </div>
-    <div className="arl-unified-editor-columns">
-      <div className="arl-unified-editor-column arl-editor-group">
-        <div className="arl-editor-group-heading"><span>01</span><div><h3>Equipamento e acesso</h3><p>Identificação, acessórios e senha do sistema.</p></div></div>
-        <label>Equipamento<textarea aria-label="Equipamento" spellCheck={true} required maxLength={500} value={equipment} onChange={(event) => { markDirty(); setEquipment(event.target.value); }} /></label>
-        <label>Fabricante / Modelo / Acessórios<textarea aria-label="Fabricante / Modelo / Acessórios" spellCheck={true} maxLength={500} value={equipmentDetails} onChange={(event) => { markDirty(); setEquipmentDetails(event.target.value); }} /></label>
-        {termIssued && (equipmentChanged || equipmentDetailsChanged) && <div className="notice">O Termo de Recebimento já emitido mantém os dados anteriores do equipamento.</div>}
-        <div className="arl-system-password-field">
-          <label>Senha do sistema<input type="text" aria-label="Senha do sistema" autoComplete="off" maxLength={500} disabled={withoutSystemPassword} value={systemPassword} placeholder={order.has_system_password ? 'Senha já cadastrada — digite para substituir' : ''} onChange={(event) => { markDirty(); setSystemPasswordTouched(true); setSystemPassword(event.target.value); }} /></label>
-          <label className="arl-system-password-absent"><input type="checkbox" checked={withoutSystemPassword} onChange={(event) => { markDirty(); setSystemPasswordTouched(true); setWithoutSystemPassword(event.target.checked); if (event.target.checked) setSystemPassword(''); }} /><span>Sem senha</span></label>
-        </div>
-        {order.has_system_password && !systemPasswordTouched && <p className="arl-unified-editor-help">Há uma senha cadastrada. Digite uma nova somente se quiser substituí-la.</p>}
-      </div>
-      <div className="arl-unified-editor-column arl-editor-group">
-        <div className="arl-editor-group-heading"><span>02</span><div><h3>Relato e condição de entrada</h3><p>Registre o que o cliente informou e o estado do equipamento.</p></div></div>
-        <label>Problema relatado<textarea aria-label="Problema relatado" spellCheck={true} value={problem} onChange={(event) => { markDirty(); setProblem(event.target.value); }} /><TextImprovement value={problem} onUse={(text) => { markDirty(); setProblem(text); }} /></label>
-        <label className="arl-unified-editor-intake-condition">Estado físico na entrada<textarea aria-label="Estado físico na entrada" maxLength={10000} spellCheck={true} value={intakeCondition} onChange={(event) => { markDirty(); setIntakeCondition(event.target.value); }} placeholder="Ex.: riscos, trincas, peça faltando ou marcas de queda" /></label>
-        <p className="arl-unified-editor-help">Deixe vazio quando o equipamento chegar aparentemente sem avarias.</p>
-      </div>
-    </div>
-    {error && <div className="alert">{error}</div>}
-    <div className="arl-od-actions"><button type="button" onClick={close}>Cancelar</button><button type="button" className="primary arl-od-save" disabled={busy} onClick={() => void save()}><Save />{busy ? 'Salvando…' : 'Salvar'}</button></div>
-  </section>;
+    <footer className="arl-3d-footer"><button type="button" disabled={busy} onClick={close}><X />Cancelar</button><button type="button" className="arl-3d-primary" disabled={busy} onClick={() => void save()}><Save />{busy ? 'Salvando…' : 'Salvar'}</button></footer>
+  </OrderPopup>;
 }

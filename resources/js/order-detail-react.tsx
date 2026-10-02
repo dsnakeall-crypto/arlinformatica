@@ -1,6 +1,11 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   Camera,
+  Box,
+  CalendarDays,
+  Wrench,
+  MessageCircle,
+  Save,
   Check,
   Eye,
   FileText,
@@ -18,6 +23,7 @@ import {
 import ServiceProductSearch, {
   type ServiceProductCatalogItem,
 } from "./service-product-search";
+import OrderPopup from "./order-popup";
 import OrderAuditHistory from "./order-audit-history";
 import "../css/order-detail-layout.css";
 import { OrderPaymentFigures } from "./finance-refund-summary";
@@ -953,51 +959,32 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
         )}
       </div>
       {open && (
-        <div className="modal">
-          <form
-            className="modal-card budget-form"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Gerar orçamento"
-            onSubmit={submit}
-          >
-            <button
-              type="button"
-              className="modal-close"
-              aria-label="Fechar orçamento"
-              onClick={() => setOpen(false)}
-            >
-              <X />
-            </button>
-            <header className="arl-budget-heading"><span className="arl-budget-heading-icon"><ReceiptText /></span><div><span className="arl-eyebrow">PROPOSTA · OS #{order.number}</span><h1>Gerar orçamento</h1><p>Organize o diagnóstico, os serviços e as condições para o cliente.</p></div></header>
-            <div className="arl-budget-description-grid">
-            <label className="field">
-              <span>Diagnóstico</span>
+        <OrderPopup variant="budget" title="Gerar orçamento" eyebrow={`PROPOSTA · OS #${order.number}`} description="Organize o diagnóstico, os serviços e as condições para o cliente." icon={ReceiptText} onClose={() => { if (!busy) setOpen(false); }}>
+          <form className="arl-3d-budget-form" onSubmit={submit}>
+            <div className="arl-3d-budget-body">
+
+            <label className="arl-3d-panel arl-3d-field">
+              <span className="arl-3d-field-heading"><i><FileText /></i>Diagnóstico</span>
               <textarea
                 spellCheck={true}
                 required
+                placeholder="Descreva o diagnóstico realizado..."
                 value={diagnosis}
                 onChange={(e) => setDiagnosis(e.target.value)}
               />
             </label>
-            <label className="field">
-              <span>Serviço proposto</span>
+            <label className="arl-3d-panel arl-3d-field">
+              <span className="arl-3d-field-heading"><i><Wrench /></i>Serviço proposto</span>
               <textarea
                 spellCheck={true}
                 required
+                placeholder="Descreva o serviço proposto..."
                 value={proposal}
                 onChange={(e) => setProposal(e.target.value)}
               />
             </label>
-            </div>
-            <div className="arl-budget-validity"><TextField
-              label="Validade (dias)"
-              value={validity}
-              onChange={(e: any) => setValidity(+e.target.value)}
-              required
-            />
-            </div>
-            <div className="arl-budget-items-heading"><h2>Serviços e produtos</h2><p>Selecione os itens e ajuste as quantidades e os valores.</p></div>
+            <label className="arl-3d-panel arl-3d-field arl-3d-validity"><span className="arl-3d-field-heading"><i><CalendarDays /></i>Validade (dias) <em>*</em></span><input aria-label="Validade (dias)" type="number" min="1" max="365" required value={validity} onChange={event => setValidity(+event.target.value)} /></label>
+            <section className="arl-3d-panel arl-3d-services"><div className="arl-3d-field-heading"><i><Box /></i><div><h3>Serviços e produtos</h3><p>Selecione os itens e ajuste as quantidades e os valores.</p></div></div>
             <ServiceProductSearch
               items={catalog}
               ariaLabel="Buscar serviço ou produto para o orçamento"
@@ -1056,15 +1043,17 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
                 </div>
               ))}
             </div>
-            <label className="field">
-              <span>Observação (opcional)</span>
+            </section>
+            <label className="arl-3d-panel arl-3d-field">
+              <span className="arl-3d-field-heading"><i><MessageCircle /></i>Observação (opcional)</span>
               <textarea
                 spellCheck={true}
+                placeholder="Adicione uma observação..."
                 value={observation}
                 onChange={(e) => setObservation(e.target.value)}
               />
             </label>
-            <strong className="arl-budget-total">
+            {items.length > 0 && <strong className="arl-3d-total">
               Total:{" "}
               {money(
                 items.reduce(
@@ -1072,16 +1061,17 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
                   0,
                 ),
               )}
-            </strong>
+            </strong>}
             {error && <div className="alert">{error}</div>}
-            <div className="actions">
-              <button type="button" onClick={() => setOpen(false)}>
+            </div>
+            <footer className="arl-3d-footer">
+              <button className="arl-3d-budget-cancel" type="button" disabled={busy} onClick={() => setOpen(false)}>
                 Cancelar
               </button>
-              <button className="primary" disabled={busy}>{busy ? "Gerando orçamento…" : "Salvar e gerar PDF"}</button>
-            </div>
+              <button className="arl-3d-primary" disabled={busy}><Save />{busy ? "Gerando orçamento…" : "Salvar e gerar PDF"}</button>
+            </footer>
           </form>
-        </div>
+        </OrderPopup>
       )}
       {error && !open && <div className="alert">{error}</div>}
       {sharePrompt && (

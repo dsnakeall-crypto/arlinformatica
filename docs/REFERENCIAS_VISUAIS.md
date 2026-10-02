@@ -48,3 +48,7 @@ As imagens são referência visual, não autorização para restaurar regras ant
 - O PDF de fechamento gerado pelo artefato visual permaneceu em uma única página A4, sem corte/overlap observado na renderização automática.
 
 A comparação visual automatizada de layout está concluída para as referências recebidas. **Ainda permanecem externas** a validação com a `LOGO.png` cadastrada no ambiente real e a impressão física A4.
+
+## Popups da OS — referências 3D de 02/10/2026
+
+As duas referências mais recentes substituem o desenho anterior da ficha de edição e do formulário de orçamento. Usar moldura branca arredondada, cantos pretos/vermelhos com circuitos discretos, painéis com bordas duplas e relevo, campos reais organizados e ações compactas com acabamento preto/vermelho. Edição em diálogo com dois blocos; orçamento em diálogo com cinco blocos. Manter responsividade, rolagem do conteúdo e acesso às ações. Cópias das referências foram preservadas no backup externo `popups-3d-20261002-073026`; detalhes e capturas da implementação em `docs/FICHA_ORCAMENTO_ENVIO.md`.

@@ -48,7 +48,7 @@ test('Editar OS usa a própria ficha e preserva o cliente enquanto corrige os da
   await expect(root.getByText('Atendimento Interno', { exact: true })).toBeVisible();
   await root.getByRole('button', { name: 'Editar', exact: true }).click();
 
-  const editor = page.locator('.arl-unified-editor-inline');
+  const editor = page.locator('.arl-3d-editor');
   await expect(editor).toBeVisible();
   await expect(page.getByRole('dialog', { name: /Editar OS/ })).toHaveCount(0);
   await expect(editor.getByRole('heading', { name: 'Ficha de entrada — edição' })).toBeVisible();
@@ -134,7 +134,7 @@ test('rascunhos avisam saída e o Laudo Final é persistido antes da finalizaç�
   expect(await hasUnsavedGuard(page)).toBe(false);
 
   await root.getByRole('button', { name: 'Editar', exact: true }).click();
-  const editor = page.locator('.arl-unified-editor-inline');
+  const editor = page.locator('.arl-3d-editor');
   await editor.getByLabel('Atendimento').selectOption('external');
   await editor.getByLabel('Problema relatado').fill('Problema ainda não salvo no editor');
   await editor.getByLabel('Estado físico na entrada').fill('Risco ainda não salvo');
