@@ -248,8 +248,6 @@ function syncOrderDetail() {
   const detail = document.querySelector<HTMLElement>('.detail-grid');
   if (!detail) return;
   const history = Array.from(detail.querySelectorAll<HTMLElement>(':scope > section')).find((section) => section.querySelector('h2')?.textContent?.trim() === 'Histórico de status');
-  history?.querySelectorAll<HTMLParagraphElement>('p').forEach((line) => {
-  });
   if (order.archived && history) {
     const lines = Array.from(history.querySelectorAll<HTMLParagraphElement>('p'));
     const paidIndex = order.histories?.findIndex((item) => item.to_status === 'paid') ?? -1;

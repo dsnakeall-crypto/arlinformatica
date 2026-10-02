@@ -5235,7 +5235,7 @@ function App() {
       headers: {
         Accept: "application/json",
         "X-CSRF-TOKEN":
-          document.querySelector<HTMLMetaElement>('meta[name=\"csrf-token\"]')
+          document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
             ?.content || "",
       },
     });

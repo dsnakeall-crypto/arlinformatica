@@ -1,0 +1,2 @@
+# Pint expects LF even in Windows checkouts. Keep binary documents untouched.
+*.php text eol=lf

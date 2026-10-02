@@ -25,10 +25,15 @@ Acesse `http://127.0.0.1:8000`. Não existe cadastro público. Crie o primeiro M
 ```bash
 composer test
 vendor/bin/pint --test
+npm run lint
 npm run typecheck
 npm run build
 npm run test:e2e
 ```
+
+O ESLint usa configuração flat para JavaScript/TypeScript, com exceções nominais para componentes/helpers legados sem uso; novos símbolos não usados continuam sendo erros. `any` explícito dos clientes JSON, catch vazio de fallback e ternários com efeitos são aceitos. As exceções estão documentadas em `eslint.config.js`; não há redução das verificações dos testes. Referência: [configuração oficial do typescript-eslint](https://typescript-eslint.io/getting-started/).
+
+Arquivos PHP usam LF também no Windows, conforme `.gitattributes`. O Pint mantém o preset Laravel e ignora apenas artefatos em `output`, `storage` e `visual-artifacts`.
 
 ### E2E local, passo a passo
 
