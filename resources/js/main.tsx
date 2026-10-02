@@ -38,7 +38,6 @@ import {
   Landmark,
   RotateCcw,
   Clock3,
-  EllipsisVertical,
   Star,
   Instagram,
   BarChart3,
@@ -4145,6 +4144,7 @@ function BudgetBox({ order }: any) {
   );
 }
 function PostSalePage() {
+  const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [rows, setRows] = useState<any[]>([]),
     [loading, setLoading] = useState(true),
@@ -4180,6 +4180,7 @@ function PostSalePage() {
       }
       setRows((current) => current.filter((row) => !ids.includes(row.id)));
       setSelectedIds((current) => current.filter((id) => !ids.includes(id)));
+      setSelectionMode(false);
       setRemoval(null);
     } catch (error) {
       setRemovalError(error instanceof Error ? error.message : "Não foi possível excluir o card.");
@@ -4226,11 +4227,16 @@ function PostSalePage() {
         icon={Phone}
       />
       <section className="post-sale-workspace" data-arl-post-sale-workspace="1">
+        <div className="post-sale-controls">
         <label className="post-sale-search">
           <Search aria-hidden="true" />
           <span className="sr-only">Buscar por cliente ou OS</span>
           <input value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Buscar por cliente ou número da OS…" />
         </label>
+        <button className="post-sale-select-toggle" type="button" aria-pressed={selectionMode} disabled={removing || !rows.length} onClick={() => { setSelectionMode(!selectionMode); setSelectedIds([]); }}>
+          <CheckCircle2 /> {selectionMode ? "Cancelar seleção" : "Selecionar cards"}
+        </button>
+        </div>
         {selectedIds.length > 0 && (
           <div className="post-sale-selection" role="region" aria-label="Cards selecionados">
             <strong role="status">{selectedIds.length} {selectedIds.length === 1 ? "card selecionado" : "cards selecionados"}</strong>
@@ -4262,24 +4268,12 @@ function PostSalePage() {
                   <b>OS {row.number}</b>
                   <strong>{row.name}</strong>
                 </div>
-                <details className="post-sale-menu">
-                  <summary aria-label={`Ações da OS ${row.number}`}><EllipsisVertical /></summary>
-                  <div>
-                    <button className="post-sale-mark" type="button" disabled={removing} onClick={(event) => { toggleSelection(row.id); event.currentTarget.closest("details")?.removeAttribute("open"); }}>
-                      <CheckCircle2 /> {selectedIds.includes(row.id) ? "Desmarcar card" : "Marcar card"}
-                    </button>
-                    <button className="post-sale-delete" type="button" onClick={() => { setRemovalError(""); setRemoval({ id: row.id, number: row.number, name: row.name }); }}>
-                      <Trash2 /> Excluir card
-                    </button>
-                  </div>
-                </details>
+                {selectionMode && (
+                  <label className="post-sale-card-select">
+                    <input type="checkbox" checked={selectedIds.includes(row.id)} disabled={removing} onChange={() => toggleSelection(row.id)} aria-label={`Marcar card da OS ${row.number}`} />
+                  </label>
+                )}
               </header>
-              {selectedIds.length > 0 && (
-                <label className="post-sale-checkbox">
-                  <input type="checkbox" checked={selectedIds.includes(row.id)} disabled={removing} onChange={() => toggleSelection(row.id)} aria-label={`Marcar card da OS ${row.number}`} />
-                  <span>{selectedIds.includes(row.id) ? "Selecionado" : "Marcar card"}</span>
-                </label>
-              )}
               <div className={`post-sale-state ${row.available ? "post-sale-state-ready" : "post-sale-state-waiting"}`}>
                 <Clock3 />
                 <span>{stateLabel(row)}</span>
@@ -4313,7 +4307,7 @@ function PostSalePage() {
       {removal && (
         <div className="modal">
           <div className="modal-card confirm-send" role="dialog" aria-modal="true" aria-labelledby="post-sale-delete-title">
-            <h2 id="post-sale-delete-title">{removal.ids ? `Excluir ${removal.ids.length} cards de Pós-Venda?` : "Excluir card de Pós-Venda?"}</h2>
+            <h2 id="post-sale-delete-title">{removal.ids ? `Excluir ${removal.ids.length} ${removal.ids.length === 1 ? "card" : "cards"} de Pós-Venda?` : "Excluir card de Pós-Venda?"}</h2>
             <p>
               {removal.ids ? "Os cards selecionados deixarão apenas esta lista de acompanhamento. As Ordens de Serviço, documentos e histórico de mensagens continuarão preservados." : <>A OS {removal.number} de {removal.name} deixará apenas esta lista de acompanhamento. A Ordem de Serviço, documentos e histórico de mensagens continuarão preservados.</>}
             </p>

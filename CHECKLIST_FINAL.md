@@ -2,9 +2,9 @@
 
 - [OK] Backup local completo dos arquivos e histórico Git criado e verificado antes de editar; caminho registrado em docs/POS_VENDA_SELECAO_EM_LOTE.md.
 - [OK] Regra permanente de backup antes de editar registrada em AGENTS.md.
-- [OK] Marcar/Desmarcar card pelo menu de três pontos; caixas de seleção, contagem e Limpar seleção.
+- [OK] Selecionar cards ao lado da busca; caixas no canto superior direito substituem o menu de três pontos, com contagem, Limpar seleção e Cancelar seleção.
 - [OK] Excluir selecionados abre confirmação com os números das OS e clientes; cancelar não envia exclusão.
-- [OK] Busca preserva a seleção; exclusão individual continua funcionando.
+- [OK] Busca preserva a seleção; permite excluir um ou vários cards marcados.
 - [OK] Lote atômico autenticado, protegido por CSRF, validado e auditado por card; card indisponível cancela todo o lote.
 - [OK] OS, PDFs e histórico de mensagens preservados; regras existentes de Pós-Venda mantidas, sem migrations.
 - [OK] 206 testes PHP / 1703 asserções, 12 unitários frontend, lint, Pint, TypeScript e build aprovados.

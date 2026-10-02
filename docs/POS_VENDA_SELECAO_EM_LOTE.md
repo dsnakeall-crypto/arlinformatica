@@ -1,10 +1,10 @@
 # Pós-Venda: seleção e exclusão de cards em lote
 
-O menu de três pontos de cada card possui **Marcar card** e **Desmarcar card**. Ao marcar o primeiro, os cards passam a exibir caixas de seleção e uma barra informa a quantidade marcada, com **Limpar seleção** e **Excluir selecionados**.
+Ao lado da busca fica **Selecionar cards**. Ao ativar essa opção, caixas de seleção aparecem no canto superior direito dos cards, no lugar do antigo menu de três pontos. Uma barra informa a quantidade marcada, com **Limpar seleção** e **Excluir selecionados**. **Cancelar seleção** limpa as marcações e encerra esse modo. As caixas não aumentam a altura dos cards.
 
 A busca não apaga a seleção: cards marcados que ficam ocultos pelo filtro continuam selecionados. Antes de excluir, a confirmação lista todas as OS selecionadas e seus clientes. Cancelar mantém a seleção e não envia uma operação ao servidor.
 
-A exclusão individual continua disponível. Tanto individualmente quanto em lote, excluir significa arquivar o ciclo de Pós-Venda, preservar OS, documentos e ações/mensagens históricas, resolver notificações e registrar auditoria por card. A regra existente de exclusão manual por 35 dias permanece igual. Não há novas migrations ou mudanças no Financeiro.
+É possível selecionar um ou vários cards. Excluir significa arquivar o ciclo de Pós-Venda, preservar OS, documentos e ações/mensagens históricas, resolver notificações e registrar auditoria por card. A regra existente de exclusão manual por 35 dias permanece igual. Não há novas migrations ou mudanças no Financeiro.
 
 O endpoint `POST /api/post-sales/bulk-delete` recebe `ids`, exige a sessão autenticada e o CSRF já usados nas demais ações. A seleção deve conter de 1 a 500 IDs inteiros positivos e distintos. A permissão é a mesma da exclusão individual atual.
 
@@ -25,6 +25,8 @@ O backup fica fora do repositório e pode conter dados e configurações privado
 A regra de criar e verificar backup antes de editar está registrada em `AGENTS.md`. Uma publicação exige também um backup novo do banco e dos arquivos privados da produção.
 
 ## Validação
+
+O ajuste do layout de seleção tem backup em `C:\Users\Allan\ARL-backups\pos-venda-layout-20261002-005713`, com arquivos anteriores, revisão Git, patch das alterações locais e checksums. Lint, TypeScript/build e os 12 cenários Playwright relacionados passaram novamente após trocar o menu por caixas no canto dos cards.
 
 - Suíte PHP completa: 206 testes e 1703 asserções aprovados, incluindo arquivamento de 10 cards, preservação dos registros, validação de IDs e rejeição integral de lote com card indisponível.
 - Frontend: lint, TypeScript, build e 12 testes unitários aprovados. Pint aprovado.

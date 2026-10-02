@@ -27,14 +27,18 @@ test('marca dez cards, confirma uma exclusão em lote e preserva OS, PDFs e o ca
   await page.reload();
   await page.getByRole('button', { name: 'Pós-Venda', exact: true }).click();
   const first = page.locator('.post-sale-card').filter({ hasText: `OS ${orders[0].number}` });
-  await first.locator('.post-sale-menu summary').click();
-  await first.getByRole('button', { name: 'Marcar card', exact: true }).click();
+  await expect(page.locator('.post-sale-menu')).toHaveCount(0);
+  await expect(first.getByRole('checkbox')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Selecionar cards', exact: true }).click();
+  await first.getByRole('checkbox').check();
   const toolbar = page.getByRole('region', { name: 'Cards selecionados' });
   await expect(toolbar).toContainText('1 card selecionado');
   await toolbar.getByRole('button', { name: 'Limpar seleção' }).click();
   await expect(toolbar).toHaveCount(0);
-  await first.locator('.post-sale-menu summary').click();
-  await first.getByRole('button', { name: 'Marcar card', exact: true }).click();
+  await page.getByRole('button', { name: 'Cancelar seleção', exact: true }).click();
+  await expect(first.getByRole('checkbox')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Selecionar cards', exact: true }).click();
+  await first.getByRole('checkbox').check();
   for (const order of orders.slice(1, 10)) {
     await page.getByRole('checkbox', { name: `Marcar card da OS ${order.number}`, exact: true }).check();
   }

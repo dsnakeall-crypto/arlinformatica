@@ -387,11 +387,12 @@ test.describe.serial('fluxo operacional principal', () => {
     const blocked = await api(page, `/post-sales/${cycle.id}/google/confirm`, 'POST', {});
     expect(blocked.status).toBe(409);
 
-    await lockedRow.locator('.post-sale-menu summary').click();
-    await lockedRow.getByRole('button', { name: 'Excluir card' }).click();
-    const deleteDialog = page.getByRole('dialog', { name: 'Excluir card de Pós-Venda?' });
+    await page.getByRole('button', { name: 'Selecionar cards', exact: true }).click();
+    await lockedRow.getByRole('checkbox').check();
+    await page.getByRole('region', { name: 'Cards selecionados' }).getByRole('button', { name: 'Excluir selecionados' }).click();
+    const deleteDialog = page.getByRole('dialog', { name: 'Excluir 1 card de Pós-Venda?' });
     await expect(deleteDialog).toBeVisible();
-    await deleteDialog.getByRole('button', { name: 'Excluir card', exact: true }).click();
+    await deleteDialog.getByRole('button', { name: 'Excluir selecionados', exact: true }).click();
     await expect(lockedRow).toHaveCount(0);
     expect((await api(page, `/orders/${orderId}`)).status).toBe(200);
   });
