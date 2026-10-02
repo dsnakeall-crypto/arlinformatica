@@ -77,6 +77,8 @@ O workflow manual **Preparar release** executa as auditorias/testes/build/E2E no
 
 ## Produção
 
+As correções de sessão de conta desativada, headers CSRF e reconexão explícita estão documentadas em [`docs/SEGURANCA_SESSAO_CSRF.md`](docs/SEGURANCA_SESSAO_CSRF.md), com seus testes e limites de homologação.
+
 Nunca publique `.env`, banco, backups, fotos ou PDFs. O document root é `public/`; use HTTPS. O guia detalhado para hospedagem compartilhada está em [`docs/KINGHOST_DEPLOY.md`](docs/KINGHOST_DEPLOY.md).
 
 Antes de aceitar a publicação real, configure a logomarca oficial em Configurações, gere/confera um PDF A4, configure cron/heartbeat, VAPID quando aplicável e realize o smoke test descrito no checklist.
