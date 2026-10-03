@@ -377,5 +377,16 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Suíte geral de navegador: 110 testes aprovados; build final e três fluxos finais do módulo aprovados; lint, TypeScript e Pint sem falhas.
 - [PENDENTE] Cadastro por foto com extração/revisão antes de salvar, conforme etapa futura combinada.
 - [PENDENTE] Estorno da compra com redistribuição automática entre parcelas restantes.
-- [PENDENTE] Avisos agendados/push, relatórios próprios/exportação e personalização de imagens das instituições.
+- [PENDENTE] Avisos agendados/push e relatórios próprios/exportação.
 - [PENDENTE] Publicação desta etapa no servidor; somente ambiente local atualizado.
+
+## Controle de Gasto — cartões (02/10/2026)
+
+- [OK] Backup externo verificado de código/histórico e banco/arquivos privados antes da migração; 54 conjuntos de dados e 128 arquivos privados preservados.
+- [OK] Galeria pesquisável dos dez bancos solicitados, modelos ilustrativos identificados e arte oficial Bradesco Neo local.
+- [OK] Upload privado JPG/PNG/WebP, prévia, enquadramento por zoom/posição, normalização JPEG 856×540 até 100 KB.
+- [OK] Bloqueio de salvamento enquanto o enquadramento aguarda confirmação; remoção/substituição da imagem sem alterar valores financeiros.
+- [OK] Autorização no backend, rejeição de arquivos inválidos/grandes, limpeza em falha transacional e restauração do arquivo/vínculo verificada.
+- [OK] Acabamento 3D nos cartões, painéis e responsáveis; cor dos cadastros antigos preservada.
+- [PENDENTE] Publicação desta alteração no servidor; ambiente local apenas.
+- [OK] 252 testes PHP gerais, 23 MySQL isolados, 12 unitários de frontend e cinco fluxos de navegador aprovados; lint, TypeScript, Pint e build aprovados.

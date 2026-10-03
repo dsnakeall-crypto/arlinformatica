@@ -65,3 +65,7 @@ A extensão de pagamentos/notas mantém os popups brancos arredondados e os card
 ## Controle de Gasto — 02/10/2026
 
 O site gastos-do-casal.dsnakeall.chatgpt.site e o PDF Gestão de Gastos fornecido orientam a organização das informações e os fluxos. Adaptar para a identidade visual ARL aprovada: branco/vermelho, cabeçalho com linha, cards com sombras, navegação clara e popups brancos arredondados. Resumo pessoal e visão do casal distintos; instituição → tipo → compra → parcelas. Capturas de testes com dados fictícios em `output/controle-gasto`. Agenda, Contas e voz excluídos pelo proprietário; foto posterior.
+
+### Controle de Gasto: galeria de cartões
+
+Cartões com proporção 856:540, cantos arredondados, reflexo leve e sombra de relevo. Modelos de bancos identificam cores/nome sem se apresentar como réplicas oficiais. A prévia acompanha a seleção, com galeria pesquisável e upload separado. Todas as imagens utilizam a mesma moldura; arte oficial preserva proporção sem esticar. Enquadramento de fotos é confirmado antes do cadastro. Sombras de painéis/responsáveis reforçam o acabamento 3D dentro da identidade ARL. Capturas de desktop/mobile em `output/cartoes`.

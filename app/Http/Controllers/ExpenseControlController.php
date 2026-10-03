@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Services\Audit;
+use App\Services\ExpenseCardImage;
 use App\Services\ExpenseControl;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ExpenseControlController extends Controller
 {
@@ -25,7 +29,8 @@ class ExpenseControlController extends Controller
     {
         return response()->json([
             'people' => DB::table('cg_people')->orderBy('id')->get(),
-            'institutions' => DB::table('cg_institutions')->orderBy('name')->get(),
+            'institutions' => DB::table('cg_institutions')->orderBy('name')->get()->map(fn ($row) => $this->institution($row)),
+            'card_artworks' => $this->artworks(),
             'types' => DB::table('cg_types')->orderBy('name')->get(),
             'my_person_id' => DB::table('cg_people')->where('user_id', $r->user()->id)->value('id'),
             'can_assign_users' => $r->user()->hasRole('Master', 'Administrador'),
@@ -66,24 +71,69 @@ class ExpenseControlController extends Controller
         abort_unless(in_array($catalog, ['institutions', 'types'], true), 404);
         $rules = ['name' => 'required|string|max:80', 'active' => 'required|boolean'];
         if ($catalog === 'institutions') {
-            $rules += ['due_day' => 'required|integer|min:1|max:31', 'color' => ['required', 'regex:/^#[a-fA-F0-9]{6}$/']];
+            $rules += ['due_day' => 'required|integer|min:1|max:31', 'color' => ['required', 'regex:/^#[a-fA-F0-9]{6}$/'], 'artwork_key' => ['nullable', Rule::in(array_column($this->artworks(), 'key'))], 'image' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:4096', 'remove_image' => 'sometimes|boolean'];
         } else {
             $rules['name'] = ['required', 'string', 'max:80', Rule::unique('cg_types')->ignore($id)];
         }
         $data = $r->validate($rules);
         $table = 'cg_'.$catalog;
-        DB::transaction(function () use ($r, $table, &$id, $data) {
-            $before = $id ? DB::table($table)->where('id', $id)->lockForUpdate()->first() : null;
-            if ($id) {
-                abort_unless($before, 404);
-                DB::table($table)->where('id', $id)->update([...$data, 'updated_at' => now()]);
-            } else {
-                $id = DB::table($table)->insertGetId([...$data, 'created_at' => now(), 'updated_at' => now()]);
+        $stored = null;
+        if ($catalog === 'institutions') {
+            $remove = $data['remove_image'] ?? false;
+            unset($data['remove_image'], $data['image']);
+            if ($r->hasFile('image')) {
+                $bytes = app(ExpenseCardImage::class)->optimize($r->file('image'));
+                $stored = 'expense-cards/'.Str::uuid().'.jpg';
+                abort_unless(Storage::disk('local')->put($stored, $bytes), 500, 'Falha ao armazenar a imagem.');
+                $data['image_path'] = $stored;
+                $data['artwork_key'] = null;
+            } elseif ($remove || ! empty($data['artwork_key'])) {
+                $data['image_path'] = null;
             }
-            app(Audit::class)->record($r, 'expense_control.catalog_saved', 'expense_control', $id, $before, $data);
-        });
+        }
+        try {
+            DB::transaction(function () use ($r, $table, &$id, $data) {
+                $before = $id ? DB::table($table)->where('id', $id)->lockForUpdate()->first() : null;
+                if ($id) {
+                    abort_unless($before, 404);
+                    DB::table($table)->where('id', $id)->update([...$data, 'updated_at' => now()]);
+                } else {
+                    $id = DB::table($table)->insertGetId([...$data, 'created_at' => now(), 'updated_at' => now()]);
+                }
+                app(Audit::class)->record($r, 'expense_control.catalog_saved', 'expense_control', $id, $before, $data);
+            });
 
-        return response()->json(DB::table($table)->find($id), 200);
+        } catch (\Throwable $error) {
+            if ($stored) {
+                Storage::disk('local')->delete($stored);
+            }
+            throw $error;
+        }
+
+        $row = DB::table($table)->find($id);
+
+        return response()->json($catalog === 'institutions' ? $this->institution($row) : $row, 200);
+    }
+
+    private function artworks(): array
+    {
+        return json_decode(file_get_contents(public_path('arl-assets/expense-cards/catalog.json')), true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    private function institution(object $row): object
+    {
+        $row->image_url = $row->image_path ? '/api/expense-control/institutions/'.$row->id.'/image?v='.basename($row->image_path, '.jpg') : null;
+        unset($row->image_path);
+
+        return $row;
+    }
+
+    public function image(int $id): BinaryFileResponse
+    {
+        $path = DB::table('cg_institutions')->where('id', $id)->value('image_path');
+        abort_unless($path && str_starts_with($path, 'expense-cards/') && Storage::disk('local')->exists($path), 404);
+
+        return response()->file(Storage::disk('local')->path($path), ['Content-Type' => 'image/jpeg', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
     }
 
     public function summary(Request $r): JsonResponse

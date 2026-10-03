@@ -34,6 +34,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::prefix('expense-control')->middleware('role:Master,Administrador,Controle de Gasto')->group(function () {
+        Route::get('/institutions/{id}/image', [ExpenseControlController::class, 'image'])->whereNumber('id');
         Route::get('/configuration', [ExpenseControlController::class, 'configuration']);
         Route::put('/people', [ExpenseControlController::class, 'people']);
         Route::post('/catalogs/{catalog}', [ExpenseControlController::class, 'catalog']);

@@ -1,0 +1,101 @@
+[
+  {
+    "key": "bb",
+    "name": "Banco do Brasil",
+    "color": "#f6d52d",
+    "accent": "#063d96",
+    "wordmark": "BB",
+    "kind": "illustrative",
+    "image_url": null
+  },
+  {
+    "key": "nubank",
+    "name": "Nubank",
+    "color": "#820ad1",
+    "accent": "#b454ee",
+    "wordmark": "nu",
+    "kind": "illustrative",
+    "image_url": null
+  },
+  {
+    "key": "caixa",
+    "name": "Caixa Econômica",
+    "color": "#005ca9",
+    "accent": "#058bd1",
+    "wordmark": "CAIXA",
+    "kind": "illustrative",
+    "image_url": null
+  },
+  {
+    "key": "santander",
+    "name": "Santander",
+    "color": "#e80014",
+    "accent": "#a90013",
+    "wordmark": "Santander",
+    "kind": "illustrative",
+    "image_url": null
+  },
+  {
+    "key": "bradesco",
+    "name": "Bradesco",
+    "color": "#cb003c",
+    "accent": "#253b91",
+    "wordmark": "bradesco",
+    "kind": "illustrative",
+    "image_url": null
+  },
+  {
+    "key": "itau",
+    "name": "Itaú",
+    "color": "#ef6a00",
+    "accent": "#e39419",
+    "wordmark": "itaú",
+    "kind": "illustrative",
+    "image_url": null
+  },
+  {
+    "key": "samsung-itau",
+    "name": "Samsung Itaú",
+    "color": "#171719",
+    "accent": "#4b4d50",
+    "wordmark": "SAMSUNG · itaú",
+    "kind": "illustrative",
+    "image_url": null
+  },
+  {
+    "key": "bv",
+    "name": "BV Financeira",
+    "color": "#2959a4",
+    "accent": "#738ecc",
+    "wordmark": "BV",
+    "kind": "illustrative",
+    "image_url": null
+  },
+  {
+    "key": "mercado-pago",
+    "name": "Mercado Pago",
+    "color": "#009ee3",
+    "accent": "#0075b3",
+    "wordmark": "mercado pago",
+    "kind": "illustrative",
+    "image_url": null
+  },
+  {
+    "key": "infinitepay",
+    "name": "InfinitePay",
+    "color": "#17221c",
+    "accent": "#4d754c",
+    "wordmark": "InfinitePay",
+    "kind": "illustrative",
+    "image_url": null
+  },
+  {
+    "key": "bradesco-neo",
+    "name": "Bradesco Neo Visa Platinum",
+    "color": "#cb003c",
+    "accent": "#253b91",
+    "wordmark": "bradesco",
+    "kind": "official",
+    "image_url": "/arl-assets/expense-cards/bradesco-neo.png"
+  }
+]
