@@ -623,3 +623,13 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Lint, TypeScript/build e 19 testes frontend aprovados; capturas desktop revisadas.
 - [OK] Backup externo verificado: C:/Users/Allan/ARL-backups/desktop-auto-fit-20261003-135745 (1793 arquivos e histórico Git). Banco de uso e Mobile/Tablet preservados.
 - [PENDENTE] Publicação no servidor, fora desta execução.
+
+
+## Exclusão segura dos cadastros de gastos — 03/10/2026
+- [OK] Lixeira para instituições e tipos, confirmação explícita e popup compacto com botões azuis.
+- [OK] Backend bloqueia saldo em aberto de qualquer mês, recorrência em andamento e exclusão de tipo ligado a instituição exclusiva.
+- [OK] Exclusão lógica preserva compras/parcelas/pagamentos e imagens; cadastro retirado dos seletores e bloqueado para novas dívidas/edição direta.
+- [OK] Estorno restaura cadastros excluídos quando a dívida volta a ficar em aberto, com auditoria.
+- [OK] 28 testes PHP (421 verificações), 19 testes frontend, lint, TypeScript/build e Pint; seis testes no navegador (exclusão + cinco fluxos mobile), com revisão visual desktop e tela estreita.
+- [OK] Backup externo de 1809 arquivos/Git e banco/privados de 20391980 bytes verificados em C:/Users/Allan/ARL-backups/expense-catalog-delete-20261003-140859; migração aditiva aplicada localmente.
+- [PENDENTE] Publicação no servidor. Nenhum cadastro real foi excluído nesta execução.

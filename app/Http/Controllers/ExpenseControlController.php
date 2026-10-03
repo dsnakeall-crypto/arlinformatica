@@ -30,9 +30,9 @@ class ExpenseControlController extends Controller
         return response()->json([
             'account_id' => $r->user()->id,
             'people' => DB::table('cg_people')->orderBy('id')->get(),
-            'institutions' => DB::table('cg_institutions')->orderByRaw('CASE WHEN restricted_type_id IS NULL THEN 0 ELSE 1 END')->orderBy('name')->get()->map(fn ($row) => $this->institution($row)),
+            'institutions' => DB::table('cg_institutions')->whereNull('deleted_at')->orderByRaw('CASE WHEN restricted_type_id IS NULL THEN 0 ELSE 1 END')->orderBy('name')->get()->map(fn ($row) => $this->institution($row)),
             'card_artworks' => $this->artworks(),
-            'types' => DB::table('cg_types')->orderBy('name')->get(),
+            'types' => DB::table('cg_types')->whereNull('deleted_at')->orderBy('name')->get(),
             'my_person_id' => DB::table('cg_people')->where('user_id', $r->user()->id)->value('id'),
             'can_assign_users' => $r->user()->hasRole('Master', 'Administrador'),
             'accounts' => $r->user()->hasRole('Master', 'Administrador') ? DB::table('users')->join('roles', 'roles.id', '=', 'users.role_id')->where('users.active', true)->whereIn('roles.name', ['Master', 'Administrador', 'Controle de Gasto'])->get(['users.id', 'users.name']) : [],
@@ -70,6 +70,9 @@ class ExpenseControlController extends Controller
     public function catalog(Request $r, string $catalog, ?int $id = null): JsonResponse
     {
         abort_unless(in_array($catalog, ['institutions', 'types'], true), 404);
+        if ($id) {
+            abort_unless(DB::table('cg_'.$catalog)->where('id', $id)->whereNull('deleted_at')->exists(), 404);
+        }
         $rules = ['name' => 'required|string|max:80', 'active' => 'required|boolean'];
         if ($catalog === 'institutions') {
             $rules += ['due_day' => 'required|integer|min:1|max:31', 'color' => ['required', 'regex:/^#[a-fA-F0-9]{6}$/'], 'artwork_key' => ['nullable', Rule::in(array_column($this->artworks(), 'key'))], 'image' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:4096', 'remove_image' => 'sometimes|boolean', 'household' => 'sometimes|boolean'];
@@ -95,12 +98,16 @@ class ExpenseControlController extends Controller
         try {
             DB::transaction(function () use ($r, $table, &$id, $data) {
                 $before = $id ? DB::table($table)->where('id', $id)->lockForUpdate()->first() : null;
+                abort_if($before && $before->deleted_at, 404);
                 if ($table === 'cg_institutions') {
                     $household = $data['household'] ?? false;
                     unset($data['household']);
                     if ($household && ! ($before->restricted_type_id ?? null)) {
                         abort_if($id && DB::table('cg_debts')->where('institution_id', $id)->exists(), 422, 'Crie um grupo separado para Fixos de Casa, preservando as compras existentes.');
-                        $type = DB::table('cg_types')->where('name', 'Fixos de Casa')->first();
+                        $type = DB::table('cg_types')->where('name', 'Fixos de Casa')->lockForUpdate()->first();
+                        if ($type && $type->deleted_at) {
+                            DB::table('cg_types')->where('id', $type->id)->update(['deleted_at' => null, 'active' => true, 'updated_at' => now()]);
+                        }
                         $data['restricted_type_id'] = $type?->id ?? DB::table('cg_types')->insertGetId(['name' => 'Fixos de Casa', 'active' => true, 'created_at' => now(), 'updated_at' => now()]);
                     }
                 }
@@ -123,6 +130,30 @@ class ExpenseControlController extends Controller
         $row = DB::table($table)->find($id);
 
         return response()->json($catalog === 'institutions' ? $this->institution($row) : $row, 200);
+    }
+
+    public function deleteCatalog(Request $r, string $catalog, int $id, Audit $audit): JsonResponse
+    {
+        abort_unless(in_array($catalog, ['institutions', 'types'], true), 404);
+        $r->validate(['confirmed' => 'required|accepted']);
+        DB::transaction(function () use ($r, $catalog, $id, $audit) {
+            $table = 'cg_'.$catalog;
+            $before = DB::table($table)->where('id', $id)->lockForUpdate()->first();
+            abort_unless($before && ! $before->deleted_at, 404);
+            if ($catalog === 'types') {
+                abort_if(DB::table('cg_institutions')->whereNull('deleted_at')->where('restricted_type_id', $id)->exists(), 422, 'Este tipo pertence a uma instituição exclusiva. Exclua essa instituição primeiro.');
+            }
+            $column = $catalog === 'institutions' ? 'institution_id' : 'type_id';
+            $debts = DB::table('cg_debts')->where($column, $id)->whereNull('cancelled_at')->orderBy('id')->lockForUpdate()->get();
+            abort_if($debts->contains(fn ($debt) => $debt->recurrence === 'monthly' && ! $debt->ended_on), 422, 'Encerre as despesas recorrentes antes de excluir este cadastro.');
+            $pending = $this->control->installments()->whereNull('d.cancelled_at')->where('d.'.$column, $id)
+                ->whereRaw('i.amount_cents > COALESCE(credits.credit_one, 0) + COALESCE(credits.credit_two, 0)')->exists();
+            abort_if($pending, 422, 'Este cadastro possui parcelas em aberto, incluindo parcelas futuras. Quite ou cancele essas dívidas antes de excluir.');
+            DB::table($table)->where('id', $id)->update(['deleted_at' => now(), 'active' => false, 'updated_at' => now()]);
+            $audit->record($r, 'expense_control.catalog_deleted', 'expense_control', $id, $before, ['catalog' => $catalog]);
+        }, 3);
+
+        return response()->json(['message' => 'Cadastro excluído; o histórico foi preservado.']);
     }
 
     private function artworks(): array
@@ -381,14 +412,31 @@ class ExpenseControlController extends Controller
             $entry = DB::table('cg_entries')->find($id);
             abort_unless($entry, 404);
             $parent = DB::table('cg_installments')->find($entry->installment_id);
-            DB::table('cg_debts')->where('id', $parent->debt_id)->lockForUpdate()->first();
+
+            $debt = DB::table('cg_debts')->find($parent->debt_id);
+
+            DB::table('cg_institutions')->where('id', $debt->institution_id)->lockForUpdate()->first();
+
+            DB::table('cg_types')->where('id', $debt->type_id)->lockForUpdate()->first();
+
+            $debt = DB::table('cg_debts')->where('id', $parent->debt_id)->lockForUpdate()->first();
+
             $entry = DB::table('cg_entries')->where('id', $id)->lockForUpdate()->first();
             if ($entry->reversed_at) {
                 return;
             }
             DB::table('cg_entries')->where('id', $id)->update(['reversed_at' => now(), 'reversal_reason' => $data['reason'], 'reversed_by' => $r->user()->id, 'updated_at' => now()]);
+            if (! $debt->cancelled_at) {
+                foreach (['cg_institutions' => $debt->institution_id, 'cg_types' => $debt->type_id] as $table => $catalogId) {
+                    $old = DB::table($table)->find($catalogId);
+                    if ($old->deleted_at) {
+                        DB::table($table)->where('id', $catalogId)->update(['deleted_at' => null, 'active' => true, 'updated_at' => now()]);
+                        $audit->record($r, 'expense_control.catalog_restored', 'expense_control', $catalogId, $old, ['catalog' => $table, 'reason' => 'payment_reversed']);
+                    }
+                }
+            }
             $audit->record($r, 'expense_control.entry_reversed', 'expense_control', $id, $entry, $data);
-        });
+        }, 3);
 
         return response()->json(['message' => 'Lançamento desfeito; o histórico foi preservado.']);
     }

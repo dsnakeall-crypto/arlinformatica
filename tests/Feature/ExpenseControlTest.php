@@ -53,6 +53,51 @@ class ExpenseControlTest extends TestCase
         return [...['request_key' => (string) Str::uuid(), 'installment_ids' => $ids, 'kind' => 'payment', 'target' => 'one', 'paid_by' => 1, 'occurred_on' => '2026-10-02', 'amount_cents' => null, 'notes' => null], ...$extra];
     }
 
+    public function test_catalog_deletion_requires_confirmation_and_preserves_settled_history(): void
+    {
+        $url = '/api/expense-control/catalogs/';
+        $this->deleteJson($url.'institutions/'.$this->bank)->assertUnprocessable();
+        $debt = $this->createDebt();
+        foreach (['institutions' => $this->bank, 'types' => $this->type] as $kind => $id) {
+            $this->deleteJson($url.$kind.'/'.$id, ['confirmed' => true])->assertUnprocessable();
+        }
+        $ids = DB::table('cg_installments')->where('debt_id', $debt['debt']['id'])->pluck('id')->all();
+        $this->postJson('/api/expense-control/operations', $this->payment([$ids[0]], ['target' => 'both']))->assertCreated();
+        $this->deleteJson($url.'institutions/'.$this->bank, ['confirmed' => true])->assertUnprocessable();
+        $this->postJson('/api/expense-control/operations', $this->payment(array_slice($ids, 1), ['target' => 'both']))->assertCreated();
+        foreach (['institutions' => $this->bank, 'types' => $this->type] as $kind => $id) {
+            $this->deleteJson($url.$kind.'/'.$id, ['confirmed' => true])->assertOk();
+            $this->assertNotNull(DB::table('cg_'.$kind)->where('id', $id)->value('deleted_at'));
+        }
+        $configuration = $this->getJson('/api/expense-control/configuration')->assertOk()->json();
+        $this->assertNotContains($this->bank, array_column($configuration['institutions'], 'id'));
+        $history = $this->getJson('/api/expense-control/debts/'.$debt['debt']['id'])->assertOk()->json();
+        $this->assertSame(0, array_sum(array_column($history['installments'], 'remaining_cents')));
+        $this->assertCount(3, $history['entries']);
+        $this->postJson('/api/expense-control/debts', $this->payload())->assertUnprocessable();
+        $this->putJson($url.'types/'.$this->type, ['name' => 'Reativar', 'active' => true])->assertNotFound();
+        $entry = DB::table('cg_entries')->where('installment_id', $ids[0])->value('id');
+        $this->postJson('/api/expense-control/entries/'.$entry.'/reverse', ['reason' => 'Correção de teste'])->assertOk();
+        $this->assertNull(DB::table('cg_institutions')->where('id', $this->bank)->value('deleted_at'));
+        $this->assertNull(DB::table('cg_types')->where('id', $this->type)->value('deleted_at'));
+        $this->deleteJson($url.'institutions/'.$this->bank, ['confirmed' => true])->assertUnprocessable();
+    }
+
+    public function test_recurring_and_exclusive_catalogs_cannot_be_removed_unsafely(): void
+    {
+        $debt = $this->createDebt(['recurrence' => 'monthly', 'installment_count' => 1]);
+        $ids = DB::table('cg_installments')->where('debt_id', $debt['debt']['id'])->pluck('id')->all();
+        $this->postJson('/api/expense-control/operations', $this->payment($ids, ['target' => 'both']))->assertCreated();
+        $this->deleteJson('/api/expense-control/catalogs/institutions/'.$this->bank, ['confirmed' => true])->assertUnprocessable();
+        $this->postJson('/api/expense-control/debts/'.$debt['debt']['id'].'/end-recurring', ['end_month' => '2026-10'])->assertOk();
+        $this->deleteJson('/api/expense-control/catalogs/institutions/'.$this->bank, ['confirmed' => true])->assertOk();
+        $bank = $this->postJson('/api/expense-control/catalogs/institutions', ['name' => 'Casa', 'household' => true, 'due_day' => 10, 'active' => true, 'color' => '#ffffff'])->assertOk()->json();
+        $this->deleteJson('/api/expense-control/catalogs/types/'.$bank['restricted_type_id'], ['confirmed' => true])->assertUnprocessable();
+        $this->deleteJson('/api/expense-control/catalogs/institutions/'.$bank['id'], ['confirmed' => true])->assertOk();
+        $this->deleteJson('/api/expense-control/catalogs/types/'.$bank['restricted_type_id'], ['confirmed' => true])->assertOk();
+        $this->actingAs($this->account('Usuário local'))->deleteJson('/api/expense-control/catalogs/types/'.$this->type, ['confirmed' => true])->assertForbidden();
+    }
+
     public function test_institution_payment_distributes_personal_first_and_preserves_other_person_and_months(): void
     {
         $shared = $this->createDebt(['name' => 'Casal antigo', 'amount_cents' => 160000, 'start_month' => '2026-09']);

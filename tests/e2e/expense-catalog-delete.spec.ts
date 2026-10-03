@@ -1,0 +1,38 @@
+import { test, expect } from '@playwright/test';
+import { api, login } from './helpers';
+
+test('cadastros: confirmação, exclusão sem saldo e bloqueio de parcela futura', async ({ page }) => {
+  await login(page);
+  const stamp = Date.now();
+  const bank = await api(page, '/expense-control/catalogs/institutions', 'POST', { name: 'Excluir banco ' + stamp, due_day: 10, active: true, color: '#123456' });
+  const kind = await api(page, '/expense-control/catalogs/types', 'POST', { name: 'Excluir tipo ' + stamp, active: true });
+  await page.goto('/expense-control');
+  await page.getByRole('tab', { name: 'Instituições', exact: true }).click();
+  await page.getByRole('button', { name: 'Excluir instituição ' + bank.body.name, exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Excluir cadastro', exact: true });
+  await expect(dialog).toContainText('Compras e pagamentos anteriores');
+  await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Excluir instituição ' + bank.body.name, exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Excluir tipo ' + kind.body.name, exact: true }).click();
+  await dialog.getByRole('button', { name: 'Confirmar exclusão', exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByRole('button', { name: 'Excluir tipo ' + kind.body.name, exact: true })).toHaveCount(0);
+  const nextKind = await api(page, '/expense-control/catalogs/types', 'POST', { name: 'Bloqueio tipo ' + stamp, active: true });
+  const month = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+  const debt = await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: bank.body.id, type_id: nextKind.body.id, name: 'Compra futura', recurrence: 'installments', responsibility: 'one', percent_one: 100, amount_cents: 5000, installment_count: 2, first_number: 1, start_month: month, due_day: 10, notes: null });
+  expect(debt.status).toBe(201);
+  await page.getByRole('button', { name: 'Excluir instituição ' + bank.body.name, exact: true }).click();
+  await dialog.getByRole('button', { name: 'Confirmar exclusão', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toContainText('parcelas em aberto');
+  await page.screenshot({ path: 'output/compacto/catalog-delete-desktop.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(dialog.getByRole('button', { name: 'Cancelar', exact: true })).toBeVisible();
+  await page.screenshot({ path: 'output/compacto/catalog-delete-narrow.png' });
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await api(page, '/expense-control/debts/' + debt.body.debt.id + '/cancel', 'POST', { reason: 'Teste isolado cancelado' });
+  await page.getByRole('button', { name: 'Excluir instituição ' + bank.body.name, exact: true }).click();
+  await dialog.getByRole('button', { name: 'Confirmar exclusão', exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByRole('button', { name: 'Excluir instituição ' + bank.body.name, exact: true })).toHaveCount(0);
+});

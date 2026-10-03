@@ -348,3 +348,7 @@
 
 .cg-settled-row small[hidden] { display:none; }
 .cg-payment-art .cg-card-art { border-radius:9px; }.cg-payment-art .cg-card-wordmark { font-size:8px; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.cg-payment-art .cg-card-caption { font-size:3px; letter-spacing:.4px; }.cg-payment-art .cg-card-chip { border-radius:3px; }
+
+.cg-type-actions { display: inline-flex; align-items: center; gap: 4px; }
+
+.arl-3d-popup:has(.cg-catalog-delete) { max-width: 680px; }
