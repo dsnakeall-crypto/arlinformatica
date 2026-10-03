@@ -108,6 +108,40 @@ class ExpenseControlTest extends TestCase
         $this->assertDatabaseCount('cg_entries', 13);
     }
 
+    public function test_household_group_restricts_type_and_preserves_individual_due_dates(): void
+    {
+        $bank = $this->postJson('/api/expense-control/catalogs/institutions', ['name' => 'Fixos de Casa', 'active' => true, 'due_day' => 10, 'color' => '#a0afc0', 'artwork_key' => 'household', 'household' => true])->assertOk()->json();
+        $this->assertNotNull($bank['restricted_type_id']);
+        $this->postJson('/api/expense-control/debts', $this->payload(['institution_id' => $bank['id']]))->assertUnprocessable();
+        $debt = $this->createDebt(['institution_id' => $bank['id'], 'type_id' => $bank['restricted_type_id'], 'name' => 'Conta de luz', 'recurrence' => 'monthly', 'due_day' => 22, 'payment_method' => 'pix']);
+        $this->assertSame('pix', $debt['debt']['payment_method']);
+        $this->assertSame('2026-10-22', $debt['installments'][0]['due_on']);
+        $this->createDebt();
+        $this->putJson('/api/expense-control/catalogs/institutions/'.$this->bank, ['name' => 'Não converter', 'active' => true, 'due_day' => 10, 'color' => '#a0afc0', 'household' => true])->assertUnprocessable();
+    }
+
+    public function test_paid_history_separates_discounts_and_groups_complete_month(): void
+    {
+        $detail = $this->createDebt(['responsibility' => 'one', 'amount_cents' => 10000, 'installment_count' => 1]);
+        $ids = [$detail['installments'][0]['id']];
+        $this->postJson('/api/expense-control/operations', $this->payment($ids, ['kind' => 'discount', 'amount_cents' => 2000]))->assertCreated();
+        $this->postJson('/api/expense-control/operations', $this->payment($ids))->assertCreated();
+        $settled = $this->getJson('/api/expense-control/debts?status=settled')->assertOk()->json('data.0');
+        $this->assertSame(8000, (int) $settled['paid_cents']);
+        $this->assertSame(2000, (int) $settled['discount_cents']);
+        $groups = $this->getJson('/api/expense-control/advances?month=2026-10&grouped=1')->assertOk()->json();
+        $this->assertCount(1, $groups);
+        $this->assertSame(8000, (int) $groups[0]['paid_cents']);
+        $this->assertSame(2000, (int) $groups[0]['discount_cents']);
+        $this->assertSame(1, (int) $groups[0]['installment_count']);
+        $this->getJson('/api/expense-control/advances?month=2026-10&debt='.$detail['debt']['id'])->assertOk()->assertJsonPath('total', 2);
+        $entry = DB::table('cg_entries')->where('kind', 'payment')->value('id');
+        $this->postJson('/api/expense-control/entries/'.$entry.'/reverse', ['reason' => 'Corrigir pagamento'])->assertOk();
+        $groups = $this->getJson('/api/expense-control/advances?month=2026-10&grouped=1')->assertOk()->json();
+        $this->assertSame(0, (int) $groups[0]['paid_cents']);
+        $this->assertSame(2000, (int) $groups[0]['discount_cents']);
+    }
+
     public function test_month_balance_preview_and_due_summary_group_by_institution(): void
     {
         $this->createDebt(['amount_cents' => 10000]);

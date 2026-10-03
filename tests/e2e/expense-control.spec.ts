@@ -307,11 +307,23 @@ test('controle: fatura paga somente o mês e quitar compra liquida todas as parc
   expect(detail.body.installments.every((i: any) => i.remaining_cents === 0)).toBe(true);
   await page.getByRole('tab', { name: 'Pagamentos', exact: true }).click();
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
-  await expect(page.locator('.cg-payments-panel .cg-entry')).toHaveCount(13);
+  const bankPayments = page.locator('.cg-payment-bank').filter({ hasText: catalog.institution.name });
+  await expect(bankPayments).toBeVisible();
+  await expect(page.locator('.cg-payments-panel .cg-entry')).toHaveCount(0);
+  await expect(bankPayments).toContainText('1.200,00');
+  await page.screenshot({ path: 'output/controle-gasto/pagamentos-instituicoes.png', fullPage: true });
+  await bankPayments.locator('.cg-payment-types > div > button').filter({ hasText: catalog.type.name }).click();
+  await expect(bankPayments.locator('.cg-paid-purchase')).toHaveCount(1);
+  await expect(bankPayments.locator('.cg-paid-purchase')).toContainText('12 parcelas');
+  await bankPayments.locator('.cg-paid-purchase').click();
+  await expect(bankPayments.locator('.cg-payments-panel .cg-entry')).toHaveCount(13);
   await page.screenshot({ path: 'output/controle-gasto/pagamentos-compactos.png', fullPage: true });
   await page.getByRole('tab', { name: 'Quitadas', exact: true }).click();
   await page.getByLabel('Pesquisar compra ou instituição').fill('Compra casal doze');
   await expect(page.locator('.cg-debt-row')).toHaveCount(1);
+  await expect(page.locator('.cg-settled-row')).toContainText('Total pago');
+  await expect(page.locator('.cg-settled-row')).toContainText('1.200,00');
+  await page.screenshot({ path: 'output/controle-gasto/quitadas-compactas.png', fullPage: true });
 });
 
 test('controle: voltar ao menu Gastos restaura filtros e resumo agrupa vencimentos por instituição', async ({ page }) => {
@@ -337,4 +349,32 @@ test('controle: voltar ao menu Gastos restaura filtros e resumo agrupa venciment
   await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
   for (const [index, value] of ['', '', '', 'active', 'newest'].entries()) await expect(page.locator('.cg-filters select').nth(index)).toHaveValue(value);
   await expect(page.getByLabel('Pesquisar compra ou instituição')).toHaveValue('');
+});
+
+
+test('controle: Fixos de Casa usa cartão próprio e aceita somente despesas da casa', async ({ page }) => {
+  await login(page);
+  const created = await api(page, '/expense-control/catalogs/institutions', 'POST', { name: 'Fixos de Casa teste', active: true, due_day: 10, color: '#a0afc0', artwork_key: 'household', household: true });
+  expect(created.status).toBe(200);
+  await page.goto('/expense-control');
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  const bank = page.locator('.cg-institution').filter({ hasText: 'Fixos de Casa teste' });
+  await expect(bank.locator('img')).toHaveAttribute('src', '/arl-assets/expense-cards/fixos-casa.png');
+  await bank.click();
+  await expect(page.locator('.cg-type-grid > button')).toHaveCount(1);
+  await expect(page.locator('.cg-type-grid > button')).toContainText('Fixos de Casa');
+  await page.getByRole('button', { name: 'Nova dívida', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Cadastrar nova dívida', exact: true });
+  await dialog.getByRole('combobox', { name: 'Instituição', exact: true }).selectOption(String(created.body.id));
+  await expect(dialog.getByRole('combobox', { name: 'Tipo de dívida', exact: true }).locator('option')).toHaveCount(2);
+  await expect(dialog.getByRole('combobox', { name: 'Como a cobrança se repete?', exact: true })).toHaveValue('monthly');
+  await dialog.getByLabel('Nome da dívida ou compra').fill('Internet de casa');
+  await dialog.getByLabel('Quem paga esta fatura?').selectOption('shared');
+  await dialog.getByLabel('Valor da cobrança (R$)').fill('15000');
+  await dialog.getByLabel('Dia de vencimento', { exact: true }).fill('20');
+  await dialog.getByRole('combobox', { name: 'Forma de pagamento prevista (opcional)', exact: true }).selectOption('pix');
+  await page.screenshot({ path: 'output/controle-gasto/fixos-casa-cadastro.png', fullPage: true });
+  await dialog.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByText('Alteração salva com sucesso.')).toBeVisible();
 });

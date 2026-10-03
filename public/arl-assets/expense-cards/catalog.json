@@ -97,5 +97,14 @@
     "wordmark": "bradesco",
     "kind": "official",
     "image_url": "/arl-assets/expense-cards/bradesco-neo.png"
+  },
+  {
+    "key": "household",
+    "name": "Fixos de Casa",
+    "color": "#a0afc0",
+    "accent": "#e8eff7",
+    "wordmark": "Fixos de Casa",
+    "kind": "illustrative",
+    "image_url": "/arl-assets/expense-cards/fixos-casa.png"
   }
 ]

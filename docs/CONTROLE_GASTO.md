@@ -181,3 +181,15 @@ Painel Pagamentos compacto, com espaçamentos, cabeçalho, ícones, valores e a�
 Backup verificado antes das alterações: C:\Users\Allan\ARL-backups\controle-gasto-quitar-compra-20261003-031600. Nenhuma migração, publicação ou chamada paga à IA. Testes em bancos separados: 283 PHP/2530 verificações, 32 MySQL/419 verificações, dez E2E; revisão final focada dos botões azuis e dos novos fluxos também aprovada. Build/TypeScript, lint e Pint.
 
 Pagamentos usa o mês da data do lançamento (occurred_on), incluindo todas as parcelas futuras antecipadas naquela data. A competência e o vencimento originais das parcelas permanecem preservados; Resumo/Projeção continuam usando o mês da parcela.
+
+
+### Controle de Gasto — histórico compacto (03/10/2026)
+Quitadas apresenta instituição, nome da compra e total efetivamente pago, com abatimentos separados quando existem. Projeção mantém mês, total e divisão entre responsáveis em dimensões menores. Pagamentos abre em lista por instituição com tipos, quantidades de compras/parcelas e valor pago no mês do lançamento; ao expandir, mostra compras resumidas e, depois, os lançamentos paginados com opção de desfazer mediante confirmação. Totais excluem lançamentos desfeitos e não tratam descontos como dinheiro pago. Sem alteração de dados históricos ou migrações.
+Backup verificado: `C:\Users\Allan\ARL-backups\controle-gasto-quitadas-pagamentos-20261003-033742`.
+
+
+### Fixos de Casa e continuação agendada (03/10/2026)
+Instituição/grupo Fixos de Casa usa o cartão de referência fornecido pelo usuário e somente o tipo associado Fixos de Casa. A restrição é validada no backend, inclusive no cadastro por foto; bancos existentes continuam aceitando seus tipos usuais. Selecionar a instituição no cadastro manual sugere recorrência mensal e seu tipo, permitindo outras recorrências e vencimento próprio de cada conta. Forma de pagamento prevista opcional: Pix, dinheiro, boleto, cartão, transferência ou outra; essa informação não altera cálculos nem comprova pagamento. Migração aditiva com campos nullable restricted_type_id e payment_method; sem reclassificar dívidas existentes. O grupo foi adicionado apenas no ambiente local após backup de banco e arquivos privados validado.
+Backup: `C:\Users\Allan\ARL-backups\controle-gasto-fixos-casa-20261003-034326`, incluindo `banco-arquivos-privados.zip`.
+O usuário rejeitou o acabamento visual do cartão atual e pediu sua recriação somente após o agendamento. Automação única ativa para 07h: refazer a imagem, concluir pendências autorizadas do Controle de Gasto e depois retomar Fornecedores conforme os requisitos do chat. Não publicar em produção. A execução depende de o computador/Codex permanecerem disponíveis e de limite da conta disponível.
+Validação: 285 testes PHP / 2559 verificações; 34 testes MySQL isolado / 448 verificações; 17 testes frontend; 10 fluxos E2E passaram na suíte e o novo fluxo Fixos de Casa passou após correção de seletor de teste. Build/TypeScript, lint e Pint aprovados.

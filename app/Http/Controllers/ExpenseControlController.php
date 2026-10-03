@@ -72,7 +72,7 @@ class ExpenseControlController extends Controller
         abort_unless(in_array($catalog, ['institutions', 'types'], true), 404);
         $rules = ['name' => 'required|string|max:80', 'active' => 'required|boolean'];
         if ($catalog === 'institutions') {
-            $rules += ['due_day' => 'required|integer|min:1|max:31', 'color' => ['required', 'regex:/^#[a-fA-F0-9]{6}$/'], 'artwork_key' => ['nullable', Rule::in(array_column($this->artworks(), 'key'))], 'image' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:4096', 'remove_image' => 'sometimes|boolean'];
+            $rules += ['due_day' => 'required|integer|min:1|max:31', 'color' => ['required', 'regex:/^#[a-fA-F0-9]{6}$/'], 'artwork_key' => ['nullable', Rule::in(array_column($this->artworks(), 'key'))], 'image' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:4096', 'remove_image' => 'sometimes|boolean', 'household' => 'sometimes|boolean'];
         } else {
             $rules['name'] = ['required', 'string', 'max:80', Rule::unique('cg_types')->ignore($id)];
         }
@@ -95,6 +95,15 @@ class ExpenseControlController extends Controller
         try {
             DB::transaction(function () use ($r, $table, &$id, $data) {
                 $before = $id ? DB::table($table)->where('id', $id)->lockForUpdate()->first() : null;
+                if ($table === 'cg_institutions') {
+                    $household = $data['household'] ?? false;
+                    unset($data['household']);
+                    if ($household && ! ($before->restricted_type_id ?? null)) {
+                        abort_if($id && DB::table('cg_debts')->where('institution_id', $id)->exists(), 422, 'Crie um grupo separado para Fixos de Casa, preservando as compras existentes.');
+                        $type = DB::table('cg_types')->where('name', 'Fixos de Casa')->first();
+                        $data['restricted_type_id'] = $type?->id ?? DB::table('cg_types')->insertGetId(['name' => 'Fixos de Casa', 'active' => true, 'created_at' => now(), 'updated_at' => now()]);
+                    }
+                }
                 if ($id) {
                     abort_unless($before, 404);
                     DB::table($table)->where('id', $id)->update([...$data, 'updated_at' => now()]);
@@ -185,9 +194,9 @@ class ExpenseControlController extends Controller
         $month = $this->period($r);
         $this->control->ensureMonth($month);
         $r->validate(['q' => 'nullable|string|max:200', 'institution' => 'nullable|integer', 'type' => 'nullable|integer', 'person' => 'nullable|in:one,two,shared', 'status' => 'nullable|in:active,settled,cancelled', 'sort' => 'nullable|in:newest,oldest,name,value']);
-        $aggregate = $this->control->installments()->select('i.debt_id')->selectRaw('SUM(i.amount_cents) AS original_cents, SUM(i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0)) AS remaining_cents, SUM(CASE WHEN i.month_on = ? THEN i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0) ELSE 0 END) AS month_remaining_cents', [$month->toDateString()])->groupBy('i.debt_id');
+        $aggregate = $this->control->installments()->select('i.debt_id')->selectRaw('SUM(COALESCE(credits.paid, 0)) AS paid_cents, SUM(COALESCE(credits.discounted, 0)) AS discount_cents, SUM(i.amount_cents) AS original_cents, SUM(i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0)) AS remaining_cents, SUM(CASE WHEN i.month_on = ? THEN i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0) ELSE 0 END) AS month_remaining_cents', [$month->toDateString()])->groupBy('i.debt_id');
         $q = DB::table('cg_debts as d')->join('cg_institutions as bank', 'bank.id', '=', 'd.institution_id')->join('cg_types as type', 'type.id', '=', 'd.type_id')->leftJoinSub($aggregate, 'totals', fn ($j) => $j->on('totals.debt_id', '=', 'd.id'))
-            ->select('d.*', 'bank.name as institution_name', 'bank.color', 'type.name as type_name', 'totals.original_cents', 'totals.remaining_cents', 'totals.month_remaining_cents');
+            ->select('d.*', 'bank.name as institution_name', 'bank.color', 'type.name as type_name', 'totals.paid_cents', 'totals.discount_cents', 'totals.original_cents', 'totals.remaining_cents', 'totals.month_remaining_cents');
         if ($search = trim((string) $r->query('q'))) {
             $q->where(fn ($q) => $q->where('d.name', 'like', '%'.$search.'%')->orWhere('bank.name', 'like', '%'.$search.'%'));
         }
@@ -287,7 +296,7 @@ class ExpenseControlController extends Controller
             'name' => 'required|string|max:200', 'recurrence' => 'required|in:installments,monthly,once', 'responsibility' => 'required|in:one,two,shared',
             'percent_one' => 'required|integer|min:0|max:100', 'amount_cents' => 'required|integer|min:1|max:100000000', 'installment_count' => 'required|integer|min:1|max:360',
             'first_number' => 'required|integer|min:1|lte:installment_count', 'start_month' => 'required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12',
-            'due_day' => 'required|integer|min:1|max:31', 'notes' => 'nullable|string|max:2000']);
+            'due_day' => 'required|integer|min:1|max:31', 'notes' => 'nullable|string|max:2000', 'payment_method' => 'nullable|in:pix,cash,boleto,card,transfer,other']);
         if ($data['recurrence'] !== 'installments') {
             $data['installment_count'] = 1;
             $data['first_number'] = 1;
@@ -298,7 +307,7 @@ class ExpenseControlController extends Controller
 
     public function update(Request $r, int $id, Audit $audit): JsonResponse
     {
-        $data = $r->validate(['name' => 'required|string|max:200', 'notes' => 'nullable|string|max:2000']);
+        $data = $r->validate(['name' => 'required|string|max:200', 'notes' => 'nullable|string|max:2000', 'payment_method' => 'nullable|in:pix,cash,boleto,card,transfer,other']);
         DB::transaction(function () use ($r, $id, $data, $audit) {
             $before = DB::table('cg_debts')->where('id', $id)->lockForUpdate()->first();
             abort_unless($before, 404);
@@ -437,7 +446,19 @@ class ExpenseControlController extends Controller
     {
         $month = $this->period($r);
 
-        return response()->json(DB::table('cg_entries as e')->join('cg_installments as i', 'i.id', '=', 'e.installment_id')->join('cg_debts as d', 'd.id', '=', 'i.debt_id')->join('cg_institutions as bank', 'bank.id', '=', 'd.institution_id')->whereBetween('e.occurred_on', [$month->toDateString(), $month->endOfMonth()->toDateString()])->orderByDesc('e.id')->select('e.*', 'd.name', 'bank.name as institution_name', 'i.number', 'i.month_on')->paginate(20));
+        $query = DB::table('cg_entries as e')->join('cg_installments as i', 'i.id', '=', 'e.installment_id')->join('cg_debts as d', 'd.id', '=', 'i.debt_id')->join('cg_institutions as bank', 'bank.id', '=', 'd.institution_id')->join('cg_types as type', 'type.id', '=', 'd.type_id')->whereBetween('e.occurred_on', [$month->toDateString(), $month->endOfMonth()->toDateString()]);
+        if ($r->boolean('grouped')) {
+            $purchases = (clone $query)->whereNull('e.reversed_at')->select('d.id', 'd.name', 'd.institution_id', 'd.type_id', 'bank.name as institution_name', 'type.name as type_name')
+                ->selectRaw("COUNT(DISTINCT i.id) AS installment_count, SUM(CASE WHEN e.kind IN ('payment', 'advance') THEN e.amount_cents ELSE 0 END) AS paid_cents, SUM(CASE WHEN e.kind = 'discount' THEN e.amount_cents ELSE 0 END) AS discount_cents")
+                ->groupBy('d.id', 'd.name', 'd.institution_id', 'd.type_id', 'bank.name', 'type.name')->orderBy('bank.name')->orderBy('d.name')->get();
+
+            return response()->json($purchases);
+        }
+        if ($r->filled('debt')) {
+            $query->where('d.id', $r->integer('debt'));
+        }
+
+        return response()->json($query->orderByDesc('e.id')->select('e.*', 'd.name', 'bank.name as institution_name', 'i.number', 'i.month_on')->paginate(20));
     }
 
     public function activity(): JsonResponse

@@ -338,3 +338,13 @@
 .cg-month-payment .cg-payment-modes small { font-size:10px; }
 .cg-month-payment .cg-payment-preview { padding:12px; }
 .cg-month-payment .cg-payment-preview strong { font-size:25px; }
+
+/* Compact history and projection; payment details expand only when requested. */
+.cg-page .cg-settled-row { padding:8px 10px; gap:10px; min-height:52px; }
+.cg-settled-row b,.cg-settled-row strong { font-size:12px; }.cg-settled-row small { font-size:10px; margin-top:2px; }.cg-settled-row .cg-bank-icon { width:28px; height:28px; }
+.cg-projection-grid { gap:10px; }.cg-projection-grid>.cg-panel { padding:12px 14px; border-radius:14px; }.cg-projection-grid strong { font-size:19px; margin:8px 0 4px; }.cg-projection-grid p,.cg-projection-grid dt,.cg-projection-grid dd { font-size:11px; }.cg-projection-grid dl { margin:8px 0; }.cg-projection-grid button { margin-top:7px; min-height:30px; font-size:11px; }.cg-projection-list>.cg-panel>strong { font-size:18px; }
+.cg-payment-bank { display:grid; grid-template-columns:200px minmax(0,1fr); gap:16px; padding:12px; margin-bottom:12px; }.cg-payment-bank-heading { display:flex; gap:10px; align-items:center; align-self:start; }.cg-payment-art { width:90px; flex-shrink:0; }.cg-payment-bank-heading small,.cg-payment-bank-heading strong { display:block; margin-top:4px; font-size:11px; }.cg-payment-bank-heading b { font-size:12px; }.cg-payment-types { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }.cg-payment-types>div>button { display:flex; flex-direction:column; align-items:flex-start; width:100%; gap:5px; padding:10px; font-size:11px; }.cg-payment-types small { font-size:10px; }.cg-payment-types>div:has(.cg-paid-purchases) { grid-column:1 / -1; }.cg-paid-purchases { margin-top:8px; }.cg-page .cg-paid-purchase { display:flex; width:100%; text-align:left; gap:10px; margin:5px 0; padding:8px 10px; }.cg-paid-purchase span { flex:1; }.cg-paid-purchase small { display:block; margin-top:3px; }.cg-paid-purchase strong { font-size:12px; }
+@media(max-width:850px) { .cg-payment-bank { grid-template-columns:1fr; }.cg-payment-types { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+.cg-settled-row small[hidden] { display:none; }
+.cg-payment-art .cg-card-art { border-radius:9px; }.cg-payment-art .cg-card-wordmark { font-size:8px; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.cg-payment-art .cg-card-caption { font-size:3px; letter-spacing:.4px; }.cg-payment-art .cg-card-chip { border-radius:3px; }

@@ -499,3 +499,16 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] 283 testes PHP/2530 verificações, 32 MySQL isolado/419 verificações e dez E2E passaram. Dois cenários de revisão final passaram depois da padronização azul. Build/TypeScript, lint e Pint aprovados.
 - [OK] Backup externo validado: C:\Users\Allan\ARL-backups\controle-gasto-quitar-compra-20261003-031600. Sem migração/publicação/dados financeiros reais alterados por testes.
 - [PENDENTE] Publicação e interface Mobile/Tablet completa continuam em etapa própria.
+
+
+## Histórico compacto e Fixos de Casa — 03/10/2026
+- [OK] Quitadas compacto com instituição, nome da compra, valor pago e abatimento separado.
+- [OK] Projeção com fonte e dimensões menores, mantendo informações e lista padrão.
+- [OK] Pagamentos por instituição/tipo com quantidades completas do mês e detalhes sob demanda.
+- [OK] Grupo Fixos de Casa e restrição de tipo aplicada no backend; vencimentos próprios por conta.
+- [OK] Forma de pagamento prevista opcional, sem alterar saldos.
+- [OK] Backups externos de arquivos/Git e banco/arquivos privados verificados.
+- [OK] 285 testes PHP, 34 MySQL, 17 frontend e 11 fluxos E2E validados; build, lint e Pint.
+- [PENDENTE] Recriar a arte do cartão Fixos de Casa; agendado para 07h a pedido do usuário.
+- [PENDENTE] Revisar pendências restantes e refazer área interna de Fornecedores no trabalho agendado.
+- [PENDENTE] Publicação destas alterações em produção.

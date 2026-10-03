@@ -110,6 +110,11 @@ class ExpenseControl
 
     public function activeCatalog(array $data): void
     {
+        $institution = DB::table('cg_institutions')->find($data['institution_id']);
+        if ($institution?->restricted_type_id && (int) $institution->restricted_type_id !== (int) $data['type_id']) {
+            throw ValidationException::withMessages(['type_id' => 'Fixos de Casa aceita somente despesas da casa.']);
+        }
+
         foreach (['institution_id' => 'cg_institutions', 'type_id' => 'cg_types'] as $key => $table) {
             if (! DB::table($table)->where('id', $data[$key])->where('active', true)->exists()) {
                 throw ValidationException::withMessages([$key => 'Selecione um cadastro ativo.']);
