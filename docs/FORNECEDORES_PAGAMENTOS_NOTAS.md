@@ -66,3 +66,8 @@ Decisão do projeto baseada nessas referências: separar condição, meio de pag
 Migração local: 45 conjuntos de dados existentes e 128 arquivos privados preservados, conferidos por hash. Suíte E2E geral: 106 testes aprovados. Fluxos finais de fornecedores: 2 testes aprovados, incluindo cadastro/CEP, nota, parcelas, pagamento, estoque, mobile, falha/reenvio de anexo e abertura da compra pelo sino. Lint, TypeScript, build, Pint e 12 testes unitários de frontend aprovados. Os testes PHP e MySQL com restauração usam bases próprias; executar essas duas suítes em sequência porque os discos fake padrão do PHPUnit compartilham a pasta temporária.
 
 Resultados finais: 230 testes PHP / 1.965 asserções; 25 testes MySQL isolado / 230 asserções; 106 E2E gerais e 2 fluxos finais do módulo aprovados, sem retries. A rodada final PHP/MySQL foi executada em sequência para evitar disputa entre discos temporários fake; dados reais/arquivos privados reconferidos sem alterações.
+
+
+### Cadastro de fornecedor — organização em 03/10/2026
+Consulta do documento separada de Contato, com botão estilizado e resultado destacado. Campos com rótulos legíveis, bordas definidas e contatos empilhados em coluna compacta; fonte de 16px no celular. Celular é usado como WhatsApp em novos cadastros e ao trocar o celular. Editar outros dados preserva um WhatsApp antigo diferente, com aviso no formulário. Não há remoção da coluna ou alteração de registros existentes por migração. Identificação/endereço, máscaras, consulta de CEP e validações do backend preservados.
+Backup de arquivos, alterações locais e histórico Git verificado: `C:/Users/Allan/ARL-backups/supplier-form-20261003-123005` (1736 arquivos). Sem publicação ou mudança direta no banco de uso.

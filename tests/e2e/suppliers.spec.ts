@@ -93,9 +93,7 @@ test("falha ao anexar nota permite repetir sem duplicar compra ou estoque", asyn
     ),
   );
   await expect(
-    page
-      .getByRole("dialog")
-      .getByRole("heading", { name: /Compra #/ }),
+    page.getByRole("dialog").getByRole("heading", { name: /Compra #/ }),
   ).toBeVisible();
 });
 test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva brindes sem fornecedor", async ({
@@ -124,9 +122,9 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await supplierModal.getByLabel("Pessoa de contato").fill("Equipe comercial");
   await supplierModal.getByLabel("Telefone celular").fill("35999991234");
   await supplierModal.getByLabel("Nome fantasia").fill(supplierName);
-  await supplierModal
-    .getByRole("button", { name: "Usar celular no WhatsApp" })
-    .click();
+  await expect(
+    supplierModal.getByLabel("WhatsApp", { exact: true }),
+  ).toHaveCount(0);
   await page.route("https://viacep.com.br/ws/37160000/json/", (route) =>
     route.fulfill({
       json: {
@@ -142,6 +140,13 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await supplierModal.getByLabel("Número").fill("10");
   await supplierModal.getByLabel("Cidade").fill("Campos Gerais");
   await supplierModal.getByLabel("UF", { exact: true }).selectOption("MG");
+  const contactBoxes = await supplierModal.locator(".supplier-contact-fields input").evaluateAll(inputs => inputs.map(input => {
+    const box=input.getBoundingClientRect(); return {top:box.top,width:box.width};
+  }));
+  expect(contactBoxes).toHaveLength(3);
+  expect(contactBoxes.every(box => box.width <= 361)).toBe(true);
+  expect(contactBoxes[1].top).toBeGreaterThan(contactBoxes[0].top);
+  await supplierModal.locator(".supplier-form-body").evaluate(element => element.scrollTop=0);
   await page.screenshot({ path: "output/fornecedores/cadastro-desktop.png" });
   await supplierModal
     .getByRole("button", { name: "Salvar fornecedor" })
@@ -151,6 +156,11 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
       .locator(".supplier-profile")
       .getByRole("heading", { name: supplierName, exact: true }),
   ).toBeVisible();
+  const supplierContact = await api(
+    page,
+    `/suppliers?q=${encodeURIComponent(supplierName)}`,
+  );
+  expect(supplierContact.body.data[0].whatsapp).toBe("35999991234");
   await page
     .getByRole("button", { name: "Registrar compra", exact: true })
     .click();
@@ -208,12 +218,14 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await expect(
     purchaseSection.getByRole("heading", { name: /Compra #/ }),
   ).toBeVisible();
-  await purchaseSection.getByRole("button", {name: /Notas fiscais/}).click();
+  await purchaseSection.getByRole("button", { name: /Notas fiscais/ }).click();
   await expect(
     purchaseSection.getByRole("link", { name: /nota-e2e.pdf/ }),
   ).toBeVisible();
-  await purchaseSection.getByRole("button", {name: "Parcelas (2)", exact:true}).click();
-  await purchaseSection.getByRole("button", {name: /Ver parcelas/}).click();
+  await purchaseSection
+    .getByRole("button", { name: "Parcelas (2)", exact: true })
+    .click();
+  await purchaseSection.getByRole("button", { name: /Ver parcelas/ }).click();
   await expect(
     purchaseSection.locator(".supplier-installment-history"),
   ).toHaveCount(2);
@@ -231,7 +243,9 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await page.screenshot({
     path: "output/fornecedores/pagamentos-nota-desktop.png",
   });
-  await purchaseSection.getByRole("button", {name: "Itens e dados", exact:true}).click();
+  await purchaseSection
+    .getByRole("button", { name: "Itens e dados", exact: true })
+    .click();
   await purchaseSection
     .getByRole("button", { name: "Receber mercadoria" })
     .click();
@@ -278,7 +292,9 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await expect(
     purchaseSection.getByText("Recebido", { exact: true }),
   ).toBeVisible();
-  await purchaseSection.getByRole("button", {name: "Fechar compra", exact:true}).click();
+  await purchaseSection
+    .getByRole("button", { name: "Fechar compra", exact: true })
+    .click();
   await page
     .getByRole("tab", { name: "Produtos adquiridos", exact: true })
     .click();
@@ -321,6 +337,10 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
     editModal.getByLabel("Razão social / nome completo"),
   ).toHaveValue(supplierName);
   await page.screenshot({ path: "output/fornecedores/cadastro-mobile.png" });
+  await editModal.getByLabel("Telefone celular").scrollIntoViewIfNeeded();
+  expect(await editModal.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+  await expect(editModal.getByLabel("Telefone celular")).toHaveCSS("font-size", "16px");
+  await page.screenshot({path:"output/fornecedores/contato-mobile.png"});
   await editModal
     .getByRole("button", { name: "Cancelar", exact: true })
     .click();
@@ -360,4 +380,30 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
     headers: { Accept: "application/json" },
   });
   expect(noCsrf.status()).toBe(419);
+});
+
+
+test("edição preserva WhatsApp anterior e sincroniza ao alterar celular", async ({ page }) => {
+  await login(page);
+  await page.route("https://viacep.com.br/**", route => route.fulfill({json:{erro:true}}));
+  const result = await api(page, "/suppliers", "POST", {
+    name:`Contato histórico ${Date.now()}`, trade_name:"Contato histórico", document:uniqueDocument(),
+    phone:"35999991234", whatsapp:"35988881234", postal_code:"37160000", street:"Rua Teste",
+    number:"1", district:"Centro", city:"Campos Gerais", state:"MG",
+  });
+  expect(result.status).toBe(201);
+  await page.goto(`/suppliers?supplier=${result.body.id}`);
+  await page.getByRole("button", {name:"Editar cadastro"}).click();
+  const modal=page.getByRole("dialog", {name:"Editar fornecedor"});
+  await modal.getByLabel("Pessoa de contato").fill("Comercial");
+  await modal.getByRole("button", {name:"Salvar fornecedor"}).click();
+  await expect(modal).not.toBeVisible();
+  expect((await api(page, `/suppliers/${result.body.id}`)).body.supplier.whatsapp).toBe("35988881234");
+  await page.getByRole("button", {name:"Editar cadastro"}).click();
+  await modal.getByLabel("Telefone celular").fill("35977771234");
+  await modal.getByRole("button", {name:"Salvar fornecedor"}).click();
+  await expect(modal).not.toBeVisible();
+  const updated=(await api(page, `/suppliers/${result.body.id}`)).body.supplier;
+  expect(updated.phone).toBe("35977771234");
+  expect(updated.whatsapp).toBe(updated.phone);
 });

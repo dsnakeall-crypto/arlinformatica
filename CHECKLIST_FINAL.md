@@ -562,3 +562,13 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Conta vinculada inicia na parte do responsável (individual + sua parte do casal), com saldo principal e instituições filtrados, permitindo trocar de visão.
 - [OK] Backup externo verificado, 19 testes frontend, 16 E2E, build/TypeScript, lint e revisão visual. Dados e testes isolados, sem chamadas pagas.
 - [PENDENTE] Repetir conferência no celular físico do proprietário após recarregar a página; produção permanece sem publicação.
+
+
+## Cadastro de fornecedor — acabamento em 03/10/2026
+- [OK] Consulta de documento separada de Contato, botão com ícone/estilo e espaçamento.
+- [OK] Campos com bordas definidas, rótulos legíveis e contatos empilhados compactos; campos de 16px no celular.
+- [OK] Novo cadastro usa celular como WhatsApp; edição preserva WhatsApp diferente até mudar celular. Cenários reais de API em banco isolado.
+- [OK] Verificação visual desktop/mobile e ausência de overflow no popup. Capturas locais em output/fornecedores.
+- [OK] Lint, TypeScript/build, 19 testes frontend, 24 testes PHP (291 verificações) e quatro cenários E2E distintos de fornecedores aprovados. Cenário visual repetido após acrescentar verificações geométricas.
+- [OK] Backup externo verificado em C:/Users/Allan/ARL-backups/supplier-form-20261003-123005; nenhuma migração ou alteração direta do banco de uso.
+- [PENDENTE] Publicação no servidor, fora desta execução.

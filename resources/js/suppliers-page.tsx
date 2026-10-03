@@ -390,7 +390,13 @@ function SupplierForm({
       saved(
         await api(initial.id ? `/suppliers/${initial.id}` : "/suppliers", {
           method: initial.id ? "PUT" : "POST",
-          body: JSON.stringify(draft),
+          body: JSON.stringify({
+            ...draft,
+            whatsapp:
+              initial.id && draft.phone === initial.phone
+                ? draft.whatsapp || draft.phone
+                : draft.phone,
+          }),
         }),
       );
     } catch (reason) {
@@ -408,7 +414,7 @@ function SupplierForm({
       icon={Building2}
       onClose={dismiss}
     >
-      <form className="supplier-form" onSubmit={submit}>
+      <form className="supplier-form supplier-registration" onSubmit={submit}>
         <div className="supplier-form-body">
           <section>
             <h3>Identificação</h3>
@@ -419,66 +425,78 @@ function SupplierForm({
               {fields("contact_name", "Pessoa de contato")}
             </div>
           </section>
-          <section>
-            <p className="supplier-help">
-              Os dígitos do documento são validados ao salvar. A existência e a
-              situação cadastral exigem consulta à Receita.{" "}
-              <a
-                href="https://www.gov.br/pt-br/servicos/consultar-cadastro-de-pessoas-fisicas"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Consultar CPF
-              </a>{" "}
-              ·{" "}
-              <a
-                href="https://solucoes.receita.fazenda.gov.br/servicos/cnpjreva/cnpjreva_solicitacao.asp"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Consultar CNPJ
-              </a>
-            </p>
-            <button
-              type="button"
-              disabled={busy || !documentValue}
-              onClick={async () => {
-                const sequence = ++documentRequest.current;
-                setDocumentNote("Consultando cadastro…");
-                try {
-                  const result = await api("/supplier-document/lookup", {
-                    method: "POST",
-                    body: JSON.stringify({ document: documentValue }),
-                  });
-                  if (sequence !== documentRequest.current) return;
-                  setDocumentNote(
-                    result.status === "found"
-                      ? `${result.name} · Situação: ${result.registration_status}. ${result.message}`
-                      : result.message,
-                  );
-                } catch (e) {
-                  if (sequence === documentRequest.current)
-                    setDocumentNote(errorMessage(e));
-                }
-              }}
-            >
-              Verificar documento
-            </button>
-            <p className="supplier-help" role="status">
-              {documentNote}
-            </p>
-            <h3>Contato</h3>
-            <div className="supplier-form-grid">
-              {fields("phone", "Telefone celular", "tel", true, 16)}
-              {fields("whatsapp", "WhatsApp", "tel", true, 16)}
-              {fields("landline", "Telefone fixo (opcional)", "tel", false, 15)}
-              {fields("email", "E-mail", "email")}
+          <section className="supplier-document-check">
+            <h3>Consulta do documento</h3>
+            <div className="supplier-document-actions">
+              <p className="supplier-help">
+                Os dígitos do documento são validados ao salvar. A existência e
+                a situação cadastral exigem consulta à Receita.{" "}
+                <a
+                  href="https://www.gov.br/pt-br/servicos/consultar-cadastro-de-pessoas-fisicas"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Consultar CPF
+                </a>{" "}
+                ·{" "}
+                <a
+                  href="https://solucoes.receita.fazenda.gov.br/servicos/cnpjreva/cnpjreva_solicitacao.asp"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Consultar CNPJ
+                </a>
+              </p>
               <button
                 type="button"
-                onClick={() => setDraft({ ...draft, whatsapp: draft.phone })}
+                className="supplier-document-button"
+                disabled={busy || !documentValue}
+                onClick={async () => {
+                  const sequence = ++documentRequest.current;
+                  setDocumentNote("Consultando cadastro…");
+                  try {
+                    const result = await api("/supplier-document/lookup", {
+                      method: "POST",
+                      body: JSON.stringify({ document: documentValue }),
+                    });
+                    if (sequence !== documentRequest.current) return;
+                    setDocumentNote(
+                      result.status === "found"
+                        ? `${result.name} · Situação: ${result.registration_status}. ${result.message}`
+                        : result.message,
+                    );
+                  } catch (e) {
+                    if (sequence === documentRequest.current)
+                      setDocumentNote(errorMessage(e));
+                  }
+                }}
               >
-                Usar celular no WhatsApp
+                <Search aria-hidden="true" /> Verificar documento
               </button>
+            </div>
+            {documentNote && (
+              <p className="supplier-document-result" role="status">
+                {documentNote}
+              </p>
+            )}
+          </section>
+          <section>
+            <h3>Contato</h3>
+            <p className="supplier-contact-note">
+              O telefone celular também é usado para contato pelo WhatsApp.
+            </p>
+            {initial.id &&
+              initial.whatsapp &&
+              initial.whatsapp !== initial.phone && (
+                <p className="supplier-contact-note">
+                  WhatsApp já cadastrado: {phoneMask(initial.whatsapp)}. Alterar
+                  o celular também atualiza esse número.
+                </p>
+              )}
+            <div className="supplier-contact-fields">
+              {fields("phone", "Telefone celular", "tel", true, 16)}
+              {fields("landline", "Telefone fixo (opcional)", "tel", false, 15)}
+              {fields("email", "E-mail", "email")}
             </div>
           </section>
           <section>

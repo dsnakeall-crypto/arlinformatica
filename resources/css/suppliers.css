@@ -1029,3 +1029,126 @@
 .supplier-dialog-body button{cursor:pointer;border:1px solid #d6e1ef;border-radius:10px;background:#f5f8fe;color:#254466;padding:9px 12px;font-size:12px;display:inline-flex;gap:7px;align-items:center}
 .supplier-dialog-body button:disabled{opacity:.5;cursor:default}.supplier-dialog-body button:focus-visible{outline:3px solid #a8c6f1;outline-offset:2px}.supplier-dialog-body svg{width:18px;height:18px;flex-shrink:0}.supplier-dialog-body .supplier-primary{background:linear-gradient(110deg,#5a071f,#d50032);color:white;border-color:#d70034}.supplier-product-open:focus-visible{outline:3px solid #aac4e8;outline-offset:2px}
 .supplier-purchase-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:20px}.supplier-dialog-body .supplier-purchase-shortcuts button{display:grid;gap:6px;text-align:left;padding:12px;background:linear-gradient(#f7faff,#edf4fd);border-radius:13px}.supplier-purchase-shortcuts small{font-size:11px;color:#73849b}.supplier-purchase-shortcuts b{font-size:20px;color:#243f5e}.supplier-purchase-shortcuts span{font-size:11px;color:#b7002e}@media(max-width:520px){.supplier-purchase-shortcuts{gap:6px}.supplier-dialog-body .supplier-purchase-shortcuts button{padding:10px 7px}.supplier-purchase-shortcuts small,.supplier-purchase-shortcuts span{font-size:10px}}
+
+/* Cadastro: seções claras, contatos compactos e consulta independente. */
+.supplier-registration .supplier-form-body {
+  gap: 16px;
+}
+.supplier-registration .supplier-form-body > section {
+  border-color: #d5deeb;
+  background: linear-gradient(130deg, #fff, #f8faff);
+  padding: 18px;
+  box-shadow:
+    inset 0 1px 2px #fff,
+    0 3px 9px #2439540c;
+}
+.supplier-registration h3 {
+  font-size: 16px !important;
+  color: #162940;
+  margin-bottom: 14px;
+  letter-spacing: 0;
+}
+.supplier-registration label {
+  font-size: 13px;
+  color: #263b56;
+  gap: 7px;
+}
+.arl-3d-popup .supplier-registration input:not([type="checkbox"]),
+.arl-3d-popup .supplier-registration textarea,
+.arl-3d-popup .supplier-registration select {
+  border: 1px solid #b8c7da !important;
+  border-radius: 11px !important;
+  background: linear-gradient(#fff, #f3f6fa) !important;
+  padding: 9px 12px !important;
+  font-size: 14px !important;
+  min-height: 38px;
+  box-shadow:
+    inset 0 1px 2px white,
+    0 2px 5px #24395418;
+}
+.arl-3d-popup .supplier-registration input:focus,
+.arl-3d-popup .supplier-registration textarea:focus,
+.arl-3d-popup .supplier-registration select:focus {
+  border-color: #d00038 !important;
+  outline: 2px solid #e6426524;
+  outline-offset: 2px;
+}
+.supplier-registration .supplier-document-check {
+  padding: 16px 18px;
+}
+.supplier-document-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.supplier-document-actions .supplier-help {
+  flex: 1;
+  margin: 0;
+  color: #596a80;
+}
+.supplier-document-actions a {
+  color: #a0002e;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+.supplier-document-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 10px 14px;
+  min-height: 40px;
+  border: 1px solid #becde1;
+  border-radius: 11px;
+  color: #263f60;
+  background: linear-gradient(#f4f8ff, #e3ecfa);
+  box-shadow:
+    inset 0 1px 1px #fff,
+    0 3px 6px #23395416;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 13px;
+}
+.supplier-document-button svg {
+  width: 17px;
+  height: 17px;
+}
+.supplier-registration .supplier-document-result {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: #edf3fc;
+  color: #314d70;
+}
+.supplier-registration .supplier-contact-note {
+  color: #596a80;
+  margin: 0 0 14px;
+}
+.supplier-contact-fields {
+  display: grid;
+  gap: 13px;
+  width: min(100%, 360px);
+}
+@media (max-width: 600px) {
+  .supplier-registration .supplier-form-body {
+    padding: 14px;
+  }
+  .supplier-registration .supplier-form-body > section {
+    padding: 14px;
+  }
+  .supplier-document-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .supplier-contact-fields {
+    width: 100%;
+  }
+  .arl-3d-popup .supplier-registration input:not([type="checkbox"]),
+  .arl-3d-popup .supplier-registration textarea,
+  .arl-3d-popup .supplier-registration select {
+    font-size: 16px !important;
+    min-height: 42px;
+  }
+}
