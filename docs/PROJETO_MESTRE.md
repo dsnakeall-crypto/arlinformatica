@@ -82,8 +82,7 @@ A logo deve ser redimensionada automaticamente, sem deformação, para menu, ter
 - Caixa.
 - Relatórios.
 - Pós-Venda.
-- Usuários.
-- Configurações.
+- Configurações (Usuários dentro dela, exclusivo do Master).
 
 Na parte inferior, usuário conectado, perfil e versão.
 
@@ -1075,3 +1074,10 @@ Backup externo verificado: `C:/Users/Allan/ARL-backups/supplier-dialog-size-2026
 ### Padrão único dos popups de Fornecedores — 03/10/2026
 Todos os formulários e detalhes do módulo usam a mesma moldura: largura até 1180px, altura até 760px, limitadas à área disponível (margem de 24px por lado no desktop e 12px no celular). Substitui o padrão anterior de 1170 × 720px exclusivo da compra. Cadastro, compra, recebimento, cancelamento, dados comerciais, vínculo de produto, documentos, devoluções, ocorrências e detalhes de compra/produto seguem a regra centralizada em suppliers.css. Abas vazias, carregamento e seleções não alteram a moldura; conteúdo rola internamente, cabeçalho e ações ficam acessíveis. Popups de outros módulos não são afetados.
 Backup externo verificado: C:/Users/Allan/ARL-backups/supplier-popup-standard-20261003-130019 (1779 arquivos e histórico Git). Lint, TypeScript/build, 19 testes frontend e quatro fluxos E2E de fornecedores aprovados em banco isolado. Verificação de dimensões nas abas de compra/produto em desktop e celular e nos formulários comerciais/produtos/documentos/devoluções, com revisão visual. Sem alteração do banco de uso ou publicação.
+
+
+### Menu administrativo compacto — 03/10/2026
+Usuários foi movido do menu lateral para a aba Usuários em Configurações, visível somente ao Master; backend e cadastro existente preservados. URL /users continua abrindo a seção dentro de Configurações. Controle de fixação mantém persistência por usuário, com barra de 26px, fonte de 10px e texto Fixado/Fixar.
+Diagnóstico somente de leitura no banco local: tipos Fixo Casa (id 3) e Fixos de Casa (id 5) coexistem; o segundo foi criado para a instituição exclusiva da casa por correspondência exata de nome. Ambos sem dívidas vinculadas na conferência, mas não foram excluídos nem unificados nesta entrega, pois o pedido foi de explicação.
+Backup externo verificado: C:/Users/Allan/ARL-backups/menu-settings-20261003-134223 (1788 arquivos e histórico Git). Sem alteração de dados ou publicação.
+Validação: lint, TypeScript/build e 19 testes frontend aprovados; 32 cenários E2E passaram na suíte inicial. Após atualizar a expectativa das nove abas e corrigir a quebra de linha causada pelo estilo legado, três cenários focados passaram, incluindo criação de usuário em banco isolado. Captura visual: output/compacto/usuarios-configuracao.png.

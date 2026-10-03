@@ -11,7 +11,8 @@ test.describe.serial('fluxo operacional principal', () => {
   test.beforeEach(async ({ page }) => login(page));
 
   test('Master cria Funcionário e o backend bloqueia duplicidade', async ({ page }) => {
-    await page.getByRole('button', { name: 'Usuários' }).click();
+    await page.locator('aside').getByRole('button', { name: 'Configurações', exact:true }).click();
+    await page.getByRole('tab', { name: 'Usuários', exact:true }).click();
     await page.getByRole('button', { name: 'Novo usuário' }).click();
     const modal = page.locator('.modal-card');
     const employeePassword = ['Funcionario', String(2026) + String.fromCharCode(33)].join('-');

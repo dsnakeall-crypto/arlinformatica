@@ -3692,10 +3692,10 @@ function InfrastructureSettings({ section }: { section: string }) {
     </div>
   );
 }
-function SettingsPage({ role }: any) {
+function SettingsPage({ role, initialSection = "company" }: any) {
   const [data, setData] = useState<any>();
   const [message, setMessage] = useState("");
-  const [section, setSection] = useState("company");
+  const [section, setSection] = useState(initialSection);
   const [logo, setLogo] = useState<File | null>(null);
   const [signature, setSignature] = useState<File | null>(null);
   const [removingSignature, setRemovingSignature] = useState(false);
@@ -3772,6 +3772,7 @@ function SettingsPage({ role }: any) {
     ["notifications", "Notificações", "♢"],
     ...(role === "Master"
       ? [
+          ["users", "Usuários", "♙"],
           ["backup", "Backup", "▦"],
           ["reset", "Zeramento", "⚠"],
           ["system", "Sistema", "⌁"],
@@ -3832,6 +3833,7 @@ function SettingsPage({ role }: any) {
           ))}
         </div>
       )}
+      {role === "Master" && section === "users" && <UsersAdmin />}
       {role === "Master" && section === "system" && <ClientImport />}
       {generalSave && (
         <form className="form-card settings-form" onSubmit={save}>
@@ -5326,7 +5328,6 @@ function App() {
     {
       label: "Administração",
       items: [
-        ["Usuários", "users", Users],
         ["Configurações", "settings", Settings],
       ],
     },
@@ -5390,7 +5391,7 @@ function App() {
                       type="button"
                       key={name}
                       aria-label={name}
-                      className={page === p ? "active" : ""}
+                      className={page === p || (p === "settings" && page === "users") ? "active" : ""}
                       onClick={() => go(p)}
                       title={name}
                     >
@@ -5421,7 +5422,7 @@ function App() {
             onClick={() => void toggleSidebarPinned()}
           >
             <Pin aria-hidden="true" />
-            <span>{sidebarPinned ? "Menu fixado" : "Fixar menu"}</span>
+            <span>{sidebarPinned ? "Fixado" : "Fixar"}</span>
           </button>
           <div className="profile">
             <div>
@@ -5560,7 +5561,7 @@ function App() {
         ) : page === "suppliers" ? (
           <SuppliersPage />
         ) : page === "users" ? (
-          <UsersAdmin />
+          <SettingsPage role={me?.role} initialSection="users" />
         ) : page === "settings" ? (
           <SettingsPage role={me?.role} />
         ) : (

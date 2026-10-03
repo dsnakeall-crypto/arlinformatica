@@ -603,3 +603,13 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Lint, TypeScript/build, 19 testes frontend e quatro fluxos E2E aprovados; revisão visual desktop/mobile.
 - [OK] Backup externo verificado: C:/Users/Allan/ARL-backups/supplier-popup-standard-20261003-130019. Banco de uso preservado.
 - [PENDENTE] Publicação no servidor, fora desta execução.
+
+
+## Menu lateral e Usuários — 03/10/2026
+- [OK] Usuários dentro de Configurações, exclusivo do Master; URL anterior compatível e Configurações destacada.
+- [OK] Fixado/Fixar compacto com persistência preservada, barra de 26px, fonte de 10px e ícone de 12px.
+- [OK] Abas de Configurações em uma linha com rolagem horizontal se necessário; interferência do estilo legado corrigida por seletor específico.
+- [OK] Lint, TypeScript/build e 19 testes frontend. Suíte inicial com 32 cenários aprovados; expectativa de quantidade de abas atualizada para nove, ajuste de quebra de linha validado e três cenários focados aprovados, incluindo cadastro real de usuário em banco de teste.
+- [OK] Diagnóstico dos tipos Fixo Casa/Fixos de Casa somente de leitura, sem excluir ou reclassificar dívidas.
+- [OK] Backup externo verificado: C:/Users/Allan/ARL-backups/menu-settings-20261003-134223 (1788 arquivos e histórico Git).
+- [PENDENTE] Unificação dos tipos de despesas domésticas e publicação no servidor, fora do pedido atual.

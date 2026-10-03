@@ -84,7 +84,8 @@ for (const group of groups) {
 
     for (const [menu, heading] of group.destinations) {
       await openOrder(page, orderNumber);
-      await sidebar.getByRole('button', { name: menu, exact: true }).click();
+      await sidebar.getByRole('button', { name: menu === 'Usuários' ? 'Configurações' : menu, exact: true }).click();
+      if(menu === 'Usuários') await page.getByRole('tab',{name:'Usuários',exact:true}).click();
       const destination = typeof heading === 'string'
         ? page.getByRole('heading', { name: heading, exact: true })
         : page.getByRole('heading', { name: heading });

@@ -98,13 +98,13 @@ test('configurações oculta integralmente Mensagens da navegação', async ({ p
   await expect(page.locator('.arl-post-message-panel')).toBeHidden();
 });
 
-test('configurações exibe somente as sete abas permitidas em uma linha', async ({ page }) => {
+test('configurações exibe somente as nove abas permitidas em uma linha', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
   const tabs = page.locator('.arl-settings-tab');
-  await expect(tabs).toHaveCount(8);
-  await expect(tabs.locator('b')).toHaveText(['Empresa', 'Identidade', 'Documentos', 'Notificações', 'Backup', 'Zeramento', 'Sistema', 'Armazenamento']);
+  await expect(tabs).toHaveCount(9);
+  await expect(tabs.locator('b')).toHaveText(['Empresa', 'Identidade', 'Documentos', 'Notificações', 'Usuários', 'Backup', 'Zeramento', 'Sistema', 'Armazenamento']);
   const tops = await tabs.evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
   expect(new Set(tops).size).toBe(1);
   for (const hidden of ['orders', 'messages', 'finance']) {

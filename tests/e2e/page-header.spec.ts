@@ -19,9 +19,10 @@ test('cabeçalho compartilhado preserva heading, etiqueta e ícone em todas as t
 
   for (const [navigation, heading] of screens) {
     if (navigation !== 'Painel') {
-      await page.locator('aside').getByRole('button', { name: navigation, exact: true }).click();
+      await page.locator('aside').getByRole('button', { name: navigation === 'Usuários' ? 'Configurações' : navigation, exact: true }).click();
+      if(navigation === 'Usuários') await page.getByRole('tab',{name:'Usuários',exact:true}).click();
     }
-    const header = page.getByTestId('page-header');
+    const header = page.getByTestId('page-header').filter({has:page.getByRole('heading',{name:heading,exact:true})});
     await expect(header.getByRole('heading', { name: heading, exact: true })).toBeVisible();
     await expect(header.locator('.arl-eyebrow')).not.toBeEmpty();
     await expect(header.locator('.arl-page-header-icon svg')).toHaveCount(1);

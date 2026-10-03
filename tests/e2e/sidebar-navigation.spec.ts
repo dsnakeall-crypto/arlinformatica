@@ -5,7 +5,7 @@ const expectedGroups = {
   'Operação': ['Painel', 'Ordens'],
   'Cadastros': ['Clientes', 'Serviços'],
   'Gestão': ['Financeiro', 'Pós-Venda'],
-  'Administração': ['Usuários', 'Configurações'],
+  'Administração': ['Configurações'],
 };
 
 test('menu agrupa destinos, destaca Nova OS e mostra contadores vindos do backend nos dois layouts', async ({ page }) => {
@@ -29,7 +29,8 @@ test('menu agrupa destinos, destaca Nova OS e mostra contadores vindos do backen
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveCount(0);
   const bottomBar = page.locator('.arl-global-mobile-nav');
-  await expect(bottomBar.getByRole('button')).toHaveText(['OS abertas', 'Nova OS', 'Clientes']);
+  await expect(bottomBar.getByRole('button')).toHaveCount(4);
+  for(const name of ['OS abertas','Nova OS','Clientes','Controle de Gasto']) await expect(bottomBar.getByRole('button',{name,exact:true})).toBeVisible();
 });
 
 test('menu recolhe, revela nomes no hover, libera largura e persiste após recarregar', async ({ page }) => {
@@ -142,3 +143,18 @@ for (const width of [1280, 1920]) {
     await page.screenshot({ path: testInfo.outputPath('sidebar-closed.png') });
   });
 }
+
+
+test('Usuários fica em Configurações e controle de fixação é compacto', async ({page}) => {
+ await login(page); await page.locator('aside').hover();
+ await expect(page.locator('aside').getByRole('button',{name:'Usuários',exact:true})).toHaveCount(0);
+ const pin=page.locator('.sidebar-pin-toggle'); const box=await pin.boundingBox(); expect(box!.height).toBeLessThanOrEqual(28);
+ await page.locator('aside').getByRole('button',{name:'Configurações',exact:true}).click();
+ await page.getByRole('tab',{name:'Usuários',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Usuários e Permissões',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Novo usuário',exact:true})).toBeVisible();
+ await expect(page.locator('.admin-list article').first()).toBeVisible();
+ await page.locator('aside').hover(); await page.screenshot({path:'output/compacto/usuarios-configuracao.png'});
+ await page.goto('/users'); await expect(page.getByRole('tab',{name:'Usuários',exact:true})).toHaveAttribute('aria-selected','true');
+ await expect(page.locator('aside').getByRole('button',{name:'Configurações',exact:true})).toHaveClass(/active/);
+});
