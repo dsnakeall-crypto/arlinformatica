@@ -39,6 +39,7 @@ test('cartões: galeria, edição sem perda da imagem, upload e enquadramento', 
   await edit.getByLabel('Dia padrão de vencimento').fill('17');
   await edit.getByRole('button', { name: 'Salvar', exact: true }).click();
   await expect(edit).not.toBeVisible();
+  await expect(institution.getByText('Vencimento padrão · dia 17', { exact: true })).toBeVisible();
   await expect(image).toHaveAttribute('src', original!);
   await page.screenshot({ path: 'output/cartoes/instituicoes-desktop.png', fullPage: true });
 });

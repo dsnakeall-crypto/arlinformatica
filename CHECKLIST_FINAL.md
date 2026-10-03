@@ -390,3 +390,6 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Acabamento 3D nos cartões, painéis e responsáveis; cor dos cadastros antigos preservada.
 - [PENDENTE] Publicação desta alteração no servidor; ambiente local apenas.
 - [OK] 252 testes PHP gerais, 23 MySQL isolados, 12 unitários de frontend e cinco fluxos de navegador aprovados; lint, TypeScript, Pint e build aprovados.
+
+- [OK] Cards de instituições compactados para 250 px, com cartões proporcionais e acabamento 3D preservado; backup externo anterior verificado.
+- [OK] Build/TypeScript, lint e cinco fluxos de navegador aprovados após compactação; captura desktop conferida.

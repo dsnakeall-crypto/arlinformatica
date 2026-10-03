@@ -71,3 +71,9 @@ As imagens substituídas permanecem privadas e entram no backup, permitindo recu
 Migração aditiva `2026_10_03_010000_add_expense_institution_artwork.php`: apenas dois campos nullable em instituições; cadastros antigos conservam a cor. Backup de código/histórico/banco/arquivos privados verificado em `C:\Users\Allan\ARL-backups\controle-gasto-cartoes-20261002-223804`. Conferência local preservou 54 conjuntos de dados e 128 arquivos privados. Cartões, painéis e responsáveis receberam acabamento com relevo e sombras, preservando cálculos e navegação.
 
 Verificação desta etapa: 252 testes PHP gerais (2.199 verificações), 23 testes MySQL isolados (239 verificações), 12 unitários de frontend e cinco fluxos E2E de cartões/Controle de Gasto. Lint, TypeScript, Pint e build aprovados. Capturas desktop/mobile inspecionadas. Não houve publicação no servidor.
+
+### Cards compactos
+
+A pedido do proprietário, os cards de instituições nas abas Gastos e Instituições possuem largura máxima de 250 px, aproximadamente metade da referência anterior. A grade acomoda mais cartões por linha; o cartão interno acompanha a redução mantendo proporção, cores, imagem e relevo. Espaços internos e tipografia foram compactados com leitura preservada. A galeria e a prévia do formulário conservam seus tamanhos para permitir escolher e enquadrar imagens. Nenhum dado ou regra financeira foi alterado.
+
+Backup externo anterior: `C:\Users\Allan\ARL-backups\controle-gasto-cards-compactos-20261002-231900`, com arquivos locais/alterações e histórico Git verificados.
