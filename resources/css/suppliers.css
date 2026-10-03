@@ -1216,12 +1216,23 @@
 @media(max-width:1000px) { .supplier-history-details { grid-template-columns:1fr 1fr; } }
 @media(max-width:600px) { .supplier-purchase-list > .supplier-history-card { padding:14px; }.supplier-history-heading { flex-direction:column; gap:8px; }.supplier-history-details { grid-template-columns:1fr; gap:12px; }.supplier-history-open { justify-content:flex-start; }.supplier-history-heading b { font-size:14px; } }
 
-/* Detalhes da compra: moldura estável ao alternar abas; só o corpo rola. */
-.arl-3d-popup:has(> .supplier-purchase-detail) {
-  width:min(1170px,100%);
-  height:min(720px,calc(100dvh - 48px));
+/* Padrão único de Fornecedores: formulários e detalhes usam a mesma moldura. */
+.arl-3d-popup:has(> .supplier-form, > .supplier-dialog-body) {
+  width:min(1180px,100%);
+  height:min(760px,calc(100dvh - 48px));
 }
-.arl-3d-popup > .supplier-purchase-detail {
+.arl-3d-popup > .supplier-form {
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+}
+.arl-3d-popup > .supplier-form > .supplier-form-body {
+  flex:1;
+  min-height:0;
+  overflow:auto;
+  scrollbar-gutter:stable;
+}
+.arl-3d-popup > .supplier-dialog-body {
   flex:1;
   min-height:0;
   min-width:0;
@@ -1229,7 +1240,7 @@
   scrollbar-gutter:stable;
 }
 @media(max-width:760px) {
-  .arl-3d-popup:has(> .supplier-purchase-detail) {
-    height:min(720px,calc(100dvh - 24px));
+  .arl-3d-popup:has(> .supplier-form, > .supplier-dialog-body) {
+    height:min(760px,calc(100dvh - 24px));
   }
 }

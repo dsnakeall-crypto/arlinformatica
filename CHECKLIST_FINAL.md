@@ -595,3 +595,11 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Largura/altura/posição estáveis nas quatro abas; corpo rolável e fechamento fixo, limitado à tela.
 - [OK] Teste geométrico desktop/celular e conferência visual; três fluxos E2E, lint, TypeScript/build e 19 testes frontend aprovados.
 - [OK] Backup externo verificado: C:/Users/Allan/ARL-backups/supplier-dialog-size-20261003-125445. Sem alteração do banco de uso.
+
+
+## Popups de Fornecedores — padrão unificado
+- [OK] Moldura única de até 1180 × 760px para formulários e detalhes, limitada à tela, com rolagem interna e ações fixas.
+- [OK] Troca das abas de compra/produto mantém dimensões e posição no desktop e celular; formulários compartilham o padrão.
+- [OK] Lint, TypeScript/build, 19 testes frontend e quatro fluxos E2E aprovados; revisão visual desktop/mobile.
+- [OK] Backup externo verificado: C:/Users/Allan/ARL-backups/supplier-popup-standard-20261003-130019. Banco de uso preservado.
+- [PENDENTE] Publicação no servidor, fora desta execução.

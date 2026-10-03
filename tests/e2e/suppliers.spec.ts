@@ -355,6 +355,25 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
       .locator(".supplier-product-history")
       .getByText("3 unidades recebidas deste fornecedor"),
   ).toBeVisible();
+  await page.locator(".supplier-product-open").first().click();
+  const productDialog = page.getByRole("dialog", {name:productName,exact:true});
+  await expect(productDialog.getByRole("button", {name:"Dados do produto",exact:true})).toBeVisible();
+  for (const viewport of [{width:1440,height:1000},{width:390,height:844}]) {
+    await page.setViewportSize(viewport);
+    const base = await productDialog.boundingBox();
+    expect(base).not.toBeNull();
+    expect(base!.width).toBe(Math.min(1180,viewport.width-(viewport.width>760?48:24)));
+    expect(base!.height).toBe(Math.min(760,viewport.height-(viewport.width>760?48:24)));
+    for (const tabName of ["Compras e custos","Devoluções","Dados do produto"]) {
+      await productDialog.getByRole("button", {name:tabName,exact:true}).click();
+      const box = await productDialog.boundingBox();
+      for (const key of ["width","height","x","y"] as const) expect(Math.abs(box![key]-base![key])).toBeLessThanOrEqual(1);
+      await expect(productDialog.getByRole("button", {name:"Fechar produto",exact:true})).toBeInViewport();
+    }
+    await page.screenshot({path:`output/fornecedores/produto-padrao-${viewport.width}.png`});
+  }
+  await productDialog.getByRole("button", {name:"Fechar produto",exact:true}).click();
+  await page.setViewportSize({width:1440,height:1000});
   await page.getByRole("button", { name: "Todos os fornecedores" }).click();
   await page.screenshot({ path: "output/fornecedores/lista-desktop.png" });
   await page.getByLabel("Buscar fornecedor").fill(supplierName);
