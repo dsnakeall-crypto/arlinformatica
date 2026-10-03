@@ -162,6 +162,7 @@ class ExpenseControlController extends Controller
         $personal = $items->filter(fn ($i) => $person && $i[$person === 1 ? 'remaining_one_cents' : 'remaining_two_cents'] > 0);
 
         return response()->json(['month' => $month->format('Y-m'), 'totals' => $totals, 'institutions' => $banks, 'count' => $items->count(), 'next_due' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(), 'overdue' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
+            'partial_installments' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['remaining_cents'] < $i['amount_cents'])->values(),
             'personal_next_due' => $personal->filter(fn ($i) => $i['due_on'] >= today()->toDateString())->take(5)->values(), 'personal_overdue' => $personal->filter(fn ($i) => $i['due_on'] < today()->toDateString())->take(5)->values()]);
     }
 
@@ -203,7 +204,10 @@ class ExpenseControlController extends Controller
             'oldest' => $q->orderBy('d.id'), 'name' => $q->orderBy('d.name')->orderBy('d.id'), 'value' => $q->orderByDesc('totals.remaining_cents')->orderBy('d.id'), default => $q->orderByDesc('d.id')
         };
 
-        return response()->json($q->paginate(20));
+        $counts = (clone $q)->reorder()->select('d.institution_id', 'd.type_id')->selectRaw('COUNT(*) AS debt_count')->groupBy('d.institution_id', 'd.type_id')->get()
+            ->map(fn ($row) => ['institution_id' => (int) $row->institution_id, 'type_id' => (int) $row->type_id, 'count' => (int) $row->debt_count]);
+
+        return response()->json([...$q->paginate(20)->toArray(), 'catalog_counts' => $counts]);
     }
 
     public function show(int $id): JsonResponse

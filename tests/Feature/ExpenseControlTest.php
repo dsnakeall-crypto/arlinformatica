@@ -110,6 +110,44 @@ class ExpenseControlTest extends TestCase
         $this->assertDatabaseCount('cg_installments', 3);
     }
 
+    public function test_catalog_counts_cover_all_pages_and_respect_responsibility_and_institution(): void
+    {
+        for ($index = 0; $index < 25; $index++) {
+            $this->createDebt(['responsibility' => 'one', 'percent_one' => 100, 'installment_count' => 2]);
+        }
+        $this->createDebt(['responsibility' => 'two', 'percent_one' => 0]);
+        $this->createDebt();
+        $other = $this->postJson('/api/expense-control/catalogs/institutions', ['name' => 'Outro banco', 'due_day' => 10, 'active' => true, 'color' => '#123456'])->assertOk()->json('id');
+        $this->createDebt(['institution_id' => $other, 'responsibility' => 'one', 'percent_one' => 100]);
+        $this->getJson('/api/expense-control/debts?month=2026-10&person=one')->assertOk()
+            ->assertJsonPath('total', 27)->assertJsonCount(20, 'data')
+            ->assertJsonFragment(['institution_id' => $this->bank, 'type_id' => $this->type, 'count' => 26])
+            ->assertJsonFragment(['institution_id' => $other, 'type_id' => $this->type, 'count' => 1]);
+        $this->getJson('/api/expense-control/debts?month=2026-10&person=two&institution='.$this->bank)->assertOk()
+            ->assertJsonCount(1, 'catalog_counts')->assertJsonPath('catalog_counts.0.count', 2);
+        $this->getJson('/api/expense-control/debts?month=2026-10&person=shared')->assertOk()
+            ->assertJsonPath('total', 1)->assertJsonPath('catalog_counts.0.count', 1);
+    }
+
+    public function test_shared_payment_summary_keeps_other_person_pending_and_tracks_partial_amount(): void
+    {
+        $detail = $this->createDebt(['amount_cents' => 35000, 'installment_count' => 1]);
+        $id = $detail['installments'][0]['id'];
+        $this->postJson('/api/expense-control/operations', $this->payment([$id]))->assertCreated();
+        $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk()
+            ->assertJsonPath('totals.one_remaining_cents', 0)->assertJsonPath('totals.two_remaining_cents', 17500)
+            ->assertJsonPath('partial_installments.0.share_one_cents', 17500)
+            ->assertJsonPath('partial_installments.0.remaining_one_cents', 0)
+            ->assertJsonPath('partial_installments.0.remaining_two_cents', 17500);
+        $this->postJson('/api/expense-control/operations', $this->payment([$id], ['target' => 'two', 'paid_by' => 2, 'amount_cents' => 5000]))->assertCreated();
+        $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk()
+            ->assertJsonPath('totals.paid_cents', 22500)->assertJsonPath('totals.remaining_cents', 12500)
+            ->assertJsonPath('partial_installments.0.remaining_two_cents', 12500);
+        $this->postJson('/api/expense-control/operations', $this->payment([$id], ['target' => 'both', 'paid_by' => 2]))->assertCreated();
+        $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk()
+            ->assertJsonPath('totals.remaining_cents', 0)->assertJsonCount(0, 'partial_installments');
+    }
+
     public function test_discount_affects_the_selected_responsible_and_total_without_becoming_a_payment(): void
     {
         $detail = $this->createDebt(['amount_cents' => 100000]);

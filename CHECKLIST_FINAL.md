@@ -453,3 +453,14 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Nove testes PHP (79 verificações), oito E2E, build/TypeScript, lint e Pint passaram. API externa simulada nos testes, sem chamada paga.
 - [OK] Backup externo de código, alterações e histórico Git validado: `C:\Users\Allan\ARL-backups\controle-gasto-mes-resumo-20261003-021234`. Arquivos privados existentes preservados. O app local foi usado simultaneamente, com novos cadastros/alterações nas tabelas de gastos; não restaurados nem sobrescritos.
 - [PENDENTE] Publicação e interface própria Mobile/Tablet completa em etapa futura.
+
+
+## Pagamentos e contagens — 03/10/2026
+
+- [OK] Opções explícitas de quitar parcela inteira, valor parcial ou parte de Allan/Carol, preservando quem efetivamente pagou e histórico.
+- [OK] Prévia dos saldos e resumo de parcelas parcialmente pagas, com valores por responsável. Exemplo de R$350 validado sem alterar dívidas de uso real.
+- [OK] Instituições preservadas ao filtrar responsável; contagens por tipo antes da paginação, zeros nos tipos vazios e filtro mantido ao abrir cartão.
+- [OK] Cards de navegação em azul e cartões reduzidos mais 10% (250→225 px), preservando arte.
+- [OK] 19 testes PHP/249 verificações, 28 MySQL isolado/328 verificações; cinco cenários E2E concluídos, com seletor acessível corrigido no novo teste. Build/TypeScript, lint e Pint passaram.
+- [OK] Backups locais verificados de pagamentos e contagens documentados em CONTROLE_GASTO.md. Sem migrações; cadastros simultâneos no localhost preservados.
+- [PENDENTE] Publicação com backup do servidor e interface Mobile/Tablet completa em etapa própria.

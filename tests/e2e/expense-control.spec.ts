@@ -32,7 +32,7 @@ test('controle: cadastro manual, parte individual, lote, quitadas e retorno aos 
   await expect(page.locator('.cg-table-wrap tbody tr')).toHaveCount(2);
   await page.locator('.cg-table-wrap tbody tr').first().getByRole('button', { name: 'Pagar', exact: true }).click();
   const payment = page.getByRole('dialog', { name: 'Registrar pagamento ou abatimento' });
-  await payment.getByLabel('Qual parte será abatida?').selectOption('one');
+  await payment.getByRole('button', { name: /Quitar parte de Allan/ }).click();
   await payment.getByLabel('Quem efetivamente pagou?').selectOption('1');
   await payment.getByRole('button', { name: 'Confirmar lançamento' }).click();
   await expect(payment).not.toBeVisible();
@@ -48,6 +48,68 @@ test('controle: cadastro manual, parte individual, lote, quitadas e retorno aos 
   await expect(page.locator('.cg-debt-row').filter({ hasText: 'Geladeira CG ' + stamp })).toBeVisible();
   await page.getByRole('button', { name: 'Ordens', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Ordens de Serviço', exact: true })).toBeVisible();
+});
+
+test('controle: quitar Allan mantém Carol pendente no resumo e aceita pagamento parcial', async ({ page }) => {
+  await login(page);
+  const catalog = await catalogs(page, 'pagamento-' + Date.now());
+  const month = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+  const created = await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: catalog.institution.id, type_id: catalog.type.id, name: 'Parcela casal 350', recurrence: 'once', responsibility: 'shared', percent_one: 50, amount_cents: 35000, installment_count: 1, first_number: 1, start_month: month, due_day: 12, notes: null });
+  expect(created.status).toBe(201);
+  await page.goto('/expense-control');
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await page.getByLabel('Pesquisar compra ou instituição').fill('Parcela casal 350');
+  await page.locator('.cg-debt-row').filter({ hasText: 'Parcela casal 350' }).click();
+  await page.locator('.cg-table-wrap tbody tr').getByRole('button', { name: 'Pagar', exact: true }).click();
+  const payment = page.getByRole('dialog', { name: 'Registrar pagamento ou abatimento' });
+  await payment.getByRole('button', { name: /Quitar parte de Allan/ }).click();
+  await expect(payment.locator('.cg-payment-preview strong')).toContainText('175,00');
+  await expect(payment.locator('.cg-payment-split article').last()).toContainText('175,00');
+  await page.screenshot({ path: 'output/controle-gasto/pagamento-parte.png', fullPage: true });
+  await payment.getByRole('button', { name: 'Confirmar lançamento' }).click();
+  await expect(payment).not.toBeVisible();
+  await page.getByRole('tab', { name: 'Resumo', exact: true }).click();
+  const partial = page.locator('.cg-partial-summary>article').filter({ hasText: 'Parcela casal 350' });
+  await expect(partial).toContainText('Parte quitada');
+  await expect(partial).toContainText('Falta R$ 175,00');
+  await page.screenshot({ path: 'output/controle-gasto/resumo-parcial.png', fullPage: true });
+  await partial.getByRole('button', { name: 'Ver parcela' }).click();
+  await page.locator('.cg-table-wrap tbody tr').getByRole('button', { name: 'Pagar', exact: true }).click();
+  await payment.getByRole('button', { name: /Pagar valor parcial/ }).click();
+  await payment.getByLabel('Qual parte será abatida?').selectOption('two');
+  await payment.getByLabel('Quem efetivamente pagou?').selectOption('2');
+  await payment.getByLabel('Valor a registrar (R$)').fill('5000');
+  await expect(payment.locator('.cg-payment-split article').last()).toContainText('125,00');
+  await payment.getByRole('button', { name: 'Confirmar lançamento' }).click();
+  await expect(payment).not.toBeVisible();
+  const detail = (await api(page, '/expense-control/debts/' + created.body.debt.id)).body;
+  expect(detail.installments[0].remaining_one_cents).toBe(0);
+  expect(detail.installments[0].remaining_two_cents).toBe(12500);
+});
+
+test('controle: filtro de responsável preserva cartões e contagens por tipo', async ({ page }) => {
+  await login(page);
+  const catalog = await catalogs(page, 'contagem-' + Date.now());
+  const emptyType = (await api(page, '/expense-control/catalogs/types', 'POST', { name: 'Empréstimo vazio ' + Date.now(), active: true })).body;
+  for (const responsibility of ['one', 'two', 'shared']) {
+    expect((await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: catalog.institution.id, type_id: catalog.type.id, name: 'Compra ' + responsibility, recurrence: 'installments', responsibility, percent_one: responsibility === 'one' ? 100 : responsibility === 'two' ? 0 : 50, amount_cents: 35000, installment_count: 3, first_number: 1, start_month: new Date().toLocaleDateString('sv-SE').slice(0, 7), due_day: 12, notes: null })).status).toBe(201);
+  }
+  await page.goto('/expense-control');
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await page.getByLabel('Filtrar por responsável', { exact: true }).selectOption('one');
+  const card = page.locator('.cg-bank-grid .cg-institution').filter({ hasText: catalog.institution.name });
+  await expect(card.locator('.cg-institution-counts>div').filter({ hasText: catalog.type.name }).locator('b')).toHaveText('2');
+  await expect(page.locator('.cg-debt-row')).toHaveCount(0);
+  await page.screenshot({ path: 'output/controle-gasto/instituicoes-contagens.png', fullPage: true });
+  await card.click();
+  await expect(page.getByLabel('Filtrar por responsável', { exact: true })).toHaveValue('one');
+  const typeCard = page.locator('.cg-type-grid button').filter({ hasText: catalog.type.name });
+  await expect(typeCard.locator('.cg-type-count')).toContainText('2');
+  await expect(page.locator('.cg-type-grid button').filter({ hasText: emptyType.name }).locator('.cg-type-count')).toContainText('0');
+  await page.screenshot({ path: 'output/controle-gasto/tipos-contagens.png', fullPage: true });
+  await typeCard.click();
+  await expect(page.locator('.cg-debt-row')).toHaveCount(2);
+  await expect(page.locator('.cg-debt-row').filter({ hasText: 'Compra two' })).toHaveCount(0);
 });
 
 test('controle: perfil exclusivo não vê nem acessa dados da empresa', async ({ page }) => {
