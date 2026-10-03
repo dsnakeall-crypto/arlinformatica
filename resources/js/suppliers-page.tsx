@@ -749,8 +749,11 @@ function PurchaseForm({
     >
       <form className="supplier-form supplier-purchase-form" onSubmit={submit}>
         <div className="supplier-form-body">
-          <fieldset className="supplier-purchase-fields" disabled={committed}>
-            <div className="supplier-form-grid">
+          <div className="supplier-purchase-columns">
+          <fieldset className="supplier-purchase-fields supplier-purchase-main" disabled={committed}>
+            <section className="supplier-purchase-start">
+              <h3>Compra e recebimento</h3>
+              <div className="supplier-purchase-date">
               <label>
                 <span>Data da compra *</span>
                 <input
@@ -761,16 +764,35 @@ function PurchaseForm({
                   onChange={(e) => setPurchasedOn(e.target.value)}
                 />
               </label>
-              <label>
-                <span>Nota / referência</span>
-                <input
-                  maxLength={100}
-                  value={reference}
-                  onChange={(e) => setReference(e.target.value)}
-                  placeholder="Opcional"
-                />
-              </label>
+
             </div>
+            </section>
+            <section>
+              <label className="supplier-check">
+                <input
+                  type="checkbox"
+                  checked={receivedNow}
+                  onChange={(e) => setReceivedNow(e.target.checked)}
+                />
+                Mercadoria recebida agora
+              </label>
+              <p>
+                {receivedNow
+                  ? "Ao confirmar, as quantidades serão somadas ao estoque."
+                  : "A compra ficará pendente. O estoque só será somado ao registrar o recebimento."}
+              </p>
+              {!receivedNow && (
+                <label>
+                  <span>Previsão de entrega</span>
+                  <input
+                    type="date"
+                    min={purchasedOn}
+                    value={expectedOn}
+                    onChange={(e) => setExpectedOn(e.target.value)}
+                  />
+                </label>
+              )}
+            </section>
             <section>
               <div className="supplier-section-top">
                 <div>
@@ -945,32 +967,7 @@ function PurchaseForm({
                 )}
               </div>
             </section>
-            <section>
-              <label className="supplier-check">
-                <input
-                  type="checkbox"
-                  checked={receivedNow}
-                  onChange={(e) => setReceivedNow(e.target.checked)}
-                />
-                Mercadoria recebida agora
-              </label>
-              <p>
-                {receivedNow
-                  ? "Ao confirmar, as quantidades serão somadas ao estoque."
-                  : "A compra ficará pendente. O estoque só será somado ao registrar o recebimento."}
-              </p>
-              {!receivedNow && (
-                <label>
-                  <span>Previsão de entrega</span>
-                  <input
-                    type="date"
-                    min={purchasedOn}
-                    value={expectedOn}
-                    onChange={(e) => setExpectedOn(e.target.value)}
-                  />
-                </label>
-              )}
-            </section>
+
             <section className="supplier-payment-plan">
               <h3>Pagamento ao fornecedor</h3>
               <div className="supplier-form-grid">
@@ -1080,6 +1077,21 @@ function PurchaseForm({
                   </label>
                 </div>
               ))}
+            </section>
+          </fieldset>
+          <div className="supplier-purchase-side">
+          <fieldset className="supplier-purchase-fields" disabled={committed}>
+            <section className="supplier-purchase-completion">
+              <h3>Fechamento da compra</h3>
+              <label>
+                <span>Nota / referência</span>
+                <input
+                  maxLength={100}
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  placeholder="Opcional"
+                />
+              </label>
               <label className="supplier-check">
                 <input
                   type="checkbox"
@@ -1144,6 +1156,8 @@ function PurchaseForm({
               histórico da compra.
             </p>
           </section>
+          </div>
+          </div>
           {error && (
             <div className="supplier-error" role="alert">
               {error}

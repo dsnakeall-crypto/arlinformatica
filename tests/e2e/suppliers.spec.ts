@@ -203,7 +203,27 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
       ),
     });
 
+  const columns = purchaseModal.locator(".supplier-purchase-columns");
+  await expect(columns.locator(".supplier-purchase-main").getByLabel("Buscar produto para a compra")).toHaveCount(1);
+  await expect(columns.locator(".supplier-purchase-main").getByLabel("Condição de pagamento")).toHaveCount(1);
+  await expect(columns.locator(".supplier-purchase-side").getByLabel("Compra já paga integralmente")).toHaveCount(1);
+  const mainBox = await columns.locator(".supplier-purchase-main").boundingBox();
+  const sideBox = await columns.locator(".supplier-purchase-side").boundingBox();
+  expect(mainBox).not.toBeNull(); expect(sideBox).not.toBeNull();
+  expect(sideBox!.x).toBeGreaterThan(mainBox!.x + mainBox!.width);
+  expect(await purchaseModal.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+  await purchaseModal.locator(".supplier-form-body").evaluate(element => element.scrollTop=0);
   await page.screenshot({ path: "output/fornecedores/compra-desktop.png" });
+  await page.setViewportSize({width:390,height:844});
+  expect(await purchaseModal.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+  const mobileMain = await columns.locator(".supplier-purchase-main").boundingBox();
+  const mobileSide = await columns.locator(".supplier-purchase-side").boundingBox();
+  expect(mobileSide!.y).toBeGreaterThan(mobileMain!.y + mobileMain!.height);
+  await purchaseModal.getByLabel("Buscar produto para a compra").scrollIntoViewIfNeeded();
+  await page.screenshot({path:"output/fornecedores/compra-mobile.png"});
+  await purchaseModal.getByLabel("Anexar imagem ou PDF da nota fiscal").scrollIntoViewIfNeeded();
+  await page.screenshot({path:"output/fornecedores/compra-nota-mobile.png"});
+  await page.setViewportSize({width:1440,height:1000});
   await purchaseModal
     .getByRole("button", { name: "Registrar compra", exact: true })
     .click();

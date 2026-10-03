@@ -572,3 +572,11 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Lint, TypeScript/build, 19 testes frontend, 24 testes PHP (291 verificações) e quatro cenários E2E distintos de fornecedores aprovados. Cenário visual repetido após acrescentar verificações geométricas.
 - [OK] Backup externo verificado em C:/Users/Allan/ARL-backups/supplier-form-20261003-123005; nenhuma migração ou alteração direta do banco de uso.
 - [PENDENTE] Publicação no servidor, fora desta execução.
+
+
+## Registro de compra — duas colunas
+- [OK] Produtos, recebimento e pagamento à esquerda; fechamento/total/nota à direita, empilhados no celular.
+- [OK] Campos legíveis, relevo discreto e rodapé acessível; conferência visual e geométrica desktop/mobile.
+- [OK] Lint, TypeScript/build, 19 testes frontend e três fluxos E2E, incluindo nota/parcelas/recebimento/reenvio sem duplicação.
+- [OK] Backup externo verificado: C:/Users/Allan/ARL-backups/supplier-purchase-layout-20261003-123752. Sem mudança direta no banco de uso.
+- [PENDENTE] Publicação no servidor, fora desta execução.

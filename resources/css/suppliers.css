@@ -1152,3 +1152,48 @@
     min-height: 42px;
   }
 }
+
+/* Compra: itens/pagamento e fechamento em colunas, com rolagem única. */
+.arl-3d-popup:has(.supplier-purchase-form) { width:min(1180px,100%); }
+.supplier-purchase-columns { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:20px; align-items:start; }
+.supplier-purchase-side { display:grid; gap:16px; min-width:0; }
+.supplier-purchase-form .supplier-purchase-fields { gap:16px; }
+.supplier-purchase-form fieldset > section,.supplier-purchase-side > section { padding:16px; border:1px solid #d5deeb; border-radius:14px; background:linear-gradient(130deg,#fff,#f8faff); box-shadow:inset 0 1px 2px #fff,0 3px 9px #2439540c; }
+.supplier-purchase-form h3 { font-size:16px!important; color:#162940; margin:0 0 12px; letter-spacing:0; }
+.supplier-purchase-form label { font-size:13px; color:#263b56; }
+.arl-3d-popup .supplier-purchase-form input:not([type=checkbox]),.arl-3d-popup .supplier-purchase-form textarea,.arl-3d-popup .supplier-purchase-form select { border:1px solid #b8c7da!important; border-radius:10px!important; padding:8px 11px!important; font-size:14px!important; min-height:38px; background:linear-gradient(#fff,#f3f6fa)!important; box-shadow:inset 0 1px 2px #fff,0 2px 5px #24395418; }
+.arl-3d-popup .supplier-purchase-form .supplier-search input { background:transparent!important; box-shadow:none!important; border:0!important; padding:4px!important; }
+.supplier-purchase-form .supplier-search { border-color:#b8c7da; }
+.supplier-purchase-date { max-width:260px; }
+.supplier-purchase-form .supplier-check { font-size:13px; }
+.supplier-purchase-form .supplier-purchase-completion { display:grid; gap:14px; }
+.supplier-purchase-completion h3 { margin:0; }
+.supplier-purchase-form .supplier-purchase-line { grid-template-columns:repeat(3,minmax(0,1fr)); padding:12px; gap:10px; border:1px solid #dce5f0; background:#f4f8ff; border-radius:12px; margin-top:10px; }
+.supplier-purchase-form .supplier-purchase-line > strong { grid-column:1/3; overflow-wrap:anywhere; }
+.supplier-purchase-form .supplier-purchase-line > label { grid-row:2; min-width:0; font-size:11px; }
+.supplier-purchase-form .supplier-purchase-line > b { grid-column:1/3; font-size:14px; }
+.supplier-purchase-form .supplier-purchase-line > button { grid-column:3; grid-row:3; justify-self:end; }
+.supplier-purchase-form .supplier-quick-product { grid-template-columns:1fr 1fr; }
+.supplier-purchase-form .supplier-quick-product button { justify-self:start; }
+.supplier-purchase-form .supplier-installment-row { grid-template-columns:75px minmax(0,1fr) minmax(0,1fr); gap:10px; padding:10px 0; font-size:12px; }
+.supplier-purchase-form .supplier-installment-row label { font-size:11px; }
+.supplier-purchase-form .supplier-purchase-total { background:linear-gradient(120deg,#edf4ff,#ddeafa); border:1px solid #c5d6eb; color:#263f60; padding:14px 16px; }
+.supplier-purchase-form .supplier-purchase-total strong { font-size:22px; }
+.supplier-purchase-form input[type=file] { height:auto; }
+.supplier-purchase-form input[type=file]::file-selector-button { border:1px solid #bfcee1; border-radius:8px; padding:7px 10px; margin-right:10px; background:#e6eefb; color:#29466a; cursor:pointer; font:inherit; }
+.supplier-purchase-form .supplier-help,.supplier-purchase-form section > p { color:#596a80; }
+@media(max-width:900px) {
+ .supplier-purchase-columns { grid-template-columns:1fr; gap:16px; }
+}
+@media(max-width:600px) {
+ .supplier-purchase-form .supplier-form-body { padding:14px; }
+ .supplier-purchase-form fieldset > section,.supplier-purchase-side > section { padding:14px; }
+ .arl-3d-popup .supplier-purchase-form input:not([type=checkbox]),.arl-3d-popup .supplier-purchase-form textarea,.arl-3d-popup .supplier-purchase-form select { font-size:16px!important; min-height:42px; }
+ .supplier-purchase-form .supplier-purchase-line { grid-template-columns:1fr 1fr; }
+ .supplier-purchase-form .supplier-purchase-line > label { grid-row:auto; }
+ .supplier-purchase-form .supplier-purchase-line > b { grid-column:1; }
+ .supplier-purchase-form .supplier-purchase-line > button { grid-column:2; grid-row:auto; }
+ .supplier-purchase-form .supplier-installment-row { grid-template-columns:1fr; }
+ .supplier-purchase-form .supplier-quick-product { grid-template-columns:1fr; }
+ .supplier-purchase-date { max-width:100%; }
+}

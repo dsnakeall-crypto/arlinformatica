@@ -71,3 +71,8 @@ Resultados finais: 230 testes PHP / 1.965 asserções; 25 testes MySQL isolado /
 ### Cadastro de fornecedor — organização em 03/10/2026
 Consulta do documento separada de Contato, com botão estilizado e resultado destacado. Campos com rótulos legíveis, bordas definidas e contatos empilhados em coluna compacta; fonte de 16px no celular. Celular é usado como WhatsApp em novos cadastros e ao trocar o celular. Editar outros dados preserva um WhatsApp antigo diferente, com aviso no formulário. Não há remoção da coluna ou alteração de registros existentes por migração. Identificação/endereço, máscaras, consulta de CEP e validações do backend preservados.
 Backup de arquivos, alterações locais e histórico Git verificado: `C:/Users/Allan/ARL-backups/supplier-form-20261003-123005` (1736 arquivos). Sem publicação ou mudança direta no banco de uso.
+
+
+### Registro de compra em duas colunas — 03/10/2026
+Desktop: data/recebimento, produtos e plano de pagamento na primeira coluna; referência, quitação integral/data, observações, total e nota fiscal na segunda. Cards com bordas definidas, campos legíveis e rodapé fixo. Em telas até 900px as colunas se empilham; no celular campos usam 16px. Dados de compra bloqueados após sucesso; upload permanece disponível para reenvio sem duplicar compra/estoque.
+Backup externo verificado: `C:/Users/Allan/ARL-backups/supplier-purchase-layout-20261003-123752` (1748 arquivos e histórico Git). Sem migração, alteração direta de dados ou publicação. Lint, TypeScript/build, 19 testes frontend e três fluxos E2E de fornecedores aprovados; conferência desktop/mobile com verificação de posição/conteúdo das colunas, overflow, nota, parcelas e reenvio de anexo.
