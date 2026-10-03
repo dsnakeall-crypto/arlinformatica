@@ -633,3 +633,16 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] 28 testes PHP (421 verificações), 19 testes frontend, lint, TypeScript/build e Pint; seis testes no navegador (exclusão + cinco fluxos mobile), com revisão visual desktop e tela estreita.
 - [OK] Backup externo de 1809 arquivos/Git e banco/privados de 20391980 bytes verificados em C:/Users/Allan/ARL-backups/expense-catalog-delete-20261003-140859; migração aditiva aplicada localmente.
 - [PENDENTE] Publicação no servidor. Nenhum cadastro real foi excluído nesta execução.
+
+## Simulações gerais em volume — 03/10/2026
+
+- [OK] Backup externo de 1.823 arquivos/alterações/Git e pacote validado de banco/privados em C:/Users/Allan/ARL-backups/simulacoes-gerais-20261003-144339.
+- [OK] Cenários isolados com 30 clientes/30 OS, 30 fornecedores/30 compras e 48 dívidas em oito instituições; sem cadastros fictícios no banco de uso.
+- [OK] Suíte PHP final em SQLite e MySQL: 299 testes e 6.325 verificações em cada motor; 19 testes frontend, lint, TypeScript e build aprovados.
+- [OK] Cinco cenários concorrentes reais MySQL; corrigida disputa de repetição do pagamento de OS, sem duplicar dinheiro/estoque.
+- [OK] Comparação das 58 tabelas: 57 idênticas; somente updated_at de dois alertas supplier_due mudou. Todos os 266 arquivos privados idênticos; cadastros, valores e estoque de uso preservados.
+- [OK] Testes mobile atualizados aos quatro ícones, cenário integrado de volume e 15 testes de financeiro/finalização no navegador aprovados.
+- [OK] Rodada completa final de navegador: 136/137 aprovados; expectativa de formato do número da compra corrigida no novo teste de volume e reteste 1/1 aprovado. Total de 137 cenários distintos aprovados, sem falha final pendente.
+- [OK] Pint dos arquivos PHP alterados aprovado; relatório detalhado em docs/RELATORIO_TESTES_GERAL_2026-10-03.md.
+- [OK] Pint global aprovado após normalização local do final de linha em routes/api.php, sem mudança de código.
+- [PENDENTE] Homologação sobre cópia do banco online, backup/restauração do servidor e publicação; integrações externas reais e dispositivos físicos não validados nesta rodada.

@@ -63,7 +63,8 @@ test('mobile explícito prioriza OS abertas, mantém barra global e abre OS some
     await expect(page.getByRole('heading', { name: forbidden, exact: true })).toHaveCount(0);
   }
   const bottom = page.locator('.arl-global-mobile-nav');
-  await expect(bottom.getByRole('button')).toHaveCount(3);
+  await expect(bottom.getByRole('button')).toHaveCount(4);
+  await expect(bottom.getByRole('button', { name: 'Controle de Gasto', exact: true })).toBeVisible();
   await expect(bottom.getByRole('button', { name: 'Clientes' })).toBeVisible();
   await expect(bottom.getByRole('button', { name: 'Nova OS' })).toBeVisible();
 
@@ -113,12 +114,16 @@ test('modo Mobile / Tablet ativa a mesma tela inicial mesmo em viewport largo', 
   await expect(page.locator('.arl-mobile-home').getByRole('heading', { name: 'OS abertas' })).toBeVisible();
 });
 
-test('modo Mobile / Tablet exibe somente os três destinos da barra fixa', async ({ page }) => {
+test('modo Mobile / Tablet exibe os quatro destinos acessíveis por ícones', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('arl-layout-mode', 'mobile'));
   await login(page);
   await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveCount(0);
   const bottomBar = page.locator('.arl-global-mobile-nav');
-  await expect(bottomBar.getByRole('button')).toHaveText(['OS abertas', 'Nova OS', 'Clientes']);
+  await expect(bottomBar.getByRole('button')).toHaveCount(4);
+  for (const label of ['OS abertas', 'Nova OS', 'Clientes', 'Controle de Gasto']) {
+    await expect(bottomBar.getByRole('button', { name: label, exact: true })).toBeVisible();
+  }
+  await expect(bottomBar.getByRole('button')).toHaveText(['', '', '', '']);
 });
 
 test('Web / PC preserva navegação e detalhe completo em viewport estreito', async ({ page }) => {
