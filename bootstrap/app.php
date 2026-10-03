@@ -3,7 +3,9 @@
 use App\Http\Middleware\DiscardInvalidRememberCookie;
 use App\Http\Middleware\EnsureActiveUser;
 use App\Http\Middleware\RequireRole;
+use App\Http\Middleware\RestrictModuleAccess;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
@@ -11,6 +13,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -32,7 +35,10 @@ return Application::configure(basePath: dirname(__DIR__))
             ValidateCsrfToken::class,
         ]);
         $middleware->web(append: [DiscardInvalidRememberCookie::class, EnsureActiveUser::class]);
-        $middleware->api(append: [DiscardInvalidRememberCookie::class, EnsureActiveUser::class]);
+        $middleware->api(append: [DiscardInvalidRememberCookie::class, EnsureActiveUser::class, RestrictModuleAccess::class]);
+        $middleware->prependToPriorityList(SubstituteBindings::class, RestrictModuleAccess::class);
+        $middleware->prependToPriorityList(RestrictModuleAccess::class, EnsureActiveUser::class);
+        $middleware->prependToPriorityList(AuthenticatesRequests::class, DiscardInvalidRememberCookie::class);
         $middleware->alias(['role' => RequireRole::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

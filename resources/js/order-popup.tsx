@@ -3,9 +3,10 @@ import { createPortal } from 'react-dom';
 import { X, type LucideIcon } from 'lucide-react';
 import '../css/order-popup.css';
 
-export default function OrderPopup({ title, eyebrow, description, icon: Icon, variant, onClose, children }: {
+export default function OrderPopup({ title, eyebrow, description, icon: Icon, variant, onClose, children, closeLabel }: {
   title: string; eyebrow: string; description: string; icon: LucideIcon;
   variant: 'editor' | 'budget'; onClose: () => void; children: ReactNode;
+  closeLabel?: string;
 }) {
   const dialog = useRef<HTMLElement>(null);
   const close = useRef(onClose);
@@ -34,7 +35,7 @@ export default function OrderPopup({ title, eyebrow, description, icon: Icon, va
       <header className="arl-3d-header">
         <span className="arl-3d-heading-icon"><Icon /></span>
         <div className="arl-3d-heading"><span className="arl-eyebrow">{eyebrow}</span><h2>{title}</h2><p>{description}</p></div>
-        <button type="button" className="arl-3d-close" aria-label={variant === 'editor' ? 'Cancelar edição' : 'Fechar orçamento'} onClick={onClose}><X /></button>
+        <button type="button" className="arl-3d-close" aria-label={closeLabel || (variant === 'editor' ? 'Cancelar edição' : 'Fechar orçamento')} onClick={onClose}><X /></button>
       </header>
       {children}
     </section>

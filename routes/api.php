@@ -10,6 +10,7 @@ use App\Http\Controllers\ClientImportController;
 use App\Http\Controllers\DatabaseResetController;
 use App\Http\Controllers\DiagnosticController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\ExpenseControlController;
 use App\Http\Controllers\FinalizationController;
 use App\Http\Controllers\FinalShareController;
 use App\Http\Controllers\FinanceController;
@@ -32,6 +33,25 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
+    Route::prefix('expense-control')->middleware('role:Master,Administrador,Controle de Gasto')->group(function () {
+        Route::get('/configuration', [ExpenseControlController::class, 'configuration']);
+        Route::put('/people', [ExpenseControlController::class, 'people']);
+        Route::post('/catalogs/{catalog}', [ExpenseControlController::class, 'catalog']);
+        Route::put('/catalogs/{catalog}/{id}', [ExpenseControlController::class, 'catalog'])->whereNumber('id');
+        Route::get('/summary', [ExpenseControlController::class, 'summary']);
+        Route::get('/projection', [ExpenseControlController::class, 'projection']);
+        Route::get('/advances', [ExpenseControlController::class, 'advances']);
+        Route::get('/activity', [ExpenseControlController::class, 'activity']);
+        Route::get('/debts', [ExpenseControlController::class, 'debts']);
+        Route::post('/debts', [ExpenseControlController::class, 'store']);
+        Route::get('/debts/{id}', [ExpenseControlController::class, 'show'])->whereNumber('id');
+        Route::put('/debts/{id}', [ExpenseControlController::class, 'update'])->whereNumber('id');
+        Route::post('/debts/{id}/cancel', [ExpenseControlController::class, 'cancel'])->whereNumber('id');
+        Route::post('/debts/{id}/end-recurring', [ExpenseControlController::class, 'endRecurring'])->whereNumber('id');
+        Route::put('/installments/{id}', [ExpenseControlController::class, 'installment'])->whereNumber('id');
+        Route::post('/operations', [ExpenseControlController::class, 'operation']);
+        Route::post('/entries/{id}/reverse', [ExpenseControlController::class, 'reverse'])->whereNumber('id');
+    });
     Route::post('/text-improvements', [TextImprovementController::class, 'store']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::patch('/me/sidebar', [AuthController::class, 'updateSidebarPreference']);

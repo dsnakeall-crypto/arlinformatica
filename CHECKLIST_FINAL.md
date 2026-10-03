@@ -358,3 +358,24 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [PENDENTE] Publicação desta extensão no servidor: alteração/testes locais; produção não atualizada.
 
 - [OK] Verificações desta extensão: 230 testes PHP, 25 em MySQL isolado, 106 E2E gerais, 2 fluxos finais de fornecedores, 12 unitários de frontend, lint, TypeScript, Pint e build. Dados locais/arquivos privados conferidos por hash.
+
+## Controle de Gasto — primeira etapa (02/10/2026)
+
+- [OK] Documentação mestre/referências/README lidos antes da edição; escopo e limites documentados.
+- [OK] Backup externo do código, alterações locais e histórico Git verificado; banco/arquivos privados validados antes da migração local.
+- [OK] Menu abaixo de Financeiro e identidade ARL; desktop/mobile e popups conferidos no navegador.
+- [OK] Instituições, tipos, responsáveis configuráveis e cadastro manual de compra parcelada, mensal ou única.
+- [OK] Divisão individual/Casal em centavos, preservando o valor original e as divisões anteriores.
+- [OK] Pagamento parcial/individual/lote, antecipação e abatimento; registro do pagador e do usuário responsável.
+- [OK] Idempotência, bloqueio de valor acima do saldo e transação integral no lote.
+- [OK] Quitadas, canceladas, desfazer com motivo, encerramento de recorrência, projeção de doze meses e auditoria.
+- [OK] Recorrências preenchem meses intermediários sem duplicação; alertas pessoais não são escondidos pelos gastos da outra pessoa.
+- [OK] Perfil Controle de Gasto limitado ao módulo no backend; Usuário local limitado à consulta e abertura operacional.
+- [OK] Tabelas independentes; zero despesas importadas/semeadas; 47 conjuntos de dados existentes e 128 arquivos privados locais preservados por hash.
+- [OK] Backup/restauração recuperam dados e saldo do módulo.
+- [OK] 247 testes PHP (2.149 verificações), 42 testes MySQL isolados (414 verificações) e 12 unitários de frontend aprovados.
+- [OK] Suíte geral de navegador: 110 testes aprovados; build final e três fluxos finais do módulo aprovados; lint, TypeScript e Pint sem falhas.
+- [PENDENTE] Cadastro por foto com extração/revisão antes de salvar, conforme etapa futura combinada.
+- [PENDENTE] Estorno da compra com redistribuição automática entre parcelas restantes.
+- [PENDENTE] Avisos agendados/push, relatórios próprios/exportação e personalização de imagens das instituições.
+- [PENDENTE] Publicação desta etapa no servidor; somente ambiente local atualizado.

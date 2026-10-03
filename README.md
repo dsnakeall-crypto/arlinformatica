@@ -106,3 +106,7 @@ A Etapa 10 fecha Painel/Mesa, status e finalização, histórico do cliente, or�
 A interface segue **mobile first**. O fluxo externo mobile possui WhatsApp, Maps, Foto, Status e Finalizar com alvos de toque validados; Clientes também possui regressão de contenção/overflow mobile. O E2E usa cliques normais, sem `force: true` ou clique JavaScript para contornar defeitos de interface.
 
 Fornecedores: [cadastro obrigatório, pagamentos, vencimentos e notas fiscais](docs/FORNECEDORES_PAGAMENTOS_NOTAS.md).
+
+## Controle de Gasto
+
+Novo módulo independente abaixo de Financeiro, iniciado sem despesas. Configure instituições, tipos e responsáveis; registre compras/parcelas, pagamentos, antecipações e abatimentos. Perfil exclusivo Controle de Gasto e perfil Usuário local possuem restrições no backend. Consulte [uso, modelagem e próximos passos](docs/CONTROLE_GASTO.md). Implementação local; publicação e cadastro por foto são etapas posteriores.

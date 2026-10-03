@@ -54,6 +54,7 @@ import "../css/action-icons.css";
 import ServicesCatalogPage, { ProductsCatalogPage } from "./services-page";
 import ClientsPage from "./clients-page";
 import SuppliersPage from "./suppliers-page";
+import ExpenseControlPage from "./expense-control-page";
 import DatabaseResetPanel from "./database-reset";
 import OrderDetailPage from "./order-detail-page";
 import PageHeader from "./page-header";
@@ -71,6 +72,7 @@ type Page =
   | "clients"
   | "new"
   | "finance"
+  | "expense-control"
   | "post-sale"
   | "settings"
   | "services"
@@ -5221,6 +5223,7 @@ function App() {
       clients: "clients",
       new: "new",
       finance: "finance",
+      "expense-control": "expense-control",
       "post-sale": "post-sale",
       settings: "settings",
       services: "services",
@@ -5260,7 +5263,7 @@ function App() {
       .then(setNavSummary)
       .catch(() => undefined);
   useEffect(() => {
-    if (me) void loadNavigationSummary();
+    if (me && me.role !== "Controle de Gasto") void loadNavigationSummary();
   }, [me, page, detail]);
   const logout = async () => {
     await fetch("/logout", {
@@ -5302,17 +5305,21 @@ function App() {
     window.addEventListener("arl-open-order", openOrder);
     return () => window.removeEventListener("arl-open-order", openOrder);
   }, [mobileLayout]);
+  const expenseOnly = me?.role === "Controle de Gasto";
   const roleAllowed = (p: Page) =>
-    p === "users"
+    expenseOnly ? p === "expense-control"
+    : me?.role === "Usuário local" ? ["dashboard", "orders", "clients", "new"].includes(p)
+    : p === "expense-control" ? canAdminister
+    : p === "users"
       ? me?.role === "Master"
       : ["finance", "services", "products", "suppliers", "settings"].includes(p)
         ? me?.role === "Master" || me?.role === "Administrador"
         : true;
   useEffect(() => {
     if (me && !roleAllowed(page)) {
-      setPage("dashboard");
+      setPage(expenseOnly ? "expense-control" : "dashboard");
       setDetail(undefined);
-      if (mobileLayout) history.replaceState(null, "", "/");
+      history.replaceState(null, "", expenseOnly ? "/expense-control" : "/");
     }
   }, [me, page, mobileLayout, detail]);
   const groups = [
@@ -5336,6 +5343,7 @@ function App() {
       label: "Gestão",
       items: [
         ["Financeiro", "finance", Wallet],
+        ["Controle de Gasto", "expense-control", CircleDollarSign],
         ["Pós-Venda", "post-sale", Phone],
       ],
     },
@@ -5379,7 +5387,7 @@ function App() {
             />
           </div>
         </div>
-        <button
+        {!expenseOnly && <button
           type="button"
           className={`new-order-shortcut${page === "new" ? " active" : ""}`}
           onClick={() => go("new")}
@@ -5387,7 +5395,7 @@ function App() {
         >
           <Plus />
           <span>Nova OS</span>
-        </button>
+        </button>}
         <nav aria-label="Menu principal">
           {groups.map((group) => {
             const items = group.items.filter(([, p]) => roleAllowed(p));
@@ -5457,6 +5465,7 @@ function App() {
         </div>
       </aside>
       <main
+        data-arl-expense-control-react={page === "expense-control" || expenseOnly ? "1" : undefined}
         data-arl-orders-react={!detail && page === "orders" ? "1" : undefined}
         data-arl-new-order-react={!detail && page === "new" ? "1" : undefined}
         data-arl-settings-react={
@@ -5521,9 +5530,11 @@ function App() {
               <option value="mobile">Mobile / Tablet</option>
             </select>
           </label>
-          <NotificationBell go={go} />
+          {!expenseOnly && <NotificationBell go={go} />}
         </header>
-        {detail ? (
+        {!me ? <p role="status">Carregando sessão…</p> : expenseOnly || page === "expense-control" ? (
+          <ExpenseControlPage />
+        ) : detail ? (
           <OrderDetailPage
             key={`${detail}-${orderAction || "view"}`}
             initialAction={orderAction}
@@ -5580,7 +5591,7 @@ function App() {
           <NewOrder initialClient={newOrderClient} done={(id: number) => go("orders", id)} />
         )}
       </main>
-      {mobileLayout && <MobileBottomBar go={go} page={page} />}
+      {mobileLayout && !expenseOnly && <MobileBottomBar go={go} page={page} />}
       <QuickEntry
         open={mobileQuickEntry}
         onClose={() => setMobileQuickEntry(false)}

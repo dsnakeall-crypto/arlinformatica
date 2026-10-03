@@ -934,3 +934,7 @@ Compra pendente não soma estoque. Recebimento completo ou parcial soma somente 
 Evolução aditiva com backup verificado antes da migração. Pagamentos de fornecedores possuem condições, formas, parcelas, vencimentos, confirmação auditada e lembretes internos restritos a Master/Admin. Notas fiscais privadas (PDF/imagem) podem ser anexadas à compra. Sem despesa automática duplicada no Financeiro. Margem por lote e futura cópia comercial serão etapas próprias. Regras, modelagem e validação em `docs/FORNECEDORES_COMPRAS.md`.
 
 Detalhes desta extensão: `docs/FORNECEDORES_PAGAMENTOS_NOTAS.md`.
+
+## 53. Controle de Gasto — extensão autorizada em 02/10/2026
+
+Prioridade sobre a reformulação de Fornecedores. Módulo independente abaixo de Financeiro, com cadastro do zero, dois responsáveis configuráveis e despesas individuais/compartilhadas. Instituição → tipo → compra → parcelas; cobrança única, parcelada e mensal, pagamentos/antecipações/abatimentos, quitação, projeção e histórico auditado. Perfil exclusivo Controle de Gasto acessa somente este módulo, com bloqueio no backend. Master/Admin mantêm acesso geral. Usuário local permite cadastro de clientes e abertura de chamados, preservando o Funcionário anterior. Não importar dados do site antigo. Não incluir Agenda, Contas ou voz. Foto é etapa futura. Regras e limites em `docs/CONTROLE_GASTO.md`.

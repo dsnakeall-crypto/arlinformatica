@@ -61,3 +61,7 @@ Nova área sem imagem específica fornecida. Reutiliza PageHeader, identidade br
 ### Fornecedores: cadastro e compras
 
 A extensão de pagamentos/notas mantém os popups brancos arredondados e os cards existentes. Campos obrigatórios possuem indicação, máscaras e consulta de CEP. Na ficha da compra, condições, parcelas e anexos ficam em seções, com ações compactas; quebra de linhas no mobile, preservando as áreas aprovadas de OS/orçamento. Capturas de teste em `output/fornecedores` (dados fictícios).
+
+## Controle de Gasto — 02/10/2026
+
+O site gastos-do-casal.dsnakeall.chatgpt.site e o PDF Gestão de Gastos fornecido orientam a organização das informações e os fluxos. Adaptar para a identidade visual ARL aprovada: branco/vermelho, cabeçalho com linha, cards com sombras, navegação clara e popups brancos arredondados. Resumo pessoal e visão do casal distintos; instituição → tipo → compra → parcelas. Capturas de testes com dados fictícios em `output/controle-gasto`. Agenda, Contas e voz excluídos pelo proprietário; foto posterior.
