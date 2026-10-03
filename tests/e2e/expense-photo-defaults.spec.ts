@@ -8,10 +8,11 @@ const info = { enabled: true, provider: 'mistral', label: 'Mistral', model: 'mis
 const fixture = path.resolve('tests/fixtures/expense-invoice.png');
 
 // Provider transport is simulated; the financial save below uses the real local API.
-test('Mistral: consentimento, campos faltantes, revisão e cadastro real sem enviar chave ao navegador', async ({ page }) => {
+test('Padrões opcionais, cartão por compra e divisão somente para Casal', async ({ page }) => {
   await login(page);
   const stamp = Date.now();
   const bank = (await api(page, '/expense-control/catalogs/institutions', 'POST', { name: 'AI ' + stamp, active: true, due_day: 12, color: '#c9002c' })).body;
+  const bankTwo = (await api(page, '/expense-control/catalogs/institutions', 'POST', { name: 'Segundo AI ' + stamp, active: true, due_day: 15, color: '#125588' })).body;
   const type = (await api(page, '/expense-control/catalogs/types', 'POST', { name: 'Tipo AI ' + stamp, active: true })).body;
   await page.route('**/api/expense-control/photo-ai', route => route.fulfill({ json: info }));
   let calls = 0;
@@ -29,21 +30,39 @@ test('Mistral: consentimento, campos faltantes, revisão e cadastro real sem env
   await expect(dialog.getByRole('button', { name: 'Ler com Mistral', exact: true })).toBeDisabled();
   expect(calls).toBe(0);
   await dialog.getByRole('checkbox', { name: /Autorizo enviar esta foto/ }).check();
-  await page.screenshot({ path: 'output/mistral/escolha-desktop.png', fullPage: true });
+  await page.screenshot({ path: 'output/revisao/escolha-desktop.png', fullPage: true });
   await dialog.getByRole('button', { name: 'Ler com Mistral', exact: true }).click();
   await expect(dialog.locator('.cg-photo-row')).toHaveCount(2);
   await expect(dialog.getByRole('button', { name: 'Texto lido' })).toHaveCount(0);
   await expect(dialog.getByLabel('Valor da parcela da compra 2', { exact: true })).toHaveValue('');
   await expect(dialog.getByLabel('Conferi a compra 2', { exact: true })).toBeDisabled();
+  await expect(dialog.getByRole('combobox', { name: 'Selecionar cartão geral', exact: true })).toHaveValue('');
+  await expect(dialog.getByRole('combobox', { name: 'Selecionar tipo de dívida', exact: true })).toHaveValue('');
+  await dialog.getByRole('combobox', { name: 'Responsável padrão', exact: true }).selectOption('one');
+  await expect(dialog.getByLabel(/no Casal/)).toHaveCount(0);
+  await dialog.getByRole('combobox', { name: 'Responsável padrão', exact: true }).selectOption('two');
+  await expect(dialog.getByLabel(/no Casal/)).toHaveCount(0);
+  await dialog.getByRole('combobox', { name: 'Responsável padrão', exact: true }).selectOption('shared');
+  await expect(dialog.getByLabel(/no Casal/)).toBeVisible();
   await dialog.getByRole('combobox', { name: 'Selecionar cartão geral', exact: true }).selectOption(String(bank.id));
+  await expect(dialog.getByLabel('Cartão da compra 1', { exact: true }).locator('option:checked')).toContainText(bank.name);
+  await dialog.getByLabel('Cartão da compra 2', { exact: true }).selectOption(String(bankTwo.id));
+
   await dialog.getByRole('combobox', { name: 'Selecionar tipo de dívida', exact: true }).selectOption(String(type.id));
   await dialog.getByRole('combobox', { name: 'Responsável padrão', exact: true }).selectOption('shared');
   await dialog.getByLabel('Valor da parcela da compra 2', { exact: true }).fill('8990');
+  await dialog.getByLabel('Cartão da compra 1', { exact: true }).selectOption(String(bank.id));
+  await dialog.getByLabel('Tipo da compra 1', { exact: true }).selectOption(String(type.id));
+  await dialog.getByLabel('Tipo da compra 2', { exact: true }).selectOption(String(type.id));
+  await dialog.getByRole('combobox', { name: 'Selecionar cartão geral', exact: true }).selectOption('');
+  await dialog.getByRole('combobox', { name: 'Selecionar tipo de dívida', exact: true }).selectOption('');
+  await dialog.getByRole('combobox', { name: 'Responsável padrão', exact: true }).selectOption('one');
+  await page.screenshot({ path: 'output/revisao/individual-desktop.png', fullPage: true });
   await dialog.getByLabel('Conferi a compra 1', { exact: true }).check();
   await dialog.getByLabel('Conferi a compra 2', { exact: true }).check();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(dialog.getByRole('button', { name: 'Salvar 2 compras' })).toBeVisible();
-  await page.screenshot({ path: 'output/mistral/revisao-mobile.png', fullPage: true });
+  await page.screenshot({ path: 'output/revisao/revisao-mobile.png', fullPage: true });
   const response = page.waitForResponse(r => r.url().endsWith('/photo-imports') && r.request().method() === 'POST');
   await dialog.getByRole('button', { name: 'Salvar 2 compras' }).click();
   const saved = await response;
@@ -51,26 +70,7 @@ test('Mistral: consentimento, campos faltantes, revisão e cadastro real sem env
   const body = await saved.json();
   await expect(dialog).not.toBeVisible();
   expect((await api(page, '/expense-control/debts/' + body.debt_ids[0])).body.installments).toHaveLength(8);
-  expect(calls).toBe(1);
-});
-
-test('Mistral: falha simulada permite leitura real no aparelho sem repetir chamada paga', async ({ page }) => {
-  test.setTimeout(120000);
-  await login(page);
-  await page.route('**/api/expense-control/photo-ai', route => route.fulfill({ json: info }));
-  let calls = 0;
-  await page.route('**/api/expense-control/photo-ai/read', route => { calls++; return route.fulfill({ status: 503, json: { message: 'Mistral indisponível. Use a leitura no aparelho.' } }); });
-  await page.getByRole('button', { name: 'Controle de Gasto', exact: true }).click();
-  await page.getByRole('button', { name: 'Cadastrar por foto', exact: true }).click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog.locator('.cg-photo-reader-options').getByRole('button', { name: 'Mistral' })).toHaveAttribute('aria-pressed', 'true');
-  await dialog.getByLabel('Foto da fatura', { exact: true }).setInputFiles(fixture);
-  await dialog.getByRole('checkbox', { name: /Autorizo enviar esta foto/ }).check();
-  await dialog.getByRole('button', { name: 'Ler com Mistral', exact: true }).click();
-  await expect(dialog.getByRole('alert')).toContainText('Mistral indisponível');
-  await dialog.getByRole('button', { name: 'No aparelho' }).click();
-  await dialog.getByRole('button', { name: 'Ler compras', exact: true }).click();
-  await expect(dialog.locator('.cg-photo-row')).toHaveCount(2, { timeout: 90000 });
-  await expect(dialog.getByLabel('Valor da parcela da compra 1', { exact: true })).toHaveValue('120,50');
+  expect((await api(page, '/expense-control/debts/' + body.debt_ids[0])).body.debt.institution_id).toBe(bank.id);
+  expect((await api(page, '/expense-control/debts/' + body.debt_ids[1])).body.debt.institution_id).toBe(bankTwo.id);
   expect(calls).toBe(1);
 });

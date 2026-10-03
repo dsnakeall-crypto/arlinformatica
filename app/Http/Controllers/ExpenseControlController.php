@@ -229,11 +229,12 @@ class ExpenseControlController extends Controller
         abort_if($r->files->count() > 0, 422, 'A foto deve ser lida no aparelho. Envie somente as compras conferidas.');
         $data = $r->validate([
             'request_key' => 'required|uuid', 'source_hash' => ['required', 'regex:/^[a-f0-9]{64}$/'],
-            'institution_id' => 'required|integer|exists:cg_institutions,id',
+            'institution_id' => 'nullable|integer|exists:cg_institutions,id',
             'start_month' => 'required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12',
             'due_day' => 'required|integer|min:1|max:31', 'items' => 'required|array|min:1|max:100',
-            'items.*' => 'required|array:request_key,reviewed,name,type_id,recurrence,responsibility,percent_one,amount_cents,installment_count,first_number,notes',
+            'items.*' => 'required|array:request_key,reviewed,name,institution_id,type_id,recurrence,responsibility,percent_one,amount_cents,installment_count,first_number,notes',
             'items.*.request_key' => 'required|uuid|distinct', 'items.*.reviewed' => 'required|accepted',
+            'items.*.institution_id' => 'nullable|integer|exists:cg_institutions,id',
             'items.*.name' => 'required|string|max:200', 'items.*.type_id' => 'required|integer|exists:cg_types,id',
             'items.*.recurrence' => 'required|in:installments,once', 'items.*.responsibility' => 'required|in:one,two,shared',
             'items.*.percent_one' => 'required|integer|min:0|max:100',
@@ -242,6 +243,10 @@ class ExpenseControlController extends Controller
             'items.*.first_number' => 'required|integer|min:1', 'items.*.notes' => 'nullable|string|max:2000',
         ]);
         foreach ($data['items'] as $index => &$item) {
+            abort_unless($item['institution_id'] ?? $data['institution_id'] ?? null, 422, 'Selecione o cartão da compra '.($index + 1).' ou um cartão geral.');
+            if (isset($item['institution_id'])) {
+                $item['institution_id'] = (int) $item['institution_id'];
+            }
             foreach (['type_id', 'percent_one', 'amount_cents', 'installment_count', 'first_number'] as $key) {
                 $item[$key] = (int) $item[$key];
             }

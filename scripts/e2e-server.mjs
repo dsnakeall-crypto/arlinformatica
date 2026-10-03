@@ -70,6 +70,11 @@ const environment = {
   SESSION_DRIVER: 'file',
   CACHE_STORE: 'array',
   QUEUE_CONNECTION: 'sync',
+  // Test browsers must not inherit paid-reader activation or keys from the local .env.
+  MISTRAL_EXPENSE_PHOTO_ENABLED: 'false',
+  MISTRAL_API_KEY: '',
+  GEMINI_EXPENSE_PHOTO_ENABLED: 'false',
+  GEMINI_API_KEY: '',
   PRIVATE_STORAGE_PATH: path.join(root, 'storage', 'framework', 'testing', 'e2e-private'),
 };
 

@@ -78,3 +78,7 @@ Manter a temática do app de gastos de referência com a identidade ARL: cabeça
 ## Importação de fatura: escolha do leitor
 
 O diálogo de Controle de Gasto mantém cabeçalho branco, bordas arredondadas e sombras 3D; painel de escolha Gemini Pro/No aparelho, consentimento e revisão por compra, sem alterar os pop-ups aprovados da OS.
+
+## Revisão por foto: acabamento solicitado em 03/10/2026
+
+Manter acabamento 3D. Colocar cartão geral/tipo de dívida na barra inferior antes de salvar, permitindo alternativas por compra. Navegação azul com item ativo vermelho; seletores azuis com foco vermelho. Percentuais só para Casal. Tabelas mantêm aparência anterior.

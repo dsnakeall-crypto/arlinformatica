@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ExpenseControl
@@ -119,8 +120,10 @@ class ExpenseControl
     public function importPhoto(Request $request, array $data): array
     {
         return DB::transaction(function () use ($request, $data) {
-            // The institution lock also serializes imports by the other participant.
-            DB::table('cg_institutions')->where('id', $data['institution_id'])->lockForUpdate()->first();
+            // Serialize request retries and lock every target institution in stable order.
+            DB::table('users')->where('id', $request->user()->id)->lockForUpdate()->first();
+            $banks = collect($data['items'])->map(fn ($item) => $item['institution_id'] ?? $data['institution_id'])->unique()->sort()->values();
+            DB::table('cg_institutions')->whereIn('id', $banks)->orderBy('id')->lockForUpdate()->get();
             $hash = hash('sha256', json_encode($data));
             $old = DB::table('cg_photo_imports')->where('request_key', $data['request_key'])->first();
             if ($old) {
@@ -128,19 +131,29 @@ class ExpenseControl
 
                 return ['id' => $old->id, 'debt_ids' => json_decode($old->debt_ids, true), 'replayed' => true];
             }
-            abort_if(DB::table('cg_photo_imports')->where('institution_id', $data['institution_id'])->where('source_hash', $data['source_hash'])->exists(), 409, 'Esta foto já foi cadastrada nesta instituição. Confira as compras existentes para não duplicar a fatura.');
+            abort_if(DB::table('cg_photo_imports')->whereIn('institution_id', $banks)->where('source_hash', $data['source_hash'])->exists(), 409, 'Esta foto já foi cadastrada nesta instituição. Confira as compras existentes para não duplicar a fatura.');
             $count = array_sum(array_map(fn ($item) => $item['installment_count'] - $item['first_number'] + 1, $data['items']));
             abort_if($count > 3000, 422, 'Divida o cadastro em lotes menores: máximo de 3.000 parcelas por confirmação.');
             $ids = [];
+            $groupIds = [];
             foreach ($data['items'] as $item) {
                 unset($item['reviewed']);
-                $ids[] = $this->createDebt($request, [...$item, 'institution_id' => $data['institution_id'], 'start_month' => $data['start_month'], 'due_day' => $data['due_day']]);
+                $bankId = $item['institution_id'] ?? $data['institution_id'];
+                $debtId = $this->createDebt($request, [...$item, 'institution_id' => $bankId, 'start_month' => $data['start_month'], 'due_day' => $data['due_day']]);
+                $ids[] = $debtId;
+                $groupIds[$bankId][] = $debtId;
             }
-            $id = DB::table('cg_photo_imports')->insertGetId([
-                'request_key' => $data['request_key'], 'payload_hash' => $hash, 'source_hash' => $data['source_hash'],
-                'institution_id' => $data['institution_id'], 'created_by' => $request->user()->id,
-                'debt_ids' => json_encode($ids), 'created_at' => now(), 'updated_at' => now(),
-            ]);
+            $id = null;
+            foreach ($banks as $bankId) {
+                $recordId = DB::table('cg_photo_imports')->insertGetId([
+                    'request_key' => $id === null ? $data['request_key'] : (string) Str::uuid(),
+                    'payload_hash' => $hash, 'source_hash' => $data['source_hash'],
+                    'institution_id' => $bankId, 'created_by' => $request->user()->id,
+                    // The primary record replays the whole batch; others protect each bank.
+                    'debt_ids' => json_encode($id === null ? $ids : $groupIds[$bankId]), 'created_at' => now(), 'updated_at' => now(),
+                ]);
+                $id ??= $recordId;
+            }
             app(Audit::class)->record($request, 'expense_control.photo_imported', 'expense_control', $id, null, ['debt_ids' => $ids, 'count' => count($ids)]);
 
             return ['id' => $id, 'debt_ids' => $ids, 'replayed' => false];

@@ -942,3 +942,7 @@ Prioridade sobre a reformulação de Fornecedores. Módulo independente abaixo d
 ## 54. Provedor de leitura e planejamento Mobile — 03/10/2026
 
 Por solicitação do proprietário, preferir Mistral para leitura consentida de faturas, mantendo revisão integral antes de cadastrar e alternativa local sem API. Integração/configuração em `docs/MISTRAL_FATURAS.md`; Gemini permanece alternativa configurável. Não exige OpenAI ou Node permanente em produção. Após esta etapa e Fornecedores, implementar Controle de Gasto com acesso completo e interface Mobile/Tablet própria, acabamento 3D e testes de cadastro por foto, revisão, parcelas e pagamentos. Não tratar adaptação atual do diálogo como entrega dessa etapa mobile.
+
+## 55. Ajuste da revisão por foto — 03/10/2026
+
+Cartão geral e tipo de dívida na barra inferior são padrões opcionais; permitir definir cartão/tipo por compra. Exigir escolhas resolvidas em cada compra antes de salvar, com revisão obrigatória, transação e proteção contra duplicata em todos os cartões. Percentual de divisão visível apenas para Casal. Navegação do Controle de Gasto em azul, seleção vermelha; seletores da revisão em azul com foco vermelho. Não alterar tabelas ou dados anteriores.

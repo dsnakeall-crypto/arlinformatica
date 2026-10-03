@@ -103,3 +103,11 @@ Escolha Gemini Pro ou No aparelho no diálogo 3D de importação. Gemini exige c
 ## Mistral e prioridade mobile — 03/10/2026
 
 Provedor preferido alterado para Mistral Document AI com revisão obrigatória e opção No aparelho preservada. Configuração privada, custos estimados e pendências no [guia Mistral](MISTRAL_FATURAS.md). Após esta integração e Fornecedores, planejar interface Mobile/Tablet própria para acesso completo ao Controle de Gasto, com acabamento 3D e cadastro por foto; etapa pendente.
+
+## Revisão por foto: padrões opcionais — 03/10/2026
+
+Na barra inferior, antes de salvar, Selecionar cartão geral e Selecionar tipo de dívida aplicam padrões às compras que não têm escolha individual. Ambos podem ficar vazios, desde que cada compra selecionada tenha cartão e tipo próprios. A revisão mostra o padrão herdado e permite substituir por compra; trocar padrões exige conferir novamente. O percentual geral aparece somente para Casal; uma compra individual definida como Casal possui seu percentual próprio, enquanto Allan/Carol ficam sem esse campo. Mês e dia de vencimento continuam comuns ao lote.
+
+O backend aceita cartão por item sem migração ou alteração de registros existentes, mantém transação integral, idempotência e bloqueio da foto em cada cartão incluído. Um cartão inativo ou item inválido impede salvar todo o lote. Menus de navegação têm fundo azulado e seleção vermelha; seletores do diálogo têm fundo azulado e foco vermelho. Cores das tabelas mantidas.
+
+Backup externo verificado: `C:\Users\Allan\ARL-backups\controle-gasto-revisao-20261003-015022`. Dados financeiros e arquivos privados preservados; o uso simultâneo do app alterou apenas timestamps de leitura das notificações.

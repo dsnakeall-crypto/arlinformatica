@@ -116,4 +116,38 @@ class ExpensePhotoImportTest extends TestCase
         $this->assertDatabaseCount('cg_installments', 9);
         $this->postJson('/api/expense-control/photo-imports', $data)->assertOk()->assertJsonPath('debt_ids', $ids);
     }
+
+    public function test_individual_cards_without_general_card_preserve_atomic_retry_and_duplicate_protection(): void
+    {
+        $secondBank = $this->postJson('/api/expense-control/catalogs/institutions', ['name' => 'Segundo cartão', 'due_day' => 10, 'active' => true, 'color' => '#123456'])->assertOk()->json('id');
+        $data = $this->payload();
+        $data['institution_id'] = null;
+        $data['items'][0]['institution_id'] = $this->bank;
+        $data['items'][1]['institution_id'] = $secondBank;
+        $ids = $this->postJson('/api/expense-control/photo-imports', $data)->assertCreated()->json('debt_ids');
+        $this->assertDatabaseHas('cg_debts', ['id' => $ids[0], 'institution_id' => $this->bank]);
+        $this->assertDatabaseHas('cg_debts', ['id' => $ids[1], 'institution_id' => $secondBank]);
+        $this->assertDatabaseCount('cg_photo_imports', 2);
+        $this->postJson('/api/expense-control/photo-imports', $data)->assertOk()->assertJsonPath('debt_ids', $ids);
+        foreach ([$this->bank, $secondBank] as $bank) {
+            $duplicate = $this->payload();
+            $duplicate['institution_id'] = $bank;
+            $this->postJson('/api/expense-control/photo-imports', $duplicate)->assertConflict();
+        }
+        $this->assertDatabaseCount('cg_debts', 2);
+        $this->assertDatabaseCount('financial_transactions', 0);
+    }
+
+    public function test_individual_inactive_card_rolls_back_all_purchases_and_missing_card_is_rejected(): void
+    {
+        $inactive = $this->postJson('/api/expense-control/catalogs/institutions', ['name' => 'Cartão inativo', 'due_day' => 10, 'active' => false, 'color' => '#123456'])->assertOk()->json('id');
+        $data = $this->payload();
+        $data['items'][1]['institution_id'] = $inactive;
+        $this->postJson('/api/expense-control/photo-imports', $data)->assertUnprocessable();
+        $this->assertDatabaseCount('cg_debts', 0);
+        $this->assertDatabaseCount('cg_photo_imports', 0);
+        unset($data['items'][1]['institution_id'], $data['institution_id']);
+        $this->postJson('/api/expense-control/photo-imports', $data)->assertUnprocessable();
+        $this->assertDatabaseCount('cg_installments', 0);
+    }
 }

@@ -425,3 +425,11 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Backup verificado em `C:\Users\Allan\ARL-backups\controle-gasto-mistral-20261003-013308`. Preservados 55 tabelas preexistentes e 128 arquivos privados; apenas 2 registros de leitura autorizados adicionados à tabela de consumo.
 - [PENDENTE] Publicação em produção com backup prévio validado, configuração da chave privada e verificação no servidor.
 - [PENDENTE] Reformulação de Fornecedores; depois, interface própria Mobile/Tablet completa para Controle de Gasto, com acabamento 3D.
+
+## Revisão por foto e menus — 03/10/2026
+
+- [OK] Seletores gerais opcionais na barra inferior para cartão e tipo; escolhas individuais por compra, revisão obrigatória e salvamento atômico com proteção contra repetição em cada cartão.
+- [OK] Percentuais exibidos somente para Casal; cartões/tipos gerais aplicados como padrão sem sobrescrever escolhas individuais. Navegação azul com item ativo vermelho; seletores azuis/foco vermelho.
+- [OK] Backup externo verificado em `C:\Users\Allan\ARL-backups\controle-gasto-revisao-20261003-015022`; 55 tabelas preservadas por hash e 128 arquivos privados, com alteração somente de timestamps de leitura em notificações pelo uso simultâneo do app. Dados financeiros preservados. Nenhuma migração.
+- [OK] 276 testes PHP (2.366 verificações), 47 testes MySQL isolado (406 verificações), 17 testes frontend, build/TypeScript, lint e Pint. Oito cenários E2E passaram: seis na rodada inicial, o novo teste de padrões após correção da asserção do contrato e dois testes do leitor local após isolar a configuração de API no servidor de testes.
+- [PENDENTE] Publicar esta atualização no servidor com backup prévio validado.

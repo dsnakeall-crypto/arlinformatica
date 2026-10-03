@@ -28,3 +28,15 @@
 .cg-photo-progress { display:flex; align-items:center; gap:14px; padding:18px; margin-top:15px; border-radius:15px; background:#fff2f6; color:#ab002a; }.cg-photo-progress>div { display:flex; flex-direction:column; gap:9px; flex:1; font-size:12px; }.cg-photo-progress progress { width:100%; height:8px; accent-color:#c9002c; }.cg-photo-progress small { font-size:11px; color:#8992a1; }
 .cg-photo-footer-note { margin-right:auto; align-self:center; color:#8190a0; font-size:11px; }.cg-photo-text textarea { min-height:200px; margin-bottom:12px; font-family:monospace; font-size:12px; }
 @media(max-width:700px) { .cg-photo .cg-dialog-body { padding:14px; }.cg-photo-upload-panel { grid-template-columns:1fr; padding:16px; }.cg-photo-preview { min-height:160px; }.cg-photo-preview img { height:160px; }.cg-photo-upload-panel h3 { font-size:19px; }.cg-photo-default-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.cg-photo-toolbar { flex-direction:column; align-items:stretch; }.cg-photo-row-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.cg-photo-row-grid>label:last-child { grid-column:1/-1; }.cg-photo-row { padding:13px; }.cg-photo-totals { padding:11px; }.cg-photo-totals b { font-size:13px; }.cg-photo-footer-note { display:none; }.cg-photo-steps { gap:8px; font-size:10px; }.cg-photo-review-list { max-height:420px; }.cg-photo .cg-dialog-footer { padding:12px 14px; gap:8px; } }
+
+.cg-photo-footer { flex-wrap:wrap; align-items:center; }
+.cg-photo-general { display:flex; gap:10px; flex:1; min-width:360px; }
+.cg-photo-general label { flex:1; min-width:0; color:#244675; }
+.cg-photo-general select { width:100%; }
+.cg-photo .cg-photo-row-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.cg-photo select { background:linear-gradient(145deg,#f3f7ff,#e5efff); border-color:#b8cce7; color:#213f6b; }
+.cg-photo select:focus { outline:2px solid #d5113a; outline-offset:1px; border-color:#c9002c; background:#fff0f4; }
+.cg-photo .cg-photo-reader-options button { background:linear-gradient(145deg,#f2f7ff,#dce9fc); border-color:#bdcfea; color:#244675; }
+.cg-photo .cg-photo-reader-options button[aria-pressed=true] { background:linear-gradient(120deg,#e21c46,#b4002b); border-color:#b4002b; color:#fff; }
+.cg-photo .cg-photo-reader-options button[aria-pressed=true] small { color:#ffe5ed; }
+@media(max-width:700px) { .cg-photo-general { flex-basis:100%; min-width:0; }.cg-photo .cg-photo-row-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }

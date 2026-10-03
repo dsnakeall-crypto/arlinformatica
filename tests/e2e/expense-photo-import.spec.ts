@@ -23,8 +23,8 @@ test('foto: OCR real local, revisão e cadastro das parcelas em lote', async ({ 
   await expect(dialog.getByLabel('Parcela atual da compra 1', { exact: true })).toHaveValue('3');
   await expect(dialog.getByLabel('Total de parcelas da compra 1', { exact: true })).toHaveValue('10');
   await expect(dialog.getByRole('button', { name: 'Salvar 2 compras' })).toBeDisabled();
-  await dialog.getByRole('combobox', { name: 'Instituição', exact: true }).selectOption(String(bank.id));
-  await dialog.getByRole('combobox', { name: 'Tipo padrão', exact: true }).selectOption(String(type.id));
+  await dialog.getByRole('combobox', { name: 'Selecionar cartão geral', exact: true }).selectOption(String(bank.id));
+  await dialog.getByRole('combobox', { name: 'Selecionar tipo de dívida', exact: true }).selectOption(String(type.id));
   await dialog.getByRole('combobox', { name: 'Responsável padrão', exact: true }).selectOption('shared');
   await dialog.getByLabel('Mês desta fatura').fill('2026-10');
   await dialog.getByLabel('Conferi a compra 1', { exact: true }).check();
