@@ -123,7 +123,7 @@ class ExpenseControl
             // Serialize request retries and lock every target institution in stable order.
             DB::table('users')->where('id', $request->user()->id)->lockForUpdate()->first();
             $banks = collect($data['items'])->map(fn ($item) => $item['institution_id'] ?? $data['institution_id'])->unique()->sort()->values();
-            DB::table('cg_institutions')->whereIn('id', $banks)->orderBy('id')->lockForUpdate()->get();
+            $institutions = DB::table('cg_institutions')->whereIn('id', $banks)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             $hash = hash('sha256', json_encode($data));
             $old = DB::table('cg_photo_imports')->where('request_key', $data['request_key'])->first();
             if ($old) {
@@ -139,7 +139,8 @@ class ExpenseControl
             foreach ($data['items'] as $item) {
                 unset($item['reviewed']);
                 $bankId = $item['institution_id'] ?? $data['institution_id'];
-                $debtId = $this->createDebt($request, [...$item, 'institution_id' => $bankId, 'start_month' => $data['start_month'], 'due_day' => $data['due_day']]);
+                $dueDay = ! empty($data['institution_id']) ? $institutions->get($bankId)->due_day : $data['due_day'];
+                $debtId = $this->createDebt($request, [...$item, 'institution_id' => $bankId, 'start_month' => $data['start_month'], 'due_day' => $dueDay]);
                 $ids[] = $debtId;
                 $groupIds[$bankId][] = $debtId;
             }

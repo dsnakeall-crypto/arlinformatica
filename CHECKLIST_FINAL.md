@@ -442,3 +442,14 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Build/TypeScript, lint e quatro E2E passaram; inspeção de capturas desktop/mobile. Sem chamada paga nem migração.
 - [OK] Backup externo verificado em `C:\Users\Allan\ARL-backups\controle-gasto-resumo-compacto-20261003-020346`; 55 tabelas e 128 arquivos privados preservados, notificações alteradas somente nos timestamps de leitura.
 - [PENDENTE] Publicação e interface Mobile/Tablet completa do módulo em etapa própria.
+
+
+## Resumo e vencimentos por foto — 03/10/2026
+
+- [OK] Menu único Resumo; perspectivas pessoal/casal preservadas para contas vinculadas e Projeção direcionada ao mês do casal.
+- [OK] Seletor de mês compacto com calendário e setas; navegação dezembro/janeiro verificada no navegador.
+- [OK] Caixa superior removida, responsável escolhido em cada compra; mês/dia da fatura numa linha compacta. Cartão/tipo gerais opcionais no rodapé.
+- [OK] Com cartão geral, dia bloqueado e obtido do cadastro no backend. Sem cartão geral, dia manual respeitado. Regra apenas para novas importações, sem migração.
+- [OK] Nove testes PHP (79 verificações), oito E2E, build/TypeScript, lint e Pint passaram. API externa simulada nos testes, sem chamada paga.
+- [OK] Backup externo de código, alterações e histórico Git validado: `C:\Users\Allan\ARL-backups\controle-gasto-mes-resumo-20261003-021234`. Arquivos privados existentes preservados. O app local foi usado simultaneamente, com novos cadastros/alterações nas tabelas de gastos; não restaurados nem sobrescritos.
+- [PENDENTE] Publicação e interface própria Mobile/Tablet completa em etapa futura.

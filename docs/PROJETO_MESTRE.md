@@ -946,3 +946,12 @@ Por solicitação do proprietário, preferir Mistral para leitura consentida de 
 ## 55. Ajuste da revisão por foto — 03/10/2026
 
 Cartão geral e tipo de dívida na barra inferior são padrões opcionais; permitir definir cartão/tipo por compra. Exigir escolhas resolvidas em cada compra antes de salvar, com revisão obrigatória, transação e proteção contra duplicata em todos os cartões. Percentual de divisão visível apenas para Casal. Navegação do Controle de Gasto em azul, seleção vermelha; seletores da revisão em azul com foco vermelho. Não alterar tabelas ou dados anteriores.
+
+
+## Resumo único e vencimento da revisão por foto — 03/10/2026
+
+Somente Resumo aparece no menu. Sem conta vinculada, Resumo e a antiga Visão geral eram equivalentes; com vínculo, a escolha Meu resumo/Casal mantém as duas perspectivas dentro da mesma seção. Projeção abre o mês no resumo do casal. Seletor de mês azul compacto, calendário próprio, uma única legenda e navegação anterior/próximo.
+
+Removida a caixa de padrões no topo da revisão por foto: responsável definido individualmente, percentual visível apenas para Casal. Mês e dia da fatura permanecem numa linha compacta. Cartão geral e tipo geral continuam opcionais no rodapé. Com cartão geral selecionado, dia bloqueado e obtido do cadastro da instituição no backend; uma escolha individual de outro cartão usa o dia dessa outra instituição. Sem cartão geral, dia editável respeitado. A regra se aplica somente a novas importações, preservando parcelas e vencimentos anteriores.
+
+Backup de código/alterações/histórico Git verificado: `C:\Users\Allan\ARL-backups\controle-gasto-mes-resumo-20261003-021234`. Nenhuma migração ou envio à API real nesta alteração.

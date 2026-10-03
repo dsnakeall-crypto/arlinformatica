@@ -56,6 +56,26 @@ class ExpensePhotoImportTest extends TestCase
         $this->assertDatabaseCount('service_orders', 0);
     }
 
+    public function test_general_card_uses_registered_due_day_and_manual_mode_preserves_selected_day(): void
+    {
+        $payload = $this->payload();
+        $payload['due_day'] = 7;
+        $automatic = $this->postJson('/api/expense-control/photo-imports', $payload)->assertCreated()->json('debt_ids');
+        $this->assertSame(31, DB::table('cg_debts')->where('id', $automatic[0])->value('due_day'));
+        $this->assertDatabaseHas('cg_installments', ['debt_id' => $automatic[0], 'number' => 3, 'due_on' => '2026-10-31']);
+        $manual = $this->payload();
+        $manual['source_hash'] = hash('sha256', 'outra foto manual');
+        $manual['institution_id'] = null;
+        $manual['due_day'] = 7;
+        foreach ($manual['items'] as &$item) {
+            $item['institution_id'] = $this->bank;
+        }
+        unset($item);
+        $ids = $this->postJson('/api/expense-control/photo-imports', $manual)->assertCreated()->json('debt_ids');
+        $this->assertSame(7, DB::table('cg_debts')->where('id', $ids[0])->value('due_day'));
+        $this->assertDatabaseHas('cg_installments', ['debt_id' => $ids[0], 'number' => 3, 'due_on' => '2026-10-07']);
+    }
+
     public function test_retries_and_duplicate_photo_do_not_duplicate_financial_data(): void
     {
         $payload = $this->payload();

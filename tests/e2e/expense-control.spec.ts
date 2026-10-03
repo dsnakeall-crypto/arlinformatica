@@ -75,6 +75,15 @@ test('controle: visual desktop e mobile sem vazamento de layout nos popups', asy
   await page.goto('/expense-control');
   await expect(page.getByRole('heading', { name: 'Visão geral do casal', exact: true })).toBeVisible();
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Visão geral', exact: true })).toHaveCount(0);
+  const month = page.getByLabel('Mês do Controle de Gasto', { exact: true });
+  await month.fill('2026-12');
+  await expect(page.locator('.cg-month-picker strong')).toHaveText('Dezembro De 2026', { ignoreCase: true });
+  await page.getByRole('button', { name: 'Próximo mês do controle' }).click();
+  await expect(month).toHaveValue('2027-01');
+  await page.getByRole('button', { name: 'Mês anterior do controle' }).click();
+  await expect(month).toHaveValue('2026-12');
+  await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   await page.screenshot({ path: 'output/controle-gasto/resumo-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Nova dívida', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Cadastrar nova dívida' })).toBeVisible();

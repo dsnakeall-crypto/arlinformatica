@@ -25,8 +25,8 @@ test('foto: OCR real local, revisão e cadastro das parcelas em lote', async ({ 
   await expect(dialog.getByRole('button', { name: 'Salvar 2 compras' })).toBeDisabled();
   await dialog.getByRole('combobox', { name: 'Selecionar cartão geral', exact: true }).selectOption(String(bank.id));
   await dialog.getByRole('combobox', { name: 'Selecionar tipo de dívida', exact: true }).selectOption(String(type.id));
-  await dialog.getByRole('combobox', { name: 'Responsável padrão', exact: true }).selectOption('shared');
-  await dialog.getByLabel('Mês desta fatura').fill('2026-10');
+  for (const number of [1, 2]) await dialog.getByLabel('Responsável pela compra ' + number, { exact: true }).selectOption('shared');
+  await dialog.getByLabel('Mês de vencimento da fatura').fill('2026-10');
   await dialog.getByLabel('Conferi a compra 1', { exact: true }).check();
   await dialog.getByLabel('Conferi a compra 2', { exact: true }).check();
   await expect(dialog.getByRole('button', { name: 'Salvar 2 compras' })).toBeEnabled();

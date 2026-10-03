@@ -91,3 +91,12 @@ Cards de indicadores, responsáveis, painéis e instituições usam azul claro, 
 O aviso de vínculo agora ocupa uma caixa separada: associar a conta de acesso a um responsável é opcional e permite abrir o resumo pessoal. O botão Abrir Ajustes aparece somente para quem pode fazer a associação.
 
 Backup verificado: `C:\Users\Allan\ARL-backups\controle-gasto-resumo-compacto-20261003-020346`. Alteração visual, sem migrações. Build/TypeScript e lint passaram; quatro cenários E2E de cadastro, autorização, desktop/mobile e revisão por foto passaram com API simulada, sem chamada paga. Conferência preservou 55 tabelas por hash e 128 arquivos privados; notificações tiveram somente timestamps de leitura alterados pelo uso simultâneo do app. A interface Mobile/Tablet completa permanece para etapa própria.
+
+
+## Resumo único e vencimento da revisão por foto — 03/10/2026
+
+Somente Resumo aparece no menu. Sem conta vinculada, Resumo e a antiga Visão geral eram equivalentes; com vínculo, a escolha Meu resumo/Casal mantém as duas perspectivas dentro da mesma seção. Projeção abre o mês no resumo do casal. Seletor de mês azul compacto, calendário próprio, uma única legenda e navegação anterior/próximo.
+
+Removida a caixa de padrões no topo da revisão por foto: responsável definido individualmente, percentual visível apenas para Casal. Mês e dia da fatura permanecem numa linha compacta. Cartão geral e tipo geral continuam opcionais no rodapé. Com cartão geral selecionado, dia bloqueado e obtido do cadastro da instituição no backend; uma escolha individual de outro cartão usa o dia dessa outra instituição. Sem cartão geral, dia editável respeitado. A regra se aplica somente a novas importações, preservando parcelas e vencimentos anteriores.
+
+Backup de código/alterações/histórico Git verificado: `C:\Users\Allan\ARL-backups\controle-gasto-mes-resumo-20261003-021234`. Nenhuma migração ou envio à API real nesta alteração.

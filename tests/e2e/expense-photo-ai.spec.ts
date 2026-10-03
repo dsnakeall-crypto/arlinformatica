@@ -37,7 +37,7 @@ test('Mistral: consentimento, campos faltantes, revisão e cadastro real sem env
   await expect(dialog.getByLabel('Conferi a compra 2', { exact: true })).toBeDisabled();
   await dialog.getByRole('combobox', { name: 'Selecionar cartão geral', exact: true }).selectOption(String(bank.id));
   await dialog.getByRole('combobox', { name: 'Selecionar tipo de dívida', exact: true }).selectOption(String(type.id));
-  await dialog.getByRole('combobox', { name: 'Responsável padrão', exact: true }).selectOption('shared');
+  for (const number of [1, 2]) await dialog.getByLabel('Responsável pela compra ' + number, { exact: true }).selectOption('shared');
   await dialog.getByLabel('Valor da parcela da compra 2', { exact: true }).fill('8990');
   await dialog.getByLabel('Conferi a compra 1', { exact: true }).check();
   await dialog.getByLabel('Conferi a compra 2', { exact: true }).check();

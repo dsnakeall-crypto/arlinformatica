@@ -57,3 +57,5 @@
 .cg-photo-review-list { max-height:420px; scrollbar-color:#83a5d3 #e6effb; }
 .cg-photo-upload-panel,.cg-photo-reader,.cg-photo-totals { background:linear-gradient(145deg,#f5f9ff,#e3eefc); border-color:#c2d5ed; }
 @media(max-width:700px) { .cg-photo .cg-dialog-body { padding:12px; }.cg-photo-row { padding:10px; }.cg-photo .cg-photo-row-grid { gap:8px; }.cg-photo .cg-photo-row input:not([type=checkbox]),.cg-photo .cg-photo-row select { min-height:36px; } }
+
+.cg-photo-due-fields { display:flex; align-items:end; gap:12px; flex-wrap:wrap; margin:8px 0 14px; }.cg-photo-due-fields label { flex:0 1 210px; }.cg-photo-due-fields label:nth-child(2) { flex-basis:120px; }.cg-photo-due-fields small { flex:1; min-width:160px; color:#647e9e; font-size:11px; line-height:1.5; padding-bottom:5px; }
