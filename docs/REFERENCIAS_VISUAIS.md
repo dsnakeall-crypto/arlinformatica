@@ -82,3 +82,12 @@ O diálogo de Controle de Gasto mantém cabeçalho branco, bordas arredondadas e
 ## Revisão por foto: acabamento solicitado em 03/10/2026
 
 Manter acabamento 3D. Colocar cartão geral/tipo de dívida na barra inferior antes de salvar, permitindo alternativas por compra. Navegação azul com item ativo vermelho; seletores azuis com foco vermelho. Percentuais só para Casal. Tabelas mantêm aparência anterior.
+
+
+## Acabamento compacto azul — 03/10/2026
+
+Cards de indicadores, responsáveis, painéis e instituições usam azul claro, mantendo os desenhos dos cartões bancários. Indicadores, espaçamentos e avatares foram compactados; Allan, Carol e Casal têm retratos vetoriais. Cadastrar por foto e Nova dívida usam azul com texto vermelho. A revisão por foto mantém todos os campos e a conferência individual, com cards e controles menores, preservando altura confortável no celular.
+
+O aviso de vínculo agora ocupa uma caixa separada: associar a conta de acesso a um responsável é opcional e permite abrir o resumo pessoal. O botão Abrir Ajustes aparece somente para quem pode fazer a associação.
+
+Backup verificado: `C:\Users\Allan\ARL-backups\controle-gasto-resumo-compacto-20261003-020346`. Alteração visual, sem migrações. Build/TypeScript e lint passaram; quatro cenários E2E de cadastro, autorização, desktop/mobile e revisão por foto passaram com API simulada, sem chamada paga. Conferência preservou 55 tabelas por hash e 128 arquivos privados; notificações tiveram somente timestamps de leitura alterados pelo uso simultâneo do app. A interface Mobile/Tablet completa permanece para etapa própria.

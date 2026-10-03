@@ -40,3 +40,20 @@
 .cg-photo .cg-photo-reader-options button[aria-pressed=true] { background:linear-gradient(120deg,#e21c46,#b4002b); border-color:#b4002b; color:#fff; }
 .cg-photo .cg-photo-reader-options button[aria-pressed=true] small { color:#ffe5ed; }
 @media(max-width:700px) { .cg-photo-general { flex-basis:100%; min-width:0; }.cg-photo .cg-photo-row-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+/* Compact review cards retain every field and individual confirmation. */
+.cg-photo .cg-dialog-body { background:linear-gradient(145deg,#f6f9ff,#eaf2ff); padding:16px 20px; }
+.cg-photo-steps { margin-bottom:12px; }
+.cg-photo .cg-photo-defaults { padding:10px 14px; background:#edf4ff; border-color:#c2d5ed; }
+.cg-photo .cg-muted { margin-top:8px; }
+.cg-photo-toolbar { margin:12px 0 8px; }
+.cg-photo-row { padding:11px 14px; margin-bottom:10px; border-radius:15px; border-color:#c2d5ed; background:linear-gradient(145deg,#f7faff,#e7f0fd); }
+.cg-photo-row header { margin-bottom:7px; }
+.cg-photo-row header b { width:25px; height:25px; border-radius:8px; }
+.cg-photo .cg-photo-row-grid { gap:7px 10px; margin:8px 0; }
+.cg-photo .cg-photo-row label { gap:3px; }
+.cg-photo .cg-photo-row input:not([type=checkbox]),.cg-photo .cg-photo-row select { min-height:32px; padding:6px 9px; }
+.cg-photo .cg-photo-confirm { margin-top:7px; padding:7px 9px; }
+.cg-photo-review-list { max-height:420px; scrollbar-color:#83a5d3 #e6effb; }
+.cg-photo-upload-panel,.cg-photo-reader,.cg-photo-totals { background:linear-gradient(145deg,#f5f9ff,#e3eefc); border-color:#c2d5ed; }
+@media(max-width:700px) { .cg-photo .cg-dialog-body { padding:12px; }.cg-photo-row { padding:10px; }.cg-photo .cg-photo-row-grid { gap:8px; }.cg-photo .cg-photo-row input:not([type=checkbox]),.cg-photo .cg-photo-row select { min-height:36px; } }

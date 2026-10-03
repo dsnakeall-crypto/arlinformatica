@@ -433,3 +433,12 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Backup externo verificado em `C:\Users\Allan\ARL-backups\controle-gasto-revisao-20261003-015022`; 55 tabelas preservadas por hash e 128 arquivos privados, com alteração somente de timestamps de leitura em notificações pelo uso simultâneo do app. Dados financeiros preservados. Nenhuma migração.
 - [OK] 276 testes PHP (2.366 verificações), 47 testes MySQL isolado (406 verificações), 17 testes frontend, build/TypeScript, lint e Pint. Oito cenários E2E passaram: seis na rodada inicial, o novo teste de padrões após correção da asserção do contrato e dois testes do leitor local após isolar a configuração de API no servidor de testes.
 - [PENDENTE] Publicar esta atualização no servidor com backup prévio validado.
+
+
+## Cards compactos e azul claro — 03/10/2026
+
+- [OK] Cards compactos em azul claro, avatares de homem/mulher/casal e aviso opcional de resumo pessoal separado.
+- [OK] Cadastrar por foto e Nova dívida em azul com texto vermelho; revisão individual compactada sem remover campos.
+- [OK] Build/TypeScript, lint e quatro E2E passaram; inspeção de capturas desktop/mobile. Sem chamada paga nem migração.
+- [OK] Backup externo verificado em `C:\Users\Allan\ARL-backups\controle-gasto-resumo-compacto-20261003-020346`; 55 tabelas e 128 arquivos privados preservados, notificações alteradas somente nos timestamps de leitura.
+- [PENDENTE] Publicação e interface Mobile/Tablet completa do módulo em etapa própria.
