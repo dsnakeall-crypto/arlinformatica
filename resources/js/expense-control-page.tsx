@@ -94,7 +94,7 @@ export default function ExpenseControlPage() {
   const metricPaid = scopeSummary?.paid_cents || 0;
   const metricRemaining = scopeSummary?.remaining_cents || 0;
   const dueInstitutions = scopeSummary?.due_institutions || [];
-  const nextPersonalDue = dueInstitutions.find(i => i.due_on >= today());
+  const nextPersonalDue = [...dueInstitutions].filter(i => i.due_on >= today()).sort((a, b) => a.due_on.localeCompare(b.due_on))[0];
   const goBank = (id: number) => { setBank(String(id)); setType(''); setQ(''); setStatus('active'); setQuery(''); navigate('debts', true); };
   const catalogCount = (institution: number, kind: number) => debts?.catalog_counts?.find(c => c.institution_id === institution && c.type_id === kind)?.count || 0;
   const countLabel = (kind: string, count: number) => /emprést|emprest/i.test(kind) ? (count === 1 ? 'empréstimo' : 'empréstimos') : /financia/i.test(kind) ? (count === 1 ? 'financiamento' : 'financiamentos') : /fix|casa/i.test(kind) ? (count === 1 ? 'despesa fixa' : 'despesas fixas') : (count === 1 ? 'compra' : 'compras');

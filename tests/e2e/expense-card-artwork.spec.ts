@@ -7,7 +7,7 @@ test('cartões: galeria, edição sem perda da imagem, upload e enquadramento', 
   await page.getByRole('tab', { name: 'Instituições', exact: true }).click();
   await page.getByRole('button', { name: 'Cadastrar instituição', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Cadastrar instituição', exact: true });
-  await expect(dialog.getByRole('button', { name: /^Selecionar cartão / })).toHaveCount(11);
+  await expect(dialog.getByRole('button', { name: /^Selecionar cartão / })).toHaveCount(12);
   await dialog.getByLabel('Buscar banco na galeria').fill('itau');
   await expect(dialog.getByRole('button', { name: /^Selecionar cartão / })).toHaveCount(2);
   await dialog.getByLabel('Buscar banco na galeria').fill('nubank');
@@ -29,6 +29,7 @@ test('cartões: galeria, edição sem perda da imagem, upload e enquadramento', 
   await edit.getByRole('button', { name: 'Aplicar enquadramento' }).click();
   await expect(edit.getByRole('button', { name: 'Salvar', exact: true })).toBeEnabled();
   await edit.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await edit.getByRole('button', { name: 'Confirmar alteração', exact: true }).click();
   await expect(edit).not.toBeVisible();
   const image = institution.locator('.cg-card-art img');
   await expect(image).toBeVisible();
@@ -38,6 +39,7 @@ test('cartões: galeria, edição sem perda da imagem, upload e enquadramento', 
   await institution.getByRole('button', { name: 'Editar instituição ' + name }).click();
   await edit.getByLabel('Dia padrão de vencimento').fill('17');
   await edit.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await edit.getByRole('button', { name: 'Confirmar alteração', exact: true }).click();
   await expect(edit).not.toBeVisible();
   await expect(institution.getByText('Vencimento padrão · dia 17', { exact: true })).toBeVisible();
   await expect(image).toHaveAttribute('src', original!);

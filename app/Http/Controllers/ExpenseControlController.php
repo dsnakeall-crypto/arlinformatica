@@ -30,7 +30,7 @@ class ExpenseControlController extends Controller
         return response()->json([
             'account_id' => $r->user()->id,
             'people' => DB::table('cg_people')->orderBy('id')->get(),
-            'institutions' => DB::table('cg_institutions')->orderBy('name')->get()->map(fn ($row) => $this->institution($row)),
+            'institutions' => DB::table('cg_institutions')->orderByRaw('CASE WHEN restricted_type_id IS NULL THEN 0 ELSE 1 END')->orderBy('name')->get()->map(fn ($row) => $this->institution($row)),
             'card_artworks' => $this->artworks(),
             'types' => DB::table('cg_types')->orderBy('name')->get(),
             'my_person_id' => DB::table('cg_people')->where('user_id', $r->user()->id)->value('id'),
@@ -167,6 +167,8 @@ class ExpenseControlController extends Controller
                 $totals['shared_remaining_cents'] += $i['remaining_cents'];
             }
         }
+        $householdIds = DB::table('cg_institutions')->whereNotNull('restricted_type_id')->pluck('id')->all();
+        $sortInstitutions = fn ($rows) => $rows->sortBy(fn ($row) => in_array((int) $row['id'], $householdIds, true) ? 1 : 0)->values();
         $banks = $items->groupBy('institution_id')->map(fn ($rows) => ['id' => $rows->first()['institution_id'], 'name' => $rows->first()['institution_name'], 'original_cents' => $rows->sum('amount_cents'), 'remaining_cents' => $rows->sum('remaining_cents'), 'count' => $rows->count()])->values();
         $person = DB::table('cg_people')->where('user_id', $r->user()->id)->value('id');
         $personal = $items->filter(fn ($i) => $person && $i[$person === 1 ? 'remaining_one_cents' : 'remaining_two_cents'] > 0);
@@ -176,15 +178,15 @@ class ExpenseControlController extends Controller
             $rows = $items->filter(fn ($i) => $scope === 'shared' ? $i['responsibility'] === 'shared' : $i['share_'.$scope.'_cents'] > 0);
             $rows = $rows->map(fn ($i) => [...$i, 'scope_original' => $scope === 'shared' ? $i['amount_cents'] : $i['share_'.$scope.'_cents'], 'scope_paid' => $scope === 'shared' ? $i['paid_cents'] : $i['paid_'.$scope.'_cents'], 'remaining_cents' => $scope === 'shared' ? $i['remaining_cents'] : $i['remaining_'.$scope.'_cents']]);
             $views[$scope] = [
-                'due_institutions' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0)->groupBy('institution_id')->map(fn ($group) => ['id' => $group->first()['institution_id'], 'name' => $group->first()['institution_name'], 'due_on' => $group->min('due_on'), 'remaining_cents' => $group->sum('remaining_cents'), 'count' => $group->count()])->sortBy('due_on')->values(),
+                'due_institutions' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0)->groupBy('institution_id')->map(fn ($group) => ['id' => $group->first()['institution_id'], 'name' => $group->first()['institution_name'], 'due_on' => $group->min('due_on'), 'remaining_cents' => $group->sum('remaining_cents'), 'count' => $group->count()])->sortBy(fn ($row) => [in_array((int) $row['id'], $householdIds, true) ? 1 : 0, $row['due_on']])->values(),
                 'original_cents' => $rows->sum('scope_original'), 'paid_cents' => $rows->sum('scope_paid'), 'remaining_cents' => $rows->sum('remaining_cents'), 'count' => $rows->count(),
                 'next_due' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(),
                 'overdue' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
-                'institutions' => $rows->groupBy('institution_id')->map(fn ($group) => ['id' => $group->first()['institution_id'], 'name' => $group->first()['institution_name'], 'remaining_cents' => $group->sum('remaining_cents'), 'count' => $group->count()])->values(),
+                'institutions' => $sortInstitutions($rows->groupBy('institution_id')->map(fn ($group) => ['id' => $group->first()['institution_id'], 'name' => $group->first()['institution_name'], 'remaining_cents' => $group->sum('remaining_cents'), 'count' => $group->count()])->values()),
             ];
         }
 
-        return response()->json(['month' => $month->format('Y-m'), 'totals' => $totals, 'views' => $views, 'institutions' => $banks, 'count' => $items->count(), 'next_due' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(), 'overdue' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
+        return response()->json(['month' => $month->format('Y-m'), 'totals' => $totals, 'views' => $views, 'institutions' => $sortInstitutions($banks), 'count' => $items->count(), 'next_due' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(), 'overdue' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
             'partial_installments' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['remaining_cents'] < $i['amount_cents'])->values(),
             'personal_next_due' => $personal->filter(fn ($i) => $i['due_on'] >= today()->toDateString())->take(5)->values(), 'personal_overdue' => $personal->filter(fn ($i) => $i['due_on'] < today()->toDateString())->take(5)->values()]);
     }
@@ -450,7 +452,7 @@ class ExpenseControlController extends Controller
         if ($r->boolean('grouped')) {
             $purchases = (clone $query)->whereNull('e.reversed_at')->select('d.id', 'd.name', 'd.institution_id', 'd.type_id', 'bank.name as institution_name', 'type.name as type_name')
                 ->selectRaw("COUNT(DISTINCT i.id) AS installment_count, SUM(CASE WHEN e.kind IN ('payment', 'advance') THEN e.amount_cents ELSE 0 END) AS paid_cents, SUM(CASE WHEN e.kind = 'discount' THEN e.amount_cents ELSE 0 END) AS discount_cents")
-                ->groupBy('d.id', 'd.name', 'd.institution_id', 'd.type_id', 'bank.name', 'type.name')->orderBy('bank.name')->orderBy('d.name')->get();
+                ->groupBy('d.id', 'd.name', 'd.institution_id', 'd.type_id', 'bank.name', 'bank.restricted_type_id', 'type.name')->orderByRaw('CASE WHEN bank.restricted_type_id IS NULL THEN 0 ELSE 1 END')->orderBy('bank.name')->orderBy('d.name')->get();
 
             return response()->json($purchases);
         }

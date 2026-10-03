@@ -133,3 +133,8 @@ Instituição/grupo Fixos de Casa usa o cartão de referência fornecido pelo us
 Backup: `C:\Users\Allan\ARL-backups\controle-gasto-fixos-casa-20261003-034326`, incluindo `banco-arquivos-privados.zip`.
 O usuário rejeitou o acabamento visual do cartão atual e pediu sua recriação somente após o agendamento. Automação única ativa para 07h: refazer a imagem, concluir pendências autorizadas do Controle de Gasto e depois retomar Fornecedores conforme os requisitos do chat. Não publicar em produção. A execução depende de o computador/Codex permanecerem disponíveis e de limite da conta disponível.
 Validação: 285 testes PHP / 2559 verificações; 34 testes MySQL isolado / 448 verificações; 17 testes frontend; 10 fluxos E2E passaram na suíte e o novo fluxo Fixos de Casa passou após correção de seletor de teste. Build/TypeScript, lint e Pint aprovados.
+
+
+## Complementos de 03/10/2026
+Nova OS: cápsula compacta preto/vermelho, sombra, mais e texto brancos, conforme imagem codex-clipboard-0c580818-9ae2-42b6-874f-ea3588be953a.png.
+Fixos de Casa: arte estática nova `public/arl-assets/expense-cards/fixos-casa-v2.png`, criada com imagegen no desenvolvimento. Prompt: cartão frontal branco premium, proporção 1,586, cantos arredondados, relevo/chip prata, detalhes curvos suaves e sombras 3D, textos legíveis “Fixos de Casa” e “Luz · Água · Internet”, ícone de casa discreto, sem número ou dados pessoais. Referência anterior rejeitada mantida apenas no histórico. A geração não integra o app nem exige API de IA em produção.

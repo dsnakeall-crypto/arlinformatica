@@ -403,4 +403,24 @@ class ExpenseControlTest extends TestCase
         $service->restore($backup, $this->master);
         $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk()->assertJsonPath('totals.remaining_cents', 8001);
     }
+
+    public function test_household_is_last_by_stable_identity_even_when_renamed_and_due_earlier(): void
+    {
+        $house = $this->postJson('/api/expense-control/catalogs/institutions', ['name' => 'AAA Casa', 'due_day' => 1, 'active' => true, 'color' => '#ffffff', 'artwork_key' => 'household', 'household' => true])->assertOk()->json('id');
+        $fixed = DB::table('cg_institutions')->where('id', $house)->value('restricted_type_id');
+        $this->assertNotNull($fixed);
+        $houseDebt = $this->createDebt(['institution_id' => $house, 'type_id' => $fixed, 'due_day' => 1]);
+        $bankDebt = $this->createDebt();
+        $this->postJson('/api/expense-control/catalogs/institutions', ['name' => 'ZZZ Novo', 'due_day' => 5, 'active' => true, 'color' => '#123456'])->assertOk();
+        $banks = $this->getJson('/api/expense-control/configuration')->assertOk()->json('institutions');
+        $this->assertSame($house, end($banks)['id']);
+        $summary = $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk()->json();
+        $this->assertSame($house, end($summary['institutions'])['id']);
+        $this->assertSame($house, end($summary['views']['one']['due_institutions'])['id']);
+        foreach ([$houseDebt, $bankDebt] as $debt) {
+            $this->postJson('/api/expense-control/operations', $this->payment([$debt['installments'][0]['id']]))->assertCreated();
+        }
+        $groups = $this->getJson('/api/expense-control/advances?grouped=1&month=2026-10')->assertOk()->json();
+        $this->assertSame($house, end($groups)['institution_id']);
+    }
 }

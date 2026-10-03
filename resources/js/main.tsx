@@ -1,3 +1,4 @@
+import '../css/sidebar-new-order.css';
 import NewOrderClientPicker from "./new-order-client-picker";
 import "./session-security";
 import "../css/session-security.css";

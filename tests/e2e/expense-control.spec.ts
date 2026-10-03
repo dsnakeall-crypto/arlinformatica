@@ -359,7 +359,7 @@ test('controle: Fixos de Casa usa cartão próprio e aceita somente despesas da 
   await page.goto('/expense-control');
   await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
   const bank = page.locator('.cg-institution').filter({ hasText: 'Fixos de Casa teste' });
-  await expect(bank.locator('img')).toHaveAttribute('src', '/arl-assets/expense-cards/fixos-casa.png');
+  await expect(bank.locator('img')).toHaveAttribute('src', '/arl-assets/expense-cards/fixos-casa-v2.png');
   await bank.click();
   await expect(page.locator('.cg-type-grid > button')).toHaveCount(1);
   await expect(page.locator('.cg-type-grid > button')).toContainText('Fixos de Casa');
