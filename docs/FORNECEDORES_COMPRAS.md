@@ -79,3 +79,8 @@ Atualização do cadastro: documento, razão social/nome completo, nome fantasia
 
 ## Ficha profissional revisada
 A organização e os novos recursos de 03/10/2026 estão documentados em [FORNECEDORES_FICHA.md](FORNECEDORES_FICHA.md). O histórico anterior permanece válido; condições comerciais não reescrevem compras anteriores.
+
+
+### Histórico de compras detalhado — 03/10/2026
+Uma compra por card clicável: número/referência, produtos e quantidades do snapshot, data da compra, data efetiva do último recebimento, quantidade de entregas e primeira data quando houve mais de uma. Status diferencia pendência, parcial e recebido; sem entrega registrada não inventa data. Pagamento mostra condição/forma, quantidade e valor das parcelas (faixa se diferentes), número/valor/vencimento da próxima parcela aberta, contagem paga/cancelada e totais da compra/pago/em aberto. Popup continua disponível com parcelas individuais e recibos. Listagem paginada em 15 compras; itens, parcelas e datas buscados em três consultas em lote, sem consulta por card. Sem migração ou reescrita de dados.
+Backup externo verificado: `C:/Users/Allan/ARL-backups/supplier-history-20261003-124539` (1757 arquivos e histórico Git). Lint, TypeScript/build, Pint, 19 testes frontend, 25 testes PHP/314 verificações e quatro fluxos E2E de fornecedores aprovados. Cenário visual repetido usando o layout Mobile/Tablet; imagens em output/fornecedores/historico-detalhado-desktop.png e historico-detalhado-mobile.png. Sem publicação.

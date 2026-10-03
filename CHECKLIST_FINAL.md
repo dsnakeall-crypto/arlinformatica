@@ -580,3 +580,12 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Lint, TypeScript/build, 19 testes frontend e três fluxos E2E, incluindo nota/parcelas/recebimento/reenvio sem duplicação.
 - [OK] Backup externo verificado: C:/Users/Allan/ARL-backups/supplier-purchase-layout-20261003-123752. Sem mudança direta no banco de uso.
 - [PENDENTE] Publicação no servidor, fora desta execução.
+
+
+## Histórico de compras detalhado
+- [OK] Cards com número, itens/quantidades do snapshot, datas reais de compra/recebimento e estado da entrega.
+- [OK] Condição/forma, parcelas/valores, próxima parcela e contagens pagas/canceladas, total/pago/em aberto.
+- [OK] Leitura em lote da página; sem migração ou alteração dos registros históricos.
+- [OK] Lint, TypeScript/build, Pint, 19 testes frontend, 25 testes PHP (314 verificações) e quatro cenários E2E; revisão visual desktop/mobile.
+- [OK] Backup externo verificado em C:/Users/Allan/ARL-backups/supplier-history-20261003-124539.
+- [PENDENTE] Publicação no servidor, fora desta execução.

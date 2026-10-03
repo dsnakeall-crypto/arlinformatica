@@ -43,10 +43,19 @@ class SupplierController extends Controller
             'payable_count' => DB::table('supplier_payables')->selectRaw('COUNT(*)')->whereColumn('purchase_id', 'supplier_purchases.id'),
             'next_due_on' => DB::table('supplier_payables')->selectRaw('MIN(due_on)')->whereColumn('purchase_id', 'supplier_purchases.id')->whereNull('paid_on')->whereNull('voided_at'),
         ])->where('supplier_id', $supplier->id)->orderByDesc('id')->paginate(15, ['*'], 'page', $request->integer('page', 1));
+        $purchaseIds = collect($purchases->items())->pluck('id');
+        $purchaseItems = DB::table('supplier_purchase_items')->whereIn('purchase_id', $purchaseIds)->orderBy('id')->get(['id', 'product_id', 'purchase_id', 'description', 'quantity', 'received_quantity', 'unit_cost_cents'])->groupBy('purchase_id');
+        $installments = DB::table('supplier_payables')->whereIn('purchase_id', $purchaseIds)->orderBy('installment')->get(['purchase_id', 'id', 'installment', 'amount_cents', 'due_on', 'paid_on', 'voided_at'])->groupBy('purchase_id');
+        $receipts = DB::table('supplier_purchase_receipts')->whereIn('purchase_id', $purchaseIds)->select('purchase_id')->selectRaw('MIN(received_on) as first_received_on, MAX(received_on) as last_received_on, COUNT(*) as receipt_count')->groupBy('purchase_id')->get()->keyBy('purchase_id');
         foreach ($purchases->items() as $purchase) {
             $purchase->open_amount_cents = (int) $purchase->open_amount_cents;
             $purchase->paid_amount_cents = (int) $purchase->paid_amount_cents;
             $purchase->payable_count = (int) $purchase->payable_count;
+            $purchase->items = $purchaseItems->get($purchase->id, collect())->values();
+            $purchase->installments = $installments->get($purchase->id, collect())->values();
+            $purchase->first_received_on = $receipts->get($purchase->id)?->first_received_on;
+            $purchase->last_received_on = $receipts->get($purchase->id)?->last_received_on;
+            $purchase->receipt_count = (int) ($receipts->get($purchase->id)?->receipt_count ?? 0);
         }
         $products = DB::table('supplier_purchase_items as items')->join('supplier_purchases as purchases', 'purchases.id', '=', 'items.purchase_id')->join('service_catalog as products', 'products.id', '=', 'items.product_id')->where('purchases.supplier_id', $supplier->id)->select('items.product_id', 'products.name', 'products.stock_quantity')->selectRaw('SUM(items.received_quantity) as received_quantity, SUM(items.received_quantity * items.unit_cost_cents) as received_value_cents')->groupBy('items.product_id', 'products.name', 'products.stock_quantity')->orderBy('products.name')->get();
         $products->each(function ($product) {

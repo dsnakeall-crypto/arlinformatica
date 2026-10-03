@@ -230,6 +230,21 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await expect(
     page.getByText("Aguardando recebimento", { exact: true }),
   ).toBeVisible();
+  const historyCard = page.locator(".supplier-history-card").filter({hasText:productName});
+  await expect(historyCard).toContainText(`3 × ${productName}`);
+  await expect(historyCard).toContainText("2 parcelas de R$ 300,00");
+  await expect(historyCard).toContainText("Ainda não recebida");
+  await expect(historyCard).toContainText("Próxima: 1/2");
+  await expect(historyCard).toContainText("Boleto");
+  await historyCard.scrollIntoViewIfNeeded();
+  await page.screenshot({path:"output/fornecedores/historico-detalhado-desktop.png"});
+  await page.getByLabel("Layout neste dispositivo").selectOption("mobile");
+  await page.setViewportSize({width:390,height:844});
+  await historyCard.scrollIntoViewIfNeeded();
+  expect(await historyCard.evaluate(element => element.scrollWidth <= element.clientWidth+1)).toBe(true);
+  await page.screenshot({path:"output/fornecedores/historico-detalhado-mobile.png"});
+  await page.setViewportSize({width:1440,height:1000});
+  await page.getByLabel("Layout neste dispositivo").selectOption("desktop");
   const products = (await api(page, "/catalogs/products")).body;
   const product = products.find((row: any) => row.name === productName);
   expect(product.stock_quantity).toBe(0);

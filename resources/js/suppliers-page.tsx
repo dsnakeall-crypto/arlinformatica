@@ -84,6 +84,9 @@ type Purchase = {
   paid_amount_cents?: number;
   payable_count?: number;
   next_due_on?: string | null;
+  first_received_on?: string | null;
+  last_received_on?: string | null;
+  receipt_count?: number;
   payment_terms: string | null;
   payment_method: string | null;
   installments: Payable[];
@@ -232,6 +235,29 @@ function Badge({ status }: { status: string }) {
       {statuses[status] || status}
     </span>
   );
+}
+function PurchaseHistoryRow({purchase, open}: {purchase: Purchase; open: () => void}) {
+  const installments = purchase.installments || [];
+  const amounts = installments.map(part => Number(part.amount_cents));
+  const equalAmounts = amounts.length > 0 && amounts.every(amount => amount === amounts[0]);
+  const next = [...installments].filter(part => !part.paid_on && !part.voided_at)
+    .sort((a,b) => a.due_on.localeCompare(b.due_on) || a.installment - b.installment)[0];
+  const paidCount = installments.filter(part => part.paid_on).length;
+  const voidCount = installments.filter(part => part.voided_at).length;
+  const items = (purchase.items || []).map(item => `${item.quantity} × ${item.description}`).join(" · ");
+  const plan = !amounts.length ? "Parcelamento não cadastrado" : equalAmounts
+    ? `${amounts.length} ${amounts.length === 1 ? "parcela" : "parcelas"} de ${money(amounts[0])}`
+    : `${amounts.length} parcelas · de ${money(Math.min(...amounts))} a ${money(Math.max(...amounts))}`;
+  return <button type="button" className="supplier-history-card" onClick={open}>
+    <span className="supplier-history-heading"><span><small>{purchaseNumber(purchase.id)}{purchase.reference && ` · ${purchase.reference}`}</small><b>{items || "Itens não informados"}</b></span><Badge status={purchase.status} /></span>
+    <span className="supplier-history-details">
+      <span><small>Compra / recebimento</small><b>Comprada em {date(purchase.purchased_on)}</b><span>{purchase.last_received_on ? `${purchase.status === "received" ? "Recebida" : "Último recebimento"} em ${date(purchase.last_received_on)}` : "Ainda não recebida"}</span>{Number(purchase.receipt_count) > 1 && <span>{purchase.receipt_count} entregas · primeira em {date(purchase.first_received_on)}</span>}</span>
+      <span><small>Pagamento</small><b>{paymentTerms[purchase.payment_terms || ""] || "Condição não informada"}</b><span>{paymentMethods[purchase.payment_method || ""] || "Forma não informada"}</span></span>
+      <span><small>Parcelamento</small><b>{plan}</b>{amounts.length > 0 && <span>{paidCount}/{amounts.length} parcelas pagas{voidCount > 0 && ` · ${voidCount} canceladas`}</span>}<span>{next ? `Próxima: ${next.installment}/${amounts.length} · ${money(next.amount_cents)} · ${date(next.due_on)}` : amounts.length > 0 ? "Sem parcelas em aberto" : "Consulte os detalhes da compra"}</span></span>
+      <span className="supplier-history-total"><small>Total da compra</small><strong>{money(purchase.total_cents)}</strong><span>Pago: {money(purchase.paid_amount_cents)}</span><span>Em aberto: {money(purchase.open_amount_cents)}</span></span>
+    </span>
+    <span className="supplier-history-open">Ver itens, parcelas e recebimentos <ChevronRight aria-hidden="true" /></span>
+  </button>;
 }
 function Pager({
   current,
@@ -1823,39 +1849,7 @@ export default function SuppliersPage() {
                   {detail.purchases.data.length ? (
                     <div className="supplier-purchase-list">
                       {detail.purchases.data.map((row) => (
-                        <button
-                          key={row.id}
-                          onClick={() => void openPurchase(row.id, "summary")}
-                        >
-                          <span>
-                            <b>{purchaseNumber(row.id)}</b>
-                            <small>
-                              {date(row.purchased_on)}
-                              {row.reference && ` · ${row.reference}`}
-                            </small>
-                          </span>
-                          <Badge status={row.status} />
-                          <span className="supplier-purchase-payment-status">
-                            <small>
-                              {paymentTerms[row.payment_terms || ""] ||
-                                "Condição não informada"}{" "}
-                              ·{" "}
-                              {paymentMethods[row.payment_method || ""] || "—"}
-                            </small>
-                            <small>
-                              {Number(row.payable_count) > 0
-                                ? Number(row.open_amount_cents) > 0
-                                  ? `Em aberto: ${money(row.open_amount_cents)} · vence ${date(row.next_due_on)}`
-                                  : Number(row.paid_amount_cents) >=
-                                      Number(row.total_cents)
-                                    ? "Paga integralmente"
-                                    : "Títulos encerrados (confira histórico)"
-                                : "Pagamento não cadastrado"}
-                            </small>
-                          </span>
-                          <strong>{money(row.total_cents)}</strong>
-                          <ChevronRight />
-                        </button>
+                        <PurchaseHistoryRow key={row.id} purchase={row} open={() => void openPurchase(row.id, "summary")} />
                       ))}
                     </div>
                   ) : (

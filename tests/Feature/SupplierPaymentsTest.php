@@ -44,6 +44,29 @@ class SupplierPaymentsTest extends TestCase
         return ['request_key' => (string) Str::uuid(), 'purchased_on' => today()->toDateString(), 'received_now' => true, 'items' => [['product_id' => $this->product, 'quantity' => 1, 'unit_cost_cents' => 10001]], 'payment_terms' => 'installments', 'payment_method' => 'boleto', 'installments' => [['amount_cents' => 5000, 'due_on' => today()->toDateString()], ['amount_cents' => 5001, 'due_on' => today()->addMonth()->toDateString()]]];
     }
 
+    public function test_purchase_history_returns_snapshots_installments_and_actual_partial_receipt_dates(): void
+    {
+        $data = $this->payload();
+        $data['purchased_on'] = today()->subDays(2)->toDateString();
+        $data['received_now'] = false;
+        $data['items'][0]['quantity'] = 2;
+        $data['installments'][0]['amount_cents'] = 10000;
+        $data['installments'][1]['amount_cents'] = 10002;
+        $purchase = $this->postJson('/api/suppliers/'.$this->supplier->id.'/purchases', $data)->assertCreated()->json();
+        DB::table('service_catalog')->where('id', $this->product)->update(['name' => 'Produto renomeado']);
+        $url = '/api/suppliers/'.$this->supplier->id;
+        $this->getJson($url)->assertOk()->assertJsonPath('purchases.data.0.items.0.description', 'SSD')->assertJsonPath('purchases.data.0.items.0.quantity', 2)->assertJsonPath('purchases.data.0.receipt_count', 0)->assertJsonPath('purchases.data.0.last_received_on', null)->assertJsonCount(2, 'purchases.data.0.installments')->assertJsonPath('purchases.data.0.installments.1.amount_cents', 10002);
+        $receipt = ['request_key' => (string) Str::uuid(), 'received_on' => today()->subDay()->toDateString(), 'items' => [['item_id' => DB::table('supplier_purchase_items')->where('purchase_id', $purchase['id'])->value('id'), 'quantity' => 1]]];
+        $this->postJson('/api/supplier-purchases/'.$purchase['id'].'/receipts', $receipt)->assertCreated();
+        $this->getJson($url)->assertOk()->assertJsonPath('purchases.data.0.status', 'partially_received')->assertJsonPath('purchases.data.0.first_received_on', $receipt['received_on'])->assertJsonPath('purchases.data.0.receipt_count', 1);
+        $receipt['request_key'] = (string) Str::uuid();
+        $receipt['received_on'] = today()->toDateString();
+        $this->postJson('/api/supplier-purchases/'.$purchase['id'].'/receipts', $receipt)->assertCreated();
+        $first = DB::table('supplier_payables')->where('purchase_id', $purchase['id'])->orderBy('installment')->value('id');
+        $this->postJson('/api/supplier-payables/'.$first.'/pay', ['paid_on' => today()->toDateString(), 'paid_method' => 'pix'])->assertOk();
+        $this->getJson($url)->assertOk()->assertJsonPath('purchases.data.0.status', 'received')->assertJsonPath('purchases.data.0.receipt_count', 2)->assertJsonPath('purchases.data.0.first_received_on', today()->subDay()->toDateString())->assertJsonPath('purchases.data.0.last_received_on', today()->toDateString())->assertJsonPath('purchases.data.0.paid_amount_cents', 10000)->assertJsonPath('purchases.data.0.open_amount_cents', 10002)->assertJsonPath('purchases.data.0.installments.0.paid_on', today()->toDateString());
+    }
+
     public function test_finance_groups_all_installments_before_paginating_purchases(): void
     {
         $data = $this->payload();
