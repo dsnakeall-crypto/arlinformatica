@@ -11,6 +11,7 @@ use App\Http\Controllers\DatabaseResetController;
 use App\Http\Controllers\DiagnosticController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ExpenseControlController;
+use App\Http\Controllers\ExpensePhotoAiController;
 use App\Http\Controllers\FinalizationController;
 use App\Http\Controllers\FinalShareController;
 use App\Http\Controllers\FinanceController;
@@ -35,6 +36,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth')->group(function () {
     Route::prefix('expense-control')->middleware('role:Master,Administrador,Controle de Gasto')->group(function () {
         Route::post('/photo-imports', [ExpenseControlController::class, 'importPhoto']);
+        Route::get('/photo-ai', [ExpensePhotoAiController::class, 'configuration']);
+        Route::post('/photo-ai/read', [ExpensePhotoAiController::class, 'read'])->middleware('throttle:5,1');
         Route::get('/institutions/{id}/image', [ExpenseControlController::class, 'image'])->whereNumber('id');
         Route::get('/configuration', [ExpenseControlController::class, 'configuration']);
         Route::put('/people', [ExpenseControlController::class, 'people']);

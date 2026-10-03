@@ -2,7 +2,7 @@
 
 ## Escopo aprovado
 
-Prioridade sobre a reformulação de Fornecedores. Cadastro do zero, sem importar despesas do aplicativo antigo. A organização do site de referência e o PDF de documentação orientam o funcionamento; a identidade visual segue a ARL: cabeçalhos brancos, vermelho, cards arredondados, sombras e diálogos aprovados da OS. Agenda, Contas e cadastro por voz ficam fora do escopo. Cadastro por foto possui leitura local e revisão obrigatória antes de salvar.
+Prioridade sobre a reformulação de Fornecedores. Cadastro do zero, sem importar despesas do aplicativo antigo. A organização do site de referência e o PDF de documentação orientam o funcionamento; a identidade visual segue a ARL: cabeçalhos brancos, vermelho, cards arredondados, sombras e diálogos aprovados da OS. Agenda, Contas e cadastro por voz ficam fora do escopo. Cadastro por foto possui leitura local e revisão obrigatória antes de salvar, além de alternativa opcional Gemini Pro documentada em [GEMINI_FATURAS.md](GEMINI_FATURAS.md). As descrições de processamento exclusivamente no aparelho abaixo se referem ao leitor local.
 
 ## Como começar
 
@@ -95,3 +95,7 @@ Limites: 100 compras por lote/foto, até 360 parcelas por compra e até 3.000 pa
 Backup externo verificado antes da edição e migração: `C:\Users\Allan\ARL-backups\controle-gasto-foto-20261002-233306`, incluindo código, alterações locais, histórico Git e `banco-e-arquivos-anterior.zip`. Migração aditiva `2026_10_03_020000_create_expense_photo_imports.php`; conferência por hash preservou 54 tabelas existentes e 128 arquivos privados, incluindo despesas já cadastradas.
 
 Verificação: 258 testes PHP (2.249 verificações), 29 testes em MySQL isolado (289 verificações), 17 unitários de frontend; leitura real de imagem fictícia no Chromium com valores/parcelas e cadastro em lote, revisão desktop/mobile, cancelamento e regressões do cadastro manual/cartões/OS. Lint, TypeScript, Pint e build verificados. Capturas e logs em `output/foto`. Implementação local, sem publicação no servidor.
+
+## Gemini opcional — 03/10/2026
+
+Escolha Gemini Pro ou No aparelho no diálogo 3D de importação. Gemini exige configuração privada, consentimento por foto e revisão integral; está desligado e ainda sem validação real da API. Modelo, limites, custos, privacidade e ativação: [guia](GEMINI_FATURAS.md). Verificados 40 testes em MySQL isolado (353 verificações), 11 testes específicos PHP e 9 E2E do módulo. Preservados por hash 55 tabelas existentes e 128 arquivos privados.

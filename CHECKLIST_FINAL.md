@@ -407,3 +407,12 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] 258 testes PHP, 29 MySQL isolados e 17 unitários de frontend aprovados; leitura real de imagem em navegador e regressões verificadas.
 - [OK] Lint, TypeScript, Pint e build; desktop/mobile inspecionados.
 - [PENDENTE] Publicação desta alteração no servidor; disponível no ambiente local.
+
+## Leitura opcional Gemini — 03/10/2026
+
+- [OK] Integração backend, chave privada, consentimento, autorização, limites de tentativas/tokens/custo estimado, cache e revisão obrigatória implementados e testados com respostas Google simuladas.
+- [OK] Alternativa Tesseract real e cadastro financeiro verificados em navegador; 9 E2E do módulo passaram.
+- [OK] 40 testes em MySQL isolado (353 verificações), 11 testes PHP específicos e suíte geral de 267 testes PHP passaram; lint, TypeScript e build verificados.
+- [OK] Backup externo verificado em `C:\Users\Allan\ARL-backups\controle-gasto-gemini-20261003-001607`; hashes de 55 tabelas existentes e 128 arquivos privados preservados.
+- [PENDENTE] Resolver permissão da conta Google, configurar chave e faturamento, validar precisão/custo com fatura real. Integração permanece desligada.
+- [PENDENTE] Publicação em produção, precedida de backup validado do banco e arquivos privados do servidor.

@@ -74,3 +74,7 @@ Cartões com proporção 856:540, cantos arredondados, reflexo leve e sombra de 
 ### Controle de Gasto: cadastro por foto
 
 Manter a temática do app de gastos de referência com a identidade ARL: cabeçalho branco, borda vermelha suave, cartões arredondados com relevo, sombras e campos compactos. Escolha de foto/câmera e prévia, seguida de lista com rolagem e fichas numeradas por compra; confirmação verde distingue dados conferidos. Totais separados para a fatura atual e parcelas restantes. Rodapé fixo mantém Cancelar/Salvar acessíveis; o corpo e a lista rolam em telas menores. Capturas de revisão desktop/mobile em `output/foto`.
+
+## Importação de fatura: escolha do leitor
+
+O diálogo de Controle de Gasto mantém cabeçalho branco, bordas arredondadas e sombras 3D; painel de escolha Gemini Pro/No aparelho, consentimento e revisão por compra, sem alterar os pop-ups aprovados da OS.
