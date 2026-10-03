@@ -1,0 +1,41 @@
+/* A área útil do navegador dirige o desktop; o layout Mobile/Tablet é independente. */
+@media (min-width:801px) {
+  .shell.layout-desktop > main {
+    min-width:0;
+    padding:clamp(16px,2.6dvh,28px) clamp(16px,2vw,34px) 36px;
+  }
+  .shell.layout-desktop > main > * { min-width:0; }
+  .shell.layout-desktop .arl-page-header { flex-wrap:wrap; }
+  .shell.layout-desktop .arl-page-header-copy { flex:1 1 300px; }
+  .shell.layout-desktop .arl-page-header-actions { flex-wrap:wrap; }
+  .shell.layout-desktop .arl-page-header h1 { font-size:clamp(24px,2.1vw,29px); }
+}
+
+/* Em monitores baixos, todos os destinos cabem sem esconder os últimos menus. */
+@media (min-width:801px) and (max-height:820px) {
+  .shell.layout-desktop aside { padding-top:10px; padding-bottom:10px; }
+  .shell.layout-desktop .sidebar-brand { min-height:0; flex:0 0 auto; margin-bottom:6px; }
+  .shell.layout-desktop aside .sidebar-brand .logo { height:clamp(54px,9dvh,74px); }
+  .shell.layout-desktop aside .sidebar-brand .brand-logo img { height:100%; max-height:74px; }
+  .shell.layout-desktop .new-order-shortcut { flex-shrink:0; margin-bottom:6px; min-height:30px; }
+  .shell.layout-desktop .nav-group { padding:5px 2px; }
+  .shell.layout-desktop .nav-group:first-child { padding-top:0; }
+  .shell.layout-desktop .nav-group h2 { margin-bottom:3px; font-size:8px; }
+  .shell.layout-desktop .nav-group button {
+    min-height:clamp(28px,4.4dvh,36px);
+    margin:2px 0;
+    padding:5px 10px;
+    font-size:11px;
+    line-height:1.25;
+  }
+  .shell.layout-desktop .nav-group button svg { width:18px; height:18px; }
+  .shell.layout-desktop aside .profile { padding-top:7px; font-size:12px; }
+  .shell.layout-desktop aside .profile small { font-size:10px; }
+  .shell.layout-desktop .app-head { height:44px; }
+  .shell.layout-desktop .arl-page-header { margin-bottom:12px!important; padding-bottom:12px; }
+}
+
+@media (min-width:801px) and (max-height:660px) {
+  .shell.layout-desktop .nav-group { padding-top:3px; padding-bottom:3px; }
+  .shell.layout-desktop .nav-group button { margin:1px 0; }
+}

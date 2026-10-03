@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 import "../css/app.css";
 import "../css/homologation.css";
+import "../css/desktop-adaptive.css";
 import "../css/arl-ui-system.css";
 import "../css/action-icons.css";
 import ServicesCatalogPage, { ProductsCatalogPage } from "./services-page";

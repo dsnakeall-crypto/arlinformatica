@@ -613,3 +613,13 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Diagnóstico dos tipos Fixo Casa/Fixos de Casa somente de leitura, sem excluir ou reclassificar dívidas.
 - [OK] Backup externo verificado: C:/Users/Allan/ARL-backups/menu-settings-20261003-134223 (1788 arquivos e histórico Git).
 - [PENDENTE] Unificação dos tipos de despesas domésticas e publicação no servidor, fora do pedido atual.
+
+
+## Desktop com ajuste automático — 03/10/2026
+- [OK] Adaptação à largura/altura útil pelo CSS, inclusive redimensionamento em tempo real, sem alterar o zoom do navegador ou a preferência de layout.
+- [OK] Menus laterais completos, logo/rodapé acessíveis e nav sem rolagem nos oito tamanhos testados: 1280×720, 1360×768, 1366×768, 1440×900, 1440×1080, 1920×1080, 2560×1440 e 1280×640.
+- [OK] Onze telas principais carregadas, dados isolados de cliente/produto/fornecedor, sem overflow horizontal da página; popup de cadastro contido e ação de salvar visível.
+- [OK] Sete cenários desktop finais, três de cabeçalho e cinco mobile aprovados; seis fluxos de OS/fornecedores aprovados. A interferência inicial entre testes de menu fixado foi corrigida com restauração da preferência ao final do teste.
+- [OK] Lint, TypeScript/build e 19 testes frontend aprovados; capturas desktop revisadas.
+- [OK] Backup externo verificado: C:/Users/Allan/ARL-backups/desktop-auto-fit-20261003-135745 (1793 arquivos e histórico Git). Banco de uso e Mobile/Tablet preservados.
+- [PENDENTE] Publicação no servidor, fora desta execução.
