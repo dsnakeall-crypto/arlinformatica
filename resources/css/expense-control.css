@@ -272,3 +272,41 @@
 .cg-institution-allocation article { display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; padding:10px; border-bottom:1px solid #c2d6f6; }
 .cg-institution-allocation article div { flex:1; }
 .cg-institution-allocation small { display:block; color:#587397; }
+
+/* Compact reference month beside the creation actions. */
+.cg-page .arl-page-header-actions { gap:6px; flex-wrap:wrap; }
+.cg-page .arl-page-header-actions .cg-create-action { min-height:32px; padding:7px 10px; font-size:11px; border-radius:10px; }
+.cg-page .arl-page-header-actions .cg-create-action svg { width:15px; height:15px; }
+.cg-page .cg-navigation { margin:12px 0 16px; gap:0; }
+.cg-month.cg-month-compact { position:relative; flex:0 0 auto; padding:2px; margin:0; align-self:center; border-radius:11px; }
+.cg-page .cg-month-compact>button { width:26px; height:30px; min-height:30px; padding:4px; border-radius:8px; }
+.cg-page .cg-month-compact>.cg-month-trigger { width:auto; gap:6px; padding:5px 8px; background:#f8fbff; box-shadow:0 2px 4px #29466f12; }
+.cg-month-trigger strong { font-size:12px; color:#29476f; white-space:nowrap; }
+.cg-page .cg-month-trigger svg { width:16px; height:16px; color:#bf153b; }
+.cg-month-popover { position:absolute; top:calc(100% + 9px); right:0; z-index:30; width:256px; box-sizing:border-box; padding:12px; border:1px solid #b9cee9; border-radius:17px; background:linear-gradient(145deg,#f8fbff,#e6effe); box-shadow:0 12px 28px #243e6e30,inset 0 1px 0 #fff; }
+.cg-month-popover header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.cg-month-popover select { flex:1; width:100%; min-width:0; border:1px solid #b9cdea; border-radius:9px; padding:6px; background:#fff; color:#29476f; font-weight:700; font-size:13px; }
+.cg-page .cg-month-popover button { min-height:32px; padding:6px 9px; background:#eef5ff; border-color:#c4d5ed; color:#29476f; font-size:11px; }
+.cg-month-options { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.cg-page .cg-month-options button[aria-pressed=true] { color:#fff; background:linear-gradient(120deg,#e21c46,#b4002b); border-color:#b4002b; }
+.cg-month-popover footer { display:flex; justify-content:space-between; gap:8px; margin-top:11px; }
+@media(max-width:600px) { .cg-page .arl-page-header-actions { padding-left:0; justify-content:flex-start; } .cg-page .arl-page-header-actions>* { flex:0 0 auto; } .cg-month-popover { left:0; right:auto; max-width:calc(100vw - 42px); } .cg-page .cg-month-compact>button { min-height:34px; height:34px; } }
+
+/* Purchase identity stays compact above the installment table. */
+.cg-page .cg-debt-header { padding:14px 17px; border-radius:16px; margin-bottom:14px; }
+.cg-debt-heading { display:flex; align-items:center; justify-content:space-between; gap:15px; }
+.cg-debt-identity { min-width:0; }
+.cg-debt-header .cg-eyebrow { font-size:8px; letter-spacing:1.4px; }
+.cg-page .cg-debt-header h2 { margin:3px 0 0; font-size:18px; line-height:1.2; }
+.cg-page .cg-debt-header p { font-size:11px; margin:4px 0 0; }
+.cg-page .cg-debt-header .cg-actions { margin:0; flex-shrink:0; gap:6px; }
+.cg-page .cg-debt-header .cg-actions button { min-height:29px; padding:6px 9px; font-size:10px; border-radius:9px; }
+.cg-page .cg-debt-header .cg-actions svg { width:14px; height:14px; }
+.cg-page .cg-debt-header .cg-detail-totals { margin:11px 0 0; padding:10px 12px; gap:12px; background:#e7f0ff; border:1px solid #c7d9f2; border-radius:11px; }
+.cg-debt-header .cg-detail-totals span { font-size:10px; color:#587397; }
+.cg-page .cg-debt-header .cg-detail-totals strong { font-size:16px; margin-top:3px; color:#233d62; }
+.cg-page .cg-debt-header .cg-debt-note { margin:7px 0 0; font-size:10px; overflow-wrap:anywhere; }
+@media(max-width:600px) { .cg-debt-heading { flex-wrap:wrap; gap:9px; } .cg-page .cg-debt-header .cg-actions button { min-height:36px; } .cg-page .cg-debt-header .cg-detail-totals { grid-template-columns:1fr; gap:7px; } .cg-page .cg-debt-header .cg-detail-totals strong { margin:0; } }
+
+@media(min-width:1101px) { .cg-page .arl-page-header-actions { flex-shrink:0; flex-wrap:nowrap; } }
+@media(min-width:601px) and (max-width:1100px) { .cg-page .arl-page-header { display:grid; } .cg-page .arl-page-header-actions { justify-content:flex-start; } }

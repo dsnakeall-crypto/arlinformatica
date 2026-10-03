@@ -28,6 +28,7 @@ class ExpenseControlController extends Controller
     public function configuration(Request $r): JsonResponse
     {
         return response()->json([
+            'account_id' => $r->user()->id,
             'people' => DB::table('cg_people')->orderBy('id')->get(),
             'institutions' => DB::table('cg_institutions')->orderBy('name')->get()->map(fn ($row) => $this->institution($row)),
             'card_artworks' => $this->artworks(),

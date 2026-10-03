@@ -979,3 +979,14 @@ O usuário confere a distribuição antes de confirmar. O servidor recalcula sob
 Editar identificação, parcela, instituição/tipo, encerrar recorrência e excluir/desfazer lançamentos pedem confirmação na tela. Excluir dívida utiliza o cancelamento já existente: sai dos gastos e projeção, permanece no filtro Canceladas com histórico. Parcelas com lançamentos não têm seus valores originais reescritos; correção usa estorno/novo lançamento. Dívidas finitas totalmente quitadas saem de Gastos e aparecem em Quitadas, com detalhes e histórico. Despesas mensais recorrentes continuam ativas até encerrar a recorrência.
 
 Backup validado de código/alterações/histórico antes desta etapa: C:\Users\Allan\ARL-backups\controle-gasto-quitacao-instituicao-20261003-024604. Backup anterior às listas: C:\Users\Allan\ARL-backups\controle-gasto-lista-resumo-20261003-023730. Nenhuma migração ou publicação nesta etapa; testes financeiros em bancos separados.
+
+
+### Cabeçalho, compra compacta e preferência de exibição — 03/10/2026
+
+Mês de referência no cabeçalho, ao lado de Cadastrar por foto/Nova dívida, em MM/AAAA (ex.: 10/2026). Setas mantêm navegação entre meses; clique abre seletor azul de ano e doze meses, com ano anterior/próximo e Mês atual. Fecha ao escolher mês, sair do controle ou usar Escape. Intervalo permanece 2000–2099. Botões de criação menores no desktop; Resumo fica mais próximo da navegação.
+
+Card de identificação da compra compacto: título e ações na primeira linha, três totais menores numa faixa azul, observação discreta. Em tela estreita, ações e valores se reorganizam. Nenhuma regra financeira, registro ou histórico alterado.
+
+Regra de preferências: cada conta deve ter sua escolha visual isolada das outras. Em Gastos, Lista/Cards é salvo neste navegador por ID autenticado (`arl-cg-view-user-{id}`), preservado em recargas e novas sessões neste navegador; não sincroniza dispositivos. A chave global anterior deixa de ser utilizada. Projeção é exceção: sempre inicia em Lista ao entrar na seção, independentemente da escolha em Gastos; Cards vale somente para aquela visita à seção.
+
+Backup anterior à edição validado: C:\Users\Allan\ARL-backups\controle-gasto-calendario-20261003-025548 (código, alterações e histórico Git). Sem migração/publicação, sem chamadas à IA e sem alterações de dados financeiros reais.

@@ -120,7 +120,7 @@ test('controle: resumo alterna responsáveis e projeção oferece lista e cards'
   await login(page);
   await page.goto('/expense-control');
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
-  const month = await page.getByLabel('Mês do Controle de Gasto', { exact: true }).inputValue();
+  const month = await page.getByRole('button', { name: 'Selecionar mês do Controle de Gasto', exact: true }).getAttribute('data-month');
   const data = (await api(page, '/expense-control/summary?month=' + month)).body;
   const money = (n: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n / 100);
   for (const [name, key] of [['Allan', 'one'], ['Carol', 'two'], ['Casal', 'shared']]) {
@@ -137,6 +137,10 @@ test('controle: resumo alterna responsáveis e projeção oferece lista e cards'
   await page.getByRole('button', { name: 'Cards', exact: true }).click();
   await expect(page.locator('.cg-projection-list')).toHaveCount(0);
   await expect(page.locator('.cg-projection-grid>article')).toHaveCount(12);
+  await page.getByRole('tab', { name: 'Resumo', exact: true }).click();
+  await page.getByRole('tab', { name: 'Projeção', exact: true }).click();
+  await expect(page.locator('.cg-projection-list>article')).toHaveCount(12);
+  await expect(page.getByRole('button', { name: 'Lista', exact: true })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('controle: perfil exclusivo não vê nem acessa dados da empresa', async ({ page }) => {
@@ -165,13 +169,18 @@ test('controle: visual desktop e mobile sem vazamento de layout nos popups', asy
   await expect(page.getByRole('heading', { name: 'Visão geral do casal', exact: true })).toBeVisible();
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   await expect(page.getByRole('tab', { name: 'Visão geral', exact: true })).toHaveCount(0);
-  const month = page.getByLabel('Mês do Controle de Gasto', { exact: true });
-  await month.fill('2026-12');
-  await expect(page.locator('.cg-month-picker strong')).toHaveText('Dezembro De 2026', { ignoreCase: true });
+  const month = page.getByRole('button', { name: 'Selecionar mês do Controle de Gasto', exact: true });
+  await month.click();
+  const calendar = page.getByRole('dialog', { name: 'Selecionar mês e ano' });
+  await calendar.getByLabel('Ano do controle').selectOption('2026');
+  await page.screenshot({ path: 'output/controle-gasto/calendario-compacto.png', fullPage: true });
+  await calendar.getByRole('button', { name: 'Dezembro de 2026', exact: true }).click();
+  await expect(month).toHaveText('12/2026');
+  await expect(calendar).not.toBeVisible();
   await page.getByRole('button', { name: 'Próximo mês do controle' }).click();
-  await expect(month).toHaveValue('2027-01');
+  await expect(month).toHaveAttribute('data-month', '2027-01');
   await page.getByRole('button', { name: 'Mês anterior do controle' }).click();
-  await expect(month).toHaveValue('2026-12');
+  await expect(month).toHaveAttribute('data-month', '2026-12');
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   await page.screenshot({ path: 'output/controle-gasto/resumo-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Nova dívida', exact: true }).click();
@@ -219,6 +228,8 @@ test('controle: pagamento da instituição simula distribuição e confirma sem 
   expect(summary.body.views.two.institutions.find((i: any) => i.id === catalog.institution.id).remaining_cents).toBe(80000);
   await page.locator('.cg-type-grid button').filter({ hasText: catalog.type.name }).click();
   await page.locator('.cg-debt-row').filter({ hasText: 'Casal instituição' }).click();
+  expect((await page.locator('.cg-debt-header').boundingBox())!.height).toBeLessThan(200);
+  await page.screenshot({ path: 'output/controle-gasto/compra-compacta.png', fullPage: true });
   await page.getByRole('button', { name: 'Editar identificação' }).click();
   const edit = page.getByRole('dialog', { name: 'Editar identificação da dívida' });
   await edit.getByRole('button', { name: 'Salvar', exact: true }).click();
@@ -232,4 +243,31 @@ test('controle: pagamento da instituição simula distribuição e confirma sem 
   await expect(removal.getByText('Confirma excluir esta dívida?')).toBeVisible();
   await removal.getByRole('button', { name: 'Confirmar exclusão' }).click();
   await expect(removal).not.toBeVisible();
+});
+
+
+test('controle: Gastos memoriza lista/cards separadamente por conta neste navegador', async ({ page }) => {
+  await login(page);
+  await page.goto('/expense-control');
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await page.getByRole('button', { name: 'Lista', exact: true }).click();
+  await page.reload();
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Lista', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  const roles = (await api(page, '/users')).body.roles;
+  const loginName = 'cg.view.' + Date.now();
+  const user = await api(page, '/users', 'POST', { name: 'Preferência independente', login: loginName, email: null, password, password_confirmation: password, active: true, role_id: roles.find((r: any) => r.name === 'Controle de Gasto').id });
+  expect(user.status).toBe(201);
+  const logout = async () => { await page.evaluate(async () => { await fetch('/logout', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '' } }); }); };
+  await logout();
+  await login(page, loginName);
+  await page.goto('/expense-control');
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Cards', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Cards', exact: true }).click();
+  await logout();
+  await login(page);
+  await page.goto('/expense-control');
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Lista', exact: true })).toHaveAttribute('aria-pressed', 'true');
 });

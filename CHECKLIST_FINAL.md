@@ -476,3 +476,14 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] 281 testes PHP (2487 verificações), 30 testes MySQL isolado (376 verificações), sete cenários E2E. Build/TypeScript e lint passaram.
 - [OK] Backups externos validados: controle-gasto-lista-resumo-20261003-023730 e controle-gasto-quitacao-instituicao-20261003-024604 em C:\Users\Allan\ARL-backups.
 - [PENDENTE] Publicação com backups do servidor e interface Mobile/Tablet completa em etapa futura.
+
+
+## Calendário e cards compactos — 03/10/2026
+
+- [OK] Mês MM/AAAA ao lado dos botões menores; seletor de ano/doze meses, setas e Mês atual; transição dezembro/janeiro verificada.
+- [OK] Resumo mais próximo dos menus; card da compra compactado com valores de 16px e ações na linha do título.
+- [OK] Projeção inicia em Lista a cada entrada; Cards disponível durante a visita.
+- [OK] Gastos preserva Lista/Cards por conta autenticada neste navegador, sem misturar usuários; não sincroniza dispositivos.
+- [OK] Oito cenários E2E verificados (sete passaram na execução ampla; correção do carregamento da preferência e dois cenários focados passaram depois). Conferência visual desktop/mobile, 21 testes PHP/297 verificações, build/TypeScript e lint passaram.
+- [OK] Backup de código/alterações/histórico validado: C:\Users\Allan\ARL-backups\controle-gasto-calendario-20261003-025548. Nenhuma migração ou publicação.
+- [PENDENTE] Publicação e interface Mobile/Tablet completa continuam em etapa própria.
