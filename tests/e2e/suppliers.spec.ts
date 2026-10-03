@@ -94,7 +94,7 @@ test("falha ao anexar nota permite repetir sem duplicar compra ou estoque", asyn
   );
   await expect(
     page
-      .locator(".supplier-purchase-detail")
+      .getByRole("dialog")
       .getByRole("heading", { name: /Compra #/ }),
   ).toBeVisible();
 });
@@ -204,13 +204,16 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   const product = products.find((row: any) => row.name === productName);
   expect(product.stock_quantity).toBe(0);
   await page.locator(".supplier-purchase-list button").first().click();
-  const purchaseSection = page.locator(".supplier-purchase-detail");
+  const purchaseSection = page.getByRole("dialog", { name: /Compra #/ });
   await expect(
     purchaseSection.getByRole("heading", { name: /Compra #/ }),
   ).toBeVisible();
+  await purchaseSection.getByRole("button", {name: /Notas fiscais/}).click();
   await expect(
     purchaseSection.getByRole("link", { name: /nota-e2e.pdf/ }),
   ).toBeVisible();
+  await purchaseSection.getByRole("button", {name: "Parcelas (2)", exact:true}).click();
+  await purchaseSection.getByRole("button", {name: /Ver parcelas/}).click();
   await expect(
     purchaseSection.locator(".supplier-installment-history"),
   ).toHaveCount(2);
@@ -228,6 +231,7 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await page.screenshot({
     path: "output/fornecedores/pagamentos-nota-desktop.png",
   });
+  await purchaseSection.getByRole("button", {name: "Itens e dados", exact:true}).click();
   await purchaseSection
     .getByRole("button", { name: "Receber mercadoria" })
     .click();
@@ -274,6 +278,7 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await expect(
     purchaseSection.getByText("Recebido", { exact: true }),
   ).toBeVisible();
+  await purchaseSection.getByRole("button", {name: "Fechar compra", exact:true}).click();
   await page
     .getByRole("tab", { name: "Produtos adquiridos", exact: true })
     .click();

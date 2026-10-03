@@ -1,3 +1,4 @@
+import SupplierProductDetails from "./supplier-product-details";
 import SupplierWorkspace from './supplier-workspace';
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
@@ -1411,7 +1412,6 @@ export default function SuppliersPage() {
   useEffect(() => {
     if (selected === null) return;
     let active = true;
-    setDetail(null);
     api(`/suppliers/${selected}?page=${historyPage}`)
       .then((data) => {
         if (active) setDetail(data);
@@ -1437,7 +1437,10 @@ export default function SuppliersPage() {
     setError("");
     setMessage("");
   };
-  const openPurchase = async (id: number) => {
+  const [purchaseTab, setPurchaseTab] = useState("summary");
+  const [productDetails, setProductDetails] = useState<number | null>(null);
+  const openPurchase = async (id: number, section?: string) => {
+    if (section) setPurchaseTab(section);
     setPurchaseLoading(true);
     setError("");
     try {
@@ -1773,7 +1776,7 @@ export default function SuppliersPage() {
                 </button>
                 {[["overview", "Visão geral"], ["commercial", "Dados comerciais"], ["offerings", "Produtos fornecidos"], ["finance", "Financeiro"], ["documents", "Documentos"], ["returns", "Devoluções"], ["history", "Ocorrências"], ["reports", "Relatórios"]].map(([key, label]) => <button key={key} role="tab" aria-selected={tab === key} onClick={() => { setTab(key); setPurchase(null); }}>{label}</button>)}
               </div>
-              {!["purchases", "products"].includes(tab) && <SupplierWorkspace key={selected + '-' + tab + '-' + revision} id={supplier.id} tab={tab} onPurchase={id => void openPurchase(id)} onChange={() => refresh("Fornecedor atualizado.")} />}
+              {!["purchases", "products"].includes(tab) && <SupplierWorkspace key={selected + '-' + tab + '-' + revision} id={supplier.id} tab={tab} onPurchase={id => void openPurchase(id, tab === "finance" ? "payments" : "summary")} onChange={() => refresh("Fornecedor atualizado.")} />}
               {tab === "purchases" ? (
                 <section className="supplier-panel">
                   <div className="supplier-section-top">
@@ -1790,7 +1793,7 @@ export default function SuppliersPage() {
                       {detail.purchases.data.map((row) => (
                         <button
                           key={row.id}
-                          onClick={() => void openPurchase(row.id)}
+                          onClick={() => void openPurchase(row.id, "summary")}
                         >
                           <span>
                             <b>{purchaseNumber(row.id)}</b>
@@ -1850,7 +1853,7 @@ export default function SuppliersPage() {
                   {detail.products.length ? (
                     <div className="supplier-product-history">
                       {detail.products.map((product) => (
-                        <article key={product.product_id}>
+                        <button className="supplier-product-open" key={product.product_id} onClick={() => setProductDetails(product.product_id)}>
                           <PackagePlus />
                           <div>
                             <b>{product.name}</b>
@@ -1868,8 +1871,8 @@ export default function SuppliersPage() {
                           <span>
                             Estoque atual
                             <strong>{product.stock_quantity}</strong>
-                          </span>
-                        </article>
+                          </span><ChevronRight />
+                        </button>
                       ))}
                     </div>
                   ) : (
@@ -1880,33 +1883,12 @@ export default function SuppliersPage() {
                 </section>
               ) : null}
               {purchaseLoading && <p role="status">Carregando compra…</p>}
-              {purchase && (
-                <section
-                  className="supplier-panel supplier-purchase-detail"
-                  aria-label={purchaseNumber(purchase.id)}
-                >
-                  <div className="supplier-section-top">
-                    <div>
-                      <span className="arl-eyebrow">DETALHES DA COMPRA</span>
-                      <h2>{purchaseNumber(purchase.id)}</h2>
-                      <p>
-                        {purchase.supplier_snapshot.name} ·{" "}
-                        {date(purchase.purchased_on)}
-                        {purchase.reference && ` · ${purchase.reference}`}
-                      </p>
-                    </div>
-                    <button
-                      aria-label="Fechar detalhes da compra"
-                      onClick={() => setPurchase(null)}
-                    >
-                      <X />
-                    </button>
-                  </div>
-                  <div className="supplier-purchase-detail-top">
-                    <Badge status={purchase.status} />
-                    <span>Previsão: {date(purchase.expected_on)}</span>
-                    <strong>Total: {money(purchase.total_cents)}</strong>
-                  </div>
+              {purchase && !receive && !cancel && (
+                <OrderPopup variant="budget" title={purchaseNumber(purchase.id)} eyebrow="FORNECEDORES · DETALHES DA COMPRA" description={`${purchase.supplier_snapshot.name} · ${date(purchase.purchased_on)}${purchase.reference ? ' · ' + purchase.reference : ''}`} icon={ShoppingCart} onClose={() => setPurchase(null)} closeLabel="Fechar detalhes da compra">
+                <div className="supplier-dialog-body supplier-purchase-detail">
+                  <div className="supplier-purchase-detail-top"><Badge status={purchase.status} /><span>Previsão: {date(purchase.expected_on)}</span><strong>Total: {money(purchase.total_cents)}</strong></div>
+                  <nav className="supplier-detail-tabs" aria-label="Seções da compra">{[["summary", "Itens e dados"], ["payments", `Parcelas (${purchase.installments.length})`], ["documents", `Notas fiscais (${purchase.invoices.length})`], ["receipts", `Recebimentos (${purchase.receipts.length})`]].map(([key, label]) => <button type="button" key={key} aria-pressed={purchaseTab === key} onClick={() => setPurchaseTab(key)}>{label}</button>)}</nav>
+                  {purchaseTab === "summary" && <section className="supplier-detail-section"><div className="supplier-purchase-shortcuts"><button onClick={() => setPurchaseTab("payments")}><small>Parcelas cadastradas</small><b>{purchase.installments.length}</b><span>Ver parcelas →</span></button><button onClick={() => setPurchaseTab("payments")}><small>Parcelas vencidas</small><b>{purchase.installments.filter(p => !p.paid_on && !p.voided_at && p.due_on < new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" })).length}</b><span>Consultar vencimentos →</span></button><button onClick={() => setPurchaseTab("receipts")}><small>Entregas registradas</small><b>{purchase.receipts.length}</b><span>Ver recebimentos →</span></button></div><h3>Itens da compra</h3>
                   <div className="supplier-detail-items">
                     {purchase.items.map((item) => (
                       <article key={item.id}>
@@ -1941,18 +1923,13 @@ export default function SuppliersPage() {
                       </button>
                     </div>
                   )}
-                  <PurchasePayments
-                    purchase={purchase}
-                    refresh={async () => {
-                      await openPurchase(purchase.id);
-                      if (selected)
-                        setDetail(
-                          await api(
-                            `/suppliers/${selected}?page=${historyPage}`,
-                          ),
-                        );
-                    }}
-                  />
+                  </section>}
+                  {["payments", "documents"].includes(purchaseTab) && <PurchasePayments purchase={purchase} section={purchaseTab as "payments" | "documents"} refresh={async () => {
+                    await openPurchase(purchase.id);
+                    if (selected) setDetail(await api(`/suppliers/${selected}?page=${historyPage}`));
+                    setRevision(v => v + 1);
+                  }} />}
+                  {purchaseTab === "receipts" && <section className="supplier-detail-section">
                   <h3>Recebimentos registrados</h3>
                   {purchase.receipts.length ? (
                     purchase.receipts.map((receipt) => (
@@ -1983,8 +1960,12 @@ export default function SuppliersPage() {
                       o estoque.
                     </p>
                   )}
-                </section>
+                  </section>}
+                </div><footer className="arl-3d-footer"><button onClick={() => setPurchase(null)}>Fechar compra</button></footer>
+                </OrderPopup>
               )}
+              {productDetails && supplier && <SupplierProductDetails supplierId={supplier.id} productId={productDetails} supplierName={supplier.name} close={() => setProductDetails(null)} onPurchase={id => { setProductDetails(null); void openPurchase(id, "summary"); }} />}
+
             </>
           )}
         </>

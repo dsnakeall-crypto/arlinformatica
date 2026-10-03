@@ -23,7 +23,23 @@ class SupplierWorkspaceController extends Controller
         }
         $payables = DB::table('supplier_payables as p')->joinSub((clone $purchases)->select('id'), 'buys', fn ($j) => $j->on('buys.id', '=', 'p.purchase_id'));
         $open = (clone $payables)->whereNull('paid_on')->whereNull('voided_at');
-        $summary = ['purchases' => (clone $purchases)->count(), 'purchased_cents' => (int) (clone $purchases)->where('status', '!=', 'cancelled')->sum('total_cents'), 'paid_cents' => (int) (clone $payables)->whereNotNull('paid_on')->sum(DB::raw('amount_cents + interest_cents - discount_cents')), 'open_cents' => (int) (clone $open)->sum('amount_cents'), 'overdue_cents' => (int) (clone $open)->where('due_on', '<', today())->sum('amount_cents')];
+        $summary = ['purchases' => (clone $purchases)->count(), 'purchased_cents' => (int) (clone $purchases)->where('status', '!=', 'cancelled')->sum('total_cents'), 'paid_cents' => (int) (clone $payables)->whereNotNull('paid_on')->sum(DB::raw('amount_cents + interest_cents - discount_cents')), 'open_cents' => (int) (clone $open)->sum('amount_cents'), 'overdue_cents' => (int) (clone $open)->where('due_on', '<', today()->toDateString())->sum('amount_cents')];
+        $totals = (clone $payables)->select('p.purchase_id')->selectRaw('COUNT(*) as installment_count,
+            SUM(CASE WHEN paid_on IS NOT NULL THEN 1 ELSE 0 END) as paid_count,
+            SUM(CASE WHEN paid_on IS NULL AND voided_at IS NULL THEN amount_cents ELSE 0 END) as open_cents,
+            SUM(CASE WHEN paid_on IS NOT NULL THEN amount_cents + interest_cents - discount_cents ELSE 0 END) as paid_cents,
+            SUM(CASE WHEN paid_on IS NULL AND voided_at IS NULL AND due_on < ? THEN 1 ELSE 0 END) as overdue_count,
+            MIN(CASE WHEN paid_on IS NULL AND voided_at IS NULL THEN due_on END) as next_due_on', [today()->toDateString()])->groupBy('p.purchase_id');
+        $financePurchases = DB::table('supplier_purchases as purchase')->joinSub($totals, 'titles', fn ($j) => $j->on('titles.purchase_id', '=', 'purchase.id'))
+            ->select('purchase.id', 'purchase.reference', 'purchase.purchased_on', 'purchase.total_cents', 'titles.*')
+            ->orderByDesc('purchase.id')->paginate(15, ['*'], 'payments_page');
+        $financePurchases->getCollection()->transform(function ($row) {
+            foreach (['total_cents', 'installment_count', 'paid_count', 'open_cents', 'paid_cents', 'overdue_count'] as $field) {
+                $row->$field = (int) $row->$field;
+            }
+
+            return $row;
+        });
         $lastCost = DB::table('supplier_purchase_items as i')->join('supplier_purchases as p', 'p.id', '=', 'i.purchase_id')->where('p.supplier_id', $supplier->id)->whereColumn('i.product_id', 'o.product_id')->where('i.received_quantity', '>', 0)->orderByDesc('p.purchased_on')->orderByDesc('i.id')->limit(1)->select('i.unit_cost_cents');
         $offerings = DB::table('supplier_offerings as o')->join('service_catalog as p', 'p.id', '=', 'o.product_id')->where('o.supplier_id', $supplier->id)->select('o.*', 'p.name', 'p.stock_quantity')->addSelect(['last_cost_cents' => $lastCost])->orderBy('p.name')->get();
         $priceHistory = DB::table('supplier_purchase_items as i')->joinSub((clone $purchases)->select('id', 'purchased_on'), 'buys', fn ($j) => $j->on('buys.id', '=', 'i.purchase_id'))->orderByDesc('buys.purchased_on')->orderByDesc('i.id')->select('i.id', 'i.product_id', 'i.description', 'i.quantity', 'i.unit_cost_cents', 'i.received_quantity', 'i.lot', 'buys.purchased_on')->paginate(25, ['*'], 'prices_page');
@@ -38,9 +54,9 @@ class SupplierWorkspaceController extends Controller
         $ratings = (clone $occurrences)->selectRaw('AVG(delivery_rating) as delivery, AVG(quality_rating) as quality, AVG(price_rating) as price, AVG(service_rating) as service')->first();
 
         return response()->json([
-            'profile' => $supplier->profile ?? [], 'summary' => $summary, 'offerings' => $offerings,
+            'profile' => $supplier->profile ?? [], 'summary' => $summary, 'offerings' => $offerings, 'finance_purchases' => $financePurchases,
             'payables' => (clone $payables)->orderBy('p.due_on')->select('p.*')->paginate(25, ['*'], 'payments_page'),
-            'late_purchases' => (clone $purchases)->whereIn('status', ['pending', 'partially_received'])->where('expected_on', '<', today())->orderBy('expected_on')->get(['id', 'reference', 'expected_on']),
+            'late_purchases' => (clone $purchases)->whereIn('status', ['pending', 'partially_received'])->where('expected_on', '<', today()->toDateString())->orderBy('expected_on')->get(['id', 'reference', 'expected_on']),
             'documents' => DB::table('supplier_documents')->where('supplier_id', $supplier->id)->orderByDesc('id')->get(['id', 'category', 'original_name', 'bytes', 'purchase_id', 'created_at']),
             'returns' => (clone $returns)->orderByDesc('id')->paginate(25, ['*'], 'returns_page'),
             'credit_cents' => (int) (clone $returns)->where('resolution', 'credit')->sum('value_cents'),
@@ -53,6 +69,28 @@ class SupplierWorkspaceController extends Controller
 
                 return $row;
             }),
+        ]);
+    }
+
+    public function product(Request $request, Supplier $supplier, int $product)
+    {
+        $items = DB::table('supplier_purchase_items as i')->join('supplier_purchases as p', 'p.id', '=', 'i.purchase_id')
+            ->where('p.supplier_id', $supplier->id)->where('i.product_id', $product);
+        abort_unless((clone $items)->exists(), 404);
+        $catalog = DB::table('service_catalog')->where('id', $product)->first(['id', 'name', 'price_cents', 'stock_quantity', 'active']);
+        $summary = (clone $items)->selectRaw('SUM(i.quantity) as ordered_quantity, SUM(i.received_quantity) as received_quantity, SUM(i.received_quantity * i.unit_cost_cents) as received_cents')->first();
+        foreach (['ordered_quantity', 'received_quantity', 'received_cents'] as $field) {
+            $summary->$field = (int) $summary->$field;
+        }
+        $returns = DB::table('supplier_returns as r')->join('supplier_purchase_items as i', 'i.id', '=', 'r.purchase_item_id')
+            ->where('r.supplier_id', $supplier->id)->where('i.product_id', $product);
+        $summary->returned_quantity = (int) (clone $returns)->sum('r.quantity');
+
+        return response()->json([
+            'product' => $catalog, 'summary' => $summary,
+            'offering' => DB::table('supplier_offerings')->where('supplier_id', $supplier->id)->where('product_id', $product)->first(['supplier_code', 'brand', 'cost_cents', 'minimum_quantity', 'delivery_days', 'active']),
+            'purchases' => (clone $items)->select('i.id', 'i.purchase_id', 'i.description', 'i.quantity', 'i.received_quantity', 'i.unit_cost_cents', 'i.lot', 'p.purchased_on', 'p.reference', 'p.status')->orderByDesc('p.purchased_on')->orderByDesc('i.id')->paginate(15, ['*'], 'purchases_page'),
+            'returns' => (clone $returns)->select('r.id', 'r.quantity', 'r.value_cents', 'r.resolution', 'r.returned_on', 'r.reason')->orderByDesc('r.id')->paginate(15, ['*'], 'returns_page'),
         ]);
     }
 

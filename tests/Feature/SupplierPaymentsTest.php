@@ -44,6 +44,42 @@ class SupplierPaymentsTest extends TestCase
         return ['request_key' => (string) Str::uuid(), 'purchased_on' => today()->toDateString(), 'received_now' => true, 'items' => [['product_id' => $this->product, 'quantity' => 1, 'unit_cost_cents' => 10001]], 'payment_terms' => 'installments', 'payment_method' => 'boleto', 'installments' => [['amount_cents' => 5000, 'due_on' => today()->toDateString()], ['amount_cents' => 5001, 'due_on' => today()->addMonth()->toDateString()]]];
     }
 
+    public function test_finance_groups_all_installments_before_paginating_purchases(): void
+    {
+        $data = $this->payload();
+        $data['items'][0]['unit_cost_cents'] = 32000;
+        $data['installments'] = array_map(fn ($n) => ['amount_cents' => 1000, 'due_on' => today()->addMonths($n)->toDateString()], range(0, 31));
+        $purchase = $this->postJson('/api/suppliers/'.$this->supplier->id.'/purchases', $data)->assertCreated()->json('id');
+        $titles = DB::table('supplier_payables')->where('purchase_id', $purchase)->orderBy('installment')->get();
+        $this->postJson('/api/supplier-payables/'.$titles[0]->id.'/pay', ['paid_on' => today()->toDateString(), 'paid_method' => 'pix', 'interest_cents' => 100, 'discount_cents' => 50])->assertOk();
+        DB::table('supplier_payables')->where('id', $titles[1]->id)->update(['due_on' => today()->subDay()->toDateString()]);
+        $second = $this->postJson('/api/suppliers/'.$this->supplier->id.'/purchases', $this->payload())->assertCreated()->json('id');
+        $result = $this->getJson('/api/suppliers/'.$this->supplier->id.'/workspace')->assertOk()->assertJsonCount(2, 'finance_purchases.data')->assertJsonPath('summary.overdue_cents', 1000);
+        $rows = collect($result->json('finance_purchases.data'))->keyBy('id');
+        $this->assertSame(32, $rows[$purchase]['installment_count']);
+        $this->assertSame(31000, $rows[$purchase]['open_cents']);
+        $this->assertSame(1050, $rows[$purchase]['paid_cents']);
+        $this->assertSame(1, $rows[$purchase]['paid_count']);
+        $this->assertSame(1, $rows[$purchase]['overdue_count']);
+        $this->assertSame(2, $rows[$second]['installment_count']);
+        for ($i = 0; $i < 15; $i++) {
+            $this->postJson('/api/suppliers/'.$this->supplier->id.'/purchases', $this->payload())->assertCreated();
+        }
+        $this->getJson('/api/suppliers/'.$this->supplier->id.'/workspace')->assertOk()->assertJsonCount(15, 'finance_purchases.data')->assertJsonPath('finance_purchases.total', 17);
+        $this->getJson('/api/suppliers/'.$this->supplier->id.'/workspace?payments_page=2')->assertOk()->assertJsonCount(2, 'finance_purchases.data')->assertJsonPath('finance_purchases.data.1.installment_count', 32);
+        $this->getJson('/api/suppliers/'.$this->supplier->id.'/workspace?from='.today()->addDay()->toDateString())->assertOk()->assertJsonCount(0, 'finance_purchases.data');
+    }
+
+    public function test_product_detail_is_scoped_to_supplier_and_backend_role(): void
+    {
+        $this->postJson('/api/suppliers/'.$this->supplier->id.'/purchases', $this->payload())->assertCreated();
+        $other = Supplier::create(['name' => 'Outro parceiro']);
+        $this->getJson('/api/suppliers/'.$this->supplier->id.'/products/'.$this->product)->assertOk()->assertJsonPath('product.price_cents', 48000)->assertJsonPath('summary.received_quantity', 1)->assertJsonPath('summary.received_cents', 10001)->assertJsonCount(1, 'purchases.data');
+        $this->getJson('/api/suppliers/'.$other->id.'/products/'.$this->product)->assertNotFound();
+        $local = User::create(['name' => 'Funcionário', 'login' => 'produto-local', 'password' => 'Senha#Forte123', 'role_id' => Role::where('name', 'Funcionário')->value('id'), 'active' => true]);
+        $this->actingAs($local)->getJson('/api/suppliers/'.$this->supplier->id.'/products/'.$this->product)->assertForbidden();
+    }
+
     public function test_installment_totals_and_dates_are_checked_atomically_before_stock_changes(): void
     {
         $data = $this->payload();

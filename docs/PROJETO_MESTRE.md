@@ -1026,3 +1026,7 @@ Fixos de Casa usa nova imagem estática branca com acabamento 3D, gerada na ferr
 Botão Nova OS abaixo da logo compacto, em cápsula preto/vermelho, sombra e texto/ícone branco; ação/autorização preservadas. Referência enviada: codex-clipboard-0c580818-9ae2-42b6-874f-ea3588be953a.png.
 
 Fornecedores recebe ficha organizada e funcionalidades reais descritas em [FORNECEDORES_FICHA.md](FORNECEDORES_FICHA.md), incluindo vínculos por produto, perfil comercial/bancário, documentos privados, devoluções de estoque, ocorrências/avaliações, relatórios, alertas e juros/descontos na quitação dos títulos. Perfis Master/Administrador autorizados no backend. Produtos sem fornecedor, brindes zero e compras de parceiros distintos preservados. Consulta oficial de CPF, pagamentos parciais ao fornecedor, compensação automática de créditos e permissões granulares seguem etapas próprias, sem simulação. Nenhuma publicação autorizada nesta execução.
+
+
+### Fornecedores: detalhes organizados — 03/10/2026
+Financeiro agrupado por compra antes da paginação, com contagem de parcelas e totais completos. Detalhes em popup com abas de itens, parcelas, notas e recebimentos; parcelas recolhidas até abrir, numeradas N/total. Produtos adquiridos abrem ficha em popup, com cadastro, condições, histórico paginado de custos/lotes e devoluções do fornecedor. Sem mudanças de dados/schema. Solicitação de limpeza aguarda definição de alcance pelo proprietário. Uso, backup e validação em FORNECEDORES_FICHA.md.

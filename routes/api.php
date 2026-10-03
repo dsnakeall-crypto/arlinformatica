@@ -77,6 +77,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/suppliers', [SupplierController::class, 'store']);
         Route::post('/supplier-document/lookup', [SupplierController::class, 'lookupDocument'])->middleware('throttle:20,1');
         Route::get('/suppliers/{supplier}', [SupplierController::class, 'show']);
+        Route::get('/suppliers/{supplier}/products/{product}', [SupplierWorkspaceController::class, 'product'])->whereNumber('product');
         Route::get('/suppliers/{supplier}/workspace', [SupplierWorkspaceController::class, 'show']);
         Route::put('/suppliers/{supplier}/profile', [SupplierWorkspaceController::class, 'profile']);
         Route::post('/suppliers/{supplier}/offerings', [SupplierWorkspaceController::class, 'offering']);

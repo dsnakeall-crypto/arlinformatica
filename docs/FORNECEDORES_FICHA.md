@@ -46,3 +46,16 @@ As capturas de homologação estão em `output/fornecedores/nova-lista-desktop.p
 ## Verificação final
 
 291 testes PHP/2637 asserções; 57 testes MySQL isolado/712 asserções; 17 testes frontend; build/TypeScript, lint e Pint aprovados. Suíte geral de navegador: 125 cenários aprovados e um teste com expectativa antiga da galeria. Esse teste foi atualizado para contemplar o cartão novo e a confirmação obrigatória ao editar; revisão final de cinco cenários aprovada (galeria/upload, mobile e fornecedores). A revisão focada também aprovou os 11 fluxos de Controle de Gasto. A cobertura inclui OS, clientes, financeiro, pós-venda, login, fotos, documentos e responsividade, sem prometer ausência absoluta de falhas fora dos cenários testados.
+
+
+## Compras e produtos em popups — revisão de 03/10/2026
+
+Financeiro mostra uma linha compacta por compra, com referência/data, quantidade total de parcelas, pagas/vencidas, dinheiro pago, saldo e próximo vencimento. Agregação no servidor antes da paginação (15 compras por página), sem truncar compras com mais de 25 parcelas. Títulos cancelados não compõem saldo; juros/descontos continuam compondo somente o dinheiro pago. Vencimento de hoje não é atraso.
+
+Abrir compra em Compras e recebimentos, Financeiro, avisos da Visão geral ou link de notificação abre o mesmo popup. Abas Itens e dados, Parcelas, Notas fiscais e Recebimentos. Atalhos mostram quantidade de parcelas/vencidas/entregas; lista de parcelas inicialmente recolhida, numeração N/total, valor, data, situação e ações preservadas. Receber/cancelar saldo de entrega abre o formulário existente e retorna ao detalhe. Pagamento atualiza também os totais da ficha, sem perder o contexto. Cabeçalho/fecho e rodapé ficam acessíveis; conteúdo rolável quando necessário.
+
+Produtos adquiridos agora abrem um popup com cadastro atual, preço de venda/saldo global, condições comerciais específicas, compras/custos/lotes e devoluções. Histórico paginado no servidor e limitado ao fornecedor escolhido; o estoque global inclui outras origens e é identificado dessa forma. Cada compra do histórico pode abrir o detalhe da compra. Endpoints novos somente de leitura, protegidos por Master/Administrador; sem alteração de schema ou registros existentes.
+
+Backup de arquivos/alterações/Git verificado antes da edição: `C:\Users\Allan\ARL-backups\fornecedores-popups-20261003-103901`. Backups anteriores preservados. Nenhuma limpeza ou publicação realizada. A solicitação de apagar cadastros está pendente de definição pelo proprietário: dados de teste, todos os fornecedores locais ou apenas reorganização; não executar exclusão silenciosa de entradas de estoque/pagamentos.
+
+Validação: 293 testes PHP / 2680 asserções; 59 testes MySQL isolado / 755 asserções; 17 testes frontend. Build/TypeScript, lint e Pint aprovados. Três fluxos existentes de navegador aprovados, mais fluxo novo aprovado após corrigir o seletor de teste para o número de compra com zeros; nova rodada com geometria e capturas desktop/mobile aprovada. Inclui compra com 32 parcelas, pagamento real no banco isolado, documentos, recebimento parcial, link por notificação, produto e navegação pelo histórico. Capturas em `output/fornecedores/financeiro-por-compra.png`, `detalhes-compra-popup.png`, `produto-popup-desktop.png`, `produto-popup-mobile.png` e `compra-popup-mobile.png`.

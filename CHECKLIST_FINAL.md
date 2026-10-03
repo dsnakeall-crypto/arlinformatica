@@ -536,3 +536,11 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [PENDENTE] Publicação: requer backup validado do servidor, implantação e migrations; produção não foi acessada nesta execução.
 
 Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é encerrado ao entregar esta revisão local.
+
+
+## Fornecedores — organização de compras e produtos (03/10/2026)
+- [OK] Financeiro em linhas por compra, totais/contagens anteriores à paginação e próximas datas.
+- [OK] Detalhes da compra em popup com abas, atalhos e parcelas numeradas inicialmente recolhidas; ações de pagamento, notas e recebimento preservadas.
+- [OK] Produto adquirido abre popup com dados atuais, condições comerciais e histórico de compras/custos/lotes/devoluções, protegido e paginado.
+- [OK] Desktop/mobile, 32 parcelas, backend SQLite/MySQL, frontend, build/TypeScript, lint e Pint verificados. Resultados detalhados em docs/FORNECEDORES_FICHA.md.
+- [PENDENTE] Limpeza dos cadastros de fornecedores: aguarda resposta sobre dados de teste versus registros reais/todos os dados locais. Nenhum registro foi apagado nesta revisão.

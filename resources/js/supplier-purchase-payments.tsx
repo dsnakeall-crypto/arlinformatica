@@ -77,7 +77,9 @@ async function post(path: string, body: Record<string, unknown> | FormData) {
 export default function PurchasePayments({
   purchase,
   refresh,
+  section = "payments",
 }: {
+  section?: "payments" | "documents";
   purchase: Purchase;
   refresh: () => Promise<void>;
 }) {
@@ -91,6 +93,7 @@ export default function PurchasePayments({
     [error, setError] = useState("");
   const [interest, setInterest] = useState(""), [discount, setDiscount] = useState("");
   const invoiceKey = useRef(crypto.randomUUID());
+  const [expanded, setExpanded] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const action = async (work: () => Promise<unknown>) => {
     if (busy) return;
@@ -125,6 +128,7 @@ export default function PurchasePayments({
   const open = purchase.installments.filter((p) => !p.paid_on && !p.voided_at);
   return (
     <section className="supplier-payment-history">
+      {section === "payments" && <>
       <h3>Pagamento e vencimentos</h3>
       <p>
         {terms[purchase.payment_terms || ""] ||
@@ -149,11 +153,12 @@ export default function PurchasePayments({
           </b>
         </span>
       </div>
-      {purchase.installments.map((p) => (
+      <button type="button" className="supplier-installments-toggle" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}><span><b>{purchase.installments.length} parcelas registradas</b><small>{open.length} em aberto · {purchase.installments.filter(p => !!p.paid_on).length} pagas · {open.filter(p => p.due_on < day()).length} vencidas</small></span><strong>{expanded ? "Ocultar parcelas −" : "Ver parcelas +"}</strong></button>
+      {expanded && <div className="supplier-installments-list">{purchase.installments.map((p) => (
         <article className="supplier-installment-history" key={p.id}>
           <div>
             <b>
-              Parcela {p.installment} · {money(p.amount_cents)}
+              Parcela {p.installment}/{purchase.installments.length} · {money(p.amount_cents)}
             </b>
             <p>Vencimento: {date(p.due_on)}</p>{p.paid_on && (Number(p.interest_cents) > 0 || Number(p.discount_cents) > 0) && <p>Pago: {money(Number(p.amount_cents) + Number(p.interest_cents || 0) - Number(p.discount_cents || 0))} · juros {money(Number(p.interest_cents || 0))} · desconto {money(Number(p.discount_cents || 0))}</p>}
             <small>
@@ -197,7 +202,7 @@ export default function PurchasePayments({
             </div>
           )}
         </article>
-      ))}
+      ))}</div>}
       {!purchase.installments.length && (
         <p>
           Compra anterior sem parcelas cadastradas. Nenhuma dívida foi criada
@@ -287,6 +292,8 @@ export default function PurchasePayments({
           </button>
         </form>
       )}
+      </>}
+      {section === "documents" && <>
       <h3>Notas fiscais anexadas</h3>
       {purchase.invoices.map((invoice) => (
         <a
@@ -326,6 +333,7 @@ export default function PurchasePayments({
         </label>
         <button disabled={busy || !file}>Anexar nota</button>
       </form>
+      </>}
       {error && (
         <p className="supplier-error" role="alert">
           {error}
