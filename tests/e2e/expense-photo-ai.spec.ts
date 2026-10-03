@@ -4,11 +4,11 @@ import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
-const info = { enabled: true, model: 'gemini-3.1-pro-preview', monthly_reads: 20, used_reads: 0, monthly_micro_usd: 1000000, used_micro_usd: 0 };
+const info = { enabled: true, provider: 'mistral', label: 'Mistral', model: 'mistral-ocr-4-1', monthly_reads: 20, used_reads: 0, monthly_micro_usd: 1000000, used_micro_usd: 0 };
 const fixture = path.resolve('tests/fixtures/expense-invoice.png');
 
 // Provider transport is simulated; the financial save below uses the real local API.
-test('Gemini: consentimento, campos faltantes, revisão e cadastro real sem enviar chave ao navegador', async ({ page }) => {
+test('Mistral: consentimento, campos faltantes, revisão e cadastro real sem enviar chave ao navegador', async ({ page }) => {
   await login(page);
   const stamp = Date.now();
   const bank = (await api(page, '/expense-control/catalogs/institutions', 'POST', { name: 'AI ' + stamp, active: true, due_day: 12, color: '#c9002c' })).body;
@@ -24,13 +24,13 @@ test('Gemini: consentimento, campos faltantes, revisão e cadastro real sem envi
   await page.getByRole('button', { name: 'Controle de Gasto', exact: true }).click();
   await page.getByRole('button', { name: 'Cadastrar por foto', exact: true }).click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog.getByRole('button', { name: 'Gemini Pro' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(dialog.locator('.cg-photo-reader-options').getByRole('button', { name: 'Mistral' })).toHaveAttribute('aria-pressed', 'true');
   await dialog.getByLabel('Foto da fatura', { exact: true }).setInputFiles(fixture);
-  await expect(dialog.getByRole('button', { name: 'Ler com Gemini', exact: true })).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'Ler com Mistral', exact: true })).toBeDisabled();
   expect(calls).toBe(0);
   await dialog.getByRole('checkbox', { name: /Autorizo enviar esta foto/ }).check();
-  await page.screenshot({ path: 'output/gemini/escolha-desktop.png', fullPage: true });
-  await dialog.getByRole('button', { name: 'Ler com Gemini', exact: true }).click();
+  await page.screenshot({ path: 'output/mistral/escolha-desktop.png', fullPage: true });
+  await dialog.getByRole('button', { name: 'Ler com Mistral', exact: true }).click();
   await expect(dialog.locator('.cg-photo-row')).toHaveCount(2);
   await expect(dialog.getByRole('button', { name: 'Texto lido' })).toHaveCount(0);
   await expect(dialog.getByLabel('Valor da parcela da compra 2', { exact: true })).toHaveValue('');
@@ -43,7 +43,7 @@ test('Gemini: consentimento, campos faltantes, revisão e cadastro real sem envi
   await dialog.getByLabel('Conferi a compra 2', { exact: true }).check();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(dialog.getByRole('button', { name: 'Salvar 2 compras' })).toBeVisible();
-  await page.screenshot({ path: 'output/gemini/revisao-mobile.png', fullPage: true });
+  await page.screenshot({ path: 'output/mistral/revisao-mobile.png', fullPage: true });
   const response = page.waitForResponse(r => r.url().endsWith('/photo-imports') && r.request().method() === 'POST');
   await dialog.getByRole('button', { name: 'Salvar 2 compras' }).click();
   const saved = await response;
@@ -54,20 +54,20 @@ test('Gemini: consentimento, campos faltantes, revisão e cadastro real sem envi
   expect(calls).toBe(1);
 });
 
-test('Gemini: falha simulada permite leitura real no aparelho sem repetir chamada paga', async ({ page }) => {
+test('Mistral: falha simulada permite leitura real no aparelho sem repetir chamada paga', async ({ page }) => {
   test.setTimeout(120000);
   await login(page);
   await page.route('**/api/expense-control/photo-ai', route => route.fulfill({ json: info }));
   let calls = 0;
-  await page.route('**/api/expense-control/photo-ai/read', route => { calls++; return route.fulfill({ status: 503, json: { message: 'Gemini indisponível. Use a leitura no aparelho.' } }); });
+  await page.route('**/api/expense-control/photo-ai/read', route => { calls++; return route.fulfill({ status: 503, json: { message: 'Mistral indisponível. Use a leitura no aparelho.' } }); });
   await page.getByRole('button', { name: 'Controle de Gasto', exact: true }).click();
   await page.getByRole('button', { name: 'Cadastrar por foto', exact: true }).click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog.getByRole('button', { name: 'Gemini Pro' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(dialog.locator('.cg-photo-reader-options').getByRole('button', { name: 'Mistral' })).toHaveAttribute('aria-pressed', 'true');
   await dialog.getByLabel('Foto da fatura', { exact: true }).setInputFiles(fixture);
   await dialog.getByRole('checkbox', { name: /Autorizo enviar esta foto/ }).check();
-  await dialog.getByRole('button', { name: 'Ler com Gemini', exact: true }).click();
-  await expect(dialog.getByRole('alert')).toContainText('Gemini indisponível');
+  await dialog.getByRole('button', { name: 'Ler com Mistral', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Mistral indisponível');
   await dialog.getByRole('button', { name: 'No aparelho' }).click();
   await dialog.getByRole('button', { name: 'Ler compras', exact: true }).click();
   await expect(dialog.locator('.cg-photo-row')).toHaveCount(2, { timeout: 90000 });

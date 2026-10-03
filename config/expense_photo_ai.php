@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'provider' => env('EXPENSE_PHOTO_AI_PROVIDER', 'mistral'),
+    'mistral_enabled' => env('MISTRAL_EXPENSE_PHOTO_ENABLED', false),
+    'mistral_api_key' => env('MISTRAL_API_KEY', ''),
+    'mistral_model' => 'mistral-ocr-4-1',
+    // Conservative estimate: USD 4 OCR + USD 5 annotation per 1,000 pages.
+    'mistral_page_micro_usd' => 9000,
     'enabled' => env('GEMINI_EXPENSE_PHOTO_ENABLED', false),
     'api_key' => env('GEMINI_API_KEY', ''),
     'model' => env('GEMINI_EXPENSE_PHOTO_MODEL', 'gemini-3.1-pro-preview'),

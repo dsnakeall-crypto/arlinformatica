@@ -1,5 +1,7 @@
 # Leitura opcional de faturas com Gemini
 
+Atualização: o provedor preferido agora é Mistral; consulte [MISTRAL_FATURAS.md](MISTRAL_FATURAS.md). Para usar esta configuração histórica Gemini, selecione `EXPENSE_PHOTO_AI_PROVIDER=gemini`.
+
 Implementação local em 03/10/2026. O leitor **No aparelho** continua disponível com Tesseract. **Gemini Pro** envia a imagem ao Google somente após consentimento e clique do usuário. Ambos exigem conferência de cada compra antes do cadastro; ler uma foto não registra dívidas automaticamente.
 
 ## Ativação privada

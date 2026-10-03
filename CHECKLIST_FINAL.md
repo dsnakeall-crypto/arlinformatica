@@ -416,3 +416,12 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Backup externo verificado em `C:\Users\Allan\ARL-backups\controle-gasto-gemini-20261003-001607`; hashes de 55 tabelas existentes e 128 arquivos privados preservados.
 - [PENDENTE] Resolver permissão da conta Google, configurar chave e faturamento, validar precisão/custo com fatura real. Integração permanece desligada.
 - [PENDENTE] Publicação em produção, precedida de backup validado do banco e arquivos privados do servidor.
+
+## Mistral — leitura por foto (03/10/2026)
+
+- [OK] Provedor Mistral OCR 4.1 integrado, chave privada configurada, consentimento explícito, cache, limites e leitura No aparelho preservados.
+- [OK] API real HTTP 200: imagem fictícia e fatura de novembro com 9 compras; os 9 valores, parcelas atuais e totais de parcelas conferiram. Nenhuma dívida cadastrada nesses testes reais. Precisão validada nessas amostras.
+- [OK] 274 testes PHP (2.345 verificações), 45 testes em MySQL isolado (385 verificações), 17 testes frontend e 9 E2E do módulo passaram. Build/TypeScript, lint e Pint passaram. Dois E2E tiveram seletor corrigido e passaram na repetição.
+- [OK] Backup verificado em `C:\Users\Allan\ARL-backups\controle-gasto-mistral-20261003-013308`. Preservados 55 tabelas preexistentes e 128 arquivos privados; apenas 2 registros de leitura autorizados adicionados à tabela de consumo.
+- [PENDENTE] Publicação em produção com backup prévio validado, configuração da chave privada e verificação no servidor.
+- [PENDENTE] Reformulação de Fornecedores; depois, interface própria Mobile/Tablet completa para Controle de Gasto, com acabamento 3D.

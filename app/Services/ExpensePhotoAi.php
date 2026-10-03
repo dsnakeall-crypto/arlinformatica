@@ -26,7 +26,9 @@ TEXT;
         $rows = DB::table('cg_photo_reads')->where('created_at', '>=', $month)->get(['cost_micro_usd', 'reserved_micro_usd']);
 
         return [
-            'enabled' => $this->enabled(), 'model' => config('expense_photo_ai.model'),
+            'enabled' => $this->enabled(), 'model' => $this->model(),
+            'provider' => config('expense_photo_ai.provider'),
+            'label' => config('expense_photo_ai.provider') === 'mistral' ? 'Mistral' : 'Gemini Pro',
             'monthly_reads' => max(0, config('expense_photo_ai.monthly_reads')),
             'used_reads' => $rows->count(),
             'monthly_micro_usd' => max(0, config('expense_photo_ai.monthly_micro_usd')),
@@ -36,17 +38,21 @@ TEXT;
 
     private function enabled(): bool
     {
-        return (bool) config('expense_photo_ai.enabled') && trim((string) config('expense_photo_ai.api_key')) !== '' && isset(config('expense_photo_ai.prices')[config('expense_photo_ai.model')]);
+        if (config('expense_photo_ai.provider') === 'mistral') {
+            return (bool) config('expense_photo_ai.mistral_enabled') && trim((string) config('expense_photo_ai.mistral_api_key')) !== '';
+        }
+
+        return config('expense_photo_ai.provider') === 'gemini' && (bool) config('expense_photo_ai.enabled') && trim((string) config('expense_photo_ai.api_key')) !== '' && isset(config('expense_photo_ai.prices')[config('expense_photo_ai.model')]);
     }
 
     public function read(UploadedFile $file, int $rotation, string $requestKey, int $userId): array
     {
-        abort_unless($this->enabled(), 503, 'A leitura com Gemini ainda não está configurada. Use a leitura no aparelho.');
+        abort_unless($this->enabled(), 503, 'A leitura com IA ainda não está configurada. Use a leitura no aparelho.');
         $raw = file_get_contents($file->getRealPath());
         $sourceHash = hash('sha256', $raw);
         DB::table('cg_photo_reads')->whereNotNull('result')->where('created_at', '<', now()->subDay())->update(['result' => null]);
-        $model = (string) config('expense_photo_ai.model');
-        $payloadHash = hash('sha256', $sourceHash.'|'.$rotation.'|'.$model.'|v1');
+        $model = $this->model();
+        $payloadHash = hash('sha256', $sourceHash.'|'.$rotation.'|'.config('expense_photo_ai.provider').'|'.$model.'|v2');
         $image = $this->image($raw, $rotation, $file->getRealPath());
         unset($raw);
         // A single existing person serializes both participants' cost reservations.
@@ -79,6 +85,9 @@ TEXT;
         $id = $read['id'];
         $reserved = false;
         try {
+            if (config('expense_photo_ai.provider') === 'mistral') {
+                return $this->readMistral($image, $id, $sourceHash, $reserved);
+            }
             $contents = [['role' => 'user', 'parts' => [['text' => self::PROMPT], ['inlineData' => ['mimeType' => 'image/jpeg', 'data' => base64_encode($image)]]]]];
             unset($image);
             $tokens = $this->http()->post($this->url($model, 'countTokens'), ['contents' => $contents]);
@@ -125,8 +134,43 @@ TEXT;
             if ($failure instanceof HttpExceptionInterface) {
                 throw $failure;
             }
-            abort(503, 'Não foi possível concluir a leitura com Gemini. Não repetimos a chamada automaticamente. Use a leitura no aparelho ou tente novamente depois.');
+            abort(503, 'Não foi possível concluir a leitura com IA. Não repetimos a chamada automaticamente. Use a leitura no aparelho ou tente novamente depois.');
         }
+    }
+
+    private function model(): string
+    {
+        return (string) config(config('expense_photo_ai.provider') === 'mistral' ? 'expense_photo_ai.mistral_model' : 'expense_photo_ai.model');
+    }
+
+    private function readMistral(string $image, int $id, string $sourceHash, bool &$reserved): array
+    {
+        $reserve = max(9000, (int) config('expense_photo_ai.mistral_page_micro_usd'));
+        DB::transaction(function () use ($id, $reserve) {
+            DB::table('cg_people')->where('id', 1)->lockForUpdate()->first();
+            $usage = $this->configuration();
+            abort_if($usage['monthly_micro_usd'] < $usage['used_micro_usd'] + $reserve, 429, 'Saldo do limite mensal estimado insuficiente. Use a leitura no aparelho.');
+            DB::table('cg_photo_reads')->where('id', $id)->update(['reserved_micro_usd' => $reserve]);
+        }, 3);
+        $reserved = true;
+        $response = Http::withToken((string) config('expense_photo_ai.mistral_api_key'))
+            ->acceptJson()->connectTimeout(10)->timeout(55)->withOptions(['allow_redirects' => false])
+            ->post('https://api.mistral.ai/v1/ocr', [
+                'model' => $this->model(),
+                'document' => ['type' => 'image_url', 'image_url' => 'data:image/jpeg;base64,'.base64_encode($image)],
+                'include_image_base64' => false,
+                'document_annotation_format' => ['type' => 'json_schema', 'json_schema' => ['name' => 'invoice_purchases', 'strict' => true, 'schema' => $this->schema()]],
+                'document_annotation_prompt' => self::PROMPT,
+            ]);
+        unset($image);
+        if (! $response->successful() || $response->json('usage_info.pages_processed') !== 1 || count($response->json('pages', [])) !== 1) {
+            throw new RuntimeException('Incomplete document response');
+        }
+        // Annotations use page pricing, not Gemini tokens. Keep the conservative estimate.
+        $result = $this->validateResult(json_decode($response->json('document_annotation') ?? '', true, 64, JSON_THROW_ON_ERROR));
+        DB::table('cg_photo_reads')->where('id', $id)->update(['status' => 'completed', 'cost_micro_usd' => $reserve, 'result' => json_encode($result), 'updated_at' => now()]);
+
+        return [...$result, 'source_hash' => $sourceHash, 'replayed' => false, 'usage' => $this->configuration()];
     }
 
     private function replay(object $row): array
@@ -196,7 +240,7 @@ TEXT;
             'purchased_on' => ['type' => ['string', 'null']], 'warnings' => ['type' => 'array', 'items' => ['type' => 'string']],
         ];
 
-        return ['type' => 'object', 'properties' => ['purchases' => ['type' => 'array', 'maxItems' => 100, 'items' => ['type' => 'object', 'properties' => $fields, 'required' => array_keys($fields)]], 'warnings' => ['type' => 'array', 'items' => ['type' => 'string']]], 'required' => ['purchases', 'warnings']];
+        return ['type' => 'object', 'additionalProperties' => false, 'properties' => ['purchases' => ['type' => 'array', 'maxItems' => 100, 'items' => ['type' => 'object', 'additionalProperties' => false, 'properties' => $fields, 'required' => array_keys($fields)]], 'warnings' => ['type' => 'array', 'items' => ['type' => 'string']]], 'required' => ['purchases', 'warnings']];
     }
 
     private function validateResult(mixed $result): array

@@ -99,3 +99,7 @@ Verificação: 258 testes PHP (2.249 verificações), 29 testes em MySQL isolado
 ## Gemini opcional — 03/10/2026
 
 Escolha Gemini Pro ou No aparelho no diálogo 3D de importação. Gemini exige configuração privada, consentimento por foto e revisão integral; está desligado e ainda sem validação real da API. Modelo, limites, custos, privacidade e ativação: [guia](GEMINI_FATURAS.md). Verificados 40 testes em MySQL isolado (353 verificações), 11 testes específicos PHP e 9 E2E do módulo. Preservados por hash 55 tabelas existentes e 128 arquivos privados.
+
+## Mistral e prioridade mobile — 03/10/2026
+
+Provedor preferido alterado para Mistral Document AI com revisão obrigatória e opção No aparelho preservada. Configuração privada, custos estimados e pendências no [guia Mistral](MISTRAL_FATURAS.md). Após esta integração e Fornecedores, planejar interface Mobile/Tablet própria para acesso completo ao Controle de Gasto, com acabamento 3D e cadastro por foto; etapa pendente.

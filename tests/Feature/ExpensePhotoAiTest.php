@@ -24,7 +24,7 @@ class ExpensePhotoAiTest extends TestCase
         parent::setUp();
         $this->seed(DatabaseSeeder::class);
         $this->actingAs($this->account('Master'));
-        config(['expense_photo_ai.enabled' => true, 'expense_photo_ai.api_key' => 'test-key-never-real', 'expense_photo_ai.monthly_reads' => 20, 'expense_photo_ai.monthly_micro_usd' => 1000000]);
+        config(['expense_photo_ai.provider' => 'gemini', 'expense_photo_ai.enabled' => true, 'expense_photo_ai.api_key' => 'test-key-never-real', 'expense_photo_ai.monthly_reads' => 20, 'expense_photo_ai.monthly_micro_usd' => 1000000]);
         Http::preventStrayRequests();
         Storage::fake('local');
     }
