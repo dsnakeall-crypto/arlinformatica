@@ -101,8 +101,12 @@ test('controle: filtro de responsável preserva cartões e contagens por tipo', 
   await expect(card.locator('.cg-institution-counts>div').filter({ hasText: catalog.type.name }).locator('b')).toHaveText('2');
   await expect(page.locator('.cg-debt-row')).toHaveCount(0);
   await page.screenshot({ path: 'output/controle-gasto/instituicoes-contagens.png', fullPage: true });
-  await card.click();
-  await expect(page.getByLabel('Filtrar por responsável', { exact: true })).toHaveValue('one');
+  await page.getByRole('button', { name: 'Lista', exact: true }).click();
+  const row = page.locator('.cg-bank-list-row').filter({ has: page.getByRole('heading', { name: catalog.institution.name, exact: true }) });
+  await expect(row.locator('.cg-type-grid button').filter({ hasText: catalog.type.name }).locator('.cg-type-count')).toContainText('2');
+  await page.screenshot({ path: 'output/controle-gasto/instituicoes-lista.png', fullPage: true });
+  await row.locator('.cg-institution').click();
+  await expect(page.getByLabel('Filtrar por responsável' , { exact: true })).toHaveValue('one');
   const typeCard = page.locator('.cg-type-grid button').filter({ hasText: catalog.type.name });
   await expect(typeCard.locator('.cg-type-count')).toContainText('2');
   await expect(page.locator('.cg-type-grid button').filter({ hasText: emptyType.name }).locator('.cg-type-count')).toContainText('0');
@@ -110,6 +114,29 @@ test('controle: filtro de responsável preserva cartões e contagens por tipo', 
   await typeCard.click();
   await expect(page.locator('.cg-debt-row')).toHaveCount(2);
   await expect(page.locator('.cg-debt-row').filter({ hasText: 'Compra two' })).toHaveCount(0);
+});
+
+test('controle: resumo alterna responsáveis e projeção oferece lista e cards', async ({ page }) => {
+  await login(page);
+  await page.goto('/expense-control');
+  await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
+  const month = await page.getByLabel('Mês do Controle de Gasto', { exact: true }).inputValue();
+  const data = (await api(page, '/expense-control/summary?month=' + month)).body;
+  const money = (n: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n / 100);
+  for (const [name, key] of [['Allan', 'one'], ['Carol', 'two'], ['Casal', 'shared']]) {
+    await page.locator('.cg-summary-filter').getByRole('button', { name, exact: true }).click();
+    await expect(page.locator('.cg-metrics article').nth(0).locator('strong')).toHaveText(money(data.views[key].remaining_cents));
+    await expect(page.locator('.cg-metrics article').nth(2).locator('strong')).toHaveText(money(data.views[key].paid_cents));
+  }
+  await expect(page.getByRole('button', { name: 'Meu resumo', exact: true })).toHaveCount(0);
+  await page.screenshot({ path: 'output/controle-gasto/resumo-seletores.png', fullPage: true });
+  await page.getByRole('tab', { name: 'Projeção', exact: true }).click();
+  await page.getByRole('button', { name: 'Lista', exact: true }).click();
+  await expect(page.locator('.cg-projection-list>article')).toHaveCount(12);
+  await page.screenshot({ path: 'output/controle-gasto/projecao-lista.png', fullPage: true });
+  await page.getByRole('button', { name: 'Cards', exact: true }).click();
+  await expect(page.locator('.cg-projection-list')).toHaveCount(0);
+  await expect(page.locator('.cg-projection-grid>article')).toHaveCount(12);
 });
 
 test('controle: perfil exclusivo não vê nem acessa dados da empresa', async ({ page }) => {
@@ -162,4 +189,47 @@ test('controle: visual desktop e mobile sem vazamento de layout nos popups', asy
   const dialog = page.getByRole('dialog', { name: 'Cadastrar nova dívida' });
   await expect(dialog.getByRole('button', { name: 'Salvar', exact: true })).toBeVisible();
   await page.screenshot({ path: 'output/controle-gasto/cadastro-mobile.png', fullPage: true });
+});
+
+
+test('controle: pagamento da instituição simula distribuição e confirma sem baixar a outra pessoa', async ({ page }) => {
+  await login(page);
+  const catalog = await catalogs(page, 'instituicao-' + Date.now());
+  const month = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+  for (const item of [{ name: 'Casal instituição', responsibility: 'shared', amount_cents: 160000 }, { name: 'Pessoal instituição', responsibility: 'one', amount_cents: 40000 }]) {
+    const r = await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: catalog.institution.id, type_id: catalog.type.id, recurrence: 'once', percent_one: 50, installment_count: 1, first_number: 1, start_month: month, due_day: 12, notes: null, ...item });
+    expect(r.status).toBe(201);
+  }
+  await page.goto('/expense-control');
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await page.locator('.cg-institution').filter({ hasText: catalog.institution.name }).click();
+  await page.getByRole('button', { name: 'Pagar valor da fatura', exact: true }).click();
+  const modal = page.getByRole('dialog', { name: 'Pagar valor da fatura', exact: true });
+  await modal.getByLabel('Valor do pagamento (R$)').fill('80000');
+  await modal.getByRole('button', { name: 'Simular distribuição' }).click();
+  await expect(modal.locator('.cg-institution-allocation article')).toHaveCount(2);
+  await expect(modal.locator('.cg-institution-allocation article').first()).toContainText('Pessoal instituição');
+  await expect(modal.locator('.cg-payment-split article').last()).toContainText('400,00');
+  await page.screenshot({ path: 'output/controle-gasto/pagamento-instituicao.png', fullPage: true });
+  await modal.getByRole('button', { name: 'Confirmar pagamento da fatura' }).click();
+  await expect(modal).not.toBeVisible();
+  const summary = await api(page, '/expense-control/summary?month=' + month);
+  const bank = summary.body.views.one.institutions.find((i: any) => i.id === catalog.institution.id);
+  expect(bank.remaining_cents).toBe(40000);
+  expect(summary.body.views.two.institutions.find((i: any) => i.id === catalog.institution.id).remaining_cents).toBe(80000);
+  await page.locator('.cg-type-grid button').filter({ hasText: catalog.type.name }).click();
+  await page.locator('.cg-debt-row').filter({ hasText: 'Casal instituição' }).click();
+  await page.getByRole('button', { name: 'Editar identificação' }).click();
+  const edit = page.getByRole('dialog', { name: 'Editar identificação da dívida' });
+  await edit.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(edit.getByText('Confirma esta alteração?')).toBeVisible();
+  await edit.getByRole('button', { name: 'Confirmar alteração' }).click();
+  await expect(edit).not.toBeVisible();
+  await page.getByRole('button', { name: 'Excluir dívida', exact: true }).click();
+  const removal = page.getByRole('dialog', { name: 'Excluir dívida' });
+  await removal.getByLabel('Motivo').fill('Cadastro de teste incorreto');
+  await removal.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(removal.getByText('Confirma excluir esta dívida?')).toBeVisible();
+  await removal.getByRole('button', { name: 'Confirmar exclusão' }).click();
+  await expect(removal).not.toBeVisible();
 });

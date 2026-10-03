@@ -161,6 +161,58 @@ class ExpenseControl
         }, 3);
     }
 
+    public function institutionPlan(array $data): array
+    {
+        $field = $data['target'] === 'one' ? 'remaining_one_cents' : 'remaining_two_cents';
+        $items = $this->installments()->where('d.institution_id', $data['institution_id'])
+            ->whereNull('d.cancelled_at')->where('i.month_on', $this->month($data['month'])->toDateString())
+            ->orderBy('d.start_on')->orderBy('d.id')->orderBy('i.id')->get()
+            ->map(fn ($i) => $this->figures($i))->filter(fn ($i) => $i[$field] > 0)->values();
+        $items = $items->sortBy(fn ($i) => $i['responsibility'] === 'shared' ? 1 : 0)->values();
+        $balance = $items->sum($field);
+        abort_if($data['amount_cents'] > $balance, 422, 'O valor supera o saldo deste responsável na instituição e no mês selecionado.');
+        $left = $data['amount_cents'];
+        $allocations = [];
+        foreach ($items as $i) {
+            if ($left === 0) {
+                break;
+            }
+            $amount = min($left, $i[$field]);
+            $allocations[] = ['id' => $i['id'], 'name' => $i['name'], 'number' => $i['number'], 'shared' => $i['responsibility'] === 'shared', 'amount_cents' => $amount, 'remaining_cents' => $i[$field] - $amount];
+            $left -= $amount;
+        }
+
+        return ['balance_cents' => $balance, 'remaining_cents' => $balance - $data['amount_cents'], 'allocations' => $allocations,
+            'preview_hash' => hash('sha256', json_encode([$data['institution_id'], $data['month'], $data['target'], $data['amount_cents'], $items->map(fn ($i) => [$i['id'], $i[$field]])->all()]))];
+    }
+
+    public function recordInstitution(Request $request, array $data, Audit $audit): array
+    {
+        return DB::transaction(function () use ($request, $data, $audit) {
+            DB::table('users')->where('id', $request->user()->id)->lockForUpdate()->first();
+            $hash = hash('sha256', json_encode($data));
+            $old = DB::table('cg_operations')->where('request_key', $data['request_key'])->first();
+            if ($old) {
+                abort_unless($old->created_by === $request->user()->id && hash_equals($old->payload_hash, $hash), 409, 'Solicitação já utilizada com outros dados.');
+
+                return ['id' => $old->id, 'replayed' => true];
+            }
+            $debts = DB::table('cg_debts')->where('institution_id', $data['institution_id'])->orderBy('id')->lockForUpdate()->pluck('id');
+            DB::table('cg_installments')->whereIn('debt_id', $debts)->orderBy('id')->lockForUpdate()->get();
+            $plan = $this->institutionPlan($data);
+            abort_unless(hash_equals($plan['preview_hash'], $data['preview_hash']), 409, 'O saldo mudou. Simule novamente antes de confirmar.');
+            $operation = DB::table('cg_operations')->insertGetId(['request_key' => $data['request_key'], 'payload_hash' => $hash, 'created_by' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
+            foreach ($plan['allocations'] as $allocation) {
+                DB::table('cg_entries')->insert(['operation_id' => $operation, 'installment_id' => $allocation['id'], 'kind' => $data['kind'], 'paid_by' => $data['paid_by'], 'occurred_on' => $data['occurred_on'], 'amount_cents' => $allocation['amount_cents'],
+                    'credit_one_cents' => $data['target'] === 'one' ? $allocation['amount_cents'] : 0, 'credit_two_cents' => $data['target'] === 'two' ? $allocation['amount_cents'] : 0,
+                    'notes' => 'Pagamento da instituição · '.($data['notes'] ?? ''), 'created_at' => now(), 'updated_at' => now()]);
+            }
+            $audit->record($request, 'expense_control.operation_created', 'expense_control', $operation, null, [...$data, 'allocations' => $plan['allocations']]);
+
+            return ['id' => $operation, 'replayed' => false];
+        }, 3);
+    }
+
     public function record(Request $request, array $data, Audit $audit): array
     {
         return DB::transaction(function () use ($request, $data, $audit) {

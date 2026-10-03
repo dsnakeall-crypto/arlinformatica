@@ -53,6 +53,34 @@ class ExpenseControlTest extends TestCase
         return [...['request_key' => (string) Str::uuid(), 'installment_ids' => $ids, 'kind' => 'payment', 'target' => 'one', 'paid_by' => 1, 'occurred_on' => '2026-10-02', 'amount_cents' => null, 'notes' => null], ...$extra];
     }
 
+    public function test_institution_payment_distributes_personal_first_and_preserves_other_person_and_months(): void
+    {
+        $shared = $this->createDebt(['name' => 'Casal antigo', 'amount_cents' => 160000, 'start_month' => '2026-09']);
+        $personal = $this->createDebt(['name' => 'Pessoal recente', 'responsibility' => 'one', 'amount_cents' => 40000]);
+        $other = $this->createDebt(['responsibility' => 'two', 'amount_cents' => 100000]);
+        $data = ['institution_id' => $this->bank, 'month' => '2026-10', 'target' => 'one', 'amount_cents' => 80000];
+        $plan = $this->postJson('/api/expense-control/institution-payments', [...$data, 'preview' => true])->assertOk()->json();
+        $this->assertSame(120000, $plan['balance_cents']);
+        $this->assertSame(40000, $plan['remaining_cents']);
+        $this->assertSame('Pessoal recente', $plan['allocations'][0]['name']);
+        $this->assertSame(40000, $plan['allocations'][0]['amount_cents']);
+        $this->assertSame(40000, $plan['allocations'][1]['amount_cents']);
+        $this->assertDatabaseCount('cg_entries', 0);
+        $payload = [...$data, 'request_key' => (string) Str::uuid(), 'preview_hash' => $plan['preview_hash'], 'kind' => 'advance', 'paid_by' => 1, 'occurred_on' => '2026-10-02'];
+        $this->postJson('/api/expense-control/institution-payments', $payload)->assertCreated()->assertJsonPath('replayed', false);
+        $this->postJson('/api/expense-control/institution-payments', $payload)->assertCreated()->assertJsonPath('replayed', true);
+        $this->assertDatabaseCount('cg_entries', 2);
+        $this->assertSame(80000, (int) DB::table('cg_entries')->sum('credit_one_cents'));
+        $this->assertSame(0, (int) DB::table('cg_entries')->sum('credit_two_cents'));
+        $this->assertSame(['2026-10-01'], DB::table('cg_entries as e')->join('cg_installments as i', 'i.id', '=', 'e.installment_id')->distinct()->pluck('i.month_on')->all());
+        $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk()->assertJsonPath('views.one.remaining_cents', 40000)->assertJsonPath('views.two.remaining_cents', 180000);
+        $this->postJson('/api/expense-control/institution-payments', [...$payload, 'amount_cents' => 40000, 'request_key' => (string) Str::uuid()])->assertStatus(409);
+        $this->postJson('/api/expense-control/institution-payments', [...$data, 'amount_cents' => 40001, 'preview' => true])->assertStatus(422);
+        $this->assertDatabaseCount('cg_entries', 2);
+        $plan = $this->postJson('/api/expense-control/institution-payments', [...$data, 'target' => 'two', 'amount_cents' => 180000, 'preview' => true])->assertOk()->json();
+        $this->assertSame(0, $plan['remaining_cents']);
+    }
+
     public function test_migration_starts_without_financial_data_or_changes_to_business_records(): void
     {
         $this->assertDatabaseCount('cg_debts', 0);
@@ -108,6 +136,21 @@ class ExpenseControlTest extends TestCase
         $this->postJson('/api/expense-control/debts', $data)->assertConflict();
         $this->assertDatabaseCount('cg_debts', 1);
         $this->assertDatabaseCount('cg_installments', 3);
+    }
+
+    public function test_summary_views_separate_individual_and_shared_balances_without_account_link(): void
+    {
+        $this->createDebt(['responsibility' => 'one', 'percent_one' => 100, 'amount_cents' => 10000, 'installment_count' => 1, 'due_day' => 1]);
+        $this->createDebt(['responsibility' => 'two', 'percent_one' => 0, 'amount_cents' => 20000, 'installment_count' => 1, 'due_day' => 10]);
+        $shared = $this->createDebt(['amount_cents' => 35000, 'installment_count' => 1]);
+        $this->postJson('/api/expense-control/operations', $this->payment([$shared['installments'][0]['id']]))->assertCreated();
+        $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk()
+            ->assertJsonPath('views.one.original_cents', 27500)->assertJsonPath('views.one.paid_cents', 17500)->assertJsonPath('views.one.remaining_cents', 10000)
+            ->assertJsonPath('views.two.original_cents', 37500)->assertJsonPath('views.two.paid_cents', 0)->assertJsonPath('views.two.remaining_cents', 37500)
+            ->assertJsonPath('views.shared.original_cents', 35000)->assertJsonPath('views.shared.paid_cents', 17500)->assertJsonPath('views.shared.remaining_cents', 17500)
+            ->assertJsonCount(0, 'views.one.next_due')->assertJsonCount(1, 'views.one.overdue')
+            ->assertJsonPath('views.shared.next_due.0.remaining_cents', 17500)
+            ->assertJsonPath('views.one.institutions.0.remaining_cents', 10000);
     }
 
     public function test_catalog_counts_cover_all_pages_and_respect_responsibility_and_institution(): void

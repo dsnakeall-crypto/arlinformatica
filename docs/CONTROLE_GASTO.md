@@ -138,3 +138,18 @@ O diálogo oferece quitar saldo inteiro, informar valor parcial e, em parcelas c
 Gastos mantém cards de instituições ao filtrar responsável, sem abrir diretamente todas as dívidas. Cada instituição lista contagens por tipo; abrir instituição preserva o responsável e mostra cards azuis com contagens e zeros. Contagens são de compras/dívidas, não de parcelas, calculadas no backend antes da paginação e respeitando os filtros. A participação de Allan/Carol inclui despesas compartilhadas conforme a divisão cadastrada. Tipos customizados continuam permitidos; não há listas fixas de categorias. Busca textual e seleção de tipo continuam abrindo a lista detalhada. Cards de cartões reduzidos de 250 para 225 px (10%), com proporção da arte preservada; mobile limitado à largura disponível.
 
 Backups locais verificados (arquivos, alterações e histórico Git): `C:\Users\Allan\ARL-backups\controle-gasto-pagamento-20261003-022130` e `C:\Users\Allan\ARL-backups\controle-gasto-contagens-20261003-022613`. Sem migração ou publicação. Validação: 19 testes PHP/249 verificações; 28 testes em MySQL isolado/328 verificações; cinco cenários E2E concluídos, com correção do nome acessível do filtro de responsável no cenário novo; build/TypeScript, lint e Pint. Uso local simultâneo preservado.
+
+
+## Controle de Gasto — listas, resumo e pagamento da instituição (03/10/2026)
+
+Instituições e Projeção oferecem Lista/Cards, com preferência guardada no navegador. A lista de instituições apresenta o cartão e os tipos separados à direita; os contadores preservam o filtro do responsável. A projeção em lista organiza cada mês em uma linha compacta.
+
+Resumo usa os seletores pequenos Allan/Carol/Casal (nomes configuráveis). Cada pessoa inclui despesas pessoais e sua parte das compartilhadas. Casal inclui somente compras compartilhadas. Valores, pagamentos, instituições e próximos vencimentos acompanham o seletor, independentemente de vínculo com a conta de login. Substitui o seletor anterior Meu resumo/Casal.
+
+Dentro de Gastos, ao abrir uma instituição, Pagar valor da fatura permite informar responsável, valor, pagamento/antecipação e data. A simulação distribui somente no mês selecionado: compras pessoais primeiro, depois a parte desse responsável nas compras compartilhadas, ordenadas pelo mês inicial e ID do cadastro (mais antigas primeiro). Nunca utiliza a parte da outra pessoa ou parcelas de outros meses/instituições. Não cria crédito excedente: valor acima do saldo é rejeitado.
+
+O usuário confere a distribuição antes de confirmar. O servidor recalcula sob bloqueios transacionais, rejeita prévia divergente e protege repetições por chave idempotente. Todas as parcelas afetadas pertencem ao mesmo lançamento; valores em centavos, histórico e auditoria preservados. Exemplo testado: saldo de Allan R$1.200, pagamento R$800, restante R$400, saldo de Carol R$1.800 intacto.
+
+Editar identificação, parcela, instituição/tipo, encerrar recorrência e excluir/desfazer lançamentos pedem confirmação na tela. Excluir dívida utiliza o cancelamento já existente: sai dos gastos e projeção, permanece no filtro Canceladas com histórico. Parcelas com lançamentos não têm seus valores originais reescritos; correção usa estorno/novo lançamento. Dívidas finitas totalmente quitadas saem de Gastos e aparecem em Quitadas, com detalhes e histórico. Despesas mensais recorrentes continuam ativas até encerrar a recorrência.
+
+Backup validado de código/alterações/histórico antes desta etapa: C:\Users\Allan\ARL-backups\controle-gasto-quitacao-instituicao-20261003-024604. Backup anterior às listas: C:\Users\Allan\ARL-backups\controle-gasto-lista-resumo-20261003-023730. Nenhuma migração ou publicação nesta etapa; testes financeiros em bancos separados.

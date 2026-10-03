@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/debts/{id}/end-recurring', [ExpenseControlController::class, 'endRecurring'])->whereNumber('id');
         Route::put('/installments/{id}', [ExpenseControlController::class, 'installment'])->whereNumber('id');
         Route::post('/operations', [ExpenseControlController::class, 'operation']);
+        Route::post('/institution-payments', [ExpenseControlController::class, 'institutionPayment']);
         Route::post('/entries/{id}/reverse', [ExpenseControlController::class, 'reverse'])->whereNumber('id');
     });
     Route::post('/text-improvements', [TextImprovementController::class, 'store']);

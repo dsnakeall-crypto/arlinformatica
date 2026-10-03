@@ -464,3 +464,15 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] 19 testes PHP/249 verificações, 28 MySQL isolado/328 verificações; cinco cenários E2E concluídos, com seletor acessível corrigido no novo teste. Build/TypeScript, lint e Pint passaram.
 - [OK] Backups locais verificados de pagamentos e contagens documentados em CONTROLE_GASTO.md. Sem migrações; cadastros simultâneos no localhost preservados.
 - [PENDENTE] Publicação com backup do servidor e interface Mobile/Tablet completa em etapa própria.
+
+
+## Listas, resumo e quitação da instituição — 03/10/2026
+
+- [OK] Lista/Cards para instituições e projeção; contagens por responsável preservadas.
+- [OK] Resumo Allan/Carol/Casal com métricas e vencimentos próprios; Casal contém apenas despesas compartilhadas.
+- [OK] Pagamento por instituição/mês com simulação, prioridade pessoal/parte do casal e proteção do saldo da outra pessoa.
+- [OK] Transação, idempotência, rejeição de saldo excedente/prévia alterada e histórico por parcela.
+- [OK] Confirmação antes de editar/excluir; exclusão lógica preserva pagamentos. Quitadas saem de Gastos e ficam no histórico existente.
+- [OK] 281 testes PHP (2487 verificações), 30 testes MySQL isolado (376 verificações), sete cenários E2E. Build/TypeScript e lint passaram.
+- [OK] Backups externos validados: controle-gasto-lista-resumo-20261003-023730 e controle-gasto-quitacao-instituicao-20261003-024604 em C:\Users\Allan\ARL-backups.
+- [PENDENTE] Publicação com backups do servidor e interface Mobile/Tablet completa em etapa futura.

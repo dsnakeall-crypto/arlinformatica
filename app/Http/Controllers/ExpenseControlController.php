@@ -161,7 +161,19 @@ class ExpenseControlController extends Controller
         $person = DB::table('cg_people')->where('user_id', $r->user()->id)->value('id');
         $personal = $items->filter(fn ($i) => $person && $i[$person === 1 ? 'remaining_one_cents' : 'remaining_two_cents'] > 0);
 
-        return response()->json(['month' => $month->format('Y-m'), 'totals' => $totals, 'institutions' => $banks, 'count' => $items->count(), 'next_due' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(), 'overdue' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
+        $views = [];
+        foreach (['one', 'two', 'shared'] as $scope) {
+            $rows = $items->filter(fn ($i) => $scope === 'shared' ? $i['responsibility'] === 'shared' : $i['share_'.$scope.'_cents'] > 0);
+            $rows = $rows->map(fn ($i) => [...$i, 'scope_original' => $scope === 'shared' ? $i['amount_cents'] : $i['share_'.$scope.'_cents'], 'scope_paid' => $scope === 'shared' ? $i['paid_cents'] : $i['paid_'.$scope.'_cents'], 'remaining_cents' => $scope === 'shared' ? $i['remaining_cents'] : $i['remaining_'.$scope.'_cents']]);
+            $views[$scope] = [
+                'original_cents' => $rows->sum('scope_original'), 'paid_cents' => $rows->sum('scope_paid'), 'remaining_cents' => $rows->sum('remaining_cents'), 'count' => $rows->count(),
+                'next_due' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(),
+                'overdue' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
+                'institutions' => $rows->groupBy('institution_id')->map(fn ($group) => ['id' => $group->first()['institution_id'], 'name' => $group->first()['institution_name'], 'remaining_cents' => $group->sum('remaining_cents'), 'count' => $group->count()])->values(),
+            ];
+        }
+
+        return response()->json(['month' => $month->format('Y-m'), 'totals' => $totals, 'views' => $views, 'institutions' => $banks, 'count' => $items->count(), 'next_due' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(), 'overdue' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
             'partial_installments' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['remaining_cents'] < $i['amount_cents'])->values(),
             'personal_next_due' => $personal->filter(fn ($i) => $i['due_on'] >= today()->toDateString())->take(5)->values(), 'personal_overdue' => $personal->filter(fn ($i) => $i['due_on'] < today()->toDateString())->take(5)->values()]);
     }
@@ -315,6 +327,18 @@ class ExpenseControlController extends Controller
         });
 
         return response()->json(['message' => 'Parcela atualizada.']);
+    }
+
+    public function institutionPayment(Request $r, Audit $audit): JsonResponse
+    {
+        $rules = ['institution_id' => 'required|integer|exists:cg_institutions,id', 'month' => 'required|date_format:Y-m', 'target' => 'required|in:one,two', 'amount_cents' => 'required|integer|min:1|max:100000000'];
+        if (! $r->boolean('preview')) {
+            $rules += ['request_key' => 'required|uuid', 'preview_hash' => 'required|string|size:64', 'kind' => 'required|in:payment,advance', 'paid_by' => 'required|integer|in:1,2', 'occurred_on' => 'required|date_format:Y-m-d|before_or_equal:today', 'notes' => 'nullable|string|max:500'];
+        }
+        $data = $r->validate($rules);
+        $this->control->ensureMonth($this->control->month($data['month']));
+
+        return $r->boolean('preview') ? response()->json($this->control->institutionPlan($data)) : response()->json($this->control->recordInstitution($r, $data, $audit), 201);
     }
 
     public function operation(Request $r, Audit $audit): JsonResponse
