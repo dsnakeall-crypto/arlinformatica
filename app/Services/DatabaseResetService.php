@@ -14,6 +14,10 @@ class DatabaseResetService
     private const DELETE_ORDER = [
         'final_share_tokens',
         'stock_entry_details',
+        'supplier_occurrences',
+        'supplier_returns',
+        'supplier_documents',
+        'supplier_offerings',
         'supplier_purchase_receipts',
         'supplier_purchase_items',
         'supplier_invoices',
@@ -89,6 +93,9 @@ class DatabaseResetService
         $counts = $this->preview($master);
         $photoPaths = Schema::hasTable('service_order_photos') ? DB::table('service_order_photos')->pluck('path')->all() : [];
         $invoicePaths = Schema::hasTable('supplier_invoices') ? DB::table('supplier_invoices')->pluck('path')->all() : [];
+        if (Schema::hasTable('supplier_documents')) {
+            $invoicePaths = array_merge($invoicePaths, DB::table('supplier_documents')->pluck('path')->all());
+        }
         $documentPaths = Schema::hasTable('generated_documents') ? DB::table('generated_documents')->pluck('path')->all() : [];
 
         DB::transaction(function () use ($master, $backup, $counts, $ipAddress): void {

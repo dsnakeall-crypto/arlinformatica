@@ -75,3 +75,7 @@ Não foi criada arquitetura para várias empresas ou cobrança de assinatura. O 
 PHP: 222 testes aprovados, 1.873 asserções, incluindo os testes do módulo e de isolamento. Frontend: 12 testes unitários aprovados. E2E próprio aprovado com cadastro, produto novo, compra pendente, duas entregas, repetição sem duplicar, brinde sem fornecedor e CSRF real. Capturas desktop/mobile em `output/fornecedores`, sem dados reais. Lint, typecheck, Pint e build aprovados. Suíte E2E completa: 106 testes aprovados, sem retries. Fornecedores/estoque também aprovados em MySQL isolado: 17 testes, 138 asserções. Ajustes finais restritos ao módulo reconferidos pelo seu E2E.
 
 Atualização do cadastro: documento, razão social/nome completo, nome fantasia, celular, WhatsApp e endereço completo são obrigatórios em novos cadastros/edições; telefone fixo opcional. Consulte as regras e limites de verificação cadastral em `FORNECEDORES_PAGAMENTOS_NOTAS.md`.
+
+
+## Ficha profissional revisada
+A organização e os novos recursos de 03/10/2026 estão documentados em [FORNECEDORES_FICHA.md](FORNECEDORES_FICHA.md). O histórico anterior permanece válido; condições comerciais não reescrevem compras anteriores.

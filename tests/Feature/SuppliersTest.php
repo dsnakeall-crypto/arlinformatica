@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Backup;
 use App\Models\Role;
 use App\Models\Supplier;
 use App\Models\User;
@@ -9,6 +10,7 @@ use App\Services\BackupService;
 use App\Services\DatabaseResetService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -208,5 +210,87 @@ class SuppliersTest extends TestCase
         foreach (['suppliers', 'supplier_purchases', 'supplier_purchase_items', 'supplier_purchase_receipts', 'stock_entry_details'] as $table) {
             $this->assertDatabaseCount($table, 0);
         }
+    }
+
+    public function test_workspace_profile_offerings_reports_and_roles_are_real_and_isolated(): void
+    {
+        $supplier = $this->supplier();
+        $product = $this->product(5);
+        $this->putJson('/api/suppliers/'.$supplier->id.'/profile', ['profile' => ['payment_days' => 30, 'pix_key' => 'chave', 'discount_percent' => 5]])->assertOk();
+        $this->putJson('/api/suppliers/'.$supplier->id.'/profile', ['profile' => ['untrusted' => true]])->assertUnprocessable();
+        $offering = ['product_id' => $product, 'cost_cents' => 0, 'minimum_quantity' => 1, 'active' => true];
+        $this->postJson('/api/suppliers/'.$supplier->id.'/offerings', $offering)->assertOk();
+        $this->postJson('/api/suppliers/'.$supplier->id.'/offerings', array_replace($offering, ['cost_cents' => null]))->assertOk();
+        $this->assertDatabaseCount('supplier_offerings', 1);
+        $this->assertDatabaseHas('service_catalog', ['id' => $product, 'stock_quantity' => 5, 'price_cents' => 48000]);
+        $data = $this->payload($product, true);
+        $data['items'][0]['lot'] = 'LOTE-01';
+        $this->postJson('/api/suppliers/'.$supplier->id.'/purchases', $data)->assertCreated();
+        $this->postJson('/api/suppliers/'.$supplier->id.'/occurrences', ['occurred_on' => today()->toDateString(), 'category' => 'quality', 'description' => 'Entrega conferida', 'quality_rating' => 5])->assertCreated();
+        $this->getJson('/api/suppliers/'.$supplier->id.'/workspace')->assertOk()->assertJsonPath('summary.purchased_cents', 60000)->assertJsonPath('profile.payment_days', 30)->assertJsonPath('offerings.0.last_cost_cents', 20000)->assertJsonPath('prices.data.0.lot', 'LOTE-01')->assertJsonPath('most_purchased.0.quantity', 3);
+        $this->getJson('/api/suppliers?q='.urlencode(DB::table('service_catalog')->where('id', $product)->value('name')))->assertOk()->assertJsonPath('total', 1);
+        $user = User::create(['name' => 'Restrito', 'login' => (string) Str::uuid(), 'password' => 'Seguro#12345', 'role_id' => Role::where('name', 'Controle de Gasto')->value('id'), 'active' => true]);
+        $this->actingAs($user)->getJson('/api/suppliers/'.$supplier->id.'/workspace')->assertForbidden();
+        $this->postJson('/api/suppliers/'.$supplier->id.'/offerings', $offering)->assertForbidden();
+    }
+
+    public function test_supplier_return_is_atomic_idempotent_and_cannot_exceed_received_or_available_stock(): void
+    {
+        $supplier = $this->supplier();
+        $product = $this->product();
+        $purchase = $this->postJson('/api/suppliers/'.$supplier->id.'/purchases', $this->payload($product, true))->assertCreated()->json('id');
+        $item = DB::table('supplier_purchase_items')->where('purchase_id', $purchase)->value('id');
+        $url = '/api/suppliers/'.$supplier->id.'/returns';
+        $data = ['request_key' => (string) Str::uuid(), 'purchase_item_id' => $item, 'quantity' => 2, 'value_cents' => 40000, 'returned_on' => today()->toDateString(), 'reason' => 'Produto com defeito', 'resolution' => 'credit'];
+        $this->postJson($url, $data)->assertCreated()->assertJsonPath('replayed', false);
+        $this->postJson($url, $data)->assertCreated()->assertJsonPath('replayed', true);
+        $this->postJson($url, array_replace($data, ['quantity' => 1]))->assertConflict();
+        $this->postJson($url, array_replace($data, ['request_key' => (string) Str::uuid()]))->assertUnprocessable();
+        $this->assertDatabaseHas('service_catalog', ['id' => $product, 'stock_quantity' => 1]);
+        $this->assertDatabaseHas('supplier_purchase_items', ['id' => $item, 'received_quantity' => 3]);
+        $this->assertDatabaseCount('supplier_returns', 1);
+        $this->assertDatabaseHas('stock_movements', ['type' => 'supplier_return', 'quantity' => 2, 'balance_after' => 1]);
+        $this->getJson('/api/suppliers/'.$supplier->id.'/workspace')->assertOk()->assertJsonPath('credit_cents', 40000)->assertJsonPath('return_items.0.returnable_quantity', 1);
+        DB::table('service_catalog')->where('id', $product)->update(['stock_quantity' => 0]);
+        $this->postJson($url, array_replace($data, ['request_key' => (string) Str::uuid(), 'quantity' => 1]))->assertUnprocessable();
+        $other = $this->supplier();
+        $this->postJson('/api/suppliers/'.$other->id.'/returns', array_replace($data, ['request_key' => (string) Str::uuid(), 'quantity' => 1]))->assertUnprocessable();
+    }
+
+    public function test_private_xml_documents_reject_external_entities_and_backup_restores_them(): void
+    {
+        $supplier = $this->supplier();
+        $url = '/api/suppliers/'.$supplier->id.'/documents';
+        $data = ['request_key' => (string) Str::uuid(), 'category' => 'invoice'];
+        $file = fn ($text) => UploadedFile::fake()->createWithContent('nota.xml', $text);
+        $this->post($url, $data + ['file' => $file('<!DOCTYPE x [<!ENTITY a SYSTEM "file:///etc/passwd">]><x>&a;</x>')], ['Accept' => 'application/json'])->assertUnprocessable();
+        $xml = '<?xml version="1.0"?><nfe><numero>123</numero></nfe>';
+        $id = $this->post($url, $data + ['file' => $file($xml)], ['Accept' => 'application/json'])->assertCreated()->json('id');
+        $this->post($url, $data + ['file' => $file($xml)], ['Accept' => 'application/json'])->assertCreated();
+        $this->assertDatabaseCount('supplier_documents', 1);
+        $this->get('/api/supplier-documents/'.$id.'/download')->assertOk()->assertDownload('nota.xml');
+        $path = DB::table('supplier_documents')->where('id', $id)->value('path');
+        $backup = app(BackupService::class)->create($this->master);
+        $manifest = app(BackupService::class)->validate(Storage::disk('local')->path($backup->path));
+        $this->assertSame(1, $manifest['counts']['supplier_documents']);
+        Storage::disk('local')->delete($path);
+        app(BackupService::class)->restore($backup, $this->master);
+        Storage::disk('local')->assertExists($path);
+        $reset = app(DatabaseResetService::class);
+        $prepared = $reset->prepare($this->master, app(BackupService::class));
+        $reset->reset($this->master, Backup::findOrFail($prepared['backup_id']), null);
+        $this->assertDatabaseCount('supplier_documents', 0);
+        Storage::disk('local')->assertMissing($path);
+    }
+
+    public function test_workspace_totals_cover_all_pages_and_date_filters_accept_only_end_date(): void
+    {
+        $supplier = $this->supplier();
+        $data = $this->payload($this->product());
+        $data += ['payment_terms' => 'installments', 'payment_method' => 'boleto', 'installments' => array_fill(0, 32, ['amount_cents' => 1875, 'due_on' => today()->toDateString()])];
+        $this->postJson('/api/suppliers/'.$supplier->id.'/purchases', $data)->assertCreated();
+        $this->getJson('/api/suppliers/'.$supplier->id.'/workspace?to='.today()->toDateString())->assertOk()->assertJsonPath('summary.open_cents', 60000)->assertJsonCount(25, 'payables.data');
+        $this->getJson('/api/suppliers/'.$supplier->id.'/workspace?payments_page=2')->assertOk()->assertJsonPath('summary.open_cents', 60000)->assertJsonCount(7, 'payables.data');
+        $this->getJson('/api/suppliers/'.$supplier->id.'/workspace?from='.today()->toDateString().'&to='.today()->subDay()->toDateString())->assertUnprocessable();
     }
 }

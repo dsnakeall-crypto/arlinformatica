@@ -23,7 +23,7 @@ class SupplierController extends Controller
         $query = Supplier::query();
         $search = trim((string) $request->query('q', ''));
         if ($search !== '') {
-            $query->where(fn ($q) => $q->where('name', 'like', '%'.$search.'%')->orWhere('trade_name', 'like', '%'.$search.'%')->orWhere('document', 'like', '%'.(SupplierDocument::normalize($search) ?: $search).'%')->orWhere('contact_name', 'like', '%'.$search.'%'));
+            $query->where(fn ($q) => $q->where('name', 'like', '%'.$search.'%')->orWhere('trade_name', 'like', '%'.$search.'%')->orWhere('document', 'like', '%'.(SupplierDocument::normalize($search) ?: $search).'%')->orWhere('contact_name', 'like', '%'.$search.'%')->orWhere('city', 'like', '%'.$search.'%')->orWhereExists(fn ($products) => $products->selectRaw('1')->from('supplier_offerings as o')->join('service_catalog as c', 'c.id', '=', 'o.product_id')->whereColumn('o.supplier_id', 'suppliers.id')->where('c.name', 'like', '%'.$search.'%')));
         }
         if (in_array($request->query('status'), ['active', 'inactive'], true)) {
             $query->where('active', $request->query('status') === 'active');
@@ -39,7 +39,7 @@ class SupplierController extends Controller
     {
         $purchases = DB::table('supplier_purchases')->select('supplier_purchases.*')->addSelect([
             'open_amount_cents' => DB::table('supplier_payables')->selectRaw('COALESCE(SUM(amount_cents), 0)')->whereColumn('purchase_id', 'supplier_purchases.id')->whereNull('paid_on')->whereNull('voided_at'),
-            'paid_amount_cents' => DB::table('supplier_payables')->selectRaw('COALESCE(SUM(amount_cents), 0)')->whereColumn('purchase_id', 'supplier_purchases.id')->whereNotNull('paid_on'),
+            'paid_amount_cents' => DB::table('supplier_payables')->selectRaw('COALESCE(SUM(amount_cents + interest_cents - discount_cents), 0)')->whereColumn('purchase_id', 'supplier_purchases.id')->whereNotNull('paid_on'),
             'payable_count' => DB::table('supplier_payables')->selectRaw('COUNT(*)')->whereColumn('purchase_id', 'supplier_purchases.id'),
             'next_due_on' => DB::table('supplier_payables')->selectRaw('MIN(due_on)')->whereColumn('purchase_id', 'supplier_purchases.id')->whereNull('paid_on')->whereNull('voided_at'),
         ])->where('supplier_id', $supplier->id)->orderByDesc('id')->paginate(15, ['*'], 'page', $request->integer('page', 1));
@@ -80,7 +80,7 @@ class SupplierController extends Controller
 
     public function storePurchase(Request $request, Supplier $supplier, SupplierPurchaseService $service): JsonResponse
     {
-        $data = $request->validate(['request_key' => 'required|uuid', 'purchased_on' => 'required|date_format:Y-m-d|before_or_equal:today', 'expected_on' => 'nullable|date_format:Y-m-d|after_or_equal:purchased_on', 'reference' => 'nullable|string|max:100', 'notes' => 'nullable|string|max:5000', 'received_now' => 'boolean', 'payment_terms' => 'sometimes|in:cash,deferred,installments,duplicata', 'payment_method' => 'required_with:payment_terms|in:'.implode(',', SupplierPayables::METHODS), 'installments' => 'required_with:payment_terms|array|min:1|max:60', 'installments.*' => 'array:amount_cents,due_on,paid_on', 'installments.*.amount_cents' => 'required|integer|min:0|max:999999999999', 'installments.*.due_on' => 'required|date_format:Y-m-d', 'installments.*.paid_on' => 'nullable|date_format:Y-m-d|before_or_equal:today', 'items' => 'required|array|min:1|max:100', 'items.*' => 'array:product_id,quantity,unit_cost_cents', 'items.*.product_id' => 'required|integer|distinct', 'items.*.quantity' => 'required|integer|min:1|max:999999', 'items.*.unit_cost_cents' => 'required|integer|min:0|max:999999999']);
+        $data = $request->validate(['request_key' => 'required|uuid', 'purchased_on' => 'required|date_format:Y-m-d|before_or_equal:today', 'expected_on' => 'nullable|date_format:Y-m-d|after_or_equal:purchased_on', 'reference' => 'nullable|string|max:100', 'notes' => 'nullable|string|max:5000', 'received_now' => 'boolean', 'payment_terms' => 'sometimes|in:cash,deferred,installments,duplicata', 'payment_method' => 'required_with:payment_terms|in:'.implode(',', SupplierPayables::METHODS), 'installments' => 'required_with:payment_terms|array|min:1|max:60', 'installments.*' => 'array:amount_cents,due_on,paid_on', 'installments.*.amount_cents' => 'required|integer|min:0|max:999999999999', 'installments.*.due_on' => 'required|date_format:Y-m-d', 'installments.*.paid_on' => 'nullable|date_format:Y-m-d|before_or_equal:today', 'items' => 'required|array|min:1|max:100', 'items.*' => 'array:product_id,quantity,unit_cost_cents,lot', 'items.*.lot' => 'nullable|string|max:80', 'items.*.product_id' => 'required|integer|distinct', 'items.*.quantity' => 'required|integer|min:1|max:999999', 'items.*.unit_cost_cents' => 'required|integer|min:0|max:999999999']);
 
         return response()->json($service->create($supplier, $data, $request), 201);
     }
@@ -147,7 +147,7 @@ class SupplierController extends Controller
 
     public function pay(Request $request, int $id, SupplierPayables $service): JsonResponse
     {
-        $data = $request->validate(['paid_on' => 'required|date_format:Y-m-d|before_or_equal:today', 'paid_method' => 'required|in:'.implode(',', SupplierPayables::METHODS), 'payment_reference' => 'nullable|string|max:255']);
+        $data = $request->validate(['paid_on' => 'required|date_format:Y-m-d|before_or_equal:today', 'paid_method' => 'required|in:'.implode(',', SupplierPayables::METHODS), 'payment_reference' => 'nullable|string|max:255', 'interest_cents' => 'sometimes|integer|min:0|max:999999999', 'discount_cents' => 'sometimes|integer|min:0|max:999999999']);
 
         return response()->json($service->pay($id, $data, $request));
     }

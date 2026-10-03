@@ -27,6 +27,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierInvoiceController;
+use App\Http\Controllers\SupplierWorkspaceController;
 use App\Http\Controllers\TechnicalReportController;
 use App\Http\Controllers\TechnicalReportTemplateController;
 use App\Http\Controllers\TextImprovementController;
@@ -76,6 +77,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/suppliers', [SupplierController::class, 'store']);
         Route::post('/supplier-document/lookup', [SupplierController::class, 'lookupDocument'])->middleware('throttle:20,1');
         Route::get('/suppliers/{supplier}', [SupplierController::class, 'show']);
+        Route::get('/suppliers/{supplier}/workspace', [SupplierWorkspaceController::class, 'show']);
+        Route::put('/suppliers/{supplier}/profile', [SupplierWorkspaceController::class, 'profile']);
+        Route::post('/suppliers/{supplier}/offerings', [SupplierWorkspaceController::class, 'offering']);
+        Route::post('/suppliers/{supplier}/occurrences', [SupplierWorkspaceController::class, 'occurrence']);
+        Route::post('/suppliers/{supplier}/returns', [SupplierWorkspaceController::class, 'returnGoods']);
+        Route::post('/suppliers/{supplier}/documents', [SupplierWorkspaceController::class, 'document']);
+        Route::get('/supplier-documents/{id}/download', [SupplierWorkspaceController::class, 'download'])->whereNumber('id');
+
         Route::put('/suppliers/{supplier}', [SupplierController::class, 'update']);
         Route::post('/suppliers/{supplier}/purchases', [SupplierController::class, 'storePurchase']);
         Route::post('/supplier-purchases/{id}/invoices', [SupplierInvoiceController::class, 'store'])->whereNumber('id');

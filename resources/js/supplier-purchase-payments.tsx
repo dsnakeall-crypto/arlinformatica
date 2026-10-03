@@ -1,6 +1,10 @@
 import { useRef, useState, type FormEvent } from "react";
 
+import { maskMoneyInput, centsFromMoneyInput } from "./money-input";
+
 type Payable = {
+  interest_cents?: number;
+  discount_cents?: number;
   id: number;
   installment: number;
   amount_cents: number;
@@ -85,6 +89,7 @@ export default function PurchasePayments({
     [voiding, setVoiding] = useState<Payable | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [interest, setInterest] = useState(""), [discount, setDiscount] = useState("");
   const invoiceKey = useRef(crypto.randomUUID());
   const [file, setFile] = useState<File | null>(null);
   const action = async (work: () => Promise<unknown>) => {
@@ -112,6 +117,8 @@ export default function PurchasePayments({
           paid_on: paidOn,
           paid_method: method,
           payment_reference: reference,
+          interest_cents: centsFromMoneyInput(interest),
+          discount_cents: centsFromMoneyInput(discount),
         }),
       );
   };
@@ -137,7 +144,7 @@ export default function PurchasePayments({
             {money(
               purchase.installments
                 .filter((p) => p.paid_on)
-                .reduce((sum, p) => sum + Number(p.amount_cents), 0),
+                .reduce((sum, p) => sum + Number(p.amount_cents) + Number(p.interest_cents || 0) - Number(p.discount_cents || 0), 0),
             )}
           </b>
         </span>
@@ -148,7 +155,7 @@ export default function PurchasePayments({
             <b>
               Parcela {p.installment} · {money(p.amount_cents)}
             </b>
-            <p>Vencimento: {date(p.due_on)}</p>
+            <p>Vencimento: {date(p.due_on)}</p>{p.paid_on && (Number(p.interest_cents) > 0 || Number(p.discount_cents) > 0) && <p>Pago: {money(Number(p.amount_cents) + Number(p.interest_cents || 0) - Number(p.discount_cents || 0))} · juros {money(Number(p.interest_cents || 0))} · desconto {money(Number(p.discount_cents || 0))}</p>}
             <small>
               {p.voided_at
                 ? `Cancelada: ${p.void_reason}`
@@ -171,7 +178,7 @@ export default function PurchasePayments({
                   setVoiding(null);
                   setPaidOn(day());
                   setMethod(purchase.payment_method || "pix");
-                  setReference("");
+                  setReference(""); setInterest(""); setDiscount("");
                 }}
               >
                 Registrar pagamento
@@ -233,6 +240,8 @@ export default function PurchasePayments({
               />
             </label>
           </div>
+          <div className="supplier-form-grid"><label>Juros (R$)<input inputMode="decimal" value={interest} onChange={e => setInterest(maskMoneyInput(e.target.value))} /></label><label>Desconto (R$)<input inputMode="decimal" value={discount} onChange={e => setDiscount(maskMoneyInput(e.target.value))} /></label></div>
+          <p>Total a pagar: <b>{money(Number(editing.amount_cents) + centsFromMoneyInput(interest) - centsFromMoneyInput(discount))}</b></p>
           <button disabled={busy}>Confirmar pagamento</button>
           <button
             type="button"

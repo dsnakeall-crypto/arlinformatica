@@ -173,4 +173,17 @@ class SupplierPaymentsTest extends TestCase
         $this->assertSame('Pagamento a fornecedor vencido', DB::table('notifications')->where('active', true)->value('title'));
         $this->travelBack();
     }
+
+    public function test_interest_discount_preserve_principal_and_payment_retry_and_report_real_cash(): void
+    {
+        $purchase = $this->postJson('/api/suppliers/'.$this->supplier->id.'/purchases', $this->payload())->assertCreated()->json('id');
+        $id = DB::table('supplier_payables')->where('purchase_id', $purchase)->orderBy('id')->value('id');
+        $data = ['paid_on' => today()->toDateString(), 'paid_method' => 'pix', 'interest_cents' => 100, 'discount_cents' => 200];
+        $this->postJson('/api/supplier-payables/'.$id.'/pay', $data)->assertOk();
+        $this->postJson('/api/supplier-payables/'.$id.'/pay', $data)->assertOk();
+        $this->postJson('/api/supplier-payables/'.$id.'/pay', array_replace($data, ['discount_cents' => 201]))->assertConflict();
+        $this->assertDatabaseHas('supplier_payables', ['id' => $id, 'amount_cents' => 5000, 'interest_cents' => 100, 'discount_cents' => 200]);
+        $this->getJson('/api/suppliers/'.$this->supplier->id.'/workspace')->assertOk()->assertJsonPath('summary.paid_cents', 4900)->assertJsonPath('summary.open_cents', 5001);
+        $this->getJson('/api/suppliers/'.$this->supplier->id)->assertOk()->assertJsonPath('purchases.data.0.paid_amount_cents', 4900);
+    }
 }

@@ -34,7 +34,7 @@ class SupplierPurchaseService
                 }
                 $subtotal = $item['quantity'] * $item['unit_cost_cents'];
                 $total += $subtotal;
-                $rows[] = ['product_id' => $product->id, 'description' => $product->name, 'quantity' => $item['quantity'], 'unit_cost_cents' => $item['unit_cost_cents'], 'subtotal_cents' => $subtotal, 'created_at' => now(), 'updated_at' => now()];
+                $rows[] = ['product_id' => $product->id, 'lot' => $item['lot'] ?? null, 'description' => $product->name, 'quantity' => $item['quantity'], 'unit_cost_cents' => $item['unit_cost_cents'], 'subtotal_cents' => $subtotal, 'created_at' => now(), 'updated_at' => now()];
             }
             abort_if($total > 999999999999, 422, 'O total da compra ultrapassa o limite permitido.');
             $id = DB::table('supplier_purchases')->insertGetId(['supplier_id' => $supplier->id, 'user_id' => $request->user()->id, 'request_key' => $data['request_key'], 'payload_hash' => $hash, 'supplier_snapshot' => $supplier->toJson(), 'purchased_on' => $data['purchased_on'], 'expected_on' => $data['expected_on'] ?? null, 'reference' => $data['reference'] ?? null, 'notes' => $data['notes'] ?? null, 'total_cents' => $total, 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);

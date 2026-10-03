@@ -1017,3 +1017,12 @@ Instituição/grupo Fixos de Casa usa o cartão de referência fornecido pelo us
 Backup: `C:\Users\Allan\ARL-backups\controle-gasto-fixos-casa-20261003-034326`, incluindo `banco-arquivos-privados.zip`.
 O usuário rejeitou o acabamento visual do cartão atual e pediu sua recriação somente após o agendamento. Automação única ativa para 07h: refazer a imagem, concluir pendências autorizadas do Controle de Gasto e depois retomar Fornecedores conforme os requisitos do chat. Não publicar em produção. A execução depende de o computador/Codex permanecerem disponíveis e de limite da conta disponível.
 Validação: 285 testes PHP / 2559 verificações; 34 testes MySQL isolado / 448 verificações; 17 testes frontend; 10 fluxos E2E passaram na suíte e o novo fluxo Fixos de Casa passou após correção de seletor de teste. Build/TypeScript, lint e Pint aprovados.
+
+
+### Atualização geral local — 03/10/2026 às 07h
+
+Fixos de Casa usa nova imagem estática branca com acabamento 3D, gerada na ferramenta de desenvolvimento; nenhuma dependência de IA foi introduzida em produção. A identificação persistente `restricted_type_id` garante posição final nas listas/seletoras/configuração, grupos do resumo e pagamentos. Nome e data de vencimento não determinam essa posição. Projeção permanece organizada por meses e usa as instituições configuradas nas seleções existentes. O indicador de próximo vencimento pessoal calcula a menor data, independentemente da ordem visual das instituições.
+
+Botão Nova OS abaixo da logo compacto, em cápsula preto/vermelho, sombra e texto/ícone branco; ação/autorização preservadas. Referência enviada: codex-clipboard-0c580818-9ae2-42b6-874f-ea3588be953a.png.
+
+Fornecedores recebe ficha organizada e funcionalidades reais descritas em [FORNECEDORES_FICHA.md](FORNECEDORES_FICHA.md), incluindo vínculos por produto, perfil comercial/bancário, documentos privados, devoluções de estoque, ocorrências/avaliações, relatórios, alertas e juros/descontos na quitação dos títulos. Perfis Master/Administrador autorizados no backend. Produtos sem fornecedor, brindes zero e compras de parceiros distintos preservados. Consulta oficial de CPF, pagamentos parciais ao fornecedor, compensação automática de créditos e permissões granulares seguem etapas próprias, sem simulação. Nenhuma publicação autorizada nesta execução.

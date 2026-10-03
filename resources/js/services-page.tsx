@@ -32,7 +32,7 @@ type Draft = {
 
 type StockMovement = {
   id: number;
-  type: 'entry' | 'order_out' | 'order_return';
+  type: 'entry' | 'order_out' | 'order_return' | 'supplier_return';
   quantity: number;
   balance_after: number;
   reason: string;
@@ -382,7 +382,7 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
       <div className="modal-card services-edit-card services-stock-history">
         <button type="button" className="modal-close" aria-label="Fechar movimentações" onClick={() => setStockHistory(null)}><X aria-hidden="true" /></button>
         <div className="services-section-heading"><span className="services-heading-icon"><History aria-hidden="true" /></span><div><h2>Movimentações de estoque</h2><p>{stockHistory.item.name}</p></div></div>
-        {stockHistory.rows.length ? <div className="services-stock-history-list">{stockHistory.rows.map((row) => <article key={row.id}><div><b>{row.type === 'entry' ? 'Entrada' : row.type === 'order_out' ? 'Baixa em OS' : 'Devolução de OS'}</b><small>{new Date(row.created_at).toLocaleString('pt-BR')} · {row.user_name || 'Usuário'}</small></div><strong>{row.type === 'order_out' ? '-' : '+'}{row.quantity}</strong><p>{row.reason}</p><small>Saldo após movimento: {row.balance_after}</small>{row.type === 'entry' && <small>Origem: {({ gift: 'Brinde / doação', purchase: 'Compra', initial: 'Saldo inicial', unspecified: 'Não informada' } as Record<string, string>)[row.origin || 'unspecified']} · Custo unitário: {row.unit_cost_cents == null ? 'Não informado' : money(row.unit_cost_cents)}{row.supplier_snapshot && (() => { try { return ` · Fornecedor: ${JSON.parse(row.supplier_snapshot).name}`; } catch { return ''; } })()}</small>}</article>)}</div> : <div className="services-empty">Nenhuma movimentação registrada.</div>}
+        {stockHistory.rows.length ? <div className="services-stock-history-list">{stockHistory.rows.map((row) => <article key={row.id}><div><b>{row.type === 'entry' ? 'Entrada' : row.type === 'order_out' ? 'Baixa em OS' : row.type === 'supplier_return' ? 'Devolução ao fornecedor' : 'Devolução de OS'}</b><small>{new Date(row.created_at).toLocaleString('pt-BR')} · {row.user_name || 'Usuário'}</small></div><strong>{['order_out', 'supplier_return'].includes(row.type) ? '-' : '+'}{row.quantity}</strong><p>{row.reason}</p><small>Saldo após movimento: {row.balance_after}</small>{row.type === 'entry' && <small>Origem: {({ gift: 'Brinde / doação', purchase: 'Compra', initial: 'Saldo inicial', unspecified: 'Não informada' } as Record<string, string>)[row.origin || 'unspecified']} · Custo unitário: {row.unit_cost_cents == null ? 'Não informado' : money(row.unit_cost_cents)}{row.supplier_snapshot && (() => { try { return ` · Fornecedor: ${JSON.parse(row.supplier_snapshot).name}`; } catch { return ''; } })()}</small>}</article>)}</div> : <div className="services-empty">Nenhuma movimentação registrada.</div>}
         <div className="actions"><button type="button" onClick={() => setStockHistory(null)}>Fechar</button></div>
       </div>
     </div>}

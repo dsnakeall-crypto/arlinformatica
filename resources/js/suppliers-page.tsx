@@ -1,3 +1,4 @@
+import SupplierWorkspace from './supplier-workspace';
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ArrowLeft,
@@ -58,6 +59,7 @@ type Product = {
   active: boolean;
 };
 type Item = {
+  lot?: string | null;
   id: number;
   product_id: number;
   description: string;
@@ -565,7 +567,7 @@ function PurchaseForm({
   const [products, setProducts] = useState<Product[]>([]),
     [query, setQuery] = useState(""),
     [rows, setRows] = useState<
-      { product: Product; quantity: number; cost: string }[]
+      { product: Product; quantity: number; cost: string; lot?: string }[]
     >([]);
   const [purchasedOn, setPurchasedOn] = useState(today),
     [expectedOn, setExpectedOn] = useState(""),
@@ -677,6 +679,7 @@ function PurchaseForm({
             product_id: row.product.id,
             quantity: row.quantity,
             unit_cost_cents: centsFromMoneyInput(row.cost),
+            lot: row.lot || null,
           })),
         }),
       });
@@ -901,6 +904,7 @@ function PurchaseForm({
                           }
                         />
                       </label>
+                      <label><span>Lote (opcional)</span><input maxLength={80} aria-label={`Lote de ${row.product.name}`} value={row.lot || ''} onChange={e => setRows(rows.map((r, i) => i === index ? {...r, lot: e.target.value} : r))} /></label>
                       <b>
                         {money(row.quantity * centsFromMoneyInput(row.cost))}
                       </b>
@@ -1767,7 +1771,9 @@ export default function SuppliersPage() {
                   <PackagePlus />
                   Produtos adquiridos
                 </button>
+                {[["overview", "Visão geral"], ["commercial", "Dados comerciais"], ["offerings", "Produtos fornecidos"], ["finance", "Financeiro"], ["documents", "Documentos"], ["returns", "Devoluções"], ["history", "Ocorrências"], ["reports", "Relatórios"]].map(([key, label]) => <button key={key} role="tab" aria-selected={tab === key} onClick={() => { setTab(key); setPurchase(null); }}>{label}</button>)}
               </div>
+              {!["purchases", "products"].includes(tab) && <SupplierWorkspace key={selected + '-' + tab + '-' + revision} id={supplier.id} tab={tab} onPurchase={id => void openPurchase(id)} onChange={() => refresh("Fornecedor atualizado.")} />}
               {tab === "purchases" ? (
                 <section className="supplier-panel">
                   <div className="supplier-section-top">
@@ -1830,7 +1836,7 @@ export default function SuppliersPage() {
                     change={setHistoryPage}
                   />
                 </section>
-              ) : (
+              ) : tab === "products" ? (
                 <section className="supplier-panel">
                   <div className="supplier-section-top">
                     <div>
@@ -1872,7 +1878,7 @@ export default function SuppliersPage() {
                     </p>
                   )}
                 </section>
-              )}
+              ) : null}
               {purchaseLoading && <p role="status">Carregando compra…</p>}
               {purchase && (
                 <section
@@ -1908,7 +1914,7 @@ export default function SuppliersPage() {
                         <span>Comprado: {item.quantity}</span>
                         <span>Recebido: {item.received_quantity}</span>
                         <span>
-                          Custo unitário: {money(item.unit_cost_cents)}
+                          Custo unitário: {money(item.unit_cost_cents)}{item.lot && ` · lote ${item.lot}`}
                         </span>
                       </article>
                     ))}

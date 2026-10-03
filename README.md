@@ -110,3 +110,6 @@ Fornecedores: [cadastro obrigatório, pagamentos, vencimentos e notas fiscais](d
 ## Controle de Gasto
 
 Novo módulo independente abaixo de Financeiro, iniciado sem despesas. Configure instituições, tipos e responsáveis; registre compras/parcelas, pagamentos, antecipações e abatimentos. Perfil exclusivo Controle de Gasto e perfil Usuário local possuem restrições no backend. Consulte [uso, modelagem e próximos passos](docs/CONTROLE_GASTO.md). Cadastro por foto lê compras e parcelas no navegador, com revisão obrigatória. O build inclui os recursos locais do leitor, sem Node permanente. Há também [leitura opcional com Mistral](docs/MISTRAL_FATURAS.md), desligada até configuração privada e com consentimento antes do envio ao provedor. Implementação local; publicação é uma etapa posterior.
+
+
+A ficha profissional de fornecedores e sua migração aditiva estão descritas em [docs/FORNECEDORES_FICHA.md](docs/FORNECEDORES_FICHA.md). A atualização local de 03/10/2026 não foi publicada; implantação exige backup validado do servidor e migrations antes de abrir a versão nova.

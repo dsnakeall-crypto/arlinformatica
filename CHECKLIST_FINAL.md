@@ -509,6 +509,30 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Forma de pagamento prevista opcional, sem alterar saldos.
 - [OK] Backups externos de arquivos/Git e banco/arquivos privados verificados.
 - [OK] 285 testes PHP, 34 MySQL, 17 frontend e 11 fluxos E2E validados; build, lint e Pint.
-- [PENDENTE] Recriar a arte do cartão Fixos de Casa; agendado para 07h a pedido do usuário.
-- [PENDENTE] Revisar pendências restantes e refazer área interna de Fornecedores no trabalho agendado.
+- [OK] Arte do cartão Fixos de Casa recriada na execução das 07h; detalhes na atualização geral abaixo.
+- [OK] Área interna de Fornecedores reorganizada/ampliada; limites e pendências explícitos abaixo.
 - [PENDENTE] Publicação destas alterações em produção.
+
+
+## Atualização geral das 07h — 03/10/2026
+
+- [OK] Novo cartão Fixos de Casa branco/3D criado com imagegen e integrado como recurso estático independente de IA em produção.
+- [OK] Fixos de Casa por último por identificação persistente, inclusive instituições novas, configuração/seletoras, resumo e pagamentos; indicador de próximo vencimento continua cronológico.
+- [OK] Botão Nova OS pequeno em cápsula preto/vermelho com sombra, ícone/texto brancos e ação preservada.
+- [OK] Lista paginada de fornecedores e ficha individual organizada; teste com 20 fornecedores e conferência desktop/mobile.
+- [OK] Cadastro obrigatório/máscaras/CEP/CNPJ anteriores preservados; complemento de inscrições/tipo/representante/site, condições comerciais e banco/Pix.
+- [OK] Vínculos de produtos por fornecedor, marca/código/custo/mínimo/entrega; último custo recebido real. Produtos sem fornecedor e brindes zero preservados.
+- [OK] Compras/recebimentos/parcelas/histórico preservados; lote opcional; juros/descontos ao quitar o título com principal e dinheiro pago separados.
+- [OK] Documentos PDF/imagem/XML privados, validação de conteúdo/entidades e downloads com autorização no backend; backup/restore/zeramento verificados.
+- [OK] Devolução transacional/idempotente com saldo recebido/estoque conferidos, motivo, crédito/reembolso/troca/negociação e movimento de saída legível no histórico.
+- [OK] Ocorrências e avaliação interna, relatórios por período da compra, totais completos em páginas diferentes, alertas de pagamento/entrega/custo.
+- [OK] Novos endpoints protegidos por Master/Administrador; perfil de Controle de Gasto bloqueado no backend.
+- [OK] 291 testes PHP/2637 asserções; 57 testes MySQL isolado/712 asserções; 17 testes frontend; build/TypeScript, lint e Pint.
+- [OK] Navegador: 125 cenários passaram na suíte geral; o teste restante de galeria foi atualizado para 12 cartões e confirmação obrigatória de edição. Revisão final de cinco cenários passou, incluindo esse fluxo, fornecedor completo e mobile; 11 cenários de Controle de Gasto também passaram na revisão focada.
+- [OK] Backup externo prévio verificado em C:\Users\Allan\ARL-backups\atualizacao-geral-20261003-070057; backups anteriores preservados. Migração somente local; 51 conjuntos e 128 arquivos privados conferidos contra backup, com diferenças esperadas de migração/auditoria e timestamps de dois lembretes.
+- [PENDENTE] Consulta oficial automatizada da existência de CPF: depende de serviço/credencial externo; nenhuma contratação ou validação fictícia.
+- [PENDENTE] Matriz granular por ação/usuário, pagamento parcial de títulos ao fornecedor e consumo automático de créditos: fluxos adicionais, sem interface fictícia ou alteração de regras existentes nesta entrega.
+- [PENDENTE] Interface Mobile/Tablet completa do Controle de Gasto continua etapa posterior solicitada pelo usuário.
+- [PENDENTE] Publicação: requer backup validado do servidor, implantação e migrations; produção não foi acessada nesta execução.
+
+Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é encerrado ao entregar esta revisão local.

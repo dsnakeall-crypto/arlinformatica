@@ -43,13 +43,16 @@ class SupplierPayables
     public function pay(int $id, array $data, Request $request): object
     {
         return DB::transaction(function () use ($id, $data, $request) {
+            $data['interest_cents'] = (int) ($data['interest_cents'] ?? 0);
+            $data['discount_cents'] = (int) ($data['discount_cents'] ?? 0);
             $row = DB::table('supplier_payables')->where('id', $id)->lockForUpdate()->first();
             abort_unless($row, 404);
             abort_if($row->voided_at, 409, 'Este título foi cancelado.');
             $purchase = DB::table('supplier_purchases')->find($row->purchase_id);
             abort_if($data['paid_on'] < $purchase->purchased_on, 422, 'Pagamento anterior à compra.');
+            abort_if($data['discount_cents'] > $row->amount_cents + $data['interest_cents'], 422, 'Desconto superior ao valor da parcela com juros.');
             if ($row->paid_on) {
-                abort_unless($row->paid_on === $data['paid_on'] && $row->paid_method === $data['paid_method'] && ($row->payment_reference ?? '') === ($data['payment_reference'] ?? ''), 409, 'Pagamento já confirmado com outros dados.');
+                abort_unless($row->paid_on === $data['paid_on'] && $row->paid_method === $data['paid_method'] && ($row->payment_reference ?? '') === ($data['payment_reference'] ?? '') && (int) $row->interest_cents === $data['interest_cents'] && (int) $row->discount_cents === $data['discount_cents'], 409, 'Pagamento já confirmado com outros dados.');
 
                 return $row;
             }
