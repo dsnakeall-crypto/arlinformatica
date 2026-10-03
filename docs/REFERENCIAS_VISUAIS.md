@@ -138,3 +138,8 @@ Validação: 285 testes PHP / 2559 verificações; 34 testes MySQL isolado / 448
 ## Complementos de 03/10/2026
 Nova OS: cápsula compacta preto/vermelho, sombra, mais e texto brancos, conforme imagem codex-clipboard-0c580818-9ae2-42b6-874f-ea3588be953a.png.
 Fixos de Casa: arte estática nova `public/arl-assets/expense-cards/fixos-casa-v2.png`, criada com imagegen no desenvolvimento. Prompt: cartão frontal branco premium, proporção 1,586, cantos arredondados, relevo/chip prata, detalhes curvos suaves e sombras 3D, textos legíveis “Fixos de Casa” e “Luz · Água · Internet”, ícone de casa discreto, sem número ou dados pessoais. Referência anterior rejeitada mantida apenas no histórico. A geração não integra o app nem exige API de IA em produção.
+
+
+### Popup de detalhes da compra com tamanho estável — 03/10/2026
+Itens e dados, Parcelas, Notas fiscais e Recebimentos compartilham largura de até 1170px e altura padrão de 720px, limitadas à área disponível da tela. Apenas o corpo rola; cabeçalho/fechamento permanecem fixos. Estilo específico do detalhe evita que o formulário interno de notas reduza a largura para 920px. Demais popups preservados.
+Backup externo verificado: `C:/Users/Allan/ARL-backups/supplier-dialog-size-20261003-125445` (1769 arquivos e histórico Git). Lint, TypeScript/build, 19 testes frontend e três fluxos E2E de fornecedores passaram. Teste geométrico alterna as quatro abas em desktop e celular e confirma largura/altura/posição iguais, fechamento visível e contenção na tela. Capturas em output/fornecedores/popup-estavel-1440.png e popup-estavel-390.png. Sem alteração de banco ou publicação.

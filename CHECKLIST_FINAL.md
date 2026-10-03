@@ -589,3 +589,9 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Lint, TypeScript/build, Pint, 19 testes frontend, 25 testes PHP (314 verificações) e quatro cenários E2E; revisão visual desktop/mobile.
 - [OK] Backup externo verificado em C:/Users/Allan/ARL-backups/supplier-history-20261003-124539.
 - [PENDENTE] Publicação no servidor, fora desta execução.
+
+
+## Popup de detalhes da compra — tamanho padrão
+- [OK] Largura/altura/posição estáveis nas quatro abas; corpo rolável e fechamento fixo, limitado à tela.
+- [OK] Teste geométrico desktop/celular e conferência visual; três fluxos E2E, lint, TypeScript/build e 19 testes frontend aprovados.
+- [OK] Backup externo verificado: C:/Users/Allan/ARL-backups/supplier-dialog-size-20261003-125445. Sem alteração do banco de uso.

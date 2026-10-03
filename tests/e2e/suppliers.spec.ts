@@ -253,6 +253,23 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await expect(
     purchaseSection.getByRole("heading", { name: /Compra #/ }),
   ).toBeVisible();
+  for (const viewport of [{width:1440,height:1000},{width:390,height:844}]) {
+    await page.setViewportSize(viewport);
+    await purchaseSection.getByRole("button", {name:"Itens e dados",exact:true}).click();
+    const base = await purchaseSection.boundingBox();
+    expect(base).not.toBeNull();
+    for (const tabName of [/Parcelas \(/,/Notas fiscais \(/,/Recebimentos \(/,/Itens e dados/]) {
+      await purchaseSection.getByRole("button", {name:tabName}).click();
+      const box = await purchaseSection.boundingBox();
+      expect(box).not.toBeNull();
+      for (const key of ["width","height","x","y"] as const) expect(Math.abs(box![key]-base![key])).toBeLessThanOrEqual(1);
+      expect(box!.y).toBeGreaterThanOrEqual(0);
+      expect(box!.y+box!.height).toBeLessThanOrEqual(viewport.height);
+      await expect(purchaseSection.getByRole("button", {name:"Fechar compra",exact:true})).toBeInViewport();
+    }
+    await page.screenshot({path:`output/fornecedores/popup-estavel-${viewport.width}.png`});
+  }
+  await page.setViewportSize({width:1440,height:1000});
   await purchaseSection.getByRole("button", { name: /Notas fiscais/ }).click();
   await expect(
     purchaseSection.getByRole("link", { name: /nota-e2e.pdf/ }),
