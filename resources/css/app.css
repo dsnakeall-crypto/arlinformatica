@@ -189,3 +189,9 @@
 .arl-client-nickname{display:block;width:100%;justify-self:center;color:#737985!important;font-size:10.5px!important;font-weight:500;line-height:1.25;text-align:center}
 .order-customer>.arl-client-nickname{display:block;justify-self:stretch;width:100%;text-align:center}
 .order-customer>strong{width:100%;font-size:12px;font-weight:800;text-align:center;text-wrap:balance;white-space:normal;overflow:visible;text-overflow:clip}
+
+/* Icon-only mobile shortcuts preserve the operational colors and permissions. */
+.layout-mobile .arl-global-mobile-nav.arl-mobile-icon-nav { grid-template-columns:repeat(3,minmax(0,1fr)); padding:8px 10px; }
+.layout-mobile .arl-global-mobile-nav.arl-mobile-icon-nav.has-expenses { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.layout-mobile .arl-global-mobile-nav.arl-mobile-icon-nav button { min-height:48px; padding:9px; }
+.layout-mobile .arl-global-mobile-nav.arl-mobile-icon-nav svg { width:23px; height:23px; }

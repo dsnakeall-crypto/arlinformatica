@@ -532,7 +532,7 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Backup externo prévio verificado em C:\Users\Allan\ARL-backups\atualizacao-geral-20261003-070057; backups anteriores preservados. Migração somente local; 51 conjuntos e 128 arquivos privados conferidos contra backup, com diferenças esperadas de migração/auditoria e timestamps de dois lembretes.
 - [PENDENTE] Consulta oficial automatizada da existência de CPF: depende de serviço/credencial externo; nenhuma contratação ou validação fictícia.
 - [PENDENTE] Matriz granular por ação/usuário, pagamento parcial de títulos ao fornecedor e consumo automático de créditos: fluxos adicionais, sem interface fictícia ou alteração de regras existentes nesta entrega.
-- [PENDENTE] Interface Mobile/Tablet completa do Controle de Gasto continua etapa posterior solicitada pelo usuário.
+- [OK] Interface própria Mobile/Tablet do Controle de Gasto entregue na revisão abaixo, mantendo as funções e permissões existentes.
 - [PENDENTE] Publicação: requer backup validado do servidor, implantação e migrations; produção não foi acessada nesta execução.
 
 Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é encerrado ao entregar esta revisão local.
@@ -544,3 +544,13 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Produto adquirido abre popup com dados atuais, condições comerciais e histórico de compras/custos/lotes/devoluções, protegido e paginado.
 - [OK] Desktop/mobile, 32 parcelas, backend SQLite/MySQL, frontend, build/TypeScript, lint e Pint verificados. Resultados detalhados em docs/FORNECEDORES_FICHA.md.
 - [PENDENTE] Limpeza dos cadastros de fornecedores: aguarda resposta sobre dados de teste versus registros reais/todos os dados locais. Nenhum registro foi apagado nesta revisão.
+
+
+## Controle de Gasto — Mobile/Tablet (03/10/2026)
+- [OK] Resumo inicial compacto: total do mês, pago/abatido, Allan, Carol e Casal; partes compartilhadas sem duplicação no total.
+- [OK] Saldos e primeiro vencimento pendente por instituição, filtro individual/casal, indicação de atraso e acesso aos gastos correspondentes.
+- [OK] Mês no topo e Nova dívida com escolha manual/foto, consentimento IA e revisão obrigatória; câmera/galeria existentes preservadas.
+- [OK] Parcelas em blocos no mobile, campos legíveis, ações tocáveis; oito menus existentes acessíveis e desktop preservado.
+- [OK] Quatro atalhos inferiores somente com ícones para Master/Administrador, Nova OS vermelha; funcionário/exclusivo mantêm restrições backend.
+- [OK] Backup externo verificado; testes isolados, revisão visual 320/393/768px, 293 PHP, 17 frontend, 11 E2E desktop, cinco regressões mobile e três fluxos mobile novos; build/TypeScript e lint.
+- [PENDENTE] Publicar e testar no aparelho físico após a implantação autorizada. Esta entrega permanece local.

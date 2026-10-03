@@ -5118,38 +5118,13 @@ function AdminCatalogs({ role }: any) {
     </>
   );
 }
-function MobileBottomBar({ go, page }: any) {
-  return (
-    <nav
-      className="arl-global-mobile-nav"
-      aria-label="Navegação Mobile / Tablet"
-    >
-      <button
-        type="button"
-        className={page === "dashboard" ? "active" : ""}
-        onClick={() => go("dashboard")}
-      >
-        <ClipboardList />
-        <span>OS abertas</span>
-      </button>
-      <button
-        type="button"
-        className="primary-shortcut"
-        onClick={() => go("new")}
-      >
-        <Plus />
-        <span>Nova OS</span>
-      </button>
-      <button
-        type="button"
-        className={page === "clients" ? "active" : ""}
-        onClick={() => go("clients")}
-      >
-        <Users />
-        <span>Clientes</span>
-      </button>
-    </nav>
-  );
+function MobileBottomBar({ go, page, canExpenses }: any) {
+  return <nav className={"arl-global-mobile-nav arl-mobile-icon-nav" + (canExpenses ? " has-expenses" : "")} aria-label="Navegação Mobile / Tablet">
+    <button type="button" aria-label="OS abertas" title="OS abertas" className={page === "dashboard" ? "active" : ""} onClick={() => go("dashboard")}><ClipboardList /></button>
+    <button type="button" aria-label="Nova OS" title="Nova OS" className="primary-shortcut" onClick={() => go("new")}><Plus /></button>
+    <button type="button" aria-label="Clientes" title="Clientes" className={page === "clients" ? "active" : ""} onClick={() => go("clients")}><Users /></button>
+    {canExpenses && <button type="button" aria-label="Controle de Gasto" title="Controle de Gasto" className={page === "expense-control" ? "active" : ""} onClick={() => go("expense-control")}><Wallet /></button>}
+  </nav>;
 }
 function App() {
   const [layout, setLayout] = useState<"desktop" | "mobile">(() => {
@@ -5534,7 +5509,7 @@ function App() {
           {!expenseOnly && <NotificationBell go={go} />}
         </header>
         {!me ? <p role="status">Carregando sessão…</p> : expenseOnly || page === "expense-control" ? (
-          <ExpenseControlPage />
+          <ExpenseControlPage mobile={mobileLayout} />
         ) : detail ? (
           <OrderDetailPage
             key={`${detail}-${orderAction || "view"}`}
@@ -5592,7 +5567,7 @@ function App() {
           <NewOrder initialClient={newOrderClient} done={(id: number) => go("orders", id)} />
         )}
       </main>
-      {mobileLayout && !expenseOnly && <MobileBottomBar go={go} page={page} />}
+      {mobileLayout && !expenseOnly && <MobileBottomBar go={go} page={page} canExpenses={canAdminister} />}
       <QuickEntry
         open={mobileQuickEntry}
         onClose={() => setMobileQuickEntry(false)}

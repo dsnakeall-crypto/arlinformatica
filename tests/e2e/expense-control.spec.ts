@@ -195,6 +195,7 @@ test('controle: visual desktop e mobile sem vazamento de layout nos popups', asy
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   await page.screenshot({ path: 'output/controle-gasto/resumo-mobile.png', fullPage: true });
   await page.getByRole('button', { name: 'Nova dívida', exact: true }).click();
+  await page.getByRole('button', { name: 'Cadastro manual' }).click();
   const dialog = page.getByRole('dialog', { name: 'Cadastrar nova dívida' });
   await expect(dialog.getByRole('button', { name: 'Salvar', exact: true })).toBeVisible();
   await page.screenshot({ path: 'output/controle-gasto/cadastro-mobile.png', fullPage: true });
