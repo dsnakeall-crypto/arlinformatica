@@ -375,7 +375,7 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Backup/restauração recuperam dados e saldo do módulo.
 - [OK] 247 testes PHP (2.149 verificações), 42 testes MySQL isolados (414 verificações) e 12 unitários de frontend aprovados.
 - [OK] Suíte geral de navegador: 110 testes aprovados; build final e três fluxos finais do módulo aprovados; lint, TypeScript e Pint sem falhas.
-- [PENDENTE] Cadastro por foto com extração/revisão antes de salvar, conforme etapa futura combinada.
+- [OK] Cadastro por foto com extração local e revisão obrigatória antes de salvar; detalhes na etapa abaixo.
 - [PENDENTE] Estorno da compra com redistribuição automática entre parcelas restantes.
 - [PENDENTE] Avisos agendados/push e relatórios próprios/exportação.
 - [PENDENTE] Publicação desta etapa no servidor; somente ambiente local atualizado.
@@ -393,3 +393,17 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 
 - [OK] Cards de instituições compactados para 250 px, com cartões proporcionais e acabamento 3D preservado; backup externo anterior verificado.
 - [OK] Build/TypeScript, lint e cinco fluxos de navegador aprovados após compactação; captura desktop conferida.
+
+
+## Controle de Gasto — dívidas por foto (02/10/2026)
+
+- [OK] Backup externo de código/alterações/histórico e banco/arquivos privados verificado; 54 tabelas existentes e 128 arquivos privados preservados por hash.
+- [OK] Foto/câmera, prévia, rotação e progresso; OCR português executado no navegador com recursos locais.
+- [OK] Lista com rolagem e fichas 3D editáveis: nome, valor por parcela, parcela atual, total, responsável e tipo.
+- [OK] Padrões de instituição/mês/vencimento/divisão, seleção de compras e conferência obrigatória antes de salvar.
+- [OK] Totais/pagamentos/estornos ignorados; alerta de linha repetida/leitura incerta e revisão do texto extraído.
+- [OK] Cadastro transacional, retry e bloqueio da mesma foto por instituição; backup/restauração mantêm compras e proteção contra repetição.
+- [OK] Foto e texto bruto não enviados/armazenados; backend restringe o módulo aos perfis autorizados.
+- [OK] 258 testes PHP, 29 MySQL isolados e 17 unitários de frontend aprovados; leitura real de imagem em navegador e regressões verificadas.
+- [OK] Lint, TypeScript, Pint e build; desktop/mobile inspecionados.
+- [PENDENTE] Publicação desta alteração no servidor; disponível no ambiente local.

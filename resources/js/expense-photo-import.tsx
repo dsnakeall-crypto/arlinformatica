@@ -1,0 +1,113 @@
+import { useEffect, useRef, useState } from 'react';
+import { Camera, Check, FileText, ImagePlus, Plus, RotateCw, ScanLine, ShieldCheck } from 'lucide-react';
+import type { Worker } from 'tesseract.js';
+import OrderPopup from './order-popup';
+import { expenseControlApi } from './expense-control-api';
+import { parseExpensePhoto, type PhotoPurchase } from './expense-photo-parser';
+import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from './money-input';
+import '../css/expense-photo-import.css';
+
+type PhotoConfiguration = {
+  institutions: { id: number; name: string; due_day: number; active: boolean }[];
+  types: { id: number; name: string; active: boolean }[];
+  people: { id: number; name: string; default_percent: number }[];
+};
+type ReviewRow = PhotoPurchase & { id: string; value: string; selected: boolean; reviewed: boolean; responsibility: string; type_id: string };
+const money = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value / 100);
+const validRow = (row: ReviewRow) => row.name.trim().length >= 2 && centsFromMoneyInput(row.value) > 0 && centsFromMoneyInput(row.value) <= 100000000 && Number.isInteger(row.first_number) && row.first_number >= 1 && Number.isInteger(row.installment_count) && row.installment_count >= row.first_number && row.installment_count <= 360;
+
+export default function ExpensePhotoImport({ config, month, institution, onClose, onSaved }: { config: PhotoConfiguration; month: string; institution?: string; onClose: () => void; onSaved: (count: number, institutionId: number) => void }) {
+  const bank = config.institutions.find(i => String(i.id) === institution && i.active);
+  const [defaults, setDefaults] = useState({ institution_id: bank ? String(bank.id) : '', type_id: '', responsibility: '', percent_one: config.people[0]?.default_percent ?? 50, start_month: month, due_day: bank?.due_day || 10 });
+  const [file, setFile] = useState<File>(), [preview, setPreview] = useState(''), [rotation, setRotation] = useState(0);
+  const [reading, setReading] = useState(false), [saving, setSaving] = useState(false), [progress, setProgress] = useState(0), [phase, setPhase] = useState('Preparando leitor…');
+  const [rows, setRows] = useState<ReviewRow[]>([]), [text, setText] = useState(''), [sourceHash, setSourceHash] = useState(''), [error, setError] = useState(''), [ignored, setIgnored] = useState(0), [confidence, setConfidence] = useState<number>();
+  const [step, setStep] = useState<'photo' | 'review'>('photo'), [tab, setTab] = useState<'purchases' | 'text'>('purchases');
+  const chooser = useRef<HTMLInputElement>(null), camera = useRef<HTMLInputElement>(null), worker = useRef<Worker | null>(null), requestKey = useRef(crypto.randomUUID()), alive = useRef(true), readId = useRef(0), running = useRef(false);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; ++readId.current; void worker.current?.terminate().catch(() => {}); }; }, []);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  const setDefault = (key: keyof typeof defaults, value: string | number) => { setDefaults(d => ({ ...d, [key]: value })); setRows(items => items.map(item => ({ ...item, reviewed: false }))); };
+  const changeRow = (id: string, change: Partial<ReviewRow>) => setRows(items => items.map(item => item.id === id ? { ...item, ...change, ...('reviewed' in change ? {} : { reviewed: false }) } : item));
+  const interpret = (value: string) => {
+    const result = parseExpensePhoto(value);
+    setIgnored(result.ignored_lines);
+    setRows(result.purchases.map(p => ({ ...p, id: crypto.randomUUID(), value: moneyInputFromCents(p.amount_cents), selected: !p.duplicate, reviewed: false, responsibility: '', type_id: '' })));
+    setTab('purchases');
+  };
+  const choose = (chosen?: File) => {
+    if (!chosen || reading || saving) return;
+    setError('');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(chosen.type) || chosen.size > 10 * 1024 * 1024) { setError('Escolha JPG, PNG ou WebP de até 10 MB.'); return; }
+    setFile(chosen); setPreview(URL.createObjectURL(chosen)); setRotation(0); setStep('photo'); setRows([]); setText(''); setConfidence(undefined); setSourceHash(''); requestKey.current = crypto.randomUUID();
+  };
+  const read = async () => {
+    if (!file || running.current) return;
+    running.current = true;
+    const id = ++readId.current;
+    const active = () => alive.current && id === readId.current;
+    setReading(true); setError(''); setProgress(0); setPhase('Preparando leitor…');
+    let instance: Worker | undefined;
+    try {
+      const hash = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+      const bitmap = await createImageBitmap(file);
+      if (bitmap.width * bitmap.height > 40000000) { bitmap.close(); throw new Error('Imagem muito grande. Recorte a região das compras e tente novamente.'); }
+      const sideways = rotation % 180 !== 0;
+      const width = sideways ? bitmap.height : bitmap.width, height = sideways ? bitmap.width : bitmap.height;
+      const scale = Math.min(1.5, 4000 / Math.max(width, height), Math.sqrt(6000000 / (width * height)));
+      const canvas = document.createElement('canvas'); canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { bitmap.close(); throw new Error('Este navegador não conseguiu preparar a imagem.'); }
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(rotation * Math.PI / 180); ctx.drawImage(bitmap, -bitmap.width * scale / 2, -bitmap.height * scale / 2, bitmap.width * scale, bitmap.height * scale); bitmap.close();
+      const { createWorker, OEM, PSM } = await import('tesseract.js');
+      if (!active()) return;
+      instance = await createWorker('por', OEM.LSTM_ONLY, {
+        workerPath: '/arl-assets/expense-ocr/worker.min.js', corePath: '/arl-assets/expense-ocr', langPath: '/arl-assets/expense-ocr/lang', workerBlobURL: false, cacheMethod: 'none',
+        // Tesseract rejects its promise; prevent a second uncaught error outside the dialog.
+        errorHandler: () => {},
+        logger: message => { if (active()) { setPhase(message.status === 'recognizing text' ? 'Lendo nomes, valores e parcelas…' : 'Preparando leitura no aparelho…'); setProgress(p => Math.max(p, message.status === 'recognizing text' ? 30 + Math.round(message.progress * 70) : Math.round(message.progress * 25))); } },
+      });
+      if (!active()) return;
+      worker.current = instance;
+      await instance.setParameters({ tessedit_pageseg_mode: PSM.AUTO, preserve_interword_spaces: '1', user_defined_dpi: '300' });
+      const { data } = await instance.recognize(canvas);
+      if (!active()) return;
+      const value = data.text.slice(0, 200000);
+      setText(value); interpret(value); setConfidence(data.confidence); setSourceHash([...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('')); setStep('review'); setProgress(100);
+    } catch (failure: any) { if (active()) setError(failure.message || 'Não foi possível ler a foto. Use uma imagem mais nítida ou tente novamente.'); }
+    finally { await instance?.terminate().catch(() => {}); if (active()) { worker.current = null; running.current = false; setReading(false); } }
+  };
+  const selected = rows.filter(row => row.selected);
+  const reviewed = selected.filter(row => row.reviewed && validRow(row)).length;
+  const monthTotal = selected.reduce((sum, row) => sum + centsFromMoneyInput(row.value), 0);
+  const remainingTotal = selected.reduce((sum, row) => sum + centsFromMoneyInput(row.value) * Math.max(0, row.installment_count - row.first_number + 1), 0);
+  const ready = selected.length > 0 && reviewed === selected.length && selected.every(row => row.type_id || defaults.type_id) && defaults.institution_id && defaults.responsibility && defaults.start_month && defaults.due_day >= 1 && defaults.due_day <= 31 && Number.isInteger(defaults.percent_one) && defaults.percent_one >= 0 && defaults.percent_one <= 100 && sourceHash;
+  const save = async () => {
+    if (!ready || saving) return;
+    setSaving(true); setError('');
+    try {
+      const result = await expenseControlApi<{ debt_ids: number[] }>('/photo-imports', 'POST', {
+        request_key: requestKey.current, source_hash: sourceHash, institution_id: Number(defaults.institution_id), start_month: defaults.start_month, due_day: Number(defaults.due_day),
+        items: selected.map(row => ({ request_key: row.id, reviewed: true, name: row.name.trim(), type_id: Number(row.type_id || defaults.type_id), recurrence: row.installment_count > 1 ? 'installments' : 'once', responsibility: row.responsibility || defaults.responsibility, percent_one: Number(defaults.percent_one), amount_cents: centsFromMoneyInput(row.value), installment_count: Number(row.installment_count), first_number: Number(row.first_number), notes: row.purchased_on ? 'Cadastro por foto. Data da compra lida: ' + row.purchased_on + '. Dados conferidos pelo usuário.' : 'Cadastro por foto. Dados conferidos pelo usuário.' })),
+      });
+      if (alive.current) onSaved(result.debt_ids.length, Number(defaults.institution_id));
+    } catch (failure: any) { if (alive.current) setError(failure.message || 'Não foi possível salvar as compras.'); }
+    finally { if (alive.current) setSaving(false); }
+  };
+  const personOptions = <><option value="one">{config.people[0]?.name || 'Pessoa 1'}</option><option value="two">{config.people[1]?.name || 'Pessoa 2'}</option><option value="shared">Casal</option></>;
+  const busy = reading || saving;
+  return <OrderPopup title={step === 'photo' ? 'Cadastrar dívida por foto' : 'Confira as compras reconhecidas'} eyebrow="CONTROLE DE GASTO · CADASTRO POR FOTO" description="Leia a fatura, confira cada compra e salve somente o que estiver correto." icon={ScanLine} variant="budget" closeLabel="Fechar cadastro por foto" onClose={() => { if (!saving) onClose(); }}>
+    <div className="cg-dialog cg-form cg-photo"><div className="cg-dialog-body"><input ref={chooser} hidden type="file" accept="image/jpeg,image/png,image/webp" aria-label="Foto da fatura" onChange={e => { choose(e.target.files?.[0]); e.target.value = ''; }} /><input ref={camera} hidden type="file" accept="image/*" capture="environment" aria-label="Fotografar fatura" onChange={e => { choose(e.target.files?.[0]); e.target.value = ''; }} />
+      <div className="cg-photo-steps"><span className={step === 'photo' ? 'current' : 'complete'}><b>01</b> Foto da fatura</span><span className={step === 'review' ? 'current' : ''}><b>02</b> Conferir compras</span><span><b>03</b> Salvar no controle</span></div>
+      {error && <p role="alert" className="cg-alert">{error}</p>}
+      {step === 'photo' ? <section className="cg-photo-upload-panel"><div><span className="cg-eyebrow">UMA FOTO, VÁRIAS COMPRAS</span><h3>Nome, valor e parcelas — uma compra por vez.</h3><p>Use uma foto ou captura de tela nítida da região das compras. A leitura acontece no aparelho e a foto não fica salva.</p><div className="cg-photo-upload-actions"><button type="button" disabled={busy} onClick={() => camera.current?.click()}><Camera /><b>Tirar uma foto</b><small>Abrir a câmera</small></button><button type="button" disabled={busy} onClick={() => chooser.current?.click()}><ImagePlus /><b>Escolher foto</b><small>Galeria ou computador</small></button></div><div className="cg-photo-tip"><ShieldCheck /><span>Prefira mostrar apenas as compras. Uma foto reta, sem reflexos e com as parcelas visíveis melhora a leitura.</span></div></div><div className="cg-photo-preview">{preview ? <><img src={preview} style={{ transform: `rotate(${rotation}deg)` }} alt="Foto selecionada para leitura" /><button type="button" disabled={busy} onClick={() => setRotation(r => (r + 90) % 360)}><RotateCw /> Girar foto</button></> : <><FileText /><span>Sua foto aparecerá aqui</span><small>JPG, PNG ou WebP · até 10 MB</small></>}</div></section> : <>
+        <fieldset disabled={busy} className="cg-photo-defaults"><legend>Onde cadastrar estas compras?</legend><div className="cg-photo-default-grid"><label>Instituição<select required value={defaults.institution_id} onChange={e => { const selectedBank = config.institutions.find(i => String(i.id) === e.target.value); setDefaults(d => ({ ...d, institution_id: e.target.value, due_day: selectedBank?.due_day || 10 })); setRows(items => items.map(item => ({ ...item, reviewed: false }))); }}><option value="">Selecione o cartão ou banco</option>{config.institutions.filter(i => i.active).map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select></label><label>Tipo padrão<select value={defaults.type_id} onChange={e => setDefault('type_id', e.target.value)}><option value="">Selecione o tipo de dívida</option>{config.types.filter(t => t.active).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label><label>Responsável padrão<select value={defaults.responsibility} onChange={e => setDefault('responsibility', e.target.value)}><option value="">Quem paga esta fatura?</option>{personOptions}</select></label><label>Mês desta fatura<input type="month" min="2000-01" max="2099-12" value={defaults.start_month} onChange={e => setDefault('start_month', e.target.value)} /></label><label>Dia de vencimento<input type="number" min="1" max="31" value={defaults.due_day} onChange={e => setDefault('due_day', Number(e.target.value))} /></label><label>Parte de {config.people[0]?.name || 'Pessoa 1'} no Casal (%)<input type="number" min="0" max="100" value={defaults.percent_one} onChange={e => setDefault('percent_one', Number(e.target.value))} /><small>A outra pessoa fica com {100 - defaults.percent_one}%.</small></label></div>{(!config.institutions.some(i => i.active) || !config.types.some(i => i.active)) && <p className="cg-alert">Cadastre uma instituição e um tipo na seção Instituições antes de salvar.</p>}<p className="cg-muted">O mês acima é o vencimento da parcela atual. A data da compra na foto não define o mês da fatura.</p></fieldset>
+        <div className="cg-photo-toolbar"><div><b>{rows.length} compras identificadas</b><small>{reviewed}/{selected.length} selecionadas já conferidas{ignored > 0 ? ' · totais/pagamentos ignorados: ' + ignored : ''}</small></div><div className="cg-artwork-modes"><button type="button" aria-pressed={tab === 'purchases'} onClick={() => setTab('purchases')}>Compras reconhecidas</button><button type="button" aria-pressed={tab === 'text'} onClick={() => setTab('text')}>Texto lido</button></div></div>
+        {confidence !== undefined && confidence < 70 && <p className="cg-alert">A foto teve leitura difícil. Confira com cuidado nomes, valores e parcelas; você pode corrigir todos os campos.</p>}
+        {tab === 'text' ? <div className="cg-photo-text"><label>Texto extraído da foto<textarea disabled={saving} rows={10} maxLength={200000} value={text} onChange={e => setText(e.target.value)} /></label><button type="button" disabled={saving} onClick={() => interpret(text)}>Reinterpretar texto corrigido</button><p className="cg-muted">Reinterpretar substitui a lista de revisão; nenhum cadastro é salvo nesta etapa.</p></div> : <div className="cg-photo-review-list" role="region" aria-label="Lista de compras reconhecidas" tabIndex={0}>{rows.map((row, index) => <article key={row.id} className={'cg-photo-row' + (row.reviewed ? ' reviewed' : '') + (!row.selected ? ' excluded' : '')}><header><span><b>{String(index + 1).padStart(2, '0')}</b><strong>{row.reviewed ? 'Compra conferida' : 'Confira esta compra'}</strong></span><label className="cg-checkbox"><input type="checkbox" disabled={saving} aria-label={'Incluir compra ' + (index + 1)} checked={row.selected} onChange={e => changeRow(row.id, { selected: e.target.checked })} /> Incluir</label></header><fieldset disabled={saving || !row.selected}><label>Nome da compra<input aria-label={'Nome da compra ' + (index + 1)} maxLength={200} value={row.name} onChange={e => changeRow(row.id, { name: e.target.value })} /></label><div className="cg-photo-row-grid"><label>Valor de cada parcela (R$)<input aria-label={'Valor da parcela da compra ' + (index + 1)} inputMode="numeric" value={row.value} onChange={e => changeRow(row.id, { value: maskMoneyInput(e.target.value) })} /></label><label>Parcela atual<input aria-label={'Parcela atual da compra ' + (index + 1)} type="number" min="1" max={row.installment_count} value={row.first_number} onChange={e => changeRow(row.id, { first_number: Number(e.target.value) })} /></label><label>Total de parcelas<input aria-label={'Total de parcelas da compra ' + (index + 1)} type="number" min="1" max="360" value={row.installment_count} onChange={e => changeRow(row.id, { installment_count: Number(e.target.value) })} /></label><label>Quem paga?<select aria-label={'Responsável pela compra ' + (index + 1)} value={row.responsibility} onChange={e => changeRow(row.id, { responsibility: e.target.value })}><option value="">Usar responsável padrão</option>{personOptions}</select></label><label>Tipo da compra<select aria-label={'Tipo da compra ' + (index + 1)} value={row.type_id} onChange={e => changeRow(row.id, { type_id: e.target.value })}><option value="">Usar tipo padrão</option>{config.types.filter(t => t.active).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label></div>{row.purchased_on && <small className="cg-photo-date">Data da compra lida: {row.purchased_on}</small>}{row.warnings.length > 0 && <p className="cg-photo-warning">{row.warnings.join(' ')}</p>}{!validRow(row) && <p className="cg-photo-warning">Preencha um nome, valor positivo e parcelas válidas para conferir esta compra.</p>}<label className="cg-checkbox cg-photo-confirm"><input type="checkbox" aria-label={'Conferi a compra ' + (index + 1)} checked={row.reviewed} disabled={!validRow(row)} onChange={e => changeRow(row.id, { reviewed: e.target.checked })} /><Check /> Conferi nome, valor e parcelas</label></fieldset></article>)}{rows.length === 0 && <div className="cg-empty"><ScanLine /><h3>Não identifiquei compras automaticamente</h3><p>Confira o texto lido, tente outra foto ou adicione as compras para revisar.</p></div>}</div>}
+        <div className="cg-photo-review-actions"><button type="button" disabled={saving || rows.length >= 100} onClick={() => setRows(items => [...items, { id: crypto.randomUUID(), name: '', amount_cents: 0, value: '', first_number: 1, installment_count: 1, purchased_on: null, source_line: '', warnings: [], duplicate: false, selected: true, reviewed: false, responsibility: '', type_id: '' }])}><Plus /> Adicionar compra à revisão</button><button type="button" disabled={busy} onClick={() => { setStep('photo'); setError(''); }}>Trocar foto / ler novamente</button></div>
+        <div className="cg-photo-totals"><span>Compras selecionadas<b>{selected.length}</b></span><span>Soma nesta fatura<b>{money(monthTotal)}</b></span><span>Total das parcelas restantes<b>{money(remainingTotal)}</b></span></div><p className="cg-muted">Esta soma considera somente as compras selecionadas, sem pagamentos, créditos ou o total impresso da fatura. Confira uma por uma antes de salvar.</p>
+      </>}
+      {reading && <div className="cg-photo-progress" role="status"><ScanLine /><div><b>{phase}</b><progress max={100} value={progress} aria-label="Progresso da leitura" /><small>{progress}% · a primeira leitura pode demorar um pouco mais.</small></div></div>}
+    </div><footer className="cg-dialog-footer"><span className="cg-photo-footer-note">{step === 'review' ? reviewed + '/' + selected.length + ' compras conferidas' : 'A foto não fica salva.'}</span><button type="button" disabled={saving} onClick={onClose}>{reading ? 'Cancelar leitura' : 'Cancelar'}</button>{step === 'photo' ? <button type="button" className="cg-primary" disabled={!file || busy} onClick={() => { void read(); }}><ScanLine />{reading ? 'Lendo…' : 'Ler compras'}</button> : <button type="button" className="cg-primary" disabled={!ready || busy} onClick={() => { void save(); }}><Check />{saving ? 'Salvando…' : 'Salvar ' + selected.length + (selected.length === 1 ? ' compra' : ' compras')}</button>}</footer></div>
+  </OrderPopup>;
+}

@@ -69,3 +69,8 @@ O site gastos-do-casal.dsnakeall.chatgpt.site e o PDF Gestão de Gastos fornecid
 ### Controle de Gasto: galeria de cartões
 
 Cartões com proporção 856:540, cantos arredondados, reflexo leve e sombra de relevo. Modelos de bancos identificam cores/nome sem se apresentar como réplicas oficiais. A prévia acompanha a seleção, com galeria pesquisável e upload separado. Todas as imagens utilizam a mesma moldura; arte oficial preserva proporção sem esticar. Enquadramento de fotos é confirmado antes do cadastro. Sombras de painéis/responsáveis reforçam o acabamento 3D dentro da identidade ARL. Capturas de desktop/mobile em `output/cartoes`.
+
+
+### Controle de Gasto: cadastro por foto
+
+Manter a temática do app de gastos de referência com a identidade ARL: cabeçalho branco, borda vermelha suave, cartões arredondados com relevo, sombras e campos compactos. Escolha de foto/câmera e prévia, seguida de lista com rolagem e fichas numeradas por compra; confirmação verde distingue dados conferidos. Totais separados para a fatura atual e parcelas restantes. Rodapé fixo mantém Cancelar/Salvar acessíveis; o corpo e a lista rolam em telas menores. Capturas de revisão desktop/mobile em `output/foto`.

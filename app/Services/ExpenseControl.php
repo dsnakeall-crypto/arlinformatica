@@ -116,6 +116,37 @@ class ExpenseControl
         }
     }
 
+    public function importPhoto(Request $request, array $data): array
+    {
+        return DB::transaction(function () use ($request, $data) {
+            // The institution lock also serializes imports by the other participant.
+            DB::table('cg_institutions')->where('id', $data['institution_id'])->lockForUpdate()->first();
+            $hash = hash('sha256', json_encode($data));
+            $old = DB::table('cg_photo_imports')->where('request_key', $data['request_key'])->first();
+            if ($old) {
+                abort_unless($old->created_by === $request->user()->id && hash_equals($old->payload_hash, $hash), 409, 'Esta solicitação já foi utilizada com outros dados.');
+
+                return ['id' => $old->id, 'debt_ids' => json_decode($old->debt_ids, true), 'replayed' => true];
+            }
+            abort_if(DB::table('cg_photo_imports')->where('institution_id', $data['institution_id'])->where('source_hash', $data['source_hash'])->exists(), 409, 'Esta foto já foi cadastrada nesta instituição. Confira as compras existentes para não duplicar a fatura.');
+            $count = array_sum(array_map(fn ($item) => $item['installment_count'] - $item['first_number'] + 1, $data['items']));
+            abort_if($count > 3000, 422, 'Divida o cadastro em lotes menores: máximo de 3.000 parcelas por confirmação.');
+            $ids = [];
+            foreach ($data['items'] as $item) {
+                unset($item['reviewed']);
+                $ids[] = $this->createDebt($request, [...$item, 'institution_id' => $data['institution_id'], 'start_month' => $data['start_month'], 'due_day' => $data['due_day']]);
+            }
+            $id = DB::table('cg_photo_imports')->insertGetId([
+                'request_key' => $data['request_key'], 'payload_hash' => $hash, 'source_hash' => $data['source_hash'],
+                'institution_id' => $data['institution_id'], 'created_by' => $request->user()->id,
+                'debt_ids' => json_encode($ids), 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            app(Audit::class)->record($request, 'expense_control.photo_imported', 'expense_control', $id, null, ['debt_ids' => $ids, 'count' => count($ids)]);
+
+            return ['id' => $id, 'debt_ids' => $ids, 'replayed' => false];
+        }, 3);
+    }
+
     public function record(Request $request, array $data, Audit $audit): array
     {
         return DB::transaction(function () use ($request, $data, $audit) {

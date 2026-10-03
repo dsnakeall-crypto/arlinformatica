@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
   {
     ignores: [
-      'vendor/**', 'node_modules/**', 'public/build/**', 'storage/**',
+      'vendor/**', 'node_modules/**', 'public/build/**', 'public/arl-assets/expense-ocr/**', 'storage/**',
       'output/**', 'visual-artifacts/**', 'playwright-report/**', 'test-results/**',
     ],
   },

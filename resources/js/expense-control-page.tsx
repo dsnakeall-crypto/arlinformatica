@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft, ArrowDownLeft, Building2, CalendarDays, Check, ChevronLeft, ChevronRight, CircleDollarSign, Clock3, History, Landmark, Pencil, Plus, Search, Settings, TrendingUp, Users, Wallet } from 'lucide-react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { ArrowLeft, Camera, ArrowDownLeft, Building2, CalendarDays, Check, ChevronLeft, ChevronRight, CircleDollarSign, Clock3, History, Landmark, Pencil, Plus, Search, Settings, TrendingUp, Users, Wallet } from 'lucide-react';
 import PageHeader from './page-header';
 import { FinanceDate } from './finance-date';
 import OrderPopup from './order-popup';
@@ -29,12 +29,8 @@ const currentMonth = () => new Date().toLocaleDateString('sv-SE').slice(0, 7);
 const today = () => new Date().toLocaleDateString('sv-SE');
 const kindLabel = (kind: string) => ({ payment: 'Pagamento', advance: 'Antecipação', discount: 'Abatimento' }[kind] || kind);
 const statusLabel = (status: string) => ({ open: 'Em aberto', partial: 'Parcial', paid: 'Paga', cancelled: 'Cancelada' }[status] || status);
-async function api<T = any>(path: string, method = 'GET', body?: unknown, signal?: AbortSignal): Promise<T> {
-  const response = await fetch('/api/expense-control' + path, { method, credentials: 'same-origin', signal, headers: { Accept: 'application/json', ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '' }, body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body) });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.errors ? Object.values(data.errors).flat().join(' ') : data.message || 'Não foi possível concluir a operação.');
-  return data;
-}
+import { expenseControlApi as api } from './expense-control-api';
+const PhotoImport = lazy(() => import('./expense-photo-import'));
 
 export default function ExpenseControlPage() {
   const [tab, setTab] = useState<Tab>('summary'), [month, setMonth] = useState(currentMonth), [config, setConfig] = useState(emptyConfig);
@@ -42,6 +38,7 @@ export default function ExpenseControlPage() {
   const [detail, setDetail] = useState<Detail>(), [selected, setSelected] = useState<number[]>([]), [dialog, setDialog] = useState<Dialog>();
   const [q, setQ] = useState(''), [query, setQuery] = useState(''), [bank, setBank] = useState(''), [type, setType] = useState(''), [person, setPerson] = useState(''), [sort, setSort] = useState('newest'), [status, setStatus] = useState('active'), [page, setPage] = useState(1);
   const [error, setError] = useState(''), [notice, setNotice] = useState(''), [busy, setBusy] = useState(false), [loading, setLoading] = useState(true), [revision, setRevision] = useState(0);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const detailRequest = useRef(0);
   useEffect(() => { const timer = setTimeout(() => { setQuery(q); setPage(1); }, 250); return () => clearTimeout(timer); }, [q]);
   useEffect(() => {
@@ -96,7 +93,7 @@ export default function ExpenseControlPage() {
     })}{!personal && <article className="cg-person-card cg-shared"><header><span className="cg-avatar"><Users /></span><div><small>COMPARTILHADO</small><h3>Casal</h3></div></header><dl><div><dt>Despesas compartilhadas</dt><dd>{money(total.shared_original_cents)}</dd></div><div><dt>Pago / abatido</dt><dd>{money((total.shared_original_cents || 0) - (total.shared_remaining_cents || 0))}</dd></div><div><dt>Falta pagar</dt><dd className="cg-positive">{money(total.shared_remaining_cents)}</dd></div></dl><button onClick={() => { setPerson('shared'); setBank(''); navigate('debts'); }}>Ver gastos do casal <ChevronRight /></button><small className="cg-card-note">Este valor já está distribuído entre os dois responsáveis.</small></article>}</div>;
   };
   return <section className="cg-page" data-arl-expense-control-react="1">
-    <PageHeader title="Controle de Gasto" eyebrow="ORGANIZAÇÃO FINANCEIRA" description="Seus compromissos, os gastos do casal e os próximos passos, em um só lugar." icon={CircleDollarSign} actions={<button className="cg-primary" onClick={() => openDialog({ kind: 'debt' })}><Plus /> Nova dívida</button>} />
+    <PageHeader title="Controle de Gasto" eyebrow="ORGANIZAÇÃO FINANCEIRA" description="Seus compromissos, os gastos do casal e os próximos passos, em um só lugar." icon={CircleDollarSign} actions={<><button disabled={loading} onClick={() => setPhotoOpen(true)}><Camera /> Cadastrar por foto</button><button className="cg-primary" onClick={() => openDialog({ kind: 'debt' })}><Plus /> Nova dívida</button></>} />
     <div className="cg-navigation"><div className="cg-tabs" role="tablist" aria-label="Seções do Controle de Gasto">{tabs.map(([id, label, Icon]) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => navigate(id)} className={tab === id ? 'active' : ''}><Icon /><span>{label}</span></button>)}</div><div className="cg-month"><button aria-label="Mês anterior do controle" onClick={() => moveMonth(-1)}><ChevronLeft /></button><label><span>{monthLabel(month)}</span><input aria-label="Mês do Controle de Gasto" type="month" min="2000-01" max="2099-12" value={month} onChange={e => { if (e.target.value) setMonth(e.target.value); }} /></label><button aria-label="Próximo mês do controle" onClick={() => moveMonth(1)}><ChevronRight /></button></div></div>
     {error && !dialog && <p className="cg-alert" role="alert">{error}</p>}{notice && <p className="cg-notice" role="status"><Check /> {notice}</p>}{loading && <p className="cg-loading" role="status">Atualizando informações…</p>}
     {(tab === 'summary' || tab === 'overview') && !detail && <>
@@ -126,6 +123,7 @@ export default function ExpenseControlPage() {
     {tab === 'advances' && <section className="cg-panel"><div className="cg-section-heading"><div><span className="cg-eyebrow">LANÇAMENTOS DO MÊS</span><h2>Quem pagou e o que foi abatido</h2><p>Pagamentos, antecipações e abatimentos, com histórico das correções.</p></div></div>{entries?.data.map(e => <EntryRow key={e.id} entry={e} name={name} onReverse={() => openDialog({ kind: 'reason', action: 'reverse', id: e.id })} />)}{!loading && !entries?.data.length && <Empty title="Nenhum lançamento neste mês" text="Abra uma dívida para registrar pagamentos ou antecipações." />}<Pagination current={entries?.current_page || 1} last={entries?.last_page || 1} onChange={setPage} /></section>}
     {tab === 'settings' && <PeopleSettings key={revision + '-' + config.people.map(p => p.name + p.user_id).join(',')} config={config} busy={busy} onSave={data => mutate('/people', 'PUT', data)} />}
     {tab === 'activity' && <section className="cg-panel"><div className="cg-section-heading"><div><span className="cg-eyebrow">AUDITORIA DO MÓDULO</span><h2>Histórico de atividades</h2></div></div>{activity?.data.map(a => <div className="cg-log" key={a.id}><History /><span><b>{activityLabel(a.action)}</b><small>{a.user_name || 'Conta removida'} · <FinanceDate value={a.created_at} /></small></span></div>)}{!loading && !activity?.data.length && <Empty title="Nenhuma atividade registrada" text="Os cadastros e alterações aparecerão aqui." />}<Pagination current={activity?.current_page || 1} last={activity?.last_page || 1} onChange={setPage} /></section>}
+    {photoOpen && <Suspense fallback={<p role="status">Preparando cadastro por foto…</p>}><PhotoImport config={config} month={month} institution={bank} onClose={() => setPhotoOpen(false)} onSaved={(count, id) => { setPhotoOpen(false); goBank(id); setNotice(count + " compras cadastradas por foto."); setRevision(n => n + 1); }} /></Suspense>}
     {dialog && <ExpenseDialog key={dialog.kind + ('id' in dialog ? dialog.id : '')} dialog={dialog} config={config} month={month} busy={busy} error={error} onClose={() => { if (!busy) { setDialog(undefined); setError(''); } }} onSave={mutate} />}
   </section>;
 }
@@ -133,7 +131,7 @@ export default function ExpenseControlPage() {
 function Empty({ title, text, action }: { title: string; text: string; action?: React.ReactNode }) { return <div className="cg-empty"><CircleDollarSign /><h3>{title}</h3><p>{text}</p>{action}</div>; }
 function Pagination({ current, last, onChange }: { current: number; last: number; onChange: (page: number) => void }) { return last > 1 ? <div className="cg-pagination"><button disabled={current === 1} onClick={() => onChange(current - 1)}><ChevronLeft /> Anterior</button><span>Página {current} de {last}</span><button disabled={current === last} onClick={() => onChange(current + 1)}>Próxima <ChevronRight /></button></div> : null; }
 function EntryRow({ entry: e, name, onReverse }: { entry: Entry; name: (id: number) => string; onReverse: () => void }) { return <article className={'cg-entry' + (e.reversed_at ? ' reversed' : '')}><span className="cg-bank-icon"><ArrowDownLeft /></span><div><b>{e.name || 'Parcela ' + e.number}</b><small>{kindLabel(e.kind)} · {date(e.occurred_on)} · {e.paid_by ? 'Pago por ' + name(e.paid_by) : 'Redução do saldo'}</small><small>{name(1)}: {money(e.credit_one_cents)} · {name(2)}: {money(e.credit_two_cents)}{e.institution_name && ' · ' + e.institution_name}</small>{e.notes && <small>{e.notes}</small>}{e.reversed_at && <small>Desfeito: {e.reversal_reason}</small>}</div><strong>{money(e.amount_cents)}</strong>{!e.reversed_at && <button onClick={onReverse}>Desfazer</button>}</article>; }
-function activityLabel(action: string) { return ({ debt_created: 'Dívida cadastrada', debt_updated: 'Identificação da dívida alterada', installment_updated: 'Parcela corrigida', operation_created: 'Lançamento financeiro registrado', entry_reversed: 'Lançamento desfeito', debt_cancelled: 'Dívida cancelada', recurring_ended: 'Recorrência encerrada', catalog_saved: 'Cadastro financeiro atualizado', people_updated: 'Responsáveis atualizados' }[action.replace('expense_control.', '')] || action); }
+function activityLabel(action: string) { return ({ photo_imported: 'Compras cadastradas por foto', debt_created: 'Dívida cadastrada', debt_updated: 'Identificação da dívida alterada', installment_updated: 'Parcela corrigida', operation_created: 'Lançamento financeiro registrado', entry_reversed: 'Lançamento desfeito', debt_cancelled: 'Dívida cancelada', recurring_ended: 'Recorrência encerrada', catalog_saved: 'Cadastro financeiro atualizado', people_updated: 'Responsáveis atualizados' }[action.replace('expense_control.', '')] || action); }
 
 function PeopleSettings({ config, busy, onSave }: { config: Configuration; busy: boolean; onSave: (data: unknown) => Promise<boolean> }) {
   const [people, setPeople] = useState(config.people);

@@ -109,4 +109,4 @@ Fornecedores: [cadastro obrigatório, pagamentos, vencimentos e notas fiscais](d
 
 ## Controle de Gasto
 
-Novo módulo independente abaixo de Financeiro, iniciado sem despesas. Configure instituições, tipos e responsáveis; registre compras/parcelas, pagamentos, antecipações e abatimentos. Perfil exclusivo Controle de Gasto e perfil Usuário local possuem restrições no backend. Consulte [uso, modelagem e próximos passos](docs/CONTROLE_GASTO.md). Implementação local; publicação e cadastro por foto são etapas posteriores.
+Novo módulo independente abaixo de Financeiro, iniciado sem despesas. Configure instituições, tipos e responsáveis; registre compras/parcelas, pagamentos, antecipações e abatimentos. Perfil exclusivo Controle de Gasto e perfil Usuário local possuem restrições no backend. Consulte [uso, modelagem e próximos passos](docs/CONTROLE_GASTO.md). Cadastro por foto lê compras e parcelas no navegador, com revisão obrigatória. O build inclui os recursos locais do leitor, sem serviço externo ou Node permanente. Implementação local; publicação é uma etapa posterior.

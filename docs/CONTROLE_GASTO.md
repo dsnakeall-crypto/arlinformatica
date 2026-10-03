@@ -2,7 +2,7 @@
 
 ## Escopo aprovado
 
-Prioridade sobre a reformulação de Fornecedores. Cadastro do zero, sem importar despesas do aplicativo antigo. A organização do site de referência e o PDF de documentação orientam o funcionamento; a identidade visual segue a ARL: cabeçalhos brancos, vermelho, cards arredondados, sombras e diálogos aprovados da OS. Agenda, Contas e cadastro por voz ficam fora do escopo. Cadastro por foto será uma etapa posterior.
+Prioridade sobre a reformulação de Fornecedores. Cadastro do zero, sem importar despesas do aplicativo antigo. A organização do site de referência e o PDF de documentação orientam o funcionamento; a identidade visual segue a ARL: cabeçalhos brancos, vermelho, cards arredondados, sombras e diálogos aprovados da OS. Agenda, Contas e cadastro por voz ficam fora do escopo. Cadastro por foto possui leitura local e revisão obrigatória antes de salvar.
 
 ## Como começar
 
@@ -47,7 +47,6 @@ A publicação no servidor ainda não foi realizada. Antes dela, é necessário 
 
 ## Próximas etapas, sem funções simuladas
 
-- Cadastro por foto, extração e revisão obrigatória antes de salvar.
 - Estorno de valor da compra com redistribuição automática pelas parcelas restantes; nesta etapa há abatimento explícito por parcela ou lote.
 - Avisos agendados/push e consulta consolidada de atrasos de meses anteriores.
 - Refinamentos adicionais após avaliação do layout.
@@ -77,3 +76,22 @@ Verificação desta etapa: 252 testes PHP gerais (2.199 verificações), 23 test
 A pedido do proprietário, os cards de instituições nas abas Gastos e Instituições possuem largura máxima de 250 px, aproximadamente metade da referência anterior. A grade acomoda mais cartões por linha; o cartão interno acompanha a redução mantendo proporção, cores, imagem e relevo. Espaços internos e tipografia foram compactados com leitura preservada. A galeria e a prévia do formulário conservam seus tamanhos para permitir escolher e enquadrar imagens. Nenhum dado ou regra financeira foi alterado.
 
 Backup externo anterior: `C:\Users\Allan\ARL-backups\controle-gasto-cards-compactos-20261002-231900`, com arquivos locais/alterações e histórico Git verificados.
+
+
+## Cadastro de dívidas por foto — 02/10/2026
+
+**Cadastrar por foto** fica ao lado de **Nova dívida**. Escolha uma foto/captura JPG, PNG ou WebP até 10 MB (máximo 40 megapixels), ou abra a câmera no celular. Gire a foto se necessário e clique em **Ler compras**. Não recebe PDF nem usa voz nesta etapa.
+
+A lista de revisão possui rolagem e uma ficha por compra: nome, valor de cada parcela, parcela atual, quantidade total, responsável e tipo. Instituição, tipo/responsável padrão, mês da fatura, vencimento e divisão são selecionados acima. Cada campo pode ser corrigido; mudar dados ou padrões exige conferir novamente. Desmarque **Incluir** para ignorar uma linha. O botão Salvar só libera depois de conferir todas as compras selecionadas. É possível revisar o texto lido e reinterpretá-lo, ou acrescentar uma compra à revisão.
+
+A leitura usa Tesseract.js 7 com idioma português **no navegador**. Worker, WebAssembly e modelo são gerados em `public/arl-assets/expense-ocr` pelos scripts `prebuild`/`predev`. Todos vêm do próprio servidor, sem CDN, OpenAI, upload da foto ou envio do texto bruto. A primeira leitura carrega esses recursos; o pacote KingHost inclui os arquivos estáticos gerados pelo build e não exige Node em execução. A câmera depende da permissão do aparelho; processamento e hash requerem HTTPS (localhost também funciona). Documentação técnica: https://github.com/naptha/tesseract.js/blob/master/docs/local-installation.md .
+
+Fotos, prévias e texto bruto ficam na memória da tela, descartados ao fechar. O servidor recebe somente campos financeiros conferidos e hash SHA-256 da foto. `cg_photo_imports` conserva esse hash, a chave da operação e os IDs das compras para auditoria e prevenção de repetição. A mesma foto na mesma instituição é bloqueada, inclusive entre os dois usuários. Uma foto recortada/reexportada pode produzir outro hash: o usuário deve conferir as compras existentes para não cadastrar duas fotos da mesma fatura. Backup/restauração preservam o registro da importação e suas parcelas.
+
+Uma linha 3/10 gera somente as parcelas **3 a 10**, começando pelo mês da fatura selecionado. Não cria pagamentos fictícios das parcelas 1 e 2. O valor reconhecido representa cada parcela, não o total da compra; valores com mais de uma coluna exigem conferência. Datas de compra extraídas da imagem ficam na observação, sem substituir o mês de vencimento. Totais, créditos, pagamentos e estornos são ignorados. Linhas repetidas são sinalizadas e começam fora da seleção. Leitura incerta pode exigir corrigir texto/campos ou tentar uma imagem melhor; não há garantia de reconhecer qualquer formato de fatura.
+
+Limites: 100 compras por lote/foto, até 360 parcelas por compra e até 3.000 parcelas geradas no lote. Se a fatura exceder 100 linhas, use fotos distintas de trechos e confira a separação. Validação e autorização no backend, transação integral e retry idempotente: erro em qualquer compra impede salvar todo o lote. Não há efeito no estoque, OS ou Financeiro da empresa.
+
+Backup externo verificado antes da edição e migração: `C:\Users\Allan\ARL-backups\controle-gasto-foto-20261002-233306`, incluindo código, alterações locais, histórico Git e `banco-e-arquivos-anterior.zip`. Migração aditiva `2026_10_03_020000_create_expense_photo_imports.php`; conferência por hash preservou 54 tabelas existentes e 128 arquivos privados, incluindo despesas já cadastradas.
+
+Verificação: 258 testes PHP (2.249 verificações), 29 testes em MySQL isolado (289 verificações), 17 unitários de frontend; leitura real de imagem fictícia no Chromium com valores/parcelas e cadastro em lote, revisão desktop/mobile, cancelamento e regressões do cadastro manual/cartões/OS. Lint, TypeScript, Pint e build verificados. Capturas e logs em `output/foto`. Implementação local, sem publicação no servidor.

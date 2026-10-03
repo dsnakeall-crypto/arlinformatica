@@ -224,6 +224,40 @@ class ExpenseControlController extends Controller
         return response()->json($this->show($id)->getData(true), 201);
     }
 
+    public function importPhoto(Request $r): JsonResponse
+    {
+        abort_if($r->files->count() > 0, 422, 'A foto deve ser lida no aparelho. Envie somente as compras conferidas.');
+        $data = $r->validate([
+            'request_key' => 'required|uuid', 'source_hash' => ['required', 'regex:/^[a-f0-9]{64}$/'],
+            'institution_id' => 'required|integer|exists:cg_institutions,id',
+            'start_month' => 'required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12',
+            'due_day' => 'required|integer|min:1|max:31', 'items' => 'required|array|min:1|max:100',
+            'items.*' => 'required|array:request_key,reviewed,name,type_id,recurrence,responsibility,percent_one,amount_cents,installment_count,first_number,notes',
+            'items.*.request_key' => 'required|uuid|distinct', 'items.*.reviewed' => 'required|accepted',
+            'items.*.name' => 'required|string|max:200', 'items.*.type_id' => 'required|integer|exists:cg_types,id',
+            'items.*.recurrence' => 'required|in:installments,once', 'items.*.responsibility' => 'required|in:one,two,shared',
+            'items.*.percent_one' => 'required|integer|min:0|max:100',
+            'items.*.amount_cents' => 'required|integer|min:1|max:100000000',
+            'items.*.installment_count' => 'required|integer|min:1|max:360',
+            'items.*.first_number' => 'required|integer|min:1', 'items.*.notes' => 'nullable|string|max:2000',
+        ]);
+        foreach ($data['items'] as $index => &$item) {
+            foreach (['type_id', 'percent_one', 'amount_cents', 'installment_count', 'first_number'] as $key) {
+                $item[$key] = (int) $item[$key];
+            }
+            $item['reviewed'] = true;
+            abort_if($item['first_number'] > $item['installment_count'], 422, 'A parcela atual da compra '.($index + 1).' não pode superar o total de parcelas.');
+            if ($item['recurrence'] === 'once') {
+                abort_unless($item['first_number'] === 1 && $item['installment_count'] === 1, 422, 'Compra única possui somente uma parcela.');
+            }
+            $item['notes'] ??= null;
+        }
+        unset($item);
+        $result = $this->control->importPhoto($r, $data);
+
+        return response()->json($result, $result['replayed'] ? 200 : 201);
+    }
+
     private function debtData(Request $r): array
     {
         $data = $r->validate(['request_key' => 'required|uuid', 'institution_id' => 'required|integer|exists:cg_institutions,id', 'type_id' => 'required|integer|exists:cg_types,id',
