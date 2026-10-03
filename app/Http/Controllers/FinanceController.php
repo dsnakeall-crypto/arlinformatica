@@ -7,6 +7,7 @@ use App\Services\CompanySettings;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
 use DateTimeImmutable;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,52 +37,72 @@ class FinanceController extends Controller
         }
 
         $now = CarbonImmutable::now('UTC');
-        $payment = DB::transaction(function () use ($data, $order, $request, $now) {
-            $lockedOrder = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
-            abort_if($lockedOrder->status === 'interrupted', 409, 'Uma OS interrompida é fechada com valor zero e não pode receber pagamentos.');
-            $total = $this->orderTotalCents($lockedOrder);
-            if ($total <= 0) {
-                throw ValidationException::withMessages(['amount_cents' => 'A OS ainda não possui valor definido para receber.']);
+        $replayed = false;
+        try {
+            $payment = DB::transaction(function () use ($data, $order, $request, $now, &$replayed) {
+                $lockedOrder = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+                // A retry may arrive while the first request is still holding this order lock.
+                $existing = DB::table('payments')->where('idempotency_key', $data['idempotency_key'])->first();
+                if ($existing) {
+                    abort_unless((int) $existing->service_order_id === $lockedOrder->id, 409, 'A chave de idempotência já foi usada em outro pagamento.');
+                    $replayed = true;
+
+                    return $existing;
+                }
+
+                abort_if($lockedOrder->status === 'interrupted', 409, 'Uma OS interrompida é fechada com valor zero e não pode receber pagamentos.');
+                $total = $this->orderTotalCents($lockedOrder);
+                if ($total <= 0) {
+                    throw ValidationException::withMessages(['amount_cents' => 'A OS ainda não possui valor definido para receber.']);
+                }
+
+                // Devoluções reduzem o recebido líquido, mas não autorizam uma nova cobrança.
+                $paid = $this->grossPaidCentsForOrder($lockedOrder);
+                $balance = max(0, $total - $paid);
+                abort_if($balance === 0, 409, 'Esta OS já está totalmente paga.');
+                if ((int) $data['amount_cents'] > $balance) {
+                    throw ValidationException::withMessages(['amount_cents' => 'O valor recebido não pode superar o saldo restante da OS.']);
+                }
+
+                $id = DB::table('payments')->insertGetId([
+                    ...$data,
+                    'service_order_id' => $lockedOrder->id,
+                    'paid_at' => $now,
+                    'user_id' => $request->user()->id,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+                $transaction = DB::table('financial_transactions')->insertGetId([
+                    'payment_id' => $id,
+                    'origin' => 'service_order',
+                    'description' => "OS {$lockedOrder->number}",
+                    'amount_cents' => $data['amount_cents'],
+                    'occurred_at' => $now,
+                    'user_id' => $request->user()->id,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+                $this->audit($request, 'payment.created', 'payment', $id, null, [
+                    'transaction_id' => $transaction,
+                    ...$data,
+                    'order_total_cents' => $total,
+                    'previous_paid_cents' => $paid,
+                    'balance_after_cents' => $balance - (int) $data['amount_cents'],
+                ]);
+
+                return DB::table('payments')->find($id);
+            });
+
+        } catch (UniqueConstraintViolationException $error) {
+            $payment = DB::table('payments')->where('idempotency_key', $data['idempotency_key'])->first();
+            if (! $payment) {
+                throw $error;
             }
+            abort_unless((int) $payment->service_order_id === $order->id, 409, 'A chave de idempotência já foi usada em outro pagamento.');
+            $replayed = true;
+        }
 
-            // Devoluções reduzem o recebido líquido, mas não autorizam uma nova cobrança.
-            $paid = $this->grossPaidCentsForOrder($lockedOrder);
-            $balance = max(0, $total - $paid);
-            abort_if($balance === 0, 409, 'Esta OS já está totalmente paga.');
-            if ((int) $data['amount_cents'] > $balance) {
-                throw ValidationException::withMessages(['amount_cents' => 'O valor recebido não pode superar o saldo restante da OS.']);
-            }
-
-            $id = DB::table('payments')->insertGetId([
-                ...$data,
-                'service_order_id' => $lockedOrder->id,
-                'paid_at' => $now,
-                'user_id' => $request->user()->id,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-            $transaction = DB::table('financial_transactions')->insertGetId([
-                'payment_id' => $id,
-                'origin' => 'service_order',
-                'description' => "OS {$lockedOrder->number}",
-                'amount_cents' => $data['amount_cents'],
-                'occurred_at' => $now,
-                'user_id' => $request->user()->id,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-            $this->audit($request, 'payment.created', 'payment', $id, null, [
-                'transaction_id' => $transaction,
-                ...$data,
-                'order_total_cents' => $total,
-                'previous_paid_cents' => $paid,
-                'balance_after_cents' => $balance - (int) $data['amount_cents'],
-            ]);
-
-            return DB::table('payments')->find($id);
-        });
-
-        return response()->json($payment, 201);
+        return response()->json($payment, $replayed ? 200 : 201);
     }
 
     /**
