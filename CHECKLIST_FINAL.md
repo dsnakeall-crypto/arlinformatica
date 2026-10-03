@@ -554,3 +554,11 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Quatro atalhos inferiores somente com ícones para Master/Administrador, Nova OS vermelha; funcionário/exclusivo mantêm restrições backend.
 - [OK] Backup externo verificado; testes isolados, revisão visual 320/393/768px, 293 PHP, 17 frontend, 11 E2E desktop, cinco regressões mobile e três fluxos mobile novos; build/TypeScript e lint.
 - [PENDENTE] Publicar e testar no aparelho físico após a implantação autorizada. Esta entrega permanece local.
+
+
+## Controle de Gasto — correção HTTP local e vínculo (03/10/2026)
+- [OK] Cadastro manual, foto/IA, OCR local e IDs de pagamentos compatíveis com ausência de randomUUID/subtle no acesso por IP HTTP; sem enfraquecer UUID/idempotência ou enviar foto do OCR local.
+- [OK] Mobile somente com seis menus, organizados em grade; Ajustes/Histórico mantidos no Web/PC.
+- [OK] Conta vinculada inicia na parte do responsável (individual + sua parte do casal), com saldo principal e instituições filtrados, permitindo trocar de visão.
+- [OK] Backup externo verificado, 19 testes frontend, 16 E2E, build/TypeScript, lint e revisão visual. Dados e testes isolados, sem chamadas pagas.
+- [PENDENTE] Repetir conferência no celular físico do proprietário após recarregar a página; produção permanece sem publicação.

@@ -4,6 +4,7 @@ import PageHeader from './page-header';
 import ExpenseMobileSummary from './expense-control-mobile-summary';
 import { FinanceDate } from './finance-date';
 import OrderPopup from './order-popup';
+import { expenseRequestId } from './expense-browser-crypto';
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from './money-input';
 import '../css/expense-control.css';
 import CardArtworkPicker, { CardArtworkView, type CardArtwork } from './expense-card-artwork';
@@ -62,6 +63,7 @@ export default function ExpenseControlPage({ mobile = false }: { mobile?: boolea
       if (controller.signal.aborted) return;
       if (preferenceAccount.current !== configuration.account_id) {
         preferenceAccount.current = configuration.account_id;
+        setScope(Number(configuration.my_person_id) === 1 ? 'one' : Number(configuration.my_person_id) === 2 ? 'two' : 'shared');
         try { setView(localStorage.getItem('arl-cg-view-user-' + configuration.account_id) === 'list' ? 'list' : 'cards'); } catch { setView('cards'); }
       }
       setConfig(configuration); setSummary(monthSummary);
@@ -111,9 +113,9 @@ export default function ExpenseControlPage({ mobile = false }: { mobile?: boolea
   };
   return <section className={"cg-page" + (mobile ? " cg-mobile" : "")} data-arl-expense-control-react="1">
     {mobile ? <header className="cgm-header"><div><span className="cg-eyebrow">SUAS FINANÇAS</span><h1>Controle de Gasto</h1></div><div className="cgm-header-actions"><ExpenseMonthPicker month={month} onChange={value => { setMonth(value); setSelected([]); }} /><button className="cg-create-action" disabled={loading} onClick={() => setNewDebtChoice(true)}><Plus /> Nova dívida</button></div></header> : <PageHeader title="Controle de Gasto" eyebrow="ORGANIZAÇÃO FINANCEIRA" description="Seus compromissos, os gastos do casal e os próximos passos, em um só lugar." icon={CircleDollarSign} actions={<><ExpenseMonthPicker month={month} onChange={value => { setMonth(value); setSelected([]); }} /><button className="cg-create-action" disabled={loading} onClick={() => setPhotoOpen(true)}><Camera /> Cadastrar por foto</button><button className="cg-create-action" onClick={() => openDialog({ kind: 'debt' })}><Plus /> Nova dívida</button></>} />}
-    <div className="cg-navigation"><div className="cg-tabs" role="tablist" aria-label="Seções do Controle de Gasto">{tabs.map(([id, label, Icon]) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => navigate(id)} className={tab === id ? 'active' : ''}><Icon /><span>{label}</span></button>)}</div></div>
+    <div className="cg-navigation"><div className="cg-tabs" role="tablist" aria-label="Seções do Controle de Gasto">{tabs.filter(([id]) => !mobile || (id !== 'settings' && id !== 'activity')).map(([id, label, Icon]) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => navigate(id)} className={tab === id ? 'active' : ''}><Icon /><span>{label}</span></button>)}</div></div>
     {error && !dialog && <p className="cg-alert" role="alert">{error}</p>}{notice && <p className="cg-notice" role="status"><Check /> {notice}</p>}{loading && <p className="cg-loading" role="status">Atualizando informações…</p>}
-    {tab === 'summary' && !detail && mobile && <ExpenseMobileSummary summary={summary} config={config} month={month} portraits={[<PersonPortrait key="one" kind="man" />, <PersonPortrait key="two" kind="woman" />, <PersonPortrait key="shared" kind="couple" />]} onInstitution={(id, selectedScope) => { setPerson(selectedScope === 'all' ? '' : selectedScope); goBank(id); }} onDebt={id => { void showDetail(id); setTab('debts'); }} />}
+    {tab === 'summary' && !detail && mobile && <ExpenseMobileSummary key={config.account_id + "-" + config.my_person_id} summary={summary} config={config} month={month} portraits={[<PersonPortrait key="one" kind="man" />, <PersonPortrait key="two" kind="woman" />, <PersonPortrait key="shared" kind="couple" />]} onInstitution={(id, selectedScope) => { setPerson(selectedScope === 'all' ? '' : selectedScope); goBank(id); }} onDebt={id => { void showDetail(id); setTab('debts'); }} />}
     {tab === 'summary' && !detail && !mobile && <>
       <div className="cg-section-heading"><div><span className="cg-eyebrow">SEU MÊS</span><h2>Visão geral do casal</h2><p>{monthLabel(month)} · {scopeSummary?.count || 0} cobranças nesta visão</p></div></div>
       <div className="cg-summary-scope cg-summary-filter" aria-label="Filtrar indicadores do resumo">{(['one', 'two', 'shared'] as const).map(value => <button key={value} aria-pressed={scope === value} onClick={() => setScope(value)}>{value === 'shared' ? 'Casal' : name(value === 'one' ? 1 : 2)}</button>)}</div>
@@ -178,7 +180,7 @@ function PeopleSettings({ config, busy, onSave }: { config: Configuration; busy:
 }
 
 function ExpenseDialog({ dialog, config, month, busy, error, onClose, onSave }: { dialog: Dialog; config: Configuration; month: string; busy: boolean; error: string; onClose: () => void; onSave: (path: string, method: string, data: unknown) => Promise<boolean> }) {
-  const requestKey = useRef(crypto.randomUUID());
+  const requestKey = useRef(expenseRequestId());
   const [cardFile, setCardFile] = useState<File | null>(null);
   const [pendingCrop, setPendingCrop] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -246,7 +248,7 @@ type InstitutionPlan = { balance_cents: number; remaining_cents: number; preview
 function InstitutionPayment({ bank, month, config, initialTarget, busy, saveError, onClose, onSave }: { bank: number; month: string; config: Configuration; initialTarget: string; busy: boolean; saveError: string; onClose: () => void; onSave: (data: unknown) => Promise<boolean> }) {
   const [target, setTarget] = useState(initialTarget), [value, setValue] = useState(''), [mode, setMode] = useState('partial'), [occurred, setOccurred] = useState(today()), [notes, setNotes] = useState('');
   const [balance, setBalance] = useState<number>(), [plan, setPlan] = useState<InstitutionPlan>(), [error, setError] = useState(''), [loading, setLoading] = useState(false);
-  const key = useRef(crypto.randomUUID());
+  const key = useRef(expenseRequestId());
   useEffect(() => {
     const controller = new AbortController(); setBalance(undefined); setPlan(undefined); setError('');
     void api<InstitutionPlan>('/institution-payments', 'POST', { institution_id: bank, month, target, amount_cents: 0, preview: true }, controller.signal).then(result => { if (!controller.signal.aborted) setBalance(result.balance_cents); }).catch((e: any) => { if (!controller.signal.aborted) setError(e.message); });
@@ -270,9 +272,9 @@ function InstitutionPayment({ bank, month, config, initialTarget, busy, saveErro
 type PurchasePlan = { name: string; responsibility: string; total_cents: number; one_cents: number; two_cents: number; items: Installment[]; preview_hash: string };
 function PurchaseSettlement({ bank, busy, saveError, onClose, onSave }: { bank: number; busy: boolean; saveError: string; onClose: () => void; onSave: (id: number, data: unknown) => Promise<boolean> }) {
   const [purchases, setPurchases] = useState<Debt[]>([]), [search, setSearch] = useState(''), [page, setPage] = useState(1), [last, setLast] = useState(1), [selectedDebt, setSelectedDebt] = useState<number>(), [plan, setPlan] = useState<PurchasePlan>(), [loading, setLoading] = useState(false), [error, setError] = useState(''), [occurred, setOccurred] = useState(today());
-  const key = useRef(crypto.randomUUID());
+  const key = useRef(expenseRequestId());
   useEffect(() => { const controller = new AbortController(); setLoading(true); void api<Pager<Debt>>('/debts?institution=' + bank + '&status=active&sort=newest&page=' + page + '&q=' + encodeURIComponent(search), 'GET', undefined, controller.signal).then(r => { if (!controller.signal.aborted) { setPurchases(r.data.filter(d => d.recurrence !== 'monthly')); setLast(r.last_page); } }).catch((e: any) => { if (!controller.signal.aborted) setError(e.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); return () => controller.abort(); }, [bank, page, search]);
-  const choose = async (id: number) => { setLoading(true); setError(''); setPlan(undefined); try { setPlan(await api<PurchasePlan>('/debts/' + id + '/settlement', 'POST', { preview: true })); setSelectedDebt(id); key.current = crypto.randomUUID(); } catch (e: any) { setError(e.message); } finally { setLoading(false); } };
+  const choose = async (id: number) => { setLoading(true); setError(''); setPlan(undefined); try { setPlan(await api<PurchasePlan>('/debts/' + id + '/settlement', 'POST', { preview: true })); setSelectedDebt(id); key.current = expenseRequestId(); } catch (e: any) { setError(e.message); } finally { setLoading(false); } };
   return <OrderPopup theme="expense" title="Quitar compra" eyebrow="TODAS AS PARCELAS PENDENTES" description="Escolha uma compra para quitar o saldo inteiro, incluindo os próximos meses e as duas partes do casal." icon={Check} variant="budget" onClose={onClose} closeLabel="Fechar quitação da compra"><form className="cg-dialog cg-form" onSubmit={e => { e.preventDefault(); if (plan && selectedDebt) void onSave(selectedDebt, { request_key: key.current, preview_hash: plan.preview_hash, occurred_on: occurred }); }}><div className="cg-dialog-body">{(error || saveError) && <p role="alert">{error || saveError}</p>}
     {!plan ? <><label>Pesquisar compra<input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} /></label><div className="cg-institution-allocation">{purchases.map(d => <button type="button" className="cg-purchase-choice" disabled={loading} key={d.id} onClick={() => void choose(d.id)}><span><b>{d.name}</b><small>{d.installment_count} parcelas · {d.responsibility === 'shared' ? 'Casal' : 'Individual'}</small></span><strong>{money(d.remaining_cents)}</strong></button>)}{!loading && !purchases.length && <p>Nenhuma compra parcelada ou de pagamento único encontrada.</p>}</div><Pagination current={page} last={last} onChange={setPage} /></> : <><div className="cg-payment-preview"><span>{plan.name} · {plan.items.length} parcelas pendentes selecionadas</span><strong>{money(plan.total_cents)}</strong><small>{plan.responsibility === 'shared' ? 'Quitação integral das duas partes do casal.' : 'Quitação integral desta compra.'}</small></div><div className="cg-institution-allocation">{plan.items.map(i => <article key={i.id}><div><b>Parcela {i.number}</b><small>Vencimento {date(i.due_on)}</small></div><strong>{money(i.remaining_cents)}</strong></article>)}</div><label>Data da quitação<input required type="date" max={today()} value={occurred} onChange={e => setOccurred(e.target.value)} /></label><p className="cg-muted">Confirme somente depois de conferir as parcelas. A compra sairá de Gastos e permanecerá em Quitadas, com o histórico preservado.</p></>}
     </div><footer className="cg-dialog-footer"><button type="button" disabled={busy || loading} onClick={onClose}>Cancelar</button>{plan && <button type="button" disabled={busy} onClick={() => { setPlan(undefined); setSelectedDebt(undefined); }}>Escolher outra compra</button>}{plan && <button className="cg-primary" disabled={busy || loading || plan.total_cents <= 0}>{busy ? 'Salvando…' : 'Confirmar quitação da compra'}</button>}</footer></form></OrderPopup>;

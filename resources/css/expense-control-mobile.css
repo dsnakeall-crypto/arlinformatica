@@ -122,3 +122,8 @@ html[data-layout=mobile] .cg-popup-blue button { min-height:44px; }
 }
 @media(min-width:650px) { .cgm-institutions { grid-template-columns:repeat(2,minmax(0,1fr)); }.cgm-person>strong { font-size:20px; }.cgm-person-name b { font-size:16px; }.cgm-person>small,.cgm-person-paid { font-size:11px; }.cgm-person-paid b { font-size:14px; }.cg-mobile .cg-bank-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media(max-width:360px) { .cgm-person-name { flex-direction:column; align-items:flex-start; }.cgm-person>strong { font-size:12px; }.cgm-split b { font-size:10px; }.cgm-header-actions { gap:5px; }.cg-mobile .cg-create-action { padding:8px; font-size:12px; } }
+
+/* Six visible mobile sections; administrative settings/audit stay on Web/PC. */
+.cg-mobile .cg-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); overflow:visible; }
+.cg-mobile .cg-tabs button { min-width:0; display:flex; justify-content:center; gap:5px; padding:7px 5px; font-size:11px; }
+@media(min-width:650px) { .cg-mobile .cg-tabs { grid-template-columns:repeat(6,minmax(0,1fr)); } }

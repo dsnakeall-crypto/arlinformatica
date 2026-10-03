@@ -11,10 +11,11 @@ export default function ExpenseMobileSummary({ summary, config, month, portraits
   summary?: Summary; config: Configuration; month: string; portraits: ReactNode[];
   onInstitution: (id: number, scope: Scope) => void; onDebt: (id: number) => void;
 }) {
-  const [scope, setScope] = useState<Scope>('all');
+  const [scope, setScope] = useState<Scope>(() => Number(config.my_person_id) === 1 ? 'one' : Number(config.my_person_id) === 2 ? 'two' : 'all');
   const total = summary?.totals || {};
   const names = [config.people.find(p => p.id === 1)?.name || 'Allan', config.people.find(p => p.id === 2)?.name || 'Carol', 'Casal'];
   const today = new Date().toLocaleDateString('sv-SE');
+  const selectedTotals = scope === 'all' ? { original_cents: total.original_cents || 0, remaining_cents: total.remaining_cents || 0 } : summary?.views?.[scope] || { original_cents: 0, remaining_cents: 0 };
   const scopeName = scope === 'all' ? 'Todos' : names[scope === 'one' ? 0 : scope === 'two' ? 1 : 2];
   const due = (id: number, key: 'one' | 'two' | 'shared') => summary?.views?.[key].due_institutions?.find(i => i.id === id);
   const institutions = (summary?.institutions || []).map(i => {
@@ -26,9 +27,9 @@ export default function ExpenseMobileSummary({ summary, config, month, portraits
   const next = institutions.filter(i => i.dueOn && i.dueOn >= today).sort((a, b) => a.dueOn.localeCompare(b.dueOn))[0];
   return <section className="cg-mobile-summary" aria-label="Resumo financeiro mobile">
     <section className="cgm-total" aria-label="Total do mês">
-      <div><span><Wallet /> Falta pagar no mês</span><small>{month.split('-').reverse().join('/')}</small></div>
-      <strong>{money(total.remaining_cents)}</strong>
-      <dl><div><dt>Total original</dt><dd>{money(total.original_cents)}</dd></div><div><dt><Check /> Pago / abatido</dt><dd>{money((total.original_cents || 0) - (total.remaining_cents || 0))}</dd></div></dl>
+      <div><span><Wallet /> {scopeName} · falta pagar no mês</span><small>{month.split('-').reverse().join('/')}</small></div>
+      <strong>{money(selectedTotals.remaining_cents)}</strong>
+      <dl><div><dt>Total original</dt><dd>{money(selectedTotals.original_cents)}</dd></div><div><dt><Check /> Pago / abatido</dt><dd>{money(selectedTotals.original_cents - selectedTotals.remaining_cents)}</dd></div></dl>
     </section>
     <section aria-label="Resumo por responsável" className="cgm-people">{(['one', 'two', 'shared'] as const).map((key, index) => {
       const original = total[key + '_original_cents'] || 0, remaining = total[key + '_remaining_cents'] || 0;
