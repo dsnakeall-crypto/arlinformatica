@@ -117,3 +117,7 @@ Preservar acabamento azul claro, bordas arredondadas e sombras. Lista de institu
 
 ### Cabeçalho compacto — 03/10/2026
 Mês MM/AAAA com calendário e setas ao lado dos botões de criação, sem ocupar linha própria abaixo dos menus. Seletor de ano/doze meses em popover azul arredondado com sombra. Card da compra usa título/ações na mesma linha, faixa azul de totais com valores de 16px e preenchimento reduzido. Projeção inicia em Lista; Gastos mantém a preferência da conta neste navegador.
+
+
+### Pagamentos e vencimentos — 03/10/2026
+Padronizar TODOS os botões do Controle de Gasto com fundo azul claro 3D, inclusive popup, confirmar, excluir, fecho e calendário. Texto vermelho identifica ação principal/selecionada, sem fundo vermelho. Pagamentos usa cabeçalho de 18px, linhas compactas, valores de 12px e ícones menores. Resumo usa somente O que merece atenção, uma linha por instituição, total e vencimento; painel duplicado removido. Pagar fatura do mês mostra saldo imediato e escolha total/parcial; Quitar compra mostra todas as parcelas pendentes e confirmação integral das partes do casal.

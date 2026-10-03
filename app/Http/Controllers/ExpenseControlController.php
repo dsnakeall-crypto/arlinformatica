@@ -167,6 +167,7 @@ class ExpenseControlController extends Controller
             $rows = $items->filter(fn ($i) => $scope === 'shared' ? $i['responsibility'] === 'shared' : $i['share_'.$scope.'_cents'] > 0);
             $rows = $rows->map(fn ($i) => [...$i, 'scope_original' => $scope === 'shared' ? $i['amount_cents'] : $i['share_'.$scope.'_cents'], 'scope_paid' => $scope === 'shared' ? $i['paid_cents'] : $i['paid_'.$scope.'_cents'], 'remaining_cents' => $scope === 'shared' ? $i['remaining_cents'] : $i['remaining_'.$scope.'_cents']]);
             $views[$scope] = [
+                'due_institutions' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0)->groupBy('institution_id')->map(fn ($group) => ['id' => $group->first()['institution_id'], 'name' => $group->first()['institution_name'], 'due_on' => $group->min('due_on'), 'remaining_cents' => $group->sum('remaining_cents'), 'count' => $group->count()])->sortBy('due_on')->values(),
                 'original_cents' => $rows->sum('scope_original'), 'paid_cents' => $rows->sum('scope_paid'), 'remaining_cents' => $rows->sum('remaining_cents'), 'count' => $rows->count(),
                 'next_due' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(),
                 'overdue' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
@@ -330,9 +331,19 @@ class ExpenseControlController extends Controller
         return response()->json(['message' => 'Parcela atualizada.']);
     }
 
+    public function settlePurchase(Request $r, int $id, Audit $audit): JsonResponse
+    {
+        if ($r->boolean('preview')) {
+            return response()->json($this->control->purchasePlan($id));
+        }
+        $data = $r->validate(['request_key' => 'required|uuid', 'preview_hash' => 'required|string|size:64', 'occurred_on' => 'required|date_format:Y-m-d|before_or_equal:today', 'notes' => 'nullable|string|max:500']);
+
+        return response()->json($this->control->settlePurchase($r, $id, $data, $audit), 201);
+    }
+
     public function institutionPayment(Request $r, Audit $audit): JsonResponse
     {
-        $rules = ['institution_id' => 'required|integer|exists:cg_institutions,id', 'month' => 'required|date_format:Y-m', 'target' => 'required|in:one,two', 'amount_cents' => 'required|integer|min:1|max:100000000'];
+        $rules = ['institution_id' => 'required|integer|exists:cg_institutions,id', 'month' => 'required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12', 'target' => 'required|in:one,two', 'amount_cents' => $r->boolean('preview') ? 'required|integer|min:0|max:100000000' : 'required|integer|min:1|max:100000000'];
         if (! $r->boolean('preview')) {
             $rules += ['request_key' => 'required|uuid', 'preview_hash' => 'required|string|size:64', 'kind' => 'required|in:payment,advance', 'paid_by' => 'required|integer|in:1,2', 'occurred_on' => 'required|date_format:Y-m-d|before_or_equal:today', 'notes' => 'nullable|string|max:500'];
         }
@@ -426,7 +437,7 @@ class ExpenseControlController extends Controller
     {
         $month = $this->period($r);
 
-        return response()->json(DB::table('cg_entries as e')->join('cg_installments as i', 'i.id', '=', 'e.installment_id')->join('cg_debts as d', 'd.id', '=', 'i.debt_id')->join('cg_institutions as bank', 'bank.id', '=', 'd.institution_id')->where('i.month_on', $month->toDateString())->orderByDesc('e.id')->select('e.*', 'd.name', 'bank.name as institution_name', 'i.number', 'i.month_on')->paginate(20));
+        return response()->json(DB::table('cg_entries as e')->join('cg_installments as i', 'i.id', '=', 'e.installment_id')->join('cg_debts as d', 'd.id', '=', 'i.debt_id')->join('cg_institutions as bank', 'bank.id', '=', 'd.institution_id')->whereBetween('e.occurred_on', [$month->toDateString(), $month->endOfMonth()->toDateString()])->orderByDesc('e.id')->select('e.*', 'd.name', 'bank.name as institution_name', 'i.number', 'i.month_on')->paginate(20));
     }
 
     public function activity(): JsonResponse

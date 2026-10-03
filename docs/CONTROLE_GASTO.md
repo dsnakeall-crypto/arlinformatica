@@ -164,3 +164,20 @@ Card de identificação da compra compacto: título e ações na primeira linha,
 Regra de preferências: cada conta deve ter sua escolha visual isolada das outras. Em Gastos, Lista/Cards é salvo neste navegador por ID autenticado (`arl-cg-view-user-{id}`), preservado em recargas e novas sessões neste navegador; não sincroniza dispositivos. A chave global anterior deixa de ser utilizada. Projeção é exceção: sempre inicia em Lista ao entrar na seção, independentemente da escolha em Gastos; Cards vale somente para aquela visita à seção.
 
 Backup anterior à edição validado: C:\Users\Allan\ARL-backups\controle-gasto-calendario-20261003-025548 (código, alterações e histórico Git). Sem migração/publicação, sem chamadas à IA e sem alterações de dados financeiros reais.
+
+
+### Fatura mensal, quitação da compra e vencimentos agrupados — 03/10/2026
+
+Pagar fatura do mês mostra imediatamente o saldo pendente de Allan/Carol na instituição e no mês aberto (individual + sua parte do casal). Oferece Quitar minha parte ou Pagar parte da fatura, sem seletor de pagamento/antecipação na tela. Registra pagamento; preserva a outra pessoa e todos os outros meses. Mantém prévia por parcela antes da confirmação.
+
+Ao lado, Quitar compra permite pesquisar uma compra da instituição, independentemente do responsável/tipo filtrados. Ao escolher, seleciona todas as parcelas pendentes dessa compra, inclusive futuras e saldos parciais. Confirmação baixa integralmente as duas partes se for Casal; parcelas já pagas ficam fora. Operação identificada como antecipação no histórico, com créditos individuais exatos e identificação Pago pelo casal quando compartilhada. Transação, prévia protegida por hash, idempotência e auditoria; estorno existente preservado. Compras finitas quitadas saem de Gastos e aparecem em Quitadas. Despesas mensais sem término não são compras de parcelas finitas; continuam com seu fluxo de pagamento/encerramento próprio.
+
+Entrar pelo menu Gastos restaura busca vazia, responsável Todos, instituição Todas, tipo Todos, situação Ativas e ordem Mais recentes. Lista/Cards mantém a preferência da conta neste navegador. Abrir explicitamente instituição ou responsável por um atalho mantém o contexto solicitado por esse atalho.
+
+Resumo apresenta uma linha por instituição em O que merece atenção: total pendente do mês para a visão selecionada, quantidade de compras e vencimento. Compromissos do mês por instituição removido por duplicar a informação. Datas históricas não são reescritas: quando houver vencimentos diferentes no mesmo cartão/mês, a linha usa a primeira data ainda pendente.
+
+Painel Pagamentos compacto, com espaçamentos, cabeçalho, ícones, valores e ações menores. Todos os botões do módulo, inclusive popups, calendário, ações principais, exclusão e fecho, têm fundo azul; selecionados/principais indicados por texto/borda. A opção de tema é restrita aos popups do Controle de Gasto e não modifica as telas da OS.
+
+Backup verificado antes das alterações: C:\Users\Allan\ARL-backups\controle-gasto-quitar-compra-20261003-031600. Nenhuma migração, publicação ou chamada paga à IA. Testes em bancos separados: 283 PHP/2530 verificações, 32 MySQL/419 verificações, dez E2E; revisão final focada dos botões azuis e dos novos fluxos também aprovada. Build/TypeScript, lint e Pint.
+
+Pagamentos usa o mês da data do lançamento (occurred_on), incluindo todas as parcelas futuras antecipadas naquela data. A competência e o vencimento originais das parcelas permanecem preservados; Resumo/Projeção continuam usando o mês da parcela.

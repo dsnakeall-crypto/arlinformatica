@@ -487,3 +487,15 @@ Detalhes e limites em `docs/SEGURANCA_SESSAO_CSRF.md`.
 - [OK] Oito cenários E2E verificados (sete passaram na execução ampla; correção do carregamento da preferência e dois cenários focados passaram depois). Conferência visual desktop/mobile, 21 testes PHP/297 verificações, build/TypeScript e lint passaram.
 - [OK] Backup de código/alterações/histórico validado: C:\Users\Allan\ARL-backups\controle-gasto-calendario-20261003-025548. Nenhuma migração ou publicação.
 - [PENDENTE] Publicação e interface Mobile/Tablet completa continuam em etapa própria.
+
+
+## Fatura do mês e quitação da compra — 03/10/2026
+
+- [OK] Saldo imediato do responsável, pagamento integral/parcial somente no mês aberto, com prévia.
+- [OK] Quitar compra baixa todas as parcelas pendentes, inclusive futuras e as duas partes do casal; protege repetição/prévia alterada e preserva histórico.
+- [OK] Filtros de Gastos retornam ao padrão ao abrir pelo menu; Lista/Cards continua memorizado por conta neste navegador.
+- [OK] Resumo agrupa vencimentos por instituição e remove painel duplicado.
+- [OK] Pagamentos compacto e todos os botões do módulo azuis, inclusive popups; tema das telas de OS preservado.
+- [OK] 283 testes PHP/2530 verificações, 32 MySQL isolado/419 verificações e dez E2E passaram. Dois cenários de revisão final passaram depois da padronização azul. Build/TypeScript, lint e Pint aprovados.
+- [OK] Backup externo validado: C:\Users\Allan\ARL-backups\controle-gasto-quitar-compra-20261003-031600. Sem migração/publicação/dados financeiros reais alterados por testes.
+- [PENDENTE] Publicação e interface Mobile/Tablet completa continuam em etapa própria.

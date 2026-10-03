@@ -81,6 +81,47 @@ class ExpenseControlTest extends TestCase
         $this->assertSame(0, $plan['remaining_cents']);
     }
 
+    public function test_settling_purchase_pays_all_twelve_shared_installments_and_preserves_history(): void
+    {
+        $detail = $this->createDebt(['installment_count' => 12]);
+        $id = $detail['debt']['id'];
+        $this->postJson('/api/expense-control/operations', $this->payment([$detail['installments'][0]['id']], ['amount_cents' => 1000]))->assertCreated();
+        $plan = $this->postJson('/api/expense-control/debts/'.$id.'/settlement', ['preview' => true])->assertOk()->json();
+        $this->assertCount(12, $plan['items']);
+        $this->assertSame(119012, $plan['total_cents']);
+        $data = ['request_key' => (string) Str::uuid(), 'preview_hash' => $plan['preview_hash'], 'occurred_on' => '2026-10-02'];
+        $this->postJson('/api/expense-control/debts/'.$id.'/settlement', $data)->assertCreated()->assertJsonPath('replayed', false);
+        $this->postJson('/api/expense-control/debts/'.$id.'/settlement', $data)->assertCreated()->assertJsonPath('replayed', true);
+        $this->assertDatabaseCount('cg_entries', 13);
+        $this->getJson('/api/expense-control/advances?month=2026-10')->assertOk()->assertJsonPath('total', 13);
+        $this->getJson('/api/expense-control/advances?month=2026-11')->assertOk()->assertJsonPath('total', 0);
+        $this->assertSame(120012, (int) DB::table('cg_entries')->sum('amount_cents'));
+        $this->assertSame(60012, (int) DB::table('cg_entries')->sum('credit_one_cents'));
+        $this->assertSame(60000, (int) DB::table('cg_entries')->sum('credit_two_cents'));
+        $this->getJson('/api/expense-control/debts?status=active')->assertOk()->assertJsonPath('total', 0);
+        $this->getJson('/api/expense-control/debts?status=settled')->assertOk()->assertJsonPath('total', 1);
+        $this->getJson('/api/expense-control/summary?month=2026-11')->assertOk()->assertJsonPath('totals.remaining_cents', 0);
+        $this->postJson('/api/expense-control/debts/'.$id.'/settlement', [...$data, 'request_key' => (string) Str::uuid()])->assertConflict();
+        $entry = DB::table('cg_entries')->where('kind', 'advance')->first()->id;
+        $this->postJson('/api/expense-control/entries/'.$entry.'/reverse', ['reason' => 'Correção de teste'])->assertOk();
+        $this->getJson('/api/expense-control/debts?status=active')->assertOk()->assertJsonPath('total', 1);
+        $this->assertDatabaseCount('cg_entries', 13);
+    }
+
+    public function test_month_balance_preview_and_due_summary_group_by_institution(): void
+    {
+        $this->createDebt(['amount_cents' => 10000]);
+        $this->createDebt(['responsibility' => 'one', 'amount_cents' => 20000]);
+        $this->postJson('/api/expense-control/institution-payments', ['institution_id' => $this->bank, 'month' => '2026-10', 'target' => 'one', 'amount_cents' => 0, 'preview' => true])->assertOk()->assertJsonPath('balance_cents', 25000);
+        $summary = $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk()->json();
+        $this->assertCount(1, $summary['views']['one']['due_institutions']);
+        $this->assertSame(25000, $summary['views']['one']['due_institutions'][0]['remaining_cents']);
+        $this->assertSame(2, $summary['views']['one']['due_institutions'][0]['count']);
+        $this->assertSame('2026-10-31', $summary['views']['one']['due_institutions'][0]['due_on']);
+        $monthly = $this->createDebt(['recurrence' => 'monthly']);
+        $this->postJson('/api/expense-control/debts/'.$monthly['debt']['id'].'/settlement', ['preview' => true])->assertUnprocessable();
+    }
+
     public function test_migration_starts_without_financial_data_or_changes_to_business_records(): void
     {
         $this->assertDatabaseCount('cg_debts', 0);

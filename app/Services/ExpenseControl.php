@@ -213,6 +213,47 @@ class ExpenseControl
         }, 3);
     }
 
+    public function purchasePlan(int $id): array
+    {
+        $debt = DB::table('cg_debts')->find($id);
+        abort_unless($debt, 404);
+        abort_if($debt->cancelled_at || $debt->recurrence === 'monthly', 422, 'Selecione uma compra com parcelas definidas e não cancelada.');
+        $items = $this->installments()->where('d.id', $id)->orderBy('i.number')->get()->map(fn ($i) => $this->figures($i))->filter(fn ($i) => $i['remaining_cents'] > 0)->values();
+
+        return ['name' => $debt->name, 'responsibility' => $debt->responsibility, 'total_cents' => $items->sum('remaining_cents'), 'one_cents' => $items->sum('remaining_one_cents'), 'two_cents' => $items->sum('remaining_two_cents'), 'items' => $items,
+            'preview_hash' => hash('sha256', json_encode($items->map(fn ($i) => [$i['id'], $i['remaining_one_cents'], $i['remaining_two_cents']])->all()))];
+    }
+
+    public function settlePurchase(Request $request, int $id, array $data, Audit $audit): array
+    {
+        return DB::transaction(function () use ($request, $id, $data, $audit) {
+            DB::table('users')->where('id', $request->user()->id)->lockForUpdate()->first();
+            $hash = hash('sha256', json_encode(['debt_id' => $id, ...$data]));
+            $old = DB::table('cg_operations')->where('request_key', $data['request_key'])->first();
+            if ($old) {
+                abort_unless($old->created_by === $request->user()->id && hash_equals($old->payload_hash, $hash), 409, 'Solicitação já utilizada com outros dados.');
+
+                return ['id' => $old->id, 'replayed' => true];
+            }
+            DB::table('cg_debts')->where('id', $id)->lockForUpdate()->first();
+            DB::table('cg_installments')->where('debt_id', $id)->orderBy('id')->lockForUpdate()->get();
+            $plan = $this->purchasePlan($id);
+            abort_unless(hash_equals($plan['preview_hash'], $data['preview_hash']), 409, 'As parcelas mudaram. Confira a compra novamente.');
+            abort_if($plan['total_cents'] <= 0, 422, 'Esta compra já está quitada.');
+            $operation = DB::table('cg_operations')->insertGetId(['request_key' => $data['request_key'], 'payload_hash' => $hash, 'created_by' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
+            foreach ($plan['items'] as $i) {
+                DB::table('cg_entries')->insert(['operation_id' => $operation, 'installment_id' => $i['id'], 'kind' => 'advance', 'paid_by' => match ($plan['responsibility']) {
+                    'one' => 1, 'two' => 2, default => null
+                },
+                    'occurred_on' => $data['occurred_on'], 'amount_cents' => $i['remaining_cents'], 'credit_one_cents' => $i['remaining_one_cents'], 'credit_two_cents' => $i['remaining_two_cents'],
+                    'notes' => 'Quitação integral da compra · '.($data['notes'] ?? ''), 'created_at' => now(), 'updated_at' => now()]);
+            }
+            $audit->record($request, 'expense_control.operation_created', 'expense_control', $operation, null, ['debt_id' => $id, 'total_cents' => $plan['total_cents'], ...$data]);
+
+            return ['id' => $operation, 'replayed' => false];
+        }, 3);
+    }
+
     public function record(Request $request, array $data, Audit $audit): array
     {
         return DB::transaction(function () use ($request, $data, $audit) {

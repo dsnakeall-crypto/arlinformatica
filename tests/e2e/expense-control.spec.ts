@@ -212,8 +212,8 @@ test('controle: pagamento da instituição simula distribuição e confirma sem 
   await page.goto('/expense-control');
   await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
   await page.locator('.cg-institution').filter({ hasText: catalog.institution.name }).click();
-  await page.getByRole('button', { name: 'Pagar valor da fatura', exact: true }).click();
-  const modal = page.getByRole('dialog', { name: 'Pagar valor da fatura', exact: true });
+  await page.getByRole('button', { name: 'Pagar fatura do mês', exact: true }).click();
+  const modal = page.getByRole('dialog', { name: 'Pagar fatura do mês', exact: true });
   await modal.getByLabel('Valor do pagamento (R$)').fill('80000');
   await modal.getByRole('button', { name: 'Simular distribuição' }).click();
   await expect(modal.locator('.cg-institution-allocation article')).toHaveCount(2);
@@ -270,4 +270,71 @@ test('controle: Gastos memoriza lista/cards separadamente por conta neste navega
   await page.goto('/expense-control');
   await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Lista', exact: true })).toHaveAttribute('aria-pressed', 'true');
+});
+
+
+test('controle: fatura paga somente o mês e quitar compra liquida todas as parcelas do casal', async ({ page }) => {
+  await login(page);
+  const catalog = await catalogs(page, 'quitacao-' + Date.now());
+  const month = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+  const r = await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: catalog.institution.id, type_id: catalog.type.id, name: 'Compra casal doze', recurrence: 'installments', responsibility: 'shared', percent_one: 50, amount_cents: 10000, installment_count: 12, first_number: 1, start_month: month, due_day: 12, notes: null });
+  expect(r.status).toBe(201);
+  await page.goto('/expense-control');
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await page.locator('.cg-institution').filter({ hasText: catalog.institution.name }).click();
+  await page.getByRole('button', { name: 'Pagar fatura do mês', exact: true }).click();
+  const monthly = page.getByRole('dialog', { name: 'Pagar fatura do mês', exact: true });
+  await expect(monthly.locator('.cg-payment-preview strong')).toHaveText('R$ 50,00');
+  await expect(monthly.getByLabel('Tipo de lançamento')).toHaveCount(0);
+  expect(await page.locator('.cg-popup-blue button').evaluateAll(buttons => buttons.every(button => { const background = getComputedStyle(button).backgroundImage; return background.includes('rgb(241, 247, 255)') || background.includes('rgb(230, 240, 255)'); }))).toBe(true);
+  await page.screenshot({ path: 'output/controle-gasto/fatura-do-mes.png', fullPage: true });
+  await monthly.getByRole('button', { name: /Quitar minha parte/ }).click();
+  await monthly.getByRole('button', { name: 'Simular distribuição' }).click();
+  await monthly.getByRole('button', { name: 'Confirmar pagamento da fatura' }).click();
+  await expect(monthly).not.toBeVisible();
+  let detail = await api(page, '/expense-control/debts/' + r.body.debt.id);
+  expect(detail.body.installments[0].remaining_cents).toBe(5000);
+  expect(detail.body.installments[1].remaining_cents).toBe(10000);
+  await page.getByRole('button', { name: 'Quitar compra', exact: true }).click();
+  const modal = page.getByRole('dialog', { name: 'Quitar compra', exact: true });
+  await modal.getByRole('button', { name: /Compra casal doze/ }).click();
+  await expect(modal.locator('.cg-institution-allocation article')).toHaveCount(12);
+  await expect(modal.locator('.cg-payment-preview')).toContainText('1.150,00');
+  await page.screenshot({ path: 'output/controle-gasto/quitar-compra.png', fullPage: true });
+  await modal.getByRole('button', { name: 'Confirmar quitação da compra' }).click();
+  await expect(modal).not.toBeVisible();
+  detail = await api(page, '/expense-control/debts/' + r.body.debt.id);
+  expect(detail.body.installments.every((i: any) => i.remaining_cents === 0)).toBe(true);
+  await page.getByRole('tab', { name: 'Pagamentos', exact: true }).click();
+  await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
+  await expect(page.locator('.cg-payments-panel .cg-entry')).toHaveCount(13);
+  await page.screenshot({ path: 'output/controle-gasto/pagamentos-compactos.png', fullPage: true });
+  await page.getByRole('tab', { name: 'Quitadas', exact: true }).click();
+  await page.getByLabel('Pesquisar compra ou instituição').fill('Compra casal doze');
+  await expect(page.locator('.cg-debt-row')).toHaveCount(1);
+});
+
+test('controle: voltar ao menu Gastos restaura filtros e resumo agrupa vencimentos por instituição', async ({ page }) => {
+  await login(page);
+  const catalog = await catalogs(page, 'vencimento-' + Date.now());
+  const month = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+  for (let n = 0; n < 3; n++) {
+    expect((await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: catalog.institution.id, type_id: catalog.type.id, name: 'Vencimento junto ' + n, recurrence: 'once', responsibility: 'shared', percent_one: 50, amount_cents: 10000, installment_count: 1, first_number: 1, start_month: month, due_day: 12, notes: null })).status).toBe(201);
+  }
+  await page.goto('/expense-control');
+  const bankRow = page.locator('.cg-attention-panel .cg-due-row').filter({ hasText: catalog.institution.name });
+  await expect(bankRow).toHaveCount(1);
+  await expect(bankRow).toContainText('300,00');
+  await expect(bankRow).toContainText('3 compras');
+  await page.screenshot({ path: 'output/controle-gasto/vencimentos-instituicao.png', fullPage: true });
+  await expect(page.getByRole('heading', { name: 'Compromissos do mês' })).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await page.getByLabel('Filtrar por responsável', { exact: true }).selectOption('one');
+  await page.locator('.cg-filters select').nth(3).selectOption('cancelled');
+  await page.locator('.cg-filters select').nth(4).selectOption('oldest');
+  await page.getByLabel('Pesquisar compra ou instituição').fill('teste');
+  await page.getByRole('tab', { name: 'Resumo', exact: true }).click();
+  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  for (const [index, value] of ['', '', '', 'active', 'newest'].entries()) await expect(page.locator('.cg-filters select').nth(index)).toHaveValue(value);
+  await expect(page.getByLabel('Pesquisar compra ou instituição')).toHaveValue('');
 });
