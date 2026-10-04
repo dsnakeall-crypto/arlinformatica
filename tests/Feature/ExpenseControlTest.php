@@ -53,6 +53,69 @@ class ExpenseControlTest extends TestCase
         return [...['request_key' => (string) Str::uuid(), 'installment_ids' => $ids, 'kind' => 'payment', 'target' => 'one', 'paid_by' => 1, 'occurred_on' => '2026-10-02', 'amount_cents' => null, 'notes' => null], ...$extra];
     }
 
+    public function test_spending_history_preserves_original_shares_and_separates_advances(): void
+    {
+        $shared = $this->createDebt(['amount_cents' => 10001, 'installment_count' => 2]);
+        $this->createDebt(['responsibility' => 'one', 'amount_cents' => 20000, 'recurrence' => 'once', 'installment_count' => 1]);
+        $this->createDebt(['responsibility' => 'two', 'amount_cents' => 30000, 'recurrence' => 'once', 'installment_count' => 1]);
+        $cancelled = $this->createDebt(['amount_cents' => 99999]);
+        $this->postJson('/api/expense-control/debts/'.$cancelled['debt']['id'].'/cancel', ['reason' => 'Cadastro de teste incorreto', 'confirmed' => true])->assertOk();
+        $id = $shared['installments'][1]['id'];
+        $this->postJson('/api/expense-control/operations', $this->payment([$id], ['kind' => 'advance']))->assertCreated();
+        $before = DB::table('cg_installments')->count();
+        $url = '/api/expense-control/spending-history?start=2026-10&end=2026-12';
+        $one = $this->getJson($url.'&person=one')->assertOk()->json();
+        $this->assertSame([25001, 5001, 0], array_column($one['months'], 'amount_cents'));
+        $this->assertSame(30002, $one['total_cents']);
+        $this->assertSame(5001, $one['advance_cents']);
+        $this->assertSame('2026-10', $one['highest']['month']);
+        $this->assertSame('2026-12', $one['lowest']['month']);
+        $this->assertSame(-80, $one['months'][1]['change_percent']);
+        $two = $this->getJson($url.'&person=two')->assertOk()->json();
+        $all = $this->getJson($url)->assertOk()->json();
+        $sharedReport = $this->getJson($url.'&person=shared')->assertOk()->json();
+        $this->assertSame(60001, $all['months'][0]['amount_cents']);
+        $this->assertSame($all['total_cents'], $one['total_cents'] + $two['total_cents']);
+        $this->assertSame(20002, $sharedReport['total_cents']);
+        $this->assertSame('2026-10', $sharedReport['highest']['month']);
+        $entry = DB::table('cg_entries')->where('installment_id', $id)->value('id');
+        $this->postJson('/api/expense-control/entries/'.$entry.'/reverse', ['reason' => 'Teste de estorno'])->assertOk();
+        $this->getJson($url.'&person=one')->assertOk()->assertJsonPath('advance_cents', 0)->assertJsonPath('total_cents', 30002);
+        $this->assertSame($before, DB::table('cg_installments')->count());
+    }
+
+    public function test_spending_history_recurring_preview_is_read_only_and_respects_overrides_and_end(): void
+    {
+        $debt = $this->createDebt(['recurrence' => 'monthly', 'amount_cents' => 10000, 'installment_count' => 1]);
+        DB::table('cg_installments')->where('debt_id', $debt['debt']['id'])->update(['amount_cents' => 20000, 'share_one_cents' => 10000, 'share_two_cents' => 10000]);
+        DB::table('cg_debts')->where('id', $debt['debt']['id'])->update(['ended_on' => '2026-11-01']);
+        $before = DB::table('cg_installments')->count();
+        $report = $this->getJson('/api/expense-control/spending-history?start=2026-09&end=2026-12&person=one')->assertOk()->json();
+        $this->assertSame([0, 10000, 5000, 0], array_column($report['months'], 'amount_cents'));
+        $this->assertSame($before, DB::table('cg_installments')->count());
+        $this->getJson('/api/expense-control/spending-history?start=2026-12&end=2026-10')->assertUnprocessable();
+        $this->getJson('/api/expense-control/spending-history?start=2000-01&end=2099-12')->assertUnprocessable();
+        $this->getJson('/api/expense-control/spending-history?start=2026-10&end=2026-12&person=invalid')->assertUnprocessable();
+        $this->getJson('/api/expense-control/spending-history?start=2026-13&end=2026-12')->assertUnprocessable();
+        $this->getJson('/api/expense-control/spending-history?start=2025-01&end=2025-02')->assertOk()->assertJsonPath('highest', null)->assertJsonPath('lowest', null);
+        $this->actingAs($this->account('Usuário local'))->getJson('/api/expense-control/spending-history?start=2026-10&end=2026-12')->assertForbidden();
+    }
+
+    public function test_settled_purchase_lists_actual_payers_without_counting_discounts_or_reversals(): void
+    {
+        $debt = $this->createDebt(['recurrence' => 'once', 'installment_count' => 1, 'responsibility' => 'one', 'amount_cents' => 10000]);
+        $id = $debt['installments'][0]['id'];
+        $first = $this->postJson('/api/expense-control/operations', $this->payment([$id], ['paid_by' => 1, 'amount_cents' => 1000]))->assertCreated()->json();
+        $entry = DB::table('cg_entries')->where('operation_id', $first['id'])->value('id');
+        $this->postJson('/api/expense-control/entries/'.$entry.'/reverse', ['reason' => 'Correção de teste'])->assertOk();
+        $this->postJson('/api/expense-control/operations', $this->payment([$id], ['paid_by' => 2, 'amount_cents' => 8000]))->assertCreated();
+        $this->postJson('/api/expense-control/operations', $this->payment([$id], ['kind' => 'discount', 'paid_by' => null]))->assertCreated();
+        $row = $this->getJson('/api/expense-control/debts?status=settled&month=2026-10')->assertOk()->json('data.0');
+        $this->assertSame(8000, (int) $row['paid_cents']);
+        $this->assertSame(2000, (int) $row['discount_cents']);
+        $this->assertSame([['paid_by' => 2, 'amount_cents' => 8000]], $row['payers']);
+    }
+
     public function test_catalog_deletion_requires_confirmation_and_preserves_settled_history(): void
     {
         $url = '/api/expense-control/catalogs/';

@@ -352,3 +352,27 @@
 .cg-type-actions { display: inline-flex; align-items: center; gap: 4px; }
 
 .arl-3d-popup:has(.cg-catalog-delete) { max-width: 680px; }
+.cg-projection-sections { display:flex; gap:7px; margin:0 0 15px; flex-wrap:wrap; }
+.cg-projection-sections button { font-size:12px; padding:8px 12px; }
+.cg-projection-sections button[aria-pressed=true] { color:#bd1239!important; border-color:#d4a7b6!important; }
+.cg-history-filters { display:grid; grid-template-columns:1fr 1fr 1fr auto; align-items:end; gap:12px; }
+.cg-history-filters label { display:grid; gap:6px; font-size:12px; font-weight:650; color:#334f70; }
+.cg-history-filters input,.cg-history-filters select { min-width:0; width:100%; border:1px solid #b4c9e6; border-radius:10px; background:#f8fbff; padding:9px; color:#223b60; }
+.cg-history-note { font-size:11px; line-height:1.6; color:#526d8b; margin:10px 0 16px; }
+.cg-history-caption { display:flex; gap:12px; align-items:center; margin:16px 0 10px; font-size:13px; color:#36587a; }
+.cg-history-totals { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
+.cg-history-totals .cg-panel { padding:13px; margin:0; display:grid; gap:7px; }
+.cg-history-totals span { display:flex; gap:5px; align-items:center; font-size:11px; color:#496789; }
+.cg-history-totals svg { width:14px; height:14px; }
+.cg-history-totals strong { font-size:19px; color:#1c3b60; overflow-wrap:anywhere; }
+.cg-history-totals small { font-size:10px; color:#57708b; }
+.cg-history-chart-heading { display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+.cg-history-chart-heading svg { width:18px; color:#c01743; }
+.cg-history-chart-heading h3 { margin:0; font-size:15px; }
+.cg-history-month { display:grid; grid-template-columns:65px minmax(0,1fr) 130px; gap:6px 12px; align-items:center; margin:14px 0; font-size:12px; }
+.cg-history-month>strong { text-align:right; font-size:12px; }
+.cg-history-month>small { grid-column:2/-1; font-size:10px; color:#506a8b; }
+.cg-history-track { height:14px; background:#dce8f9; border-radius:6px; overflow:hidden; box-shadow:inset 0 1px 2px #34558018; }
+.cg-history-track>span { height:100%; display:block; border-radius:6px; background:linear-gradient(90deg,#507aba,#86aad9); }
+.cg-settled-payers { white-space:normal; line-height:1.5; }
+@media(max-width:600px) { .cg-history-filters { grid-template-columns:1fr 1fr; }.cg-history-filters label:first-child { grid-column:1/-1; }.cg-history-filters input,.cg-history-filters select { font-size:16px; min-height:44px; }.cg-history-totals { grid-template-columns:1fr 1fr; }.cg-history-totals strong { font-size:16px; }.cg-history-month { grid-template-columns:55px minmax(0,1fr) 96px; gap:5px 7px; font-size:11px; }.cg-history-month>strong { font-size:11px; } }

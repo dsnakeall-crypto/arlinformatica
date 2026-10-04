@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/catalogs/{catalog}/{id}', [ExpenseControlController::class, 'deleteCatalog'])->whereNumber('id');
         Route::get('/summary', [ExpenseControlController::class, 'summary']);
         Route::get('/projection', [ExpenseControlController::class, 'projection']);
+        Route::get('/spending-history', [ExpenseControlController::class, 'spendingHistory']);
         Route::get('/advances', [ExpenseControlController::class, 'advances']);
         Route::get('/activity', [ExpenseControlController::class, 'activity']);
         Route::get('/debts', [ExpenseControlController::class, 'debts']);

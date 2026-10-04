@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\Audit;
 use App\Services\ExpenseCardImage;
 use App\Services\ExpenseControl;
+use App\Services\ExpenseSpendingHistory;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,20 @@ class ExpenseControlController extends Controller
         $r->validate(['month' => ['nullable', 'date_format:Y-m', 'after_or_equal:2000-01', 'before_or_equal:2099-12']]);
 
         return $this->control->month($r->query('month', today()->format('Y-m')));
+    }
+
+    public function spendingHistory(Request $r, ExpenseSpendingHistory $history): JsonResponse
+    {
+        $data = $r->validate([
+            'start' => 'required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12',
+            'end' => 'required|date_format:Y-m|after_or_equal:start|before_or_equal:2099-12',
+            'person' => 'nullable|in:all,one,two,shared',
+        ]);
+        $start = $this->control->month($data['start']);
+        $end = $this->control->month($data['end']);
+        abort_if($start->diffInMonths($end) >= 120, 422, 'Selecione um período de até 120 meses.');
+
+        return response()->json($history->report($start, $end, $data['person'] ?? 'all', $this->control));
     }
 
     public function configuration(Request $r): JsonResponse
@@ -263,7 +278,18 @@ class ExpenseControlController extends Controller
         $counts = (clone $q)->reorder()->select('d.institution_id', 'd.type_id')->selectRaw('COUNT(*) AS debt_count')->groupBy('d.institution_id', 'd.type_id')->get()
             ->map(fn ($row) => ['institution_id' => (int) $row->institution_id, 'type_id' => (int) $row->type_id, 'count' => (int) $row->debt_count]);
 
-        return response()->json([...$q->paginate(20)->toArray(), 'catalog_counts' => $counts]);
+        $result = $q->paginate(20);
+        if ($status === 'settled') {
+            $payers = DB::table('cg_entries as e')->join('cg_installments as i', 'i.id', '=', 'e.installment_id')
+                ->whereIn('i.debt_id', $result->getCollection()->pluck('id'))->whereNull('e.reversed_at')
+                ->whereIn('e.kind', ['payment', 'advance'])->select('i.debt_id', 'e.paid_by')
+                ->selectRaw('SUM(e.amount_cents) as amount_cents')->groupBy('i.debt_id', 'e.paid_by')->get()->groupBy('debt_id');
+            $result->getCollection()->each(function ($row) use ($payers) {
+                $row->payers = ($payers[$row->id] ?? collect())->map(fn ($payer) => ['paid_by' => $payer->paid_by, 'amount_cents' => (int) $payer->amount_cents])->values();
+            });
+        }
+
+        return response()->json([...$result->toArray(), 'catalog_counts' => $counts]);
     }
 
     public function show(int $id): JsonResponse

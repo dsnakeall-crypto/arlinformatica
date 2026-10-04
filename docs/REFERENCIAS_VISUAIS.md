@@ -161,3 +161,6 @@ Validação: oito tamanhos de viewport no mesmo navegador, onze telas carregadas
 
 ### Etiqueta da OS — 04/10/2026
 Botão Imprimir Etiqueta na linha Entrada/Saída/Atendimento, ao lado de Senha do usuário, com o mesmo estilo discreto. Popup branco compacto (até 440px), nome editável, prévia em papel branco sobre fundo azul suave; etiqueta física 40 × 20 mm. Só nome, separador tracejado, OS e ARL Informática pequena são impressos. Cabeçalho e ações acessíveis no desktop/mobile. Capturas: output/etiquetas/popup-desktop.png e popup-mobile.png.
+### Controle de Gasto: No Mobile.docx — 04/10/2026
+
+Lista mobile apresenta apenas nomes/vencimento; ao abrir a instituição, tipos com contagens aparecem em linhas compactas. Imagens de cartão permanecem em Cards. Filtros recolhidos atrás de Pesquisar e filtrar. Instituições: três botões iguais, acesso aos gastos com ícone de dinheiro. Projeção: Ver mês abaixo da divisão, sem sobrepor valores. Histórico mensal com formulários legíveis, painéis azuis compactos e gráfico de barras por mês; Quitadas mostra pagador junto da identificação da compra. Capturas: output/controle-gasto/mobile-lista-compacta.png, mobile-instituicoes-icones.png, mobile-projecao-corrigida.png, mobile-historico-gastos.png e historico-desktop.png. Regras limitadas ao mobile, exceto funcionalidades de histórico/pagador disponíveis nas duas interfaces.

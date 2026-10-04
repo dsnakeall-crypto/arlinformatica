@@ -655,3 +655,13 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Teste E2E de etiqueta aprovado em desktop/mobile, com medida física, impressão interceptada, ajuste de nome longo e preservação do cadastro; regressão da senha aprovada. 19 testes frontend, lint e TypeScript/build aprovados. Capturas revisadas em output/etiquetas.
 - [OK] Backup externo de 1.945 arquivos/alterações/Git verificado em C:/Users/Allan/ARL-backups/etiqueta-os-20261004-015749. Sem migração, mudança de dados de uso ou publicação.
 - [PENDENTE] Impressão física na B21S: selecionar papel 40 × 20 mm, escala 100%, sem cabeçalho/rodapé; conferir orientação e margens do driver.
+## Controle de Gasto: No Mobile.docx — 04/10/2026
+
+- [OK] Projeção futura/Historico de gastos: filtros de responsável/período, gráfico mensal, total, maior/menor mês e comparação; parcelas originais e antecipações separadas conforme regra aceita pelo proprietário.
+- [OK] Consulta autenticada com validação de período até 120 meses; recorrências ainda não geradas calculadas sem gravação, valores editados e histórico financeiro preservados.
+- [OK] Quitadas compacta por compra, com instituição, nome, valor pago e pagadores; estornos/descontos excluídos do dinheiro pago.
+- [OK] Mobile: filtros recolhidos, Lista só com nomes/vencimento, tipos compactos ao abrir instituição, ícone de dinheiro igual a editar/excluir e Projeção sem sobreposição de Ver mês.
+- [OK] Regras desktop e preferência Lista/Cards por conta preservadas; filtros de Gastos voltam ao padrão ao entrar e Projeção inicia em Lista.
+- [OK] 31 testes / 473 verificações em SQLite e MySQL descartável, 19 testes frontend, lint, TypeScript/build e Pint; 18 cenários distintos de navegador aprovados, com reteste final dos dois novos fluxos após compactação da lista. Capturas desktop/mobile revisadas; histórico sem overflow horizontal em 320px.
+- [OK] Backup externo de 1.954 arquivos, alterações locais e Git verificado em C:/Users/Allan/ARL-backups/gastos-mobile-historico-20261004-021521. Sem migração, alteração de dados de uso ou publicação.
+- [PENDENTE] Homologação pelo proprietário no celular físico e publicação com backup do servidor, conforme fluxo geral do projeto.
