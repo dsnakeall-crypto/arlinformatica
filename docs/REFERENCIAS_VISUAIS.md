@@ -175,3 +175,7 @@ Instituição e valor na mesma linha, separados por dois-pontos; vencimento abai
 ### Gastos mobile somente em lista — 04/10/2026
 
 Substitui a alternância Cards/Lista e os filtros recolhidos somente em Gastos mobile. Instituições e tipos usam linhas azuis compactas: título à esquerda, legenda menor abaixo e seta à direita. Tipos preservam contagens e categorias personalizadas; ações financeiras abaixo. Botões explícitos para voltar às instituições e aos tipos. Web/PC, Quitadas e Projeção preservados. Captura conferida: output/controle-gasto/mobile-tipos-em-lista.png. Backup externo de arquivos, alterações e Git verificado: C:/Users/Allan/ARL-backups/gastos-mobile-lista-20261004-030248.
+
+### Projeção mobile: divisão em linhas — 04/10/2026
+
+Mês e total preservados no topo. Responsáveis e Casal empilhados, com retratos de homem/mulher/casal, valor à direita e linha divisória entre as três linhas. Primeiro responsável em verde, segundo em preto, Casal em amarelo escuro para contraste no azul. Nomes continuam configuráveis. Aplica-se à Projeção futura mobile em Lista e Cards; desktop e cálculos preservados. Backup externo verificado: C:/Users/Allan/ARL-backups/projecao-mobile-linhas-20261004-030841. Captura: output/controle-gasto/mobile-projecao-corrigida.png.

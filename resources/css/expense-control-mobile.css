@@ -162,10 +162,17 @@ html[data-layout=mobile] .cg-popup-blue button { min-height:44px; }
 .cg-mobile .cg-projection-list>.cg-panel>.cg-eyebrow { grid-column:1; grid-row:1; }
 .cg-mobile .cg-projection-list>.cg-panel>strong { grid-column:2; grid-row:1; text-align:right; }
 .cg-mobile .cg-projection-list>.cg-panel>p { grid-column:1/-1; grid-row:2; margin:0; }
-.cg-mobile .cg-projection-list>.cg-panel>dl { grid-column:1/-1; grid-row:3; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0; }
-.cg-mobile .cg-projection-list>.cg-panel>dl>div { min-width:0; display:block; padding:5px 0; }
-.cg-mobile .cg-projection-list>.cg-panel>dl dt { font-size:9px; }
-.cg-mobile .cg-projection-list>.cg-panel>dl dd { font-size:12px; margin:3px 0 0; overflow-wrap:anywhere; }
+.cg-mobile .cg-projection-grid>.cg-panel>dl { display:grid; grid-template-columns:1fr; gap:0; margin:0; }
+.cg-mobile .cg-projection-list>.cg-panel>dl { grid-column:1/-1; grid-row:3; }
+.cg-mobile .cg-projection-grid>.cg-panel>dl>div { min-width:0; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:5px 0; border-bottom:1px solid #c4d6ed; }
+.cg-mobile .cg-projection-grid>.cg-panel>dl>div:last-child { border-bottom:0; }
+.cg-mobile .cg-projection-grid>.cg-panel>dl dt { display:flex; align-items:center; gap:6px; font-size:11px; min-width:0; overflow-wrap:anywhere; }
+.cg-mobile .cg-projection-grid>.cg-panel>dl dd { font-size:12px; margin:0; text-align:right; white-space:nowrap; }
+.cg-mobile .cg-projection-grid .cg-person-portrait { width:22px; height:22px; flex:0 0 22px; }
+.cg-mobile .cg-projection-grid>.cg-panel>dl>div:nth-child(1) { color:#08733e; }
+.cg-mobile .cg-projection-grid>.cg-panel>dl>div:nth-child(2) { color:#151515; }
+.cg-mobile .cg-projection-grid>.cg-panel>dl>div:nth-child(3) { color:#8a5900; }
+.cg-mobile .cg-projection-grid>.cg-panel>dl dt,.cg-mobile .cg-projection-grid>.cg-panel>dl dd { color:inherit; }
 .cg-mobile .cg-projection-list>.cg-panel>button { grid-column:2; grid-row:4; justify-self:end; width:auto; margin:0; min-height:36px!important; padding:7px 10px; }
 .cg-mobile .cg-projection-sections button { min-height:40px; padding:7px 10px; font-size:12px; }
 .cg-mobile .cg-settled-row { display:grid!important; grid-template-columns:minmax(0,1fr) 100px 14px; padding:8px 0!important; gap:8px!important; }

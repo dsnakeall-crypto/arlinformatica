@@ -682,3 +682,7 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 
 - [OK] Gastos mobile sem filtros e sem Cards/Lista; instituições e tipos ativos/customizados em linhas azuis compactas com contagens. Retorno às instituições e aos tipos; ações de pagamento/quitação abaixo da listagem. Preferência e filtros Web/PC, Quitadas e Projeção preservados.
 - [OK] Lint e TypeScript/build aprovados; dois fluxos mobile e dois desktop de contagens/preferência passaram em banco isolado. Captura mobile revisada. Backup externo de 444 arquivos de projeto, diff local e histórico Git verificado em C:/Users/Allan/ARL-backups/gastos-mobile-lista-20261004-030248. Sem mudança no banco de uso ou publicação.
+
+## Projeção mobile: responsáveis em linhas — 04/10/2026
+
+- [OK] Allan/Carol/Casal empilhados com retratos, valores à direita, separadores e cores verde/preto/amarelo escuro; mês e total preservados. Estilos exclusivos mobile em Lista/Cards, sem mudanças de cálculo ou desktop. Lint, TypeScript/build e fluxo mobile existente aprovados; captura revisada. Backup externo de 444 arquivos, diff e Git verificado em C:/Users/Allan/ARL-backups/projecao-mobile-linhas-20261004-030841. Sem banco de uso/publicação.
