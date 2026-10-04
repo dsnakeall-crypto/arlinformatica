@@ -1,0 +1,20 @@
+.arl-3d-popup:has(.arl-label-content){width:min(440px,100%)}
+.arl-3d-popup:has(.arl-label-content) .arl-3d-header{min-height:0;padding:20px 58px 18px 20px;gap:12px}
+.arl-3d-popup:has(.arl-label-content) .arl-3d-heading-icon{width:40px;height:40px;border-radius:12px}
+.arl-3d-popup:has(.arl-label-content) .arl-3d-heading-icon svg{width:21px;height:21px}
+.arl-3d-popup:has(.arl-label-content) .arl-eyebrow{font-size:9px;letter-spacing:1.3px}
+.arl-3d-popup:has(.arl-label-content) .arl-3d-heading h2{font-size:21px!important;letter-spacing:-.5px}
+.arl-3d-popup:has(.arl-label-content) .arl-3d-heading p{font-size:12px}
+.arl-3d-popup:has(.arl-label-content) .arl-3d-close{width:32px;height:32px;top:17px;right:16px;padding:5px}
+.arl-3d-popup:has(.arl-label-content) .arl-3d-close svg{width:19px;height:19px}
+.arl-label-content{padding:20px;overflow:auto;min-height:0}
+.arl-label-field{display:grid;gap:7px;font-size:13px;font-weight:700}
+.arl-label-field input{width:100%;min-height:40px;padding:8px 12px;border:1px solid #ccd3df;border-radius:10px;background:white;font-size:16px;color:#101827}
+.arl-label-field input:focus{outline:2px solid #dd0033;outline-offset:2px}
+.arl-label-note{font-size:12px;line-height:1.5;color:#657187;margin:9px 0}
+.arl-label-preview{display:grid;place-items:center;padding:24px 12px;margin:18px 0;background:#eef3fa;border:1px solid #d3deeb;border-radius:14px}
+.arl-label-preview .arl-equipment-label{box-shadow:0 3px 10px #20304826;border-radius:2px}
+.arl-label-actions{display:flex;justify-content:flex-end;gap:9px;padding:14px 20px;border-top:1px solid #e3e5eb;background:white}
+.arl-label-actions button{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid #d5dbe5;border-radius:9px;background:white;color:#1c273c;font-size:12px;cursor:pointer}
+.arl-label-actions button.primary{background:#be002b;border-color:#be002b;color:white}
+.arl-label-actions button:disabled{opacity:.5;cursor:default}

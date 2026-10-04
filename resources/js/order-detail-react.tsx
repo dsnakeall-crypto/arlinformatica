@@ -14,6 +14,7 @@ import {
   Pencil,
   Phone,
   Plus,
+  Printer,
   ReceiptText,
   RotateCcw,
   Trash2,
@@ -25,6 +26,7 @@ import ServiceProductSearch, {
 } from "./service-product-search";
 import OrderPopup from "./order-popup";
 import OrderAuditHistory from "./order-audit-history";
+import OrderLabel from "./order-label";
 import "../css/order-detail-layout.css";
 import { OrderPaymentFigures } from "./finance-refund-summary";
 import { isReopenedOrder } from "./order-reopened";
@@ -2249,6 +2251,7 @@ export default function OrderDetailPage({
     [pdfActionsOpen, setPdfActionsOpen] = useState(false),
     [finalLinkStatus, setFinalLinkStatus] = useState<any>(null),
     [finalLinkBusy, setFinalLinkBusy] = useState(false),
+    [labelOpen, setLabelOpen] = useState(false),
     [systemPasswordOpen, setSystemPasswordOpen] = useState(false),
     [systemPassword, setSystemPassword] = useState(""),
     [systemPasswordBusy, setSystemPasswordBusy] = useState(false),
@@ -2258,6 +2261,7 @@ export default function OrderDetailPage({
     pendingServicesSave = useRef<null | (() => Promise<any>)>(null),
     pdfActionsRef = useRef<HTMLDivElement>(null),
     mobilePdfActionsRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => { setLabelOpen(false); }, [id]);
   const load = async () => {
     try {
       const next = await api(`/orders/${id}`);
@@ -2437,6 +2441,7 @@ export default function OrderDetailPage({
       </section>
     </div>
   ) : null;
+  const labelDialog = labelOpen ? <OrderLabel key={order.id} clientName={order.client.name} orderNumber={order.number} onClose={() => setLabelOpen(false)} /> : null;
   const openClosingReference = () => {
     setClosingValue(
       order.closing_reference_cents != null
@@ -2732,6 +2737,7 @@ export default function OrderDetailPage({
           <i aria-hidden="true">|</i>
           <span><b>Atendimento</b> {order.attendance_type === 'external' ? 'Externo' : 'Interno'}</span>
           {canAdminister && order.has_system_password && <><i aria-hidden="true">|</i><button type="button" className="arl-system-password-view" aria-label="Ver senha do usuário" title="Ver senha do usuário" onClick={() => void openSystemPassword()}><Eye aria-hidden="true" /><span>Senha do usuário</span></button></>}
+          <i aria-hidden="true">|</i><button type="button" className="arl-system-password-view" onClick={() => setLabelOpen(true)}><Printer aria-hidden="true" /><span>Imprimir Etiqueta</span></button>
         </div>
         <div className="arl-mobile-read-only-actions">
           {openingWhatsapp && (
@@ -2904,6 +2910,7 @@ export default function OrderDetailPage({
         )}
         {closingDialog}
         {systemPasswordDialog}
+      {labelDialog}
       </div>
     );
   const stages = [
@@ -3132,6 +3139,7 @@ export default function OrderDetailPage({
             {order.attendance_type === "external" ? "Externo" : "Interno"}
           </span>
           {canAdminister && order.has_system_password && <><i aria-hidden="true">|</i><button type="button" className="arl-system-password-view" aria-label="Ver senha do usuário" title="Ver senha do usuário" onClick={() => void openSystemPassword()}><Eye aria-hidden="true" /><span>Senha do usuário</span></button></>}
+          <i aria-hidden="true">|</i><button type="button" className="arl-system-password-view" onClick={() => setLabelOpen(true)}><Printer aria-hidden="true" /><span>Imprimir Etiqueta</span></button>
         </div>
         <div className="arl-intake-grid">
           <section className="arl-intake-field arl-intake-client-field">
@@ -3436,6 +3444,7 @@ export default function OrderDetailPage({
       )}
       {closingDialog}
       {systemPasswordDialog}
+      {labelDialog}
       {order.status === "completed" && (
         <FinalShareCard
           order={order}

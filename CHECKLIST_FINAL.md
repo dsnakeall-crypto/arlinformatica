@@ -646,3 +646,12 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Pint dos arquivos PHP alterados aprovado; relatório detalhado em docs/RELATORIO_TESTES_GERAL_2026-10-03.md.
 - [OK] Pint global aprovado após normalização local do final de linha em routes/api.php, sem mudança de código.
 - [PENDENTE] Homologação sobre cópia do banco online, backup/restauração do servidor e publicação; integrações externas reais e dispositivos físicos não validados nesta rodada.
+
+## Etiqueta 40 × 20 mm da OS — 04/10/2026
+
+- [OK] Botão pequeno Imprimir Etiqueta na Ficha de entrada, junto de Senha do usuário, também em OS sem senha e no mobile.
+- [OK] Popup compacto: nome editável só na etiqueta, separador tracejado, número da OS e ARL Informática pequena; prévia e impressão em 40 × 20 mm.
+- [OK] Impressão isolada abre diálogo nativo, sem imprimir menus/popup e sem alterar cliente, OS ou documentos; nome vazio bloqueado e fonte ajustada para nomes longos.
+- [OK] Teste E2E de etiqueta aprovado em desktop/mobile, com medida física, impressão interceptada, ajuste de nome longo e preservação do cadastro; regressão da senha aprovada. 19 testes frontend, lint e TypeScript/build aprovados. Capturas revisadas em output/etiquetas.
+- [OK] Backup externo de 1.945 arquivos/alterações/Git verificado em C:/Users/Allan/ARL-backups/etiqueta-os-20261004-015749. Sem migração, mudança de dados de uso ou publicação.
+- [PENDENTE] Impressão física na B21S: selecionar papel 40 × 20 mm, escala 100%, sem cabeçalho/rodapé; conferir orientação e margens do driver.
