@@ -5162,9 +5162,6 @@ function App() {
     if (saved === "desktop" || saved === "mobile") return saved;
     return window.matchMedia("(max-width: 1024px)").matches ? "mobile" : "desktop";
   });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () => localStorage.getItem("arl-sidebar-collapsed") === "true",
-  );
   const [sidebarPinned, setSidebarPinned] = useState(false);
   const [navSummary, setNavSummary] = useState({
     open_orders: 0,
@@ -5190,25 +5187,18 @@ function App() {
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, []);
-  useEffect(
-    () =>
-      localStorage.setItem("arl-sidebar-collapsed", String(sidebarCollapsed)),
-    [sidebarCollapsed],
-  );
   const [me, setMe] = useState<any>();
   useEffect(() => {
     api("/me")
       .then((user) => {
         setMe(user);
         setSidebarPinned(Boolean(user.sidebar_pinned));
-        if (user.sidebar_pinned) setSidebarCollapsed(false);
       })
       .catch(() => {});
   }, []);
   const toggleSidebarPinned = async () => {
     const next = !sidebarPinned;
     setSidebarPinned(next);
-    if (next) setSidebarCollapsed(false);
     try {
       const saved = await api("/me/sidebar", {
         method: "PATCH",
@@ -5379,16 +5369,10 @@ function App() {
   ] as const;
   return (
     <div
-      className={`shell layout-${layout}${sidebarCollapsed && !sidebarPinned ? " sidebar-collapsed" : ""}${sidebarPinned ? " sidebar-pinned" : ""}`}
+      className={`shell layout-${layout}${!mobileLayout && !sidebarPinned ? " sidebar-collapsed" : ""}${sidebarPinned ? " sidebar-pinned" : ""}`}
     >
       <aside
         className={mobileMenu ? "open" : ""}
-        onMouseMove={() => {
-          if (!mobileLayout && !sidebarPinned && sidebarCollapsed) setSidebarCollapsed(false);
-        }}
-        onMouseLeave={() => {
-          if (!mobileLayout && !sidebarPinned && !sidebarCollapsed) setSidebarCollapsed(true);
-        }}
       >
         <button
           className="close"

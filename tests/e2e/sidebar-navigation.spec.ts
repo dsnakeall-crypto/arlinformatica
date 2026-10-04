@@ -13,6 +13,9 @@ test('menu agrupa destinos, destaca Nova OS e mostra contadores vindos do backen
   await login(page);
   const aside = page.locator('aside');
 
+  await aside.getByRole('button', { name: 'Fixar menu lateral', exact: true }).click();
+  await expect(page.locator('.shell')).toHaveClass(/sidebar-pinned/);
+
   for (const [groupName, items] of Object.entries(expectedGroups)) {
     const group = aside.locator('.nav-group').filter({ has: page.getByRole('heading', { name: groupName, exact: true }) });
     await expect(group).toBeVisible();
@@ -29,33 +32,35 @@ test('menu agrupa destinos, destaca Nova OS e mostra contadores vindos do backen
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveCount(0);
   const bottomBar = page.locator('.arl-global-mobile-nav');
+  expect((await api(page, '/me/sidebar', 'PATCH', { sidebar_pinned: false })).status).toBe(200);
   await expect(bottomBar.getByRole('button')).toHaveCount(4);
   for(const name of ['OS abertas','Nova OS','Clientes','Controle de Gasto']) await expect(bottomBar.getByRole('button',{name,exact:true})).toBeVisible();
 });
 
-test('menu recolhe, revela nomes no hover, libera largura e persiste após recarregar', async ({ page }) => {
+test('menu desfixado mantém largura no hover e mostra os nomes dos ícones', async ({ page }) => {
   await login(page);
+  expect((await api(page, '/me/sidebar', 'PATCH', { sidebar_pinned: false })).status).toBe(200);
+  // A preferência antiga do navegador não pode abrir um menu desfixado.
+  await page.evaluate(() => localStorage.setItem('arl-sidebar-collapsed', 'false'));
+  await page.reload();
   const shell = page.locator('.shell');
   const main = page.getByRole('main');
-  const expanded = await main.boundingBox();
-  await page.locator('aside').hover();
-  await page.getByRole('main').hover();
   await expect(shell).toHaveClass(/sidebar-collapsed/);
-  const collapsed = await main.boundingBox();
-  expect(collapsed?.width).toBeGreaterThan(expanded?.width ?? 0);
-
+  const before = await main.boundingBox();
   const aside = page.locator('aside');
-  await aside.hover();
-  await expect(shell).not.toHaveClass(/sidebar-collapsed/);
-  await expect(aside.getByRole('button', { name: /Ordens/ }).locator('.nav-label')).toBeVisible();
-  await page.getByRole('main').hover();
+  for (const button of await aside.locator('button[title]').all()) {
+    await button.hover();
+    await expect(shell).toHaveClass(/sidebar-collapsed/);
+    expect((await aside.boundingBox())?.width).toBe(58);
+    expect(await main.boundingBox()).toEqual(before);
+    await expect(button).toHaveAttribute('title', /\S/);
+  }
+  await expect(aside.getByRole('button', { name: 'Ordens', exact: true })).toHaveAttribute('title', 'Ordens');
+  await aside.getByRole('button', { name: 'Clientes', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Gestão de Clientes', exact: true })).toBeVisible();
   await expect(shell).toHaveClass(/sidebar-collapsed/);
   await page.reload();
   await expect(shell).toHaveClass(/sidebar-collapsed/);
-  await aside.hover();
-  await expect(shell).not.toHaveClass(/sidebar-collapsed/);
-  await page.reload();
-  await expect(shell).not.toHaveClass(/sidebar-collapsed/);
 });
 
 test('usuário fixa, desfixa e mantém a preferência do menu após recarregar', async ({ page }) => {
@@ -101,6 +106,8 @@ for (const width of [1280, 1920]) {
     await page.route('**/api/navigation-summary', route => route.fulfill({ json: { open_orders: 12345, available_post_sales: 9876 } }));
     await login(page);
     const aside = page.locator('aside');
+    await aside.getByRole('button', { name: 'Fixar menu lateral', exact: true }).click();
+    await expect(page.locator('.shell')).toHaveClass(/sidebar-pinned/);
     await aside.hover();
     await expect(aside.locator('.nav-badge').first()).toHaveText('12345');
     await expect(aside.locator('.sidebar-collapse, .arl-sidebar-slogan, .arl-nav-arrow, .arl-profile-arrow, .profile > i')).toHaveCount(0);
@@ -133,7 +140,7 @@ for (const width of [1280, 1920]) {
       expect(row.children).toBe(true);
     }
     await page.screenshot({ path: testInfo.outputPath('sidebar-open.png') });
-    await page.getByRole('main').hover();
+    await aside.getByRole('button', { name: 'Desfixar menu lateral', exact: true }).click();
     await expect(page.locator('.shell')).toHaveClass(/sidebar-collapsed/);
     expect((await aside.boundingBox())?.width).toBe(58);
     expect((await page.getByRole('main').boundingBox())?.x).toBe(58);

@@ -151,6 +151,8 @@ Backup externo verificado: C:/Users/Allan/ARL-backups/supplier-popup-standard-20
 
 
 ### Menu lateral — 03/10/2026
+
+Atualização autorizada em 04/10/2026: menu desfixado mantém apenas os ícones e largura de 58px, com nome no hover através de `title`; somente Fixar abre o menu completo de 240px. Hover não modifica largura ou posição do conteúdo. Referências: codex-clipboard-abbdf86c-c838-400e-a610-c5f43871e237.png e codex-clipboard-c60e2025-5ed9-47ee-8faa-6699fd1d0689.png. Mobile preservado.
 Administração mostra Configurações; Usuários fica na aba interna exclusiva do Master. Botão Fixado/Fixar compacto: barra de 26px, texto de 10px, ícone de 12px, margens reduzidas e comportamento/persistência preservados. Versão recolhida usa botão de 30px de largura.
 
 
