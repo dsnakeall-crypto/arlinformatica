@@ -709,3 +709,15 @@ Esta seção atualiza a situação da publicação registrada acima; relatórios
 - [PENDENTE] Cron KingHost observado a cada cinco minutos fora do minuto zero: ajustar para cada minuto no painel e comprovar as tarefas horárias. `crontab` é negado pela hospedagem.
 - [PENDENTE] Proprietário confirmar login com senha real e homologação prática PC/celular, impressão B21S e Push nos dispositivos.
 - [OK] Relatório completo de publicação, backups, migrações, rollback e limites em `docs/PUBLICACAO_2026-10-04.md`.
+
+## Revisão das falhas da CI e reemissão da release — 04/10/2026
+
+- [OK] Falha original do histórico reproduzida e expectativa corrigida com baseline, cálculo individual, antecipação e variação mensal verificados; nenhuma checagem financeira removida.
+- [OK] Timeout posterior diagnosticado por screenshot/trace: menu lateral se recolhia durante o clique. Teste aguarda layout e confirma aba ativa; mantém clique real, timeout e zero retries.
+- [OK] 307 testes SQLite e 307 MySQL / 6.450 assertions em cada banco isolado; 22 testes frontend; lint, TypeScript, Pint, build e npm audit aprovados.
+- [OK] 145 E2E locais, 13 direcionados após ajuste de navegação e três repetições independentes do pagamento parcial passaram. CI do commit `a2ea9cbcecda53aa283a1aaaf4fae01be8879975` integralmente aprovada, incluindo 145 E2E no GitHub: run `37209022788`.
+- [OK] Backups externos de código/alterações/Git e backups protegidos de produção #9/#10 baixados e validados. #10 atualizado imediatamente antes da ativação; banco, arquivos privados, APP_KEY e credenciais preservados.
+- [OK] Release aprovada reemitida no servidor original por troca atômica; nenhum novo código de execução, dependência ou migration. Comparação das 64 tabelas antes/depois preservou todos os registros: 626 clientes, 54 OS e 33 pagamentos.
+- [OK] Conferência após troca: 7.719 hashes de execução, 71 públicos, 89 privados; 17 consultas/PDF/foto com sucesso, permissões e acesso sem sessão, HTTPS e login responsivo sem erros JavaScript/overflow.
+- [OK] Rollback de código preparado; relatório em `docs/REVISAO_CI_PUBLICACAO_2026-10-04.md`. Runs vermelhos anteriores mantidos como histórico; não representam a CI do commit ativo.
+- [PENDENTE] Ajuste anterior do cron KingHost para cada minuto e comprovação das tarefas horárias; testes físicos B21S/Push e login por senha do proprietário continuam fora desta revisão.

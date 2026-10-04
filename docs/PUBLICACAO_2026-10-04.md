@@ -1,5 +1,7 @@
 # Publicação geral — 04/10/2026
 
+Registro da execução das 07h. A revisão posterior das falhas da CI e a release ativa `a2ea9cb`, com CI integralmente aprovada e banco preservado, estão documentadas em [REVISAO_CI_PUBLICACAO_2026-10-04.md](REVISAO_CI_PUBLICACAO_2026-10-04.md).
+
 Atualização autorizada pelo agendamento das 07h, horário de Brasília. **Publicada**, com pendência operacional no intervalo do cron da hospedagem e conferência final de login pelo proprietário. Produção: https://arlinfocg.kinghost.net.
 
 ## Versão e publicação
