@@ -714,6 +714,8 @@ function Orders({ open, role, initialTab = "progress" }: any) {
   const [items, setItems] = useState<Order[]>([]),
     [meta, setMeta] = useState<any>({}),
     [q, setQ] = useState(""),
+    [query, setQuery] = useState(""),
+    [searchRevision, setSearchRevision] = useState(0),
     [tab, setTab] = useState(initialTab),
     [page, setPage] = useState(1),
     [perPage, setPerPage] = useState(12),
@@ -721,20 +723,37 @@ function Orders({ open, role, initialTab = "progress" }: any) {
     [error, setError] = useState(""),
     [interrupt, setInterrupt] = useState<Order>(),
     [payment, setPayment] = useState<Order>();
+  const activeRequest = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setQuery(q);
+      setPage(1);
+      if (activeRequest.current?.signal.aborted) setSearchRevision((value) => value + 1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [q]);
   const load = () => {
+    activeRequest.current?.abort();
+    const controller = new AbortController();
+    activeRequest.current = controller;
     setLoading(true);
     api(
-      `/orders?q=${encodeURIComponent(q)}&tab=${tab}&page=${page}&per_page=${perPage}`,
+      `/orders?q=${encodeURIComponent(query)}&tab=${tab}&page=${page}&per_page=${perPage}`,
+      { signal: controller.signal },
     )
       .then((x) => {
+        if (controller.signal.aborted) return;
         setItems(x.data);
         setMeta(x);
         setError("");
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .catch((e) => { if (!controller.signal.aborted) setError(e.message); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
   };
-  useEffect(load, [q, tab, page, perPage]);
+  useEffect(() => {
+    load();
+    return () => activeRequest.current?.abort();
+  }, [query, tab, page, perPage, searchRevision]);
   useEffect(() => {
     setTab(initialTab);
     setPage(1);
@@ -842,8 +861,8 @@ function Orders({ open, role, initialTab = "progress" }: any) {
             <input
               value={q}
               onChange={(e) => {
+                activeRequest.current?.abort();
                 setQ(e.target.value);
-                setPage(1);
               }}
               placeholder="Número da OS ou nome do cliente…"
             />
