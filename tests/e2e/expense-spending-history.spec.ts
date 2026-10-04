@@ -7,13 +7,18 @@ async function fixture(page: Page) {
   const bank = (await api(page, '/expense-control/catalogs/institutions', 'POST', { name, active: true, due_day: 10, color: '#2273b9' })).body;
   const kind = (await api(page, '/expense-control/catalogs/types', 'POST', { name: 'Histórico crédito ' + Date.now(), active: true })).body;
   const month = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+  const last = new Date(month + '-01T12:00:00'); last.setMonth(last.getMonth() + 2);
+  const end = last.toLocaleDateString('sv-SE').slice(0, 7);
+  // The disposable database also contains purchases from earlier E2E scenarios.
+  // Compare against that baseline rather than assuming all three months are equal.
+  const baseline = await api(page, '/expense-control/spending-history?start=' + month + '&end=' + end + '&person=one');
+  expect(baseline.status).toBe(200);
   const debt = await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: bank.id, type_id: kind.id, name: 'Compra histórica ' + Date.now(), recurrence: 'installments', responsibility: 'shared', percent_one: 50, amount_cents: 10000, installment_count: 3, first_number: 1, start_month: month, due_day: 10 });
   expect(debt.status).toBe(201);
   const operation = await api(page, '/expense-control/operations', 'POST', { request_key: crypto.randomUUID(), installment_ids: debt.body.installments.map((i: any) => i.id), kind: 'advance', target: 'both', paid_by: 2, occurred_on: new Date().toLocaleDateString('sv-SE') });
   expect(operation.status).toBe(201);
   expect((await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: bank.id, type_id: kind.id, name: 'Compra pendente ' + Date.now(), recurrence: 'installments', responsibility: 'shared', percent_one: 50, amount_cents: 15000, installment_count: 3, first_number: 1, start_month: month, due_day: 10 })).status).toBe(201);
-  const last = new Date(month + '-01T12:00:00'); last.setMonth(last.getMonth() + 2);
-  return { bank, kind, debt: debt.body, month, end: last.toLocaleDateString('sv-SE').slice(0, 7) };
+  return { bank, kind, debt: debt.body, month, end, baseline: baseline.body };
 }
 
 test('histórico desktop: consulta real, divisão individual e quitada compacta com pagador', async ({ page }) => {
@@ -26,11 +31,29 @@ test('histórico desktop: consulta real, divisão individual e quitada compacta 
   await page.getByLabel('Mês final do histórico').fill(data.end);
   await page.getByLabel('Responsável no histórico').selectOption('one');
   await page.getByRole('button', { name: 'OK', exact: true }).click();
-  const report = (await api(page, '/expense-control/spending-history?start=' + data.month + '&end=' + data.end + '&person=one')).body;
+  const response = await api(page, '/expense-control/spending-history?start=' + data.month + '&end=' + data.end + '&person=one');
+  expect(response.status).toBe(200);
+  const report = response.body;
   const money = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value / 100);
+  expect(report.total_cents).toBe(data.baseline.total_cents + 37500);
+  expect(report.advance_cents).toBe(data.baseline.advance_cents + 15000);
   await expect(page.locator('.cg-history-totals article').first()).toContainText(money(report.total_cents));
   await expect(page.locator('.cg-history-month')).toHaveCount(3);
-  await expect(page.locator('.cg-history-month').nth(1)).toContainText('Sem mudança');
+  for (let index = 0; index < 3; index++) {
+    const month = report.months[index];
+    const previous = index ? report.months[index - 1].amount_cents : null;
+    const change = previous === null ? null : month.amount_cents - previous;
+    const percent = previous ? Math.sign(change as number) * Math.round(1000 * Math.abs(change as number) / previous) / 10 : null;
+    expect(month.amount_cents).toBe(data.baseline.months[index].amount_cents + 12500);
+    expect(month.change_cents).toBe(change);
+    expect(month.change_percent).toBe(percent);
+    const row = page.locator('.cg-history-month').nth(index);
+    await expect(row.locator('strong')).toHaveText(money(month.amount_cents));
+    const comparison = change === null ? 'Primeiro mês do período' : change === 0 ? 'Sem mudança'
+      : (change > 0 ? '+' : '−') + money(Math.abs(change))
+        + (percent === null ? ' · mês anterior sem valor' : ' (' + (percent > 0 ? '+' : '') + percent.toLocaleString('pt-BR') + '%)');
+    await expect(row.locator('small')).toHaveText(comparison);
+  }
   await expect(page.locator('.cg-history-totals article').last()).toContainText(money(report.advance_cents));
   await page.screenshot({ path: 'output/controle-gasto/historico-desktop.png', fullPage: true });
   await page.getByRole('tab', { name: 'Quitadas', exact: true }).click();
