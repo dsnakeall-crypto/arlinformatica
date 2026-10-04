@@ -491,16 +491,19 @@ class ServiceOrderController extends Controller
 
     private function tabCounts(): array
     {
-        $counts = [];
+        // Keep the model's soft-delete scope and the same effective-payment source as the lists.
+        $counts = ServiceOrder::query()
+            ->leftJoinSub($this->effectivePaymentsByOrder(), 'payment_status', 'payment_status.service_order_id', '=', 'service_orders.id')
+            ->selectRaw("COALESCE(SUM(CASE WHEN service_orders.status IN ('analysis', 'waiting_part', 'in_service') THEN 1 ELSE 0 END), 0) AS progress_count")
+            ->selectRaw("COALESCE(SUM(CASE WHEN service_orders.status = 'completed' AND COALESCE(payment_status.paid_cents, 0) < service_orders.total_cents THEN 1 ELSE 0 END), 0) AS awaiting_payment_count")
+            ->selectRaw("COALESCE(SUM(CASE WHEN service_orders.status = 'completed' AND COALESCE(payment_status.paid_cents, 0) >= service_orders.total_cents THEN 1 ELSE 0 END), 0) AS finalized_count")
+            ->selectRaw("COALESCE(SUM(CASE WHEN service_orders.status = 'interrupted' THEN 1 ELSE 0 END), 0) AS interrupted_count")
+            ->selectRaw('COUNT(service_orders.id) AS all_count')
+            ->first();
 
-        foreach (['progress', 'awaiting_payment', 'finalized', 'interrupted', 'all'] as $tab) {
-            $query = ServiceOrder::query()
-                ->leftJoinSub($this->effectivePaymentsByOrder(), 'payment_status', 'payment_status.service_order_id', '=', 'service_orders.id');
-            $this->applyTabFilter($query, $tab);
-            $counts[$tab] = $query->count('service_orders.id');
-        }
-
-        return $counts;
+        return collect(['progress', 'awaiting_payment', 'finalized', 'interrupted', 'all'])
+            ->mapWithKeys(fn ($tab) => [$tab => (int) $counts->{$tab.'_count'}])
+            ->all();
     }
 
     private function displayStatus(ServiceOrder $order, int $paidCents): string
