@@ -670,3 +670,6 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] Cadastro, redefinição e instalação: mínimo 6 caracteres, maiúscula e símbolo; regra validada no backend e informada no formulário, sem exigência de número/minúscula.
 - [OK] Confirmação, hashing e autorização preservados; senhas existentes não alteradas. Testes cobrem 5/6 caracteres, ausência de maiúscula/símbolo, espaço não sendo símbolo, Unicode, confirmação divergente e instalador bloqueado após uso.
 - [OK] 17 testes PHP / 121 verificações de administração/autorização/sessão, E2E de cadastro real com senha de 6 caracteres, lint, TypeScript/build e Pint aprovados. Banco de testes isolado; backup externo verificado em C:/Users/Allan/ARL-backups/senha-usuarios-20261004-024337. Sem publicação.
+## Resumo mobile: totais empilhados — 04/10/2026
+
+- [OK] Total original e Pago / abatido em duas linhas, valores alinhados à direita, em qualquer responsável selecionado. Revisão visual e regressão mobile existente aprovadas; lint e TypeScript/build aprovados. Alteração exclusiva de CSS, sem banco/publicação. Backup externo verificado em C:/Users/Allan/ARL-backups/resumo-mobile-linhas-20261004-025257.

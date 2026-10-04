@@ -23,9 +23,11 @@
 .cgm-total svg { width:16px; height:16px; color:#c21843; }
 .cgm-total small { font-size:11px; color:#536b8a; }
 .cgm-total>strong { display:block; margin:8px 0 12px; font-size:29px; letter-spacing:-1px; color:#182f50; }
-.cgm-total dl { margin:0; display:grid; grid-template-columns:1fr 1fr; gap:12px; border-top:1px solid #c6d7ec; padding-top:10px; }
+.cgm-total dl { margin:0; display:grid; grid-template-columns:1fr; gap:0; border-top:1px solid #c6d7ec; padding-top:3px; }
+.cg-mobile .cgm-total dl>div { padding:9px 0; gap:10px; }
+.cg-mobile .cgm-total dl>div:last-child { border-bottom:0; padding-bottom:0; }
 .cgm-total dt { display:flex; align-items:center; gap:4px; font-size:10px; color:#526d8d; }
-.cgm-total dd { margin:4px 0 0; font-size:14px; font-weight:750; color:#223d60; }
+.cg-mobile .cgm-total dd { margin:0; font-size:14px; font-weight:750; color:#223d60; }
 .cgm-people { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
 .cg-mobile .cgm-person { padding:10px 7px; display:flex; flex-direction:column; gap:5px; text-align:left; min-width:0; color:#254468; }
 .cg-mobile .cgm-person[aria-pressed=true] { border-color:#c41d42; box-shadow:0 0 0 1px #c41d42,inset 0 1px #fff; background:linear-gradient(145deg,#fff6f8,#e6efff); color:#254468; }
