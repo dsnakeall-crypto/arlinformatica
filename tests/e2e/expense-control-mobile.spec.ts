@@ -94,7 +94,11 @@ test('mobile gastos: quatro ícones, resumo correto das partes, instituição, m
   }
   await page.setViewportSize({ width: 393, height: 851 });
   await page.locator('.cgm-person').first().click();
-  await expect(institution.locator('.cgm-institution-value strong')).toHaveText('R$ 250,00');
+  await expect(institution.locator('.cgm-institution-amount')).toHaveText('R$ 250,00');
+  await page.setViewportSize({ width: 393, height: 1600 });
+  await institution.scrollIntoViewIfNeeded();
+  await institution.screenshot({ path: 'output/controle-gasto/mobile-instituicao-compacta.png' });
+  await page.setViewportSize({ width: 393, height: 851 });
   await institution.click();
   await expect(page.getByLabel('Filtrar por responsável')).toHaveValue('one');
   await page.locator('.cg-type-grid button').filter({ hasText: kind.name }).click();

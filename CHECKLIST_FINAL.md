@@ -673,3 +673,7 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 ## Resumo mobile: totais empilhados — 04/10/2026
 
 - [OK] Total original e Pago / abatido em duas linhas, valores alinhados à direita, em qualquer responsável selecionado. Revisão visual e regressão mobile existente aprovadas; lint e TypeScript/build aprovados. Alteração exclusiva de CSS, sem banco/publicação. Backup externo verificado em C:/Users/Allan/ARL-backups/resumo-mobile-linhas-20261004-025257.
+
+## Resumo mobile: instituições compactas — 04/10/2026
+
+- [OK] Nome e saldo na mesma linha, vencimento e responsável/parcelas abaixo; fontes e espaços menores. Divisão de Todos e acesso aos gastos preservados. Lint, TypeScript/build e regressão mobile existente aprovados em banco isolado. Backup externo verificado de 1.972 arquivos, alterações e Git em C:/Users/Allan/ARL-backups/instituicoes-mobile-compactas-20261004-025504. Sem alteração de dados de uso ou publicação.

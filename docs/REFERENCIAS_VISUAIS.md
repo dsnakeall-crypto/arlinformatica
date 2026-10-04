@@ -167,3 +167,7 @@ Lista mobile apresenta apenas nomes/vencimento; ao abrir a instituição, tipos 
 ### Resumo mobile em duas linhas — 04/10/2026
 
 No card principal de Todos/Allan/Carol/Casal, Total original ocupa uma linha e Pago / abatido ocupa a seguinte, com valores à direita e separador discreto. Saldo destacado preservado. Alteração somente de CSS mobile, sem cálculos ou banco. Captura conferida: output/controle-gasto/mobile-resumo-novo.png. Backup externo verificado: C:/Users/Allan/ARL-backups/resumo-mobile-linhas-20261004-025257 (1.971 arquivos, alterações locais e Git).
+
+### Resumo mobile: instituições compactas — 04/10/2026
+
+Instituição e valor na mesma linha, separados por dois-pontos; vencimento abaixo e responsável/parcelas em texto pequeno. Padding, fontes e espaços reduzidos, alinhamento à esquerda e seta discreta. Visão Todos preserva a divisão dos valores. Ação de abrir gastos e cálculos preservados. Captura: output/controle-gasto/mobile-instituicao-compacta.png.

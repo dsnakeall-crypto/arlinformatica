@@ -47,18 +47,18 @@
 .cgm-attention span { display:flex; align-items:center; gap:5px; }
 .cgm-attention svg { width:14px; height:14px; flex-shrink:0; }
 .cgm-overdue { color:#b91c3b!important; }
-.cgm-institutions { display:grid; gap:9px; }
-.cg-mobile .cgm-institution { display:grid; gap:9px; padding:12px; text-align:left; width:100%; color:#254468; }
+.cgm-institutions { display:grid; gap:6px; }
+.cg-mobile .cgm-institution { display:grid; justify-content:stretch; gap:3px; padding:9px 11px; text-align:left; width:100%; color:#254468; border-radius:12px; }
 .cgm-institution-top,.cgm-institution-value { display:flex; justify-content:space-between; align-items:center; gap:10px; min-width:0; }
-.cgm-institution-top b { font-size:13px; overflow-wrap:anywhere; }
-.cgm-institution-top>svg { flex:0 0 17px; width:17px; height:17px; }
-.cgm-institution-value>strong { font-size:19px; letter-spacing:-.5px; }
+.cgm-institution-top b { font-size:12px; overflow-wrap:anywhere; line-height:1.5; }
+.cgm-institution-amount { font-size:13px; white-space:nowrap; }
+.cgm-institution-top>svg { flex:0 0 14px; width:14px; height:14px; }
 .cgm-institution-value>span { font-size:10px; display:flex; align-items:center; gap:4px; }
 .cgm-institution-value svg { width:13px; height:13px; }
 .cgm-institution>small { font-size:10px; }
-.cgm-split { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; border-top:1px solid #c4d6ed; padding-top:8px; }
+.cgm-split { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; border-top:1px solid #c4d6ed; padding-top:4px; }
 .cgm-split>span { display:grid; gap:3px; font-size:9px; color:#536d8c; overflow-wrap:anywhere; }
-.cgm-split b { font-size:12px; color:#244261; }
+.cgm-split b { font-size:11px; color:#244261; }
 .cgm-empty { display:flex; align-items:center; gap:8px; padding:16px; margin:0; border:1px dashed #b6cbe6; border-radius:12px; color:#526b8b; font-size:12px; }
 .cgm-partials { padding:12px; }
 .cgm-partials summary { font-size:12px; font-weight:700; cursor:pointer; min-height:32px; }
