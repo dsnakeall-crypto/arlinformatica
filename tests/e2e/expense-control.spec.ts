@@ -57,7 +57,14 @@ test('controle: quitar Allan mantém Carol pendente no resumo e aceita pagamento
   const created = await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: catalog.institution.id, type_id: catalog.type.id, name: 'Parcela casal 350', recurrence: 'once', responsibility: 'shared', percent_one: 50, amount_cents: 35000, installment_count: 1, first_number: 1, start_month: month, due_day: 12, notes: null });
   expect(created.status).toBe(201);
   await page.goto('/expense-control');
-  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  // Moving out of the sidebar changes the content width. Settle that layout
+  // before clicking a tab so mouseup cannot land outside the original button.
+  await page.mouse.move(10, 10);
+  await page.mouse.move((page.viewportSize()?.width || 1280) - 10, 10);
+  await expect(page.locator('.shell')).toHaveClass(/sidebar-(collapsed|pinned)/);
+  const expensesTab = page.getByRole('tab', { name: 'Gastos', exact: true });
+  await expensesTab.click();
+  await expect(expensesTab).toHaveAttribute('aria-selected', 'true');
   await page.getByLabel('Pesquisar compra ou instituição').fill('Parcela casal 350');
   await page.locator('.cg-debt-row').filter({ hasText: 'Parcela casal 350' }).click();
   await page.locator('.cg-table-wrap tbody tr').getByRole('button', { name: 'Pagar', exact: true }).click();
