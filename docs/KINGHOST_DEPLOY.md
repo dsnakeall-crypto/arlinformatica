@@ -1,6 +1,6 @@
 # Deploy KingHost / hospedagem compartilhada
 
-Este roteiro serve para KingHost, outro *shared hosting* ou VPS. Limites de disco, upload e cron devem ser conferidos no plano contratado; não há limite comercial codificado no sistema. A aplicação não foi validada dentro de uma conta KingHost real.
+Este roteiro serve para KingHost, outro *shared hosting* ou VPS. Limites de disco, upload e cron devem ser conferidos no plano contratado; não há limite comercial codificado no sistema. A publicação real de 04/10/2026 está documentada em [PUBLICACAO_2026-10-04.md](PUBLICACAO_2026-10-04.md), incluindo os testes realizados e a pendência do cron. Nessa conta, use `/usr/bin/php82`: o comando genérico `php` aponta para PHP 5.6.
 
 ## 1. Preparar hospedagem e banco
 

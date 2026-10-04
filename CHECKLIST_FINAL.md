@@ -694,3 +694,18 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] 24 E2E relacionados aprovados; perfis Funcionário/Administrador aprovados; reteste final dos cinco cenários específicos de performance aprovado, incluindo paginação.
 - [OK] Backups externos verificados; alterações preexistentes preservadas; limpeza restrita aos artefatos desta tarefa; relatório e lista de publicação em docs/PERFORMANCE_ETAPA1_RELEASE.md.
 - [PENDENTE] Publicação pelo usuário com backup do servidor; confirmar scheduler/cron real na KingHost e conferência após publicação. Nenhum deploy realizado nesta etapa.
+
+## Publicação geral autorizada — 04/10/2026
+
+Esta seção atualiza a situação da publicação registrada acima; relatórios anteriores descrevem suas respectivas etapas.
+
+- [OK] Release completa `36598494cdf3c789edfc5de6ab555ca543077950` publicada na KingHost a partir de clone do GitHub, sem dados locais/testes/credenciais no pacote.
+- [OK] Backup local/alterações/Git, backup protegido #8 do banco e arquivos privados e backup do código anterior baixados e verificados antes da publicação. Versão anterior e entrypoints de retorno preservados.
+- [OK] Schema real conferido; dez migrações novas ensaiadas em cópia isolada e aplicadas. 47 migrações registradas; dados de negócio existentes preservados por comparação antes/depois, incluindo 626 clientes, 53 OS e 33 pagamentos.
+- [OK] 307 testes MySQL / 6.450 assertions, 22 testes frontend, 24 E2E, lint, Pint, TypeScript/build e auditorias de dependências aprovados.
+- [OK] HTTPS, login responsivo sem erros JavaScript, 16 leituras de backend real, permissões, PDF/foto existentes, 71 estáticos públicos e 88 arquivos privados verificados. Sessão autenticada de testes somente em memória; nenhum dado fictício em produção.
+- [OK] Mistral configurada privadamente conforme autorização anterior; nenhuma nova chamada paga de teste. APP_KEY, banco, sessão e armazenamento privado preservados.
+- [OK] Recuperação histórica completa `post-sale:check` executada com sucesso na release nova; zero ciclos novos.
+- [PENDENTE] Cron KingHost observado a cada cinco minutos fora do minuto zero: ajustar para cada minuto no painel e comprovar as tarefas horárias. `crontab` é negado pela hospedagem.
+- [PENDENTE] Proprietário confirmar login com senha real e homologação prática PC/celular, impressão B21S e Push nos dispositivos.
+- [OK] Relatório completo de publicação, backups, migrações, rollback e limites em `docs/PUBLICACAO_2026-10-04.md`.
