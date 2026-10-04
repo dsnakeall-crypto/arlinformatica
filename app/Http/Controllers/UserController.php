@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Audit;
+use App\Support\UserPasswordPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -70,7 +71,7 @@ class UserController extends Controller
 
     private function passwordRules(): array
     {
-        return ['required', 'string', 'min:12', 'max:255', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[^a-zA-Z0-9]/', 'confirmed'];
+        return [...UserPasswordPolicy::rules(), 'confirmed'];
     }
 
     private function protectLastMaster(User $user, array $data): void

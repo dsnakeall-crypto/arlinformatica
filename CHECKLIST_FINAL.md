@@ -665,3 +665,8 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 - [OK] 31 testes / 473 verificações em SQLite e MySQL descartável, 19 testes frontend, lint, TypeScript/build e Pint; 18 cenários distintos de navegador aprovados, com reteste final dos dois novos fluxos após compactação da lista. Capturas desktop/mobile revisadas; histórico sem overflow horizontal em 320px.
 - [OK] Backup externo de 1.954 arquivos, alterações locais e Git verificado em C:/Users/Allan/ARL-backups/gastos-mobile-historico-20261004-021521. Sem migração, alteração de dados de uso ou publicação.
 - [PENDENTE] Homologação pelo proprietário no celular físico e publicação com backup do servidor, conforme fluxo geral do projeto.
+## Política de senha solicitada — 04/10/2026
+
+- [OK] Cadastro, redefinição e instalação: mínimo 6 caracteres, maiúscula e símbolo; regra validada no backend e informada no formulário, sem exigência de número/minúscula.
+- [OK] Confirmação, hashing e autorização preservados; senhas existentes não alteradas. Testes cobrem 5/6 caracteres, ausência de maiúscula/símbolo, espaço não sendo símbolo, Unicode, confirmação divergente e instalador bloqueado após uso.
+- [OK] 17 testes PHP / 121 verificações de administração/autorização/sessão, E2E de cadastro real com senha de 6 caracteres, lint, TypeScript/build e Pint aprovados. Banco de testes isolado; backup externo verificado em C:/Users/Allan/ARL-backups/senha-usuarios-20261004-024337. Sem publicação.

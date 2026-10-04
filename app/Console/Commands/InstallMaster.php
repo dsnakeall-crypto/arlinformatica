@@ -4,9 +4,11 @@ namespace App\Console\Commands;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Support\UserPasswordPolicy;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class InstallMaster extends Command
 {
@@ -22,9 +24,9 @@ class InstallMaster extends Command
             return self::FAILURE;
         } $name = $this->option('name') ?: $this->ask('Nome do Master');
         $login = $this->option('login') ?: $this->ask('Login');
-        $password = $this->secret('Senha (mínimo 12 caracteres)');
-        if (strlen((string) $password) < 12) {
-            $this->error('A senha deve ter ao menos 12 caracteres.');
+        $password = $this->secret('Senha (mínimo 6 caracteres, uma letra maiúscula e um caractere especial)');
+        if (Validator::make(['password' => $password], ['password' => UserPasswordPolicy::rules()])->fails()) {
+            $this->error('A senha deve ter ao menos 6 caracteres, uma letra maiúscula e um caractere especial.');
 
             return self::FAILURE;
         } DB::transaction(function () use ($name, $login, $password) {

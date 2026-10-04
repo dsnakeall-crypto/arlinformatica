@@ -4809,11 +4809,9 @@ function UsersAdmin() {
     setError("");
     if (!form.id) {
       const missing = [
-        form.password.length < 12 && "pelo menos 12 caracteres",
-        !/[a-z]/.test(form.password) && "uma letra minúscula",
-        !/[A-Z]/.test(form.password) && "uma letra maiúscula",
-        !/[0-9]/.test(form.password) && "um número",
-        !/[^a-zA-Z0-9]/.test(form.password) && "um caractere especial",
+        Array.from(form.password).length < 6 && "pelo menos 6 caracteres",
+        !/\p{Lu}/u.test(form.password) && "uma letra maiúscula",
+        !/[^\p{L}\p{N}\s]/u.test(form.password) && "um caractere especial",
       ].filter(Boolean);
       if (missing.length) {
         setError(`A senha precisa conter ${missing.join(", ")}.`);
@@ -4878,7 +4876,7 @@ function UsersAdmin() {
             </button>
             <button
               onClick={() => {
-                const p = prompt("Nova senha forte (mínimo 12 caracteres)");
+                const p = prompt("Nova senha (mínimo 6 caracteres, uma letra maiúscula e um caractere especial)");
                 if (p) {
                   setError("");
                   api(`/users/${u.id}/password`, {
@@ -4932,7 +4930,7 @@ function UsersAdmin() {
             {!form.id && (
               <>
                 <Field
-                  label="Senha forte"
+                  label="Senha (mínimo 6 caracteres, maiúscula e caractere especial)"
                   type="password"
                   value={form.password}
                   onChange={(e: any) =>

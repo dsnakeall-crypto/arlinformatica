@@ -18,7 +18,7 @@ npm run build
 php artisan serve
 ```
 
-Acesse `http://127.0.0.1:8000`. Não existe cadastro público. Crie o primeiro Master uma única vez com `php artisan arl:install`; o comando exige senha de pelo menos 12 caracteres, usa o hasher do Laravel e se bloqueia após a instalação.
+Acesse `http://127.0.0.1:8000`. Não existe cadastro público. Crie o primeiro Master uma única vez com `php artisan arl:install`; o comando exige senha de pelo menos 6 caracteres, uma letra maiúscula e um caractere especial, usa o hasher do Laravel e se bloqueia após a instalação. A mesma regra vale no cadastro e na redefinição de senha dos usuários.
 
 ## Verificações
 
