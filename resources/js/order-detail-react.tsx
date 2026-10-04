@@ -32,6 +32,7 @@ import { OrderPaymentFigures } from "./finance-refund-summary";
 import { isReopenedOrder } from "./order-reopened";
 import TextImprovement from "./text-improvement";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
+import { createInFlightGet } from "./in-flight-get";
 
 type Props = {
   authenticatedRole: string;
@@ -61,7 +62,7 @@ const SHOW_ORDER_RECORD = false;
 const csrf = () =>
   document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ??
   "";
-const api = async (url: string, options: RequestInit = {}) => {
+const request = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(`/api${url}`, {
     credentials: "same-origin",
     ...options,
@@ -84,6 +85,9 @@ const api = async (url: string, options: RequestInit = {}) => {
     ) as ApiError;
   return body;
 };
+const inFlightGet = createInFlightGet();
+const api = (url: string, options: RequestInit = {}) =>
+  inFlightGet(`${csrf()}:${url}`, options, () => request(url, options));
 
 const digits = (value: unknown) =>
   typeof value === "string" ? value.replace(/\D/g, "") : "";
