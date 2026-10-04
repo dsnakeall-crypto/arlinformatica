@@ -30,7 +30,8 @@ test('Painel consulta a semana uma vez e usa total, não tamanho da página', as
 });
 
 test('Contadores de navegação limitam cliques a 30 segundos', async ({ page }) => {
-  await page.clock.install();
+  const start = new Date('2026-10-04T12:00:00Z');
+  await page.clock.setFixedTime(start);
   let calls = 0;
   await page.route('**/api/navigation-summary', async route => {
     calls++;
@@ -43,7 +44,7 @@ test('Contadores de navegação limitam cliques a 30 segundos', async ({ page })
   await page.getByRole('button', { name: 'Clientes', exact: true }).click();
   await expect(page.locator('[data-arl-clients-react="1"]')).toBeVisible();
   expect(calls).toBe(1);
-  await page.clock.runFor(30_000);
+  await page.clock.setFixedTime(new Date(start.getTime() + 30_000));
   await page.getByRole('button', { name: 'Ordens', exact: true }).click();
   await expect.poll(() => calls).toBe(2);
 });

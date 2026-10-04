@@ -686,3 +686,11 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 ## Projeção mobile: responsáveis em linhas — 04/10/2026
 
 - [OK] Allan/Carol/Casal empilhados com retratos, valores à direita, separadores e cores verde/preto/amarelo escuro; mês e total preservados. Estilos exclusivos mobile em Lista/Cards, sem mudanças de cálculo ou desktop. Lint, TypeScript/build e fluxo mobile existente aprovados; captura revisada. Backup externo de 444 arquivos, diff e Git verificado em C:/Users/Allan/ARL-backups/projecao-mobile-linhas-20261004-030841. Sem banco de uso/publicação.
+
+## Performance — Etapa 1 final para release — 04/10/2026
+
+- [OK] Sete itens implementados em commits próprios; contadores com equivalência antes/depois comprovada e uma única consulta de agregação.
+- [OK] 307 testes PHP / 6.450 verificações; 21 testes direcionados / 261 verificações; 22 testes frontend; TypeScript, lint, Pint e build final aprovados.
+- [OK] 24 E2E relacionados aprovados; perfis Funcionário/Administrador aprovados; reteste final dos cinco cenários específicos de performance aprovado, incluindo paginação.
+- [OK] Backups externos verificados; alterações preexistentes preservadas; limpeza restrita aos artefatos desta tarefa; relatório e lista de publicação em docs/PERFORMANCE_ETAPA1_RELEASE.md.
+- [PENDENTE] Publicação pelo usuário com backup do servidor; confirmar scheduler/cron real na KingHost e conferência após publicação. Nenhum deploy realizado nesta etapa.
