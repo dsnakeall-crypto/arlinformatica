@@ -52,7 +52,9 @@ test('menu desfixado mantém largura no hover e mostra os nomes dos ícones', as
     await button.hover();
     await expect(shell).toHaveClass(/sidebar-collapsed/);
     expect((await aside.boundingBox())?.width).toBe(58);
-    expect(await main.boundingBox()).toEqual(before);
+    const after = await main.boundingBox();
+    expect(after?.x).toBe(before?.x);
+    expect(after?.width).toBe(before?.width);
     await expect(button).toHaveAttribute('title', /\S/);
   }
   await expect(aside.getByRole('button', { name: 'Ordens', exact: true })).toHaveAttribute('title', 'Ordens');

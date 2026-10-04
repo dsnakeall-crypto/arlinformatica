@@ -1095,10 +1095,6 @@ Na Ficha de entrada da OS, ao lado de Senha do usuário, botão discreto Imprimi
 Imprimir abre o diálogo nativo de impressão por documento isolado, com @page de 40 × 20 mm e margem zero. O usuário seleciona a B21S cadastrada no Windows, papel correto, escala 100% e desativa cabeçalhos/rodapés. O navegador/driver controla a lista de impressoras, opções e resultado físico. Sem rota, tabela, migração, armazenamento de etiqueta ou dependência externa adicional. Conferência física na B21S é necessária após a entrega.
 # Ajustes mobile e histórico mensal — 04/10/2026
 
-## Menu lateral com abertura explícita — 04/10/2026
-
-Por solicitação posterior do proprietário, no Web/PC o menu desfixado fica sempre recolhido em 58px. Passar o mouse não expande nem desloca o conteúdo; os ícones mostram seus nomes pela dica nativa do navegador. Fixar abre o menu de 240px; Desfixar recolhe imediatamente. A preferência continua salva por usuário no backend e respeitada ao recarregar, sem usar a antiga chave local de recolhimento. Mobile/Tablet mantém sua navegação própria. Nenhuma migration ou alteração de dados comerciais.
-
 Requisitos de No Mobile.docx aprovados: Projeção possui submenus Projeção futura e Histórico de gastos. Histórico compara parcelas originais por responsável e período, incluindo sua parte do casal, compras quitadas e antecipações separadas pela data do lançamento. Gráfico, total, maior/menor mês e variação mensal; consulta somente leitura, com recorrências ainda não gravadas calculadas em memória. Quitadas mostra compra compacta, total pago e pagadores, excluindo estornos/descontos do dinheiro pago. Mobile: filtros recolhidos, lista de instituições/tipos sem imagens e sem cards grandes, ícone de acesso aos gastos igual a editar/excluir e Ver mês sem sobreposição. Desktop preservado nas regras exclusivas mobile. Regras completas, limites e backup em docs/GASTOS_MOBILE_HISTORICO.md.
 ## Gastos somente em lista no Mobile/Tablet — 04/10/2026
 
@@ -1107,3 +1103,7 @@ Por solicitação posterior do proprietário, Gastos no Mobile/Tablet não apres
 ## Senhas de usuários — 04/10/2026
 
 Por solicitação do proprietário, cadastro, redefinição e instalação do primeiro Master exigem mínimo de 6 caracteres, uma letra maiúscula e um caractere especial. Não há exigência adicional de número ou letra minúscula. Espaços e letras acentuadas não contam como símbolo; maiúsculas acentuadas são aceitas. Política compartilhada no backend, confirmação preservada nos formulários/API e hashing Laravel mantido. Senhas existentes não são alteradas. Backup externo verificado de 1.970 arquivos/alterações/Git: C:/Users/Allan/ARL-backups/senha-usuarios-20261004-024337. Sem migração ou publicação.
+
+## Menu lateral com abertura explícita — 04/10/2026
+
+Por solicitação posterior do proprietário, no Web/PC o menu desfixado fica sempre recolhido em 58px. Passar o mouse não expande nem desloca o conteúdo; os ícones mostram seus nomes pela dica nativa do navegador. Fixar abre o menu de 240px; Desfixar recolhe imediatamente. A preferência continua salva por usuário no backend e respeitada ao recarregar, sem usar a antiga chave local de recolhimento. Mobile/Tablet mantém sua navegação própria. Nenhuma migration ou alteração de dados comerciais.

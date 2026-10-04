@@ -721,3 +721,12 @@ Esta seção atualiza a situação da publicação registrada acima; relatórios
 - [OK] Conferência após troca: 7.719 hashes de execução, 71 públicos, 89 privados; 17 consultas/PDF/foto com sucesso, permissões e acesso sem sessão, HTTPS e login responsivo sem erros JavaScript/overflow.
 - [OK] Rollback de código preparado; relatório em `docs/REVISAO_CI_PUBLICACAO_2026-10-04.md`. Runs vermelhos anteriores mantidos como histórico; não representam a CI do commit ativo.
 - [PENDENTE] Ajuste anterior do cron KingHost para cada minuto e comprovação das tarefas horárias; testes físicos B21S/Push e login por senha do proprietário continuam fora desta revisão.
+
+## Menu lateral: recolhimento somente pelo botão — 04/10/2026
+
+- [OK] Menu Web/PC desfixado permanece em 58px; hover mostra nomes sem expandir ou deslocar o conteúdo. Fixar abre em 240px, Desfixar recolhe imediatamente e a conta mantém sua preferência após recarga. Mobile preservado.
+- [OK] Seis testes específicos do menu, adaptação desktop em oito dimensões/onze telas, capturas revisadas, 22 testes frontend, lint, TypeScript/build, Pint e npm audit aprovados. 307 testes SQLite e 307 MySQL isolado, com 6.450 assertions em cada execução, passaram.
+- [OK] Backup externo de 2.099 arquivos/alterações/Git verificado; commit funcional `6f34d44` enviado ao GitHub e pacote oficial completo preparado e verificado. Alterações preexistentes preservadas.
+- [OK] Regressão completa teve 144 aprovados e uma falha no teste novo por comparar altura da página durante carregamento de dados. Verificação corrigida para a largura/posição horizontal; todos os seis testes do menu passaram no reteste final. Sem falha adicional de código de execução identificada. Execução integral após esse ajuste somente de teste permanece pendente na CI.
+- [PENDENTE] GitHub bloqueou a CI `37219042532` antes de executar os jobs por cobrança da conta. Proprietário identificou pagamento de US$40 não processado. Publicação condicionada à CI verde; servidor original preservado, sem deploy nesta etapa. Após regularização, reexecutar CI e validar backup fresco de produção antes da troca.
+- [OK] Escopo, pacote, evidências, bloqueio e procedimento de retomada documentados em `docs/MENU_LATERAL_FIXACAO_2026-10-04.md`.
