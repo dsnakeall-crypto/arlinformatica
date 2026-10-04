@@ -710,7 +710,7 @@ function StatusPaymentModal({ order, onClose, onSaved }: any) {
     </div>
   );
 }
-function Orders({ open, role, initialTab = "progress" }: any) {
+function Orders({ open, role, initialTab = "progress", onCountersChanged }: any) {
   const [items, setItems] = useState<Order[]>([]),
     [meta, setMeta] = useState<any>({}),
     [q, setQ] = useState(""),
@@ -771,6 +771,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
       method: "PATCH",
       body: JSON.stringify({ status: next }),
     });
+    onCountersChanged?.();
     load();
   };
   const remove = async (o: Order) => {
@@ -786,6 +787,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
       return;
     try {
       await api(`/orders/${o.id}`, { method: "DELETE" });
+      onCountersChanged?.();
       load();
     } catch (x: any) {
       setError(x.message);
@@ -921,6 +923,7 @@ function Orders({ open, role, initialTab = "progress" }: any) {
           onClose={() => setInterrupt(undefined)}
           onSaved={() => {
             setInterrupt(undefined);
+            onCountersChanged?.();
             load();
           }}
         />
@@ -2954,7 +2957,7 @@ function FinancePage({ role, openOrder }: any) {
     </>
   );
 }
-function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
+function Dashboard({ go, desk = false, role, mobileLayout = false, onCountersChanged }: any) {
   const [items, setItems] = useState<Order[]>([]),
     [closedItems, setClosedItems] = useState<Order[]>([]),
     [completed, setCompleted] = useState(0),
@@ -3015,6 +3018,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
       method: "PATCH",
       body: JSON.stringify({ status: next }),
     });
+    onCountersChanged?.();
     load();
   };
   const remove = async (o: Order) => {
@@ -3025,6 +3029,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
       )
     ) {
       await api(`/orders/${o.id}`, { method: "DELETE" });
+      onCountersChanged?.();
       load();
     }
   };
@@ -3136,6 +3141,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false }: any) {
           onClose={() => setInterrupt(undefined)}
           onSaved={() => {
             setInterrupt(undefined);
+            onCountersChanged?.();
             load();
           }}
         />
@@ -4173,7 +4179,7 @@ function BudgetBox({ order }: any) {
     </section>
   );
 }
-function PostSalePage() {
+function PostSalePage({ onCountersChanged }: { onCountersChanged?: () => void }) {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [rows, setRows] = useState<any[]>([]),
@@ -4196,6 +4202,7 @@ function PostSalePage() {
       body: "{}",
     });
     setPending(null);
+    onCountersChanged?.();
     load();
   };
   const removeCard = async () => {
@@ -4212,6 +4219,7 @@ function PostSalePage() {
       setSelectedIds((current) => current.filter((id) => !ids.includes(id)));
       setSelectionMode(false);
       setRemoval(null);
+      onCountersChanged?.();
     } catch (error) {
       setRemovalError(error instanceof Error ? error.message : "Não foi possível excluir o card.");
     } finally {
@@ -5256,14 +5264,31 @@ function App() {
     if (mobileLayout) setMobileMenu(false);
   }, [mobileLayout]);
   const canAdminister = me?.role === "Master" || me?.role === "Administrador";
-  const loadNavigationSummary = () =>
-    api("/navigation-summary")
-      .then(setNavSummary)
-      .catch(() => undefined);
+  const navigationRefresh = useRef<{ accountId?: number; last: number | null; sequence: number }>({ last: null, sequence: 0 });
+  const loadNavigationSummary = (force = false) => {
+    if (!me || me.role === "Controle de Gasto") return;
+    const state = navigationRefresh.current;
+    if (state.accountId !== me.id) {
+      state.accountId = me.id;
+      state.last = null;
+      state.sequence++;
+      setNavSummary({ open_orders: 0, available_post_sales: 0 });
+    }
+    const now = Date.now();
+    if (!force && state.last !== null && now - state.last < 30_000) return;
+    state.last = now;
+    const sequence = ++state.sequence;
+    return api("/navigation-summary")
+      .then((summary) => { if (navigationRefresh.current.sequence === sequence) setNavSummary(summary); })
+      .catch(() => { if (navigationRefresh.current.sequence === sequence) state.last = null; });
+  };
+  const countersChanged = () => { void loadNavigationSummary(true); };
   useEffect(() => {
     if (me && me.role !== "Controle de Gasto") void loadNavigationSummary();
   }, [me, page, detail]);
   const logout = async () => {
+    navigationRefresh.current.sequence++;
+    navigationRefresh.current.last = null;
     await fetch("/logout", {
       method: "POST",
       credentials: "same-origin",
@@ -5533,6 +5558,7 @@ function App() {
           <ExpenseControlPage mobile={mobileLayout} />
         ) : detail ? (
           <OrderDetailPage
+            onCountersChanged={countersChanged}
             authenticatedRole={me.role || ""}
             key={`${detail}-${orderAction || "view"}`}
             initialAction={orderAction}
@@ -5550,9 +5576,9 @@ function App() {
             }
           />
         ) : page === "dashboard" ? (
-          <Dashboard go={go} role={me?.role} mobileLayout={mobileLayout} />
+          <Dashboard go={go} role={me?.role} mobileLayout={mobileLayout} onCountersChanged={countersChanged} />
         ) : page === "orders" ? (
-          <Orders open={go} role={me?.role} initialTab={ordersTab} />
+          <Orders open={go} role={me?.role} initialTab={ordersTab} onCountersChanged={countersChanged} />
         ) : page === "clients" ? (
           <Clients
             role={me?.role}
@@ -5574,7 +5600,7 @@ function App() {
             openOrder={(id: number) => go("orders", id)}
           />
         ) : page === "post-sale" ? (
-          <PostSalePage />
+          <PostSalePage onCountersChanged={countersChanged} />
         ) : page === "services" ? (
           <ServicesCatalogPage />
         ) : page === "products" ? (
@@ -5586,7 +5612,7 @@ function App() {
         ) : page === "settings" ? (
           <SettingsPage role={me?.role} />
         ) : (
-          <NewOrder initialClient={newOrderClient} done={(id: number) => go("orders", id)} />
+          <NewOrder initialClient={newOrderClient} done={(id: number) => { countersChanged(); go("orders", id); }} />
         )}
       </main>
       {mobileLayout && !expenseOnly && <MobileBottomBar go={go} page={page} canExpenses={canAdminister} />}

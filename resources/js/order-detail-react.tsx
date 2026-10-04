@@ -36,6 +36,7 @@ import { createInFlightGet } from "./in-flight-get";
 
 type Props = {
   authenticatedRole: string;
+  onCountersChanged?: () => void;
   reopenOnLoad?: boolean;
   id: number;
   back: () => void;
@@ -2226,6 +2227,7 @@ function FinalShareCard({
 
 export default function OrderDetailPage({
   authenticatedRole,
+  onCountersChanged,
   id,
   back,
   readOnly = false,
@@ -2268,9 +2270,12 @@ export default function OrderDetailPage({
     pdfActionsRef = useRef<HTMLDivElement>(null),
     mobilePdfActionsRef = useRef<HTMLDetailsElement>(null);
   useEffect(() => { setLabelOpen(false); }, [id]);
+  const loadedStatus = useRef<{ id: number; status: string } | null>(null);
   const load = async () => {
     try {
       const next = await api(`/orders/${id}`);
+      if (loadedStatus.current?.id === next.id && loadedStatus.current.status !== next.status) onCountersChanged?.();
+      loadedStatus.current = { id: next.id, status: next.status };
       setOrder(next);
       if (!finalReportDirty)
         setFinalReport(

@@ -29,6 +29,25 @@ test('Painel consulta a semana uma vez e usa total, não tamanho da página', as
   expect(new URL(calls[0]).searchParams.get('per_page')).toBe('100');
 });
 
+test('Contadores de navegação limitam cliques a 30 segundos', async ({ page }) => {
+  await page.clock.install();
+  let calls = 0;
+  await page.route('**/api/navigation-summary', async route => {
+    calls++;
+    await route.fulfill({ json: { open_orders: calls, available_post_sales: 0 } });
+  });
+  await login(page);
+  await expect.poll(() => calls).toBe(1);
+  await page.getByRole('button', { name: 'Ordens', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Ordens de Serviço', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Clientes', exact: true }).click();
+  await expect(page.locator('[data-arl-clients-react="1"]')).toBeVisible();
+  expect(calls).toBe(1);
+  await page.clock.runFor(30_000);
+  await page.getByRole('button', { name: 'Ordens', exact: true }).click();
+  await expect.poll(() => calls).toBe(2);
+});
+
 test('Abrir OS reutiliza perfil autenticado sem novo GET me', async ({ page }) => {
   await login(page);
   const order = await createOrder(page);
