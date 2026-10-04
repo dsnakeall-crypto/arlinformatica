@@ -2274,7 +2274,7 @@ export default function OrderDetailPage({
   const load = async () => {
     try {
       const next = await api(`/orders/${id}`);
-      if (loadedStatus.current?.id === next.id && loadedStatus.current.status !== next.status) onCountersChanged?.();
+      if (loadedStatus.current && loadedStatus.current.id === next.id && loadedStatus.current.status !== next.status) onCountersChanged?.();
       loadedStatus.current = { id: next.id, status: next.status };
       setOrder(next);
       if (!finalReportDirty)

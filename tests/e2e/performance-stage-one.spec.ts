@@ -94,3 +94,23 @@ test('Ordens aguarda 300 ms, cancela busca antiga e pesquisa na página 1', asyn
   expect(new URL(calls[1]).searchParams.get('page')).toBe('1');
   await expect(search).toHaveValue('nova');
 });
+
+test('Buscar a partir da página 2 retorna à primeira página', async ({ page }) => {
+  await login(page);
+  const order = await createOrder(page);
+  const calls: URL[] = [];
+  await page.route('**/api/orders?*', async route => {
+    const url = new URL(route.request().url());
+    calls.push(url);
+    const currentPage = Number(url.searchParams.get('page'));
+    await route.fulfill({ json: { data: [order], total: 13, current_page: currentPage, last_page: 2, per_page: 12, from: currentPage === 1 ? 1 : 13, to: currentPage === 1 ? 12 : 13, next_page_url: currentPage === 1 ? '/api/orders?page=2' : null, tab_counts: {} } });
+  });
+  await page.getByRole('button', { name: 'Ordens', exact: true }).click();
+  await expect(page.locator('.order-row').filter({ hasText: order.number })).toBeVisible();
+  await page.getByRole('button', { name: 'Próxima', exact: true }).click();
+  await expect.poll(() => calls.at(-1)?.searchParams.get('page')).toBe('2');
+  await page.getByPlaceholder('Número da OS ou nome do cliente…').fill('Cliente Performance');
+  await expect.poll(() => calls.at(-1)?.searchParams.get('q')).toBe('Cliente Performance');
+  expect(calls.at(-1)?.searchParams.get('page')).toBe('1');
+  await expect(page.getByRole('button', { name: 'Anterior', exact: true })).toBeDisabled();
+});
