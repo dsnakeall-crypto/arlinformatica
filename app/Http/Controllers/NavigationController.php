@@ -3,16 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\ServiceOrder;
-use App\Services\PostSaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 class NavigationController extends Controller
 {
-    public function summary(PostSaleService $postSales): JsonResponse
+    public function summary(): JsonResponse
     {
-        $postSales->catchUp(true);
-
         return response()->json([
             'open_orders' => ServiceOrder::query()
                 ->whereNotIn('status', ['completed', 'interrupted'])

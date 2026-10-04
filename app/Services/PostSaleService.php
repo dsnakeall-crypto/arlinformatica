@@ -17,19 +17,21 @@ class PostSaleService
 
     public function __construct(private readonly NotificationService $notifications) {}
 
-    public function catchUp(bool $throttled = false): int
+    public function catchUp(bool $throttled = false, ?Carbon $completedSince = null): int
     {
         if ($throttled && ! Cache::add('post-sale:catch-up', true, now()->addMinutes(10))) {
             return 0;
         }
 
-        return DB::transaction(function () {
+        return DB::transaction(function () use ($completedSince) {
             $created = 0;
-            ServiceOrder::query()->with('client')->where('status', 'completed')->where('result', 'repair_completed')->whereNotNull('completed_at')->orderBy('completed_at')->chunkById(100, function ($orders) use (&$created) {
-                foreach ($orders as $order) {
-                    $created += $this->ensureCycle($order) ? 1 : 0;
-                }
-            });
+            ServiceOrder::query()->with('client')->where('status', 'completed')->where('result', 'repair_completed')->whereNotNull('completed_at')
+                ->when($completedSince, fn ($query) => $query->where('completed_at', '>=', $completedSince))
+                ->orderBy('completed_at')->chunkById(100, function ($orders) use (&$created) {
+                    foreach ($orders as $order) {
+                        $created += $this->ensureCycle($order) ? 1 : 0;
+                    }
+                });
 
             DB::table('post_sale_cycles')->where('active', true)->where('eligible_at', '<=', now())->get()->each(function ($cycle) {
                 $pending = DB::table('post_sale_actions')

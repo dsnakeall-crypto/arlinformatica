@@ -11,7 +11,6 @@ use App\Services\InventoryService;
 use App\Services\NotificationService;
 use App\Services\OrderNumber;
 use App\Services\PhotoOptimizer;
-use App\Services\PostSaleService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,9 +22,8 @@ use Illuminate\Validation\ValidationException;
 
 class ServiceOrderController extends Controller
 {
-    public function index(Request $r, PostSaleService $postSales): JsonResponse
+    public function index(Request $r): JsonResponse
     {
-        $postSales->catchUp(true);
         $paidByOrder = $this->effectivePaymentsByOrder();
         $q = ServiceOrder::query()
             ->select('service_orders.*')
@@ -77,9 +75,8 @@ class ServiceOrderController extends Controller
         return response()->json([...$orders->toArray(), 'summary' => $summary, 'tab_counts' => $this->tabCounts()]);
     }
 
-    public function desk(PostSaleService $postSales): JsonResponse
+    public function desk(): JsonResponse
     {
-        $postSales->catchUp(true);
         $orders = ServiceOrder::query()
             ->select('service_orders.*')
             ->with(['client:id,name,nickname,phone,street,number,district,city,state', 'closingMarkedBy:id,name'])

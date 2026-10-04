@@ -23,8 +23,8 @@ class PostSaleController extends Controller
 
     public function index(PostSaleService $service): JsonResponse
     {
-        // Sem throttle aqui: ao entrar no Pós-Venda, uma OS recém-concluída deve aparecer imediatamente.
-        $service->catchUp();
+        // Recuperação recente interativa; o comando agendado mantém a varredura completa.
+        $service->catchUp(false, now()->subDays(30));
         $rows = DB::table('post_sale_cycles as cycles')
             ->join('service_orders as orders', 'orders.id', '=', 'cycles.service_order_id')
             ->join('clients', 'clients.id', '=', 'cycles.client_id')

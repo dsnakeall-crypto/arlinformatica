@@ -50,6 +50,7 @@ class NavigationSummaryTest extends TestCase
             'result' => 'repair_completed', 'created_by' => $user->id,
         ]);
 
+        $this->artisan('post-sale:check')->assertExitCode(0);
         $this->actingAs($user)->getJson('/api/navigation-summary')
             ->assertOk()
             ->assertExactJson(['open_orders' => 1, 'available_post_sales' => 1]);

@@ -242,6 +242,32 @@ class StageSixTest extends TestCase
         $this->assertDatabaseMissing('audit_logs', ['action' => 'post_sale.card_deleted']);
     }
 
+    public function test_navigation_does_not_scan_history_recent_recovery_and_scheduled_full_scan_remain_idempotent(): void
+    {
+        Carbon::setTestNow('2026-10-04 12:00:00');
+        $old = $this->order('9100001', now()->subDays(90), 'repair_completed');
+        $template = (array) DB::table('clients')->where('id', $this->client)->first();
+        unset($template['id']);
+        $this->client = DB::table('clients')->insertGetId([...$template, 'document' => '11144477735']);
+        $recent = $this->order('9100002', now()->subDays(8), 'repair_completed');
+
+        foreach (['/api/orders', '/api/orders/desk', '/api/navigation-summary'] as $endpoint) {
+            $this->actingAs($this->user)->getJson($endpoint)->assertOk();
+            $this->assertDatabaseCount('post_sale_cycles', 0);
+            $this->assertDatabaseCount('notifications', 0);
+        }
+        $this->getJson('/api/post-sales')->assertOk()->assertJsonCount(1)->assertJsonPath('0.number', $recent->number);
+        $this->assertDatabaseMissing('post_sale_cycles', ['service_order_id' => $old->id]);
+        $this->assertDatabaseHas('post_sale_cycles', ['service_order_id' => $recent->id, 'active' => true]);
+        $this->artisan('post-sale:check')->assertExitCode(0);
+        $this->assertDatabaseHas('post_sale_cycles', ['service_order_id' => $old->id, 'active' => true]);
+        $this->assertDatabaseCount('post_sale_cycles', 2);
+        $this->assertDatabaseCount('post_sale_actions', 4);
+        $this->artisan('post-sale:check')->assertExitCode(0);
+        $this->assertDatabaseCount('post_sale_cycles', 2);
+        $this->assertDatabaseCount('post_sale_actions', 4);
+    }
+
     private function bulkCycles(int $count): array
     {
         $template = (array) DB::table('clients')->where('id', $this->client)->first();
