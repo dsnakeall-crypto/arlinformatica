@@ -42,7 +42,7 @@ test('histórico desktop: consulta real, divisão individual e quitada compacta 
   await page.screenshot({ path: 'output/controle-gasto/quitadas-compactas-desktop.png', fullPage: true });
 });
 
-test('mobile documento: projeção sem sobreposição, filtros recolhidos, lista sem imagens e ícones iguais', async ({ page }) => {
+test('mobile documento: projeção sem sobreposição, gastos só em lista e ícones iguais', async ({ page }) => {
   const data = await fixture(page);
   await page.evaluate(() => localStorage.setItem('arl-layout-mode', 'mobile'));
   await page.setViewportSize({ width: 390, height: 844 });
@@ -50,15 +50,15 @@ test('mobile documento: projeção sem sobreposição, filtros recolhidos, lista
   await expect(page.locator('.cg-mobile')).toBeVisible();
   await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
   await expect(page.getByLabel('Pesquisar compra ou instituição')).not.toBeVisible();
-  await page.getByRole('button', { name: 'Lista', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Lista', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Cards', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Pesquisar e filtrar', exact: true })).toHaveCount(0);
   const row = page.locator('.cg-bank-list-row').filter({ hasText: data.bank.name });
   await expect(row).toBeVisible();
   await expect(row.locator('img,.cg-card-artwork')).toHaveCount(0);
   expect((await row.boundingBox())!.height).toBeLessThan(100);
   await expect(row.locator('.cg-type-grid')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Pesquisar e filtrar', exact: true }).click();
-  await page.getByLabel('Filtrar por responsável').selectOption('one');
-  await page.getByRole('button', { name: /Fechar filtros/ }).click();
+  await expect(page.locator('#cg-debt-filters')).toHaveCount(0);
   await expect(page.getByLabel('Filtrar por responsável')).not.toBeVisible();
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   await page.screenshot({ path: 'output/controle-gasto/mobile-lista-compacta.png', fullPage: true });
@@ -88,10 +88,17 @@ test('mobile documento: projeção sem sobreposição, filtros recolhidos, lista
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
   await expect(page.locator('.cg-bank-list')).toBeVisible();
-  await page.getByRole('button', { name: 'Pesquisar e filtrar', exact: true }).click();
-  await expect(page.getByLabel('Filtrar por responsável')).toHaveValue('');
-  await page.getByRole('button', { name: /Fechar filtros/ }).click();
+  await expect(page.locator('#cg-debt-filters')).toHaveCount(0);
   await row.locator('button.cg-institution').click();
   await expect(page.locator('.cg-type-grid>.cg-panel').first()).toBeVisible();
   expect((await page.locator('.cg-type-grid>.cg-panel').first().boundingBox())!.height).toBeLessThan(65);
+  const typeRow = page.locator('.cgm-type-list>.cg-panel').filter({ hasText: data.kind.name });
+  await expect(typeRow.locator('.cg-type-count')).toContainText('1');
+  await page.screenshot({ path: 'output/controle-gasto/mobile-tipos-em-lista.png', fullPage: true });
+  await typeRow.click();
+  await expect(page.locator('.cg-debt-row')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Voltar aos tipos', exact: true }).click();
+  await expect(typeRow).toBeVisible();
+  await page.getByRole('button', { name: 'Voltar às instituições', exact: true }).click();
+  await expect(row).toBeVisible();
 });

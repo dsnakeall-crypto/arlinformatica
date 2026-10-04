@@ -677,3 +677,8 @@ Detalhes e alcance em `docs/FORNECEDORES_FICHA.md`. O agendamento único é ence
 ## Resumo mobile: instituições compactas — 04/10/2026
 
 - [OK] Nome e saldo na mesma linha, vencimento e responsável/parcelas abaixo; fontes e espaços menores. Divisão de Todos e acesso aos gastos preservados. Lint, TypeScript/build e regressão mobile existente aprovados em banco isolado. Backup externo verificado de 1.972 arquivos, alterações e Git em C:/Users/Allan/ARL-backups/instituicoes-mobile-compactas-20261004-025504. Sem alteração de dados de uso ou publicação.
+
+## Gastos mobile somente em lista — 04/10/2026
+
+- [OK] Gastos mobile sem filtros e sem Cards/Lista; instituições e tipos ativos/customizados em linhas azuis compactas com contagens. Retorno às instituições e aos tipos; ações de pagamento/quitação abaixo da listagem. Preferência e filtros Web/PC, Quitadas e Projeção preservados.
+- [OK] Lint e TypeScript/build aprovados; dois fluxos mobile e dois desktop de contagens/preferência passaram em banco isolado. Captura mobile revisada. Backup externo de 444 arquivos de projeto, diff local e histórico Git verificado em C:/Users/Allan/ARL-backups/gastos-mobile-lista-20261004-030248. Sem mudança no banco de uso ou publicação.

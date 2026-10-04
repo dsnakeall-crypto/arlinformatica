@@ -100,7 +100,7 @@ test('mobile gastos: quatro ícones, resumo correto das partes, instituição, m
   await institution.screenshot({ path: 'output/controle-gasto/mobile-instituicao-compacta.png' });
   await page.setViewportSize({ width: 393, height: 851 });
   await institution.click();
-  await expect(page.getByLabel('Filtrar por responsável')).toHaveValue('one');
+  await expect(page.getByLabel('Filtrar por responsável')).toHaveCount(0);
   await page.locator('.cg-type-grid button').filter({ hasText: kind.name }).click();
   await page.locator('.cg-debt-row').filter({ hasText: 'Mobile compra shared' }).click();
   await expect(page.locator('.cg-table-wrap tbody tr')).toHaveCount(2);

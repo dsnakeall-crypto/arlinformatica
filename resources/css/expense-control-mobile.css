@@ -146,6 +146,16 @@ html[data-layout=mobile] .cg-popup-blue button { min-height:44px; }
 .cg-mobile.cg-list-view .cg-type-count { margin:0; font-size:13px; }
 .cg-mobile.cg-list-view .cg-type-count small { display:none; }
 .cg-mobile.cg-list-view .cg-type-grid>.cg-panel>span { font-size:0; margin:0; }
+.cg-mobile.cg-list-view .cg-type-grid.cgm-type-list { padding:0; gap:8px; }
+.cg-mobile.cg-list-view .cgm-type-list>.cg-panel { grid-template-columns:minmax(0,1fr) auto; gap:3px 8px; padding:10px 12px; min-height:56px; border:1px solid #b9ceee!important; border-radius:14px!important; box-shadow:0 3px 7px #274b7312,inset 0 1px #fff!important; justify-content:stretch; text-align:left; }
+.cg-mobile.cg-list-view .cgm-type-list>.cg-panel>svg { display:none; }
+.cg-mobile.cg-list-view .cgm-type-list h3 { grid-column:1; grid-row:1; font-size:14px; overflow-wrap:anywhere; }
+.cg-mobile.cg-list-view .cgm-type-list .cg-type-count { grid-column:1; grid-row:2; font-size:10px; font-weight:500; color:#59728e; }
+.cg-mobile.cg-list-view .cgm-type-list .cg-type-count small { display:inline; font-size:inherit; }
+.cg-mobile.cg-list-view .cgm-type-list>.cg-panel>span { grid-column:2; grid-row:1/3; }
+.cg-mobile.cg-list-view .cgm-type-list>.cg-panel>span svg { width:17px; height:17px; }
+.cg-mobile .cgm-institution-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.cg-mobile .cgm-institution-actions button { flex:1; padding:9px 10px; font-size:11px; }
 .cg-mobile .cg-institution>footer { display:flex; gap:5px; }
 .cg-mobile .cg-institution>footer>button { width:36px; height:36px; min-height:36px!important; padding:8px!important; display:flex; justify-content:center; align-items:center; }
 .cg-mobile .cg-institution>footer>button svg { width:17px; height:17px; }

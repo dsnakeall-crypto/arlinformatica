@@ -171,3 +171,7 @@ No card principal de Todos/Allan/Carol/Casal, Total original ocupa uma linha e P
 ### Resumo mobile: instituições compactas — 04/10/2026
 
 Instituição e valor na mesma linha, separados por dois-pontos; vencimento abaixo e responsável/parcelas em texto pequeno. Padding, fontes e espaços reduzidos, alinhamento à esquerda e seta discreta. Visão Todos preserva a divisão dos valores. Ação de abrir gastos e cálculos preservados. Captura: output/controle-gasto/mobile-instituicao-compacta.png.
+
+### Gastos mobile somente em lista — 04/10/2026
+
+Substitui a alternância Cards/Lista e os filtros recolhidos somente em Gastos mobile. Instituições e tipos usam linhas azuis compactas: título à esquerda, legenda menor abaixo e seta à direita. Tipos preservam contagens e categorias personalizadas; ações financeiras abaixo. Botões explícitos para voltar às instituições e aos tipos. Web/PC, Quitadas e Projeção preservados. Captura conferida: output/controle-gasto/mobile-tipos-em-lista.png. Backup externo de arquivos, alterações e Git verificado: C:/Users/Allan/ARL-backups/gastos-mobile-lista-20261004-030248.
