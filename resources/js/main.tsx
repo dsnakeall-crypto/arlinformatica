@@ -5533,6 +5533,7 @@ function App() {
           <ExpenseControlPage mobile={mobileLayout} />
         ) : detail ? (
           <OrderDetailPage
+            authenticatedRole={me.role || ""}
             key={`${detail}-${orderAction || "view"}`}
             initialAction={orderAction}
             id={detail}

@@ -34,6 +34,7 @@ import TextImprovement from "./text-improvement";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
 
 type Props = {
+  authenticatedRole: string;
   reopenOnLoad?: boolean;
   id: number;
   back: () => void;
@@ -2220,6 +2221,7 @@ function FinalShareCard({
 }
 
 export default function OrderDetailPage({
+  authenticatedRole,
   id,
   back,
   readOnly = false,
@@ -2228,8 +2230,8 @@ export default function OrderDetailPage({
   onDirtyChange,
   onOpenClientHistory,
 }: Props & { readOnly?: boolean }) {
+  const role = authenticatedRole;
   const [order, setOrder] = useState<any>(),
-    [role, setRole] = useState<string | null>(null),
     [error, setError] = useState(""),
     [editOpen, setEditOpen] = useState(false),
     [reopenOpen, setReopenOpen] = useState(false),
@@ -2277,13 +2279,7 @@ export default function OrderDetailPage({
     }
   };
   useEffect(() => {
-    setRole(null);
-    void Promise.all([
-      load(),
-      api("/me")
-        .then((me) => setRole(me.role || ""))
-        .catch((reason) => setError(reason.message)),
-    ]);
+    void load();
   }, [id]);
   useEffect(() => {
     onDirtyChange?.(servicesDirty || finalReportDirty);

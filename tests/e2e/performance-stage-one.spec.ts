@@ -1,5 +1,20 @@
 import { expect, test } from '@playwright/test';
-import { login } from './helpers';
+import { api, login, uniqueDocument } from './helpers';
+
+async function createOrder(page: import('@playwright/test').Page) {
+  const client = await api(page, '/clients', 'POST', {
+    name: 'Cliente Performance', document: uniqueDocument(), phone: '35999990000', postal_code: '37160000',
+    street: 'Rua Performance', number: '1', district: 'Centro', city: 'Campos Gerais', state: 'MG',
+  });
+  expect(client.status).toBe(201);
+  const equipment = await api(page, '/catalogs/equipment');
+  const order = await api(page, '/orders', 'POST', {
+    client_id: client.body.id, equipment_type_id: equipment.body[0].id,
+    attendance_type: 'bench', reported_problem: 'Teste de performance', checklist: [],
+  });
+  expect(order.status).toBe(201);
+  return order.body;
+}
 
 test('Painel consulta a semana uma vez e usa total, não tamanho da página', async ({ page }) => {
   const calls: string[] = [];
@@ -12,6 +27,19 @@ test('Painel consulta a semana uma vez e usa total, não tamanho da página', as
   await expect(completed.locator('strong')).toHaveText('150');
   expect(calls).toHaveLength(1);
   expect(new URL(calls[0]).searchParams.get('per_page')).toBe('100');
+});
+
+test('Abrir OS reutiliza perfil autenticado sem novo GET me', async ({ page }) => {
+  await login(page);
+  const order = await createOrder(page);
+  let profileCalls = 0;
+  page.on('request', request => { if (new URL(request.url()).pathname === '/api/me') profileCalls++; });
+  await page.getByRole('button', { name: 'Ordens', exact: true }).click();
+  const row = page.locator('.order-row').filter({ hasText: order.number });
+  await row.getByRole('button', { name: 'Ver OS', exact: true }).click();
+  await expect(page.getByRole('heading', { name: `OS #${order.number}`, exact: true })).toBeVisible();
+  await expect(page.locator('[data-arl-order-detail-react="1"] .arl-od-services')).toBeVisible();
+  expect(profileCalls).toBe(0);
 });
 
 test('Ordens aguarda 300 ms, cancela busca antiga e pesquisa na página 1', async ({ page }) => {
