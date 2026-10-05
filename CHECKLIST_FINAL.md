@@ -732,3 +732,12 @@ Esta seção atualiza a situação da publicação registrada acima; relatórios
 - [OK] Nova release `8cb058a30ac4e05169f54f277f3f78ab8226700f` ativada reversivelmente; zero migrations pendentes/aplicadas. Hashes das 54 tabelas de negócio antes/depois preservados, incluindo 626 clientes, 54 OS e 34 pagamentos. `.env`, APP_KEY e 89 arquivos privados preservados.
 - [OK] 7.719 arquivos de execução e 71 públicos verificados; novo build conferido também por HTTPS. 17 leituras de API/PDF/foto, permissões, acesso sem sessão, health/PWA/OCR e login responsivo aprovados. Rollback de código/manifesto disponível, sem restaurar banco.
 - [OK] Escopo, pacote, evidências, bloqueio e procedimento de retomada documentados em `docs/MENU_LATERAL_FIXACAO_2026-10-04.md`.
+## Performance Etapa 2A — 05/10/2026
+
+- [OK] Cache explícito somente em memória, identidade/geração/parâmetros completos, TTL, retenção por inatividade, LRU de 128 entradas e rejeição de respostas obsoletas. Sem tokens/senhas/pagamentos/saldos ou detalhe completo de OS no cache.
+- [OK] Clientes preserva lista, pesquisa, ordenação, página e tamanho; Ordens preserva aba, texto/termo efetivo, página, tamanho, apresentação e metadados. Refresh mantém linhas; loading inicial e falha de atualização verificados. Voltar da OS preservado.
+- [OK] Quatro auxiliares seguros com TTL 5min e invalidação após confirmação de mutações. Criação/edição/exclusão/importação de clientes e operações de OS invalidam os assuntos relacionados. Comunicação entre abas contém somente assuntos/limpeza.
+- [OK] 36 testes frontend, TypeScript, ESLint, build, 39 testes backend/431 assertions isoladas e 51 cenários E2E distintos pertinentes aprovados; execução final de 26 E2E sem retries. Capturas revisadas. Não foi alegada execução da suíte E2E completa ou nova validação MySQL nesta etapa de frontend.
+- [OK] Backup externo de 2.102 arquivos, alterações e histórico Git verificado; 312 arquivos protegidos conferidos sem mudanças. Arquivos e alterações preexistentes preservados e fora dos commits desta etapa. Sem migration nova, mudanças no banco em uso ou publicação.
+- [OK] Relatório com arquitetura, commits/arquivos, políticas, invalidações, testes, limites, rollback do código e escopo em `docs/PERFORMANCE_ETAPA2A.md`; implementação em `codex/performance-etapa2a`, baseada em `main`.
+- [PENDENTE] Revisão/CI remota e eventual publicação sob autorização separada; medições reais de latência, volume e memória na KingHost após publicação. Não são entregas efetuadas por esta tarefa.

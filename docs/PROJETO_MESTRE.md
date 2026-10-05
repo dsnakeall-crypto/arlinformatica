@@ -1107,3 +1107,9 @@ Por solicitação do proprietário, cadastro, redefinição e instalação do pr
 ## Menu lateral com abertura explícita — 04/10/2026
 
 Por solicitação posterior do proprietário, no Web/PC o menu desfixado fica sempre recolhido em 58px. Passar o mouse não expande nem desloca o conteúdo; os ícones mostram seus nomes pela dica nativa do navegador. Fixar abre o menu de 240px; Desfixar recolhe imediatamente. A preferência continua salva por usuário no backend e respeitada ao recarregar, sem usar a antiga chave local de recolhimento. Mobile/Tablet mantém sua navegação própria. Nenhuma migration ou alteração de dados comerciais.
+
+## Performance Etapa 2A — 05/10/2026
+
+Por solicitação do proprietário, Clientes e lista de Ordens preservam dados/estado seguros em memória por usuário e geração da sessão. Clientes usa TTL 30s; Ordens, 15s; ambas retêm por até 2min sem uso. O retorno fresco evita nova consulta; o stale mantém linhas enquanto atualiza, sem apagar pesquisa, aba ou paginação. Sessão/identidade deve ser confirmada antes de mostrar cache; logout/expiração/troca limpa e respostas anteriores são descartadas. Mutações confirmadas invalidam os assuntos relacionados.
+
+Equipamentos, fabricantes, checklist e configuração operacional têm allowlist explícita e TTL de 5min, sem cache de estoque decisivo, pagamentos, saldos, tokens/senhas ou detalhe completo de OS. Nenhum cache persistente novo, alteração de backend/banco/Financeiro/Controle de Gasto/Pós-Venda/Fornecedores/service worker/enhancers ou mudança no destino de Voltar da OS. Relatório, limites e evidências: `docs/PERFORMANCE_ETAPA2A.md`. Entrega em branch própria, sem publicação nesta tarefa.
