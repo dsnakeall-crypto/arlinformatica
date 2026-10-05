@@ -1,5 +1,8 @@
 import '../css/sidebar-new-order.css';
 import NewOrderClientPicker from "./new-order-client-picker";
+import { CACHE_POLICIES, sessionCache } from './session-memory-cache';
+import { completedRequest, connectCacheTabs, clearSessionCache, safeAuxiliary, orderListPresentation } from './cache-requests';
+import CacheBoundary from './cache-boundary';
 import "./session-security";
 import "../css/session-security.css";
 import ClientImport from "./client-import";
@@ -144,7 +147,7 @@ const emptyClient = {
   state: "",
   complement: "",
 };
-const api = async (url: string, options: RequestInit = {}) => {
+const requestApi = async (url: string, options: RequestInit = {}) => {
   const token = document.querySelector<HTMLMetaElement>(
     'meta[name="csrf-token"]',
   )?.content;
@@ -162,6 +165,7 @@ const api = async (url: string, options: RequestInit = {}) => {
   const json = await r
     .json()
     .catch(() => ({ message: "Resposta inválida do servidor." }));
+  completedRequest(url, options, r.status);
   if (!r.ok)
     throw Object.assign(
       new Error(json.message || "Não foi possível concluir."),
@@ -169,6 +173,7 @@ const api = async (url: string, options: RequestInit = {}) => {
     );
   return json;
 };
+const api = (url: string, options: RequestInit = {}) => safeAuxiliary(url, options, () => requestApi(url, options));
 const digits = (value: unknown) =>
   typeof value === "string" ? value.replace(/\D/g, "") : "";
 const masks = {
@@ -710,21 +715,30 @@ function StatusPaymentModal({ order, onClose, onSaved }: any) {
     </div>
   );
 }
-function Orders({ open, role, initialTab = "progress", onCountersChanged }: any) {
-  const [items, setItems] = useState<Order[]>([]),
-    [meta, setMeta] = useState<any>({}),
-    [q, setQ] = useState(""),
-    [query, setQuery] = useState(""),
+function Orders({ open, role, initialTab, onCountersChanged }: any) {
+  const [initial] = useState(() => {
+    const view = sessionCache.read<{ q: string; query: string; tab: string; page: number; perPage: number }>('orders-view')?.value;
+    const tab = initialTab || view?.tab || 'progress';
+    const page = initialTab && initialTab !== view?.tab ? 1 : view?.page ?? 1;
+    const params = { tab, q: view?.query ?? '', page, per_page: view?.perPage ?? 12 };
+    return { view, tab, page, cached: sessionCache.read<any>('orders', params) };
+  });
+  const [items, setItems] = useState<Order[]>(initial.cached?.value.data ?? []),
+    [meta, setMeta] = useState<any>(initial.cached?.value ?? {}),
+    [q, setQ] = useState(initial.view?.q ?? ""),
+    [query, setQuery] = useState(initial.view?.query ?? ""),
     [searchRevision, setSearchRevision] = useState(0),
-    [tab, setTab] = useState(initialTab),
-    [page, setPage] = useState(1),
-    [perPage, setPerPage] = useState(12),
-    [loading, setLoading] = useState(true),
+    [tab, setTab] = useState(initial.tab),
+    [page, setPage] = useState(initial.page),
+    [perPage, setPerPage] = useState(initial.view?.perPage ?? 12),
+    [loading, setLoading] = useState(!initial.cached?.fresh),
+    [hasData, setHasData] = useState(Boolean(initial.cached)),
     [error, setError] = useState(""),
     [interrupt, setInterrupt] = useState<Order>(),
     [payment, setPayment] = useState<Order>();
   const activeRequest = useRef<AbortController | null>(null);
   useEffect(() => {
+    if (q === query && !activeRequest.current?.signal.aborted) return;
     const timer = setTimeout(() => {
       setQuery(q);
       setPage(1);
@@ -732,32 +746,56 @@ function Orders({ open, role, initialTab = "progress", onCountersChanged }: any)
     }, 300);
     return () => clearTimeout(timer);
   }, [q]);
-  const load = () => {
+  const load = (force = false) => {
+    if (!sessionCache.ready) return;
     activeRequest.current?.abort();
+    const params = { tab, q: query, page, per_page: perPage };
+    const cached = sessionCache.read<any>('orders', params);
+    if (cached) { setItems(cached.value.data); setMeta(cached.value); setHasData(true); }
+    if (cached?.fresh && !force) { setLoading(false); return; }
     const controller = new AbortController();
     activeRequest.current = controller;
+    const ticket = sessionCache.begin('orders', params);
     setLoading(true);
     api(
       `/orders?q=${encodeURIComponent(query)}&tab=${tab}&page=${page}&per_page=${perPage}`,
       { signal: controller.signal },
     )
       .then((x) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || !sessionCache.write(ticket, orderListPresentation(x), CACHE_POLICIES.orders)) return;
         setItems(x.data);
         setMeta(x);
+        setHasData(true);
         setError("");
       })
-      .catch((e) => { if (!controller.signal.aborted) setError(e.message); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+      .catch((e) => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setError(e.message); })
+      .finally(() => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setLoading(false); });
   };
   useEffect(() => {
     load();
-    return () => activeRequest.current?.abort();
+    const unsubscribe = sessionCache.subscribe(event => {
+      if (event.type === 'revoke' && event.resources.includes('orders')) { activeRequest.current?.abort(); setItems([]); setMeta({}); setHasData(false); setLoading(false); setError('Acesso às ordens recusado.'); }
+      else if (event.type === 'invalidate' && event.resources.includes('orders')) load(true);
+      else if (event.type === 'session' && sessionCache.ready) load();
+    });
+    const scope = sessionCache.sessionKey;
+    return () => {
+      if (sessionCache.sessionKey === scope) sessionCache.read('orders', { tab, q: query, page, per_page: perPage });
+      activeRequest.current?.abort(); unsubscribe();
+    };
   }, [query, tab, page, perPage, searchRevision]);
+  const priorInitialTab = useRef(initialTab);
   useEffect(() => {
+    if (!initialTab || initialTab === priorInitialTab.current) { priorInitialTab.current = initialTab; return; }
+    priorInitialTab.current = initialTab;
     setTab(initialTab);
     setPage(1);
   }, [initialTab]);
+  useEffect(() => {
+    const ticket = sessionCache.begin('orders-view');
+    const save = () => { sessionCache.write(ticket, { q, query, tab, page, perPage }, CACHE_POLICIES.view); };
+    save(); return save;
+  }, [q, query, tab, page, perPage]);
   const changeStatus = async (o: Order, next: string) => {
     if (next === "interrupted") {
       setInterrupt(o);
@@ -772,7 +810,6 @@ function Orders({ open, role, initialTab = "progress", onCountersChanged }: any)
       body: JSON.stringify({ status: next }),
     });
     onCountersChanged?.();
-    load();
   };
   const remove = async (o: Order) => {
     if (!["Master", "Administrador"].includes(role)) {
@@ -788,7 +825,6 @@ function Orders({ open, role, initialTab = "progress", onCountersChanged }: any)
     try {
       await api(`/orders/${o.id}`, { method: "DELETE" });
       onCountersChanged?.();
-      load();
     } catch (x: any) {
       setError(x.message);
     }
@@ -871,7 +907,8 @@ function Orders({ open, role, initialTab = "progress", onCountersChanged }: any)
           </label>
         </div>
         {error && <div className="alert">{error}</div>}
-        {loading ? (
+        {loading && hasData && <small role="status">Atualizando ordens…</small>}
+        {loading && !hasData ? (
           <div className="state">Carregando ordens…</div>
         ) : !items.length ? (
           <div className="state">Nenhuma ordem de serviço encontrada.</div>
@@ -924,7 +961,6 @@ function Orders({ open, role, initialTab = "progress", onCountersChanged }: any)
           onSaved={() => {
             setInterrupt(undefined);
             onCountersChanged?.();
-            load();
           }}
         />
       )}
@@ -934,7 +970,6 @@ function Orders({ open, role, initialTab = "progress", onCountersChanged }: any)
           onClose={() => setPayment(undefined)}
           onSaved={() => {
             setPayment(undefined);
-            load();
           }}
         />
       )}
@@ -996,6 +1031,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
   );
   if (quick)
     return (
+      <CacheBoundary>
       <Clients
         quick
         role="Master"
@@ -1005,6 +1041,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
           setQuick(false);
         }}
       />
+      </CacheBoundary>
     );
   const addPhotos = (files: readonly File[] | null | undefined) => {
     if (!files?.length) return;
@@ -5189,12 +5226,43 @@ function App() {
   }, []);
   const [me, setMe] = useState<any>();
   useEffect(() => {
-    api("/me")
-      .then((user) => {
-        setMe(user);
-        setSidebarPinned(Boolean(user.sidebar_pinned));
-      })
-      .catch(() => {});
+    let active = true, sequence = 0;
+    const disconnect = connectCacheTabs();
+    const verify = async (refreshToken = false) => {
+      const request = ++sequence;
+      sessionCache.pause();
+      try {
+        if (refreshToken) {
+          const response = await fetch('/session/csrf-token', { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' } });
+          const body = await response.json();
+          if (!response.ok || !body.authenticated) throw new Error('Sessão encerrada');
+          if (!active || sequence !== request) return;
+          const meta = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]');
+          if (meta && typeof body.csrf_token === 'string') {
+            // Detect a replaced server session without putting its token in cache keys.
+            if (meta.content !== body.csrf_token) clearSessionCache(false);
+            meta.content = body.csrf_token;
+          }
+        }
+        const user = await api('/me');
+        if (!active || sequence !== request) return;
+        sessionCache.confirm(user.id, user.role, 'tab-local');
+        setMe(user); setSidebarPinned(Boolean(user.sidebar_pinned));
+      } catch { if (active && sequence === request) clearSessionCache(); }
+    };
+    const visibility = () => { if (document.hidden) { sequence++; sessionCache.pause(); } else void verify(true); };
+    const expired = () => { sequence++; clearSessionCache(); };
+    const verified = () => { void verify(true); };
+    document.addEventListener('visibilitychange', visibility);
+    window.addEventListener('arl-cache-session-expired', expired);
+    window.addEventListener('arl-cache-verify', verified);
+    void verify();
+    return () => {
+      active = false; sequence++; disconnect(); sessionCache.clear();
+      document.removeEventListener('visibilitychange', visibility);
+      window.removeEventListener('arl-cache-session-expired', expired);
+      window.removeEventListener('arl-cache-verify', verified);
+    };
   }, []);
   const toggleSidebarPinned = async () => {
     const next = !sidebarPinned;
@@ -5235,10 +5303,10 @@ function App() {
     initialOrderId ? "orders" : pathPage || "dashboard",
   );
   const [detail, setDetail] = useState<number | undefined>(initialOrderId);
-  const [ordersTab, setOrdersTab] = useState(() =>
+  const [ordersTab, setOrdersTab] = useState<string | undefined>(() =>
     new URLSearchParams(location.search).get("tab") === "finalized"
       ? "finalized"
-      : "progress",
+      : undefined,
   );
   const [clientHistoryOrigin, setClientHistoryOrigin] = useState<{
     clientId: number;
@@ -5277,6 +5345,7 @@ function App() {
     if (me && me.role !== "Controle de Gasto") void loadNavigationSummary();
   }, [me, page, detail]);
   const logout = async () => {
+    clearSessionCache();
     navigationRefresh.current.sequence++;
     navigationRefresh.current.last = null;
     await fetch("/logout", {
@@ -5294,7 +5363,7 @@ function App() {
   const go = (p: Page, id?: number, action?: "edit" | "reopen", ordersInitialTab?: string) => {
     setOrderAction(action);
     if (p === "desk") p = "dashboard";
-    if (p === "orders" && !id) setOrdersTab(ordersInitialTab || "progress");
+    if (p === "orders" && !id) setOrdersTab(ordersInitialTab);
     if (p !== "new") setNewOrderClient(undefined);
     setClientHistoryOrigin(undefined);
     setPage(p);
@@ -5562,9 +5631,9 @@ function App() {
         ) : page === "dashboard" ? (
           <Dashboard go={go} role={me?.role} mobileLayout={mobileLayout} onCountersChanged={countersChanged} />
         ) : page === "orders" ? (
-          <Orders open={go} role={me?.role} initialTab={ordersTab} onCountersChanged={countersChanged} />
+          <CacheBoundary><Orders open={go} role={me?.role} initialTab={ordersTab} onCountersChanged={countersChanged} /></CacheBoundary>
         ) : page === "clients" ? (
-          <Clients
+          <CacheBoundary><Clients
             role={me?.role}
             initialClientId={clientHistoryOrigin?.clientId}
             onHistoryClose={
@@ -5577,7 +5646,7 @@ function App() {
               setNewOrderClient(client);
               go("new");
             }}
-          />
+          /></CacheBoundary>
         ) : page === "finance" ? (
           <FinancePage
             role={me?.role}

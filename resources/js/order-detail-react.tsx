@@ -33,6 +33,7 @@ import { isReopenedOrder } from "./order-reopened";
 import TextImprovement from "./text-improvement";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
 import { createInFlightGet } from "./in-flight-get";
+import { completedRequest, safeAuxiliary } from './cache-requests';
 
 type Props = {
   authenticatedRole: string;
@@ -79,6 +80,7 @@ const request = async (url: string, options: RequestInit = {}) => {
   const body = await response
     .json()
     .catch(() => ({ message: "Resposta inválida do servidor." }));
+  completedRequest(url, options, response.status);
   if (!response.ok)
     throw Object.assign(
       new Error(body.message || "Não foi possível concluir."),
@@ -88,7 +90,7 @@ const request = async (url: string, options: RequestInit = {}) => {
 };
 const inFlightGet = createInFlightGet();
 const api = (url: string, options: RequestInit = {}) =>
-  inFlightGet(`${csrf()}:${url}`, options, () => request(url, options));
+  safeAuxiliary(url, options, () => inFlightGet(`${csrf()}:${url}`, options, () => request(url, options)));
 
 const digits = (value: unknown) =>
   typeof value === "string" ? value.replace(/\D/g, "") : "";

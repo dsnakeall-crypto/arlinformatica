@@ -50,6 +50,7 @@ export function installSessionSecurity(): void {
   const csrf = () => document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]');
 
   const notify = (status: number) => {
+    window.dispatchEvent(new Event('arl-cache-session-expired'));
     if (document.getElementById('arl-session-notice')) return;
     const notice = document.createElement('section');
     notice.id = 'arl-session-notice';
@@ -83,6 +84,7 @@ export function installSessionSecurity(): void {
         }
         if (typeof body.csrf_token !== 'string' || !body.csrf_token || !csrf()) throw new Error('Token inválido');
         csrf()!.content = body.csrf_token;
+        window.dispatchEvent(new Event('arl-cache-verify'));
         title.textContent = 'Sessão verificada';
         message.textContent = 'Revise os dados e tente salvar novamente. Nenhuma operação foi repetida.';
         actions.replaceChildren();

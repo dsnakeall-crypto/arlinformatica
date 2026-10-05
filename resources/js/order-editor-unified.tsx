@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { FileText, Save, X, CalendarDays, Clock3, Wrench, Box, Tag, LockKeyhole, ClipboardList, Info, WandSparkles, ChevronDown } from 'lucide-react';
 import TextImprovement from './text-improvement';
 import OrderPopup from './order-popup';
+import { completedRequest } from './cache-requests';
 
 type Props = {
   orderId: number;
@@ -26,6 +27,7 @@ const api = async (url: string, options: RequestInit = {}) => {
     },
   });
   const body = await response.json().catch(() => ({ message: 'Resposta inválida do servidor.' }));
+  completedRequest(url, options, response.status);
   if (!response.ok) throw Object.assign(new Error(body.message || 'Não foi possível concluir.'), { errors: body.errors }) as ApiError;
   return body;
 };
