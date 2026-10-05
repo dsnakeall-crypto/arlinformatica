@@ -1,4 +1,6 @@
-import React, { FormEvent, useEffect, useMemo, useState } from "react";
+import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { CACHE_POLICIES, sessionCache } from './session-memory-cache';
+import { completedRequest } from './cache-requests';
 import {
   ArrowLeft,
   ChevronLeft,
@@ -114,6 +116,7 @@ const api = async (url: string, options: RequestInit = {}) => {
   const json = await r
     .json()
     .catch(() => ({ message: "Resposta inválida do servidor." }));
+  completedRequest(url, options, r.status);
   if (!r.ok)
     throw Object.assign(
       new Error(json.message || "Não foi possível concluir."),
@@ -564,27 +567,59 @@ export default function ClientsPage({
   initialClientId,
   onHistoryClose,
 }: Props) {
-  const [items, setItems] = useState<Client[]>([]),
-    [q, setQ] = useState(""),
-    [sort, setSort] = useState<"name" | "id">("name"),
-    [page, setPage] = useState(1),
-    [perPage, setPerPage] = useState(12),
-    [loading, setLoading] = useState(true),
+  const [initial] = useState(() => ({
+    list: sessionCache.read<{ data: Client[] }>('clients', { all: 1 }),
+    view: !quick ? sessionCache.read<{ q: string; sort: 'name' | 'id'; page: number; perPage: number }>('clients-view')?.value : undefined,
+  }));
+  const [items, setItems] = useState<Client[]>(initial.list?.value.data ?? []),
+    [q, setQ] = useState(initial.view?.q ?? ""),
+    [sort, setSort] = useState<"name" | "id">(initial.view?.sort ?? "name"),
+    [page, setPage] = useState(initial.view?.page ?? 1),
+    [perPage, setPerPage] = useState(initial.view?.perPage ?? 12),
+    [loading, setLoading] = useState(!initial.list?.fresh),
+    [hasData, setHasData] = useState(Boolean(initial.list)),
     [error, setError] = useState(""),
     [modal, setModal] = useState<Client | null | true>(quick ? true : null),
     [detail, setDetail] = useState<number | undefined>(initialClientId);
   const canManage = !quick && (role === "Master" || role === "Administrador");
-  const load = () => {
+  const activeRequest = useRef<AbortController | null>(null);
+  const load = (force = false) => {
+    if (!sessionCache.ready) return;
+    activeRequest.current?.abort();
+    const cached = sessionCache.read<{ data: Client[] }>('clients', { all: 1 });
+    if (cached) { setItems(cached.value.data); setHasData(true); }
+    if (cached?.fresh && !force) { setLoading(false); return; }
+    const controller = new AbortController(); activeRequest.current = controller;
+    const ticket = sessionCache.begin('clients', { all: 1 });
     setLoading(true);
     setError("");
-    api("/clients?all=1")
-      .then((x) => setItems(x.data || []))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    api("/clients?all=1", { signal: controller.signal })
+      .then((x) => {
+        if (controller.signal.aborted || !sessionCache.write(ticket, x, CACHE_POLICIES.clients)) return;
+        setItems(x.data || []); setHasData(true);
+      })
+      .catch((e) => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setError(e.message); })
+      .finally(() => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setLoading(false); });
   };
   useEffect(() => {
     void load();
+    const unsubscribe = sessionCache.subscribe(event => {
+      if (event.type === 'revoke' && event.resources.includes('clients')) { activeRequest.current?.abort(); setItems([]); setHasData(false); setLoading(false); setError('Acesso aos clientes recusado.'); }
+      else if (event.type === 'invalidate' && event.resources.includes('clients')) load(true);
+      else if (event.type === 'session' && sessionCache.ready) load();
+    });
+    const scope = sessionCache.sessionKey;
+    return () => {
+      if (sessionCache.sessionKey === scope) sessionCache.read('clients', { all: 1 });
+      activeRequest.current?.abort(); unsubscribe();
+    };
   }, []);
+  useEffect(() => {
+    if (quick) return;
+    const ticket = sessionCache.begin('clients-view');
+    const save = () => { sessionCache.write(ticket, { q, sort, page, perPage }, CACHE_POLICIES.view); };
+    save(); return save;
+  }, [q, sort, page, perPage, quick]);
   const filtered = useMemo(() => {
     const raw = q.trim(),
       needle = normalized(raw),
@@ -615,13 +650,17 @@ export default function ClientsPage({
     () => filtered.slice((page - 1) * perPage, page * perPage),
     [filtered, page, perPage],
   );
+  const previousFilters = useRef({ q, sort, perPage });
   useEffect(() => {
+    if (q === previousFilters.current.q && sort === previousFilters.current.sort && perPage === previousFilters.current.perPage) return;
+    previousFilters.current = { q, sort, perPage };
     setPage(1);
   }, [q, sort, perPage]);
   useEffect(() => {
-    if (page > pageCount) setPage(pageCount);
-  }, [page, pageCount]);
+    if (hasData && page > pageCount) setPage(pageCount);
+  }, [page, pageCount, hasData]);
   const onSaved = (saved: Client) => {
+    sessionCache.update<{ data: Client[] }>('clients', { all: 1 }, current => ({ ...current, data: current.data.some(c => c.id === saved.id) ? current.data.map(c => c.id === saved.id ? saved : c) : [...current.data, saved] }));
     setItems((current) => {
       const exists = current.some((c) => c.id === saved.id);
       return exists
@@ -640,6 +679,7 @@ export default function ClientsPage({
       return;
     try {
       await api(`/clients/${c.id}`, { method: "DELETE" });
+      sessionCache.update<{ data: Client[] }>('clients', { all: 1 }, current => ({ ...current, data: current.data.filter(item => item.id !== c.id) }));
       setItems((current) => current.filter((item) => item.id !== c.id));
     } catch (e: any) {
       window.alert(e.message || "Não foi possível excluir o cliente.");
@@ -736,9 +776,11 @@ export default function ClientsPage({
             </select>
           </label>
         </div>
-        {loading ? (
+        {loading && hasData && <small role="status">Atualizando clientes…</small>}
+        {error && hasData && <div role="alert" className="state error">{error}</div>}
+        {loading && !hasData ? (
           <div className="state">Carregando clientes…</div>
-        ) : error ? (
+        ) : error && !hasData ? (
           <div className="state error">{error}</div>
         ) : !filtered.length ? (
           <div className="state">Nenhum cliente encontrado.</div>

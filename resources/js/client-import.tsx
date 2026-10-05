@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { completedRequest } from './cache-requests';
 
 type Result = { read: number; created: number; ignored: number; failed: number; errors: { line: number; reason: string }[] };
 
@@ -16,6 +17,7 @@ export default function ClientImport() {
         headers: { Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '' },
       });
       const body = await response.json();
+      completedRequest('/settings/clients/import', { method: 'POST' }, response.status);
       if (!response.ok) throw new Error(response.status >= 500 ? 'Não foi possível concluir a importação. Nenhum cliente foi gravado. Tente novamente.' : body.errors?.file?.[0] ?? body.message ?? 'Importação recusada.');
       setResult(body); form.reset();
     } catch (failure) {
