@@ -67,16 +67,16 @@ test('pending auxiliary response cannot return user A data after identity change
 
 test('tabs exchange topic names/clear only, never cached clients, tokens or personal payloads', () => {
   const previousChannel = globalThis.BroadcastChannel, previousWindow = globalThis.window;
-  const messages = []; let instance;
+  const messages = [], instances = [];
   globalThis.window = new EventTarget();
-  globalThis.BroadcastChannel = class { constructor() { instance = this; } postMessage(value) { messages.push(value); } close() {} };
+  globalThis.BroadcastChannel = class { constructor() { instances.push(this); } postMessage(value) { messages.push(value); } close() {} };
   const disconnect = connectCacheTabs();
   try {
     clearSessionCache(false); confirm();
     sessionCache.write(sessionCache.begin('clients'), ['Personal data never sent'], { ttl: 30, retention: 120 });
     completedRequest('/clients/1', { method: 'PUT' }, 200);
     assert.deepEqual(messages, [{ type: 'invalidate', resources: ['clients', 'orders', 'dashboard'] }]);
-    instance.onmessage({ data: { type: 'clear' } }); assert.equal(sessionCache.ready, false);
+    instances[0].onmessage({ data: { type: 'clear' } }); assert.equal(sessionCache.ready, false);
     confirm(); clearSessionCache(); assert.deepEqual(messages.at(-1), { type: 'clear' });
   } finally { disconnect(); globalThis.BroadcastChannel = previousChannel; globalThis.window = previousWindow; clearSessionCache(false); }
 });
