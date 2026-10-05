@@ -3,6 +3,15 @@ import test from 'node:test';
 import { SessionMemoryCache } from '../../resources/js/session-memory-cache.ts';
 
 const policy = { ttl: 30, retention: 120 };
+test('default clock reads current Date.now rather than retaining an earlier function', () => {
+  const original = Date.now, cache = new SessionMemoryCache(); let time = 1_000;
+  try {
+    Date.now = () => time; cache.confirm(1, 'Master', 'local');
+    cache.write(cache.begin('clients'), ['old'], policy);
+    time += 30; assert.equal(cache.read('clients').fresh, false);
+    time += 120; assert.equal(cache.read('clients'), undefined);
+  } finally { Date.now = original; }
+});
 function fixture(limit = 128) {
   let time = 0;
   const cache = new SessionMemoryCache(limit, () => time);
@@ -32,6 +41,12 @@ test('TTL, idle retention and bounded LRU are separate', () => {
   for (const page of [1, 2, 3]) cache.write(cache.begin('orders', { page }), page, policy);
   assert.equal(cache.read('orders', { page: 1 }), undefined);
   assert.equal(cache.read('orders', { page: 2 }).value, 2);
+});
+test('a displayed list touched on exit starts idle retention then, without extending freshness', () => {
+  const { cache, advance } = fixture(); cache.write(cache.begin('clients'), ['visible'], policy);
+  advance(300); cache.touch('clients');
+  assert.deepEqual(cache.read('clients').value, ['visible']); assert.equal(cache.read('clients').fresh, false);
+  advance(120); assert.equal(cache.read('clients'), undefined);
 });
 test('canonical parameters separate pages/search/tabs and completed responses cannot race', () => {
   const { cache } = fixture();

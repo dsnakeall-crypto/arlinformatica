@@ -780,7 +780,7 @@ function Orders({ open, role, initialTab, onCountersChanged }: any) {
     });
     const scope = sessionCache.sessionKey;
     return () => {
-      if (sessionCache.sessionKey === scope) sessionCache.read('orders', { tab, q: query, page, per_page: perPage });
+      if (sessionCache.sessionKey === scope) sessionCache.touch('orders', { tab, q: query, page, per_page: perPage });
       activeRequest.current?.abort(); unsubscribe();
     };
   }, [query, tab, page, perPage, searchRevision]);

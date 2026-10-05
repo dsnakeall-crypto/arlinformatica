@@ -610,7 +610,7 @@ export default function ClientsPage({
     });
     const scope = sessionCache.sessionKey;
     return () => {
-      if (sessionCache.sessionKey === scope) sessionCache.read('clients', { all: 1 });
+      if (sessionCache.sessionKey === scope) sessionCache.touch('clients', { all: 1 });
       activeRequest.current?.abort(); unsubscribe();
     };
   }, []);

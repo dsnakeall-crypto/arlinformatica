@@ -16,7 +16,7 @@ export class SessionMemoryCache {
   private confirmed = false;
   private limit: number;
   private now: () => number;
-  constructor(limit = 128, now: () => number = Date.now) { this.limit = limit; this.now = now; }
+  constructor(limit = 128, now: () => number = () => Date.now()) { this.limit = limit; this.now = now; }
   get ready() { return this.confirmed && this.identity !== null; }
   get sessionKey() { return `${this.identity ?? 'none'}:${this.generation}`; }
   get snapshot() { return `${this.sessionKey}:${this.ready}`; }
@@ -69,6 +69,11 @@ export class SessionMemoryCache {
     if (!this.ready) return;
     const entry = this.entries.get(this.key(resource, params));
     if (entry) { entry.value = transform(entry.value as T); entry.lastUsed = this.now(); }
+  }
+  touch(resource: string, params: CacheParams = {}) {
+    if (!this.ready) return;
+    const entry = this.entries.get(this.key(resource, params));
+    if (entry) entry.lastUsed = this.now();
   }
   invalidateKey(resource: string, params: CacheParams = {}) {
     const key = this.key(resource, params);
