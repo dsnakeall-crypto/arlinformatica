@@ -30,7 +30,8 @@ class AuthController extends Controller
             'login' => $user->login,
             'role' => $user->role->name,
             'sidebar_pinned' => (bool) $user->sidebar_pinned,
-        ]);
+            'csrf_token' => $request->session()->token(),
+        ])->header('Cache-Control', 'no-store, private');
     }
 
     public function updateSidebarPreference(Request $request): JsonResponse

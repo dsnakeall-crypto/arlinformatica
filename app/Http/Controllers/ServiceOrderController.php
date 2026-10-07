@@ -12,6 +12,7 @@ use App\Services\NotificationService;
 use App\Services\OrderNumber;
 use App\Services\PhotoOptimizer;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -92,6 +93,8 @@ class ServiceOrderController extends Controller
     {
         $data = $r->validate([
             'client_id' => 'required|exists:clients,id',
+            'confirmed_open_order_ids' => 'sometimes|array|max:1000',
+            'confirmed_open_order_ids.*' => 'integer|min:1',
             'equipment_type_id' => 'required|exists:equipment_types,id',
             'manufacturer_id' => 'nullable|exists:manufacturers,id',
             'equipment_description' => 'nullable|string|max:500',
@@ -133,8 +136,19 @@ class ServiceOrderController extends Controller
             return ['label' => $template->label, 'note' => $template->allows_note ? trim($item['note']) : null];
         })->all();
 
-        $order = DB::transaction(function () use ($data, $numbers, $r, $inventory) {
-            $client = Client::findOrFail($data['client_id']);
+        $confirmed = $data['confirmed_open_order_ids'] ?? [];
+        unset($data['confirmed_open_order_ids']);
+        $order = DB::transaction(function () use ($data, $confirmed, $numbers, $r, $inventory) {
+            // Serialize openings for this client and recheck after the operator's confirmation.
+            $client = Client::whereKey($data['client_id'])->lockForUpdate()->firstOrFail();
+            $open = $this->openOrdersForClient($client)->lockForUpdate()->get();
+            if ($open->pluck('id')->diff($confirmed)->isNotEmpty()) {
+                throw new HttpResponseException(response()->json([
+                    'code' => 'CLIENT_HAS_OPEN_ORDERS',
+                    'message' => 'Este cliente já possui chamado em aberto. Confirma a abertura de um novo chamado?',
+                    'open_orders' => $open,
+                ], 409));
+            }
             $order = ServiceOrder::create([...$data, 'number' => $numbers->next(), 'status' => 'analysis', 'received_at' => now(), 'created_by' => $r->user()->id]);
             $order->histories()->create(['to_status' => 'analysis', 'user_id' => $r->user()->id]);
             $order->checklists()->createMany($data['checklist'] ?? []);
@@ -152,6 +166,20 @@ class ServiceOrderController extends Controller
         $notifications->notifyUsers('order_created', 'Nova OS aberta', "OS {$order->number} — {$order->client->name}", "/orders/{$order->id}", "order-created:{$order->id}", ['service_order_id' => $order->id]);
 
         return response()->json($order->load(['client', 'items']), 201);
+    }
+
+    private function openOrdersForClient(Client $client): Builder
+    {
+        return ServiceOrder::query()->where('client_id', $client->id)
+            ->whereNotIn('status', ['completed', 'interrupted'])
+            ->select('id', 'number', 'status', 'reported_problem', 'received_at', 'equipment_description')
+            ->orderByDesc('id');
+    }
+
+    public function clientOpenOrders(Client $client): JsonResponse
+    {
+        return response()->json(['data' => $this->openOrdersForClient($client)->get()])
+            ->header('Cache-Control', 'no-store, private');
     }
 
     public function show(ServiceOrder $order): JsonResponse

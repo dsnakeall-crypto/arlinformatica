@@ -66,7 +66,7 @@ class InventoryStockTest extends TestCase
             'balance_after' => 1,
         ]);
 
-        $this->postJson('/api/orders', $this->orderPayload($product, 2))
+        $this->postJson('/api/orders', [...$this->orderPayload($product, 2), 'confirmed_open_order_ids' => [$order['id']]])
             ->assertUnprocessable()
             ->assertJsonPath('errors.items.0', 'Estoque insuficiente para SSD controlado. Disponível: 1 unidade.');
         $this->assertSame(1, (int) DB::table('service_catalog')->where('id', $product)->value('stock_quantity'));

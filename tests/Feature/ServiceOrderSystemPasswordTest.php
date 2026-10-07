@@ -56,6 +56,7 @@ class ServiceOrderSystemPasswordTest extends TestCase
 
         $withoutPassword = $this->postJson('/api/orders', [
             ...$this->orderPayload('Sem senha cadastrada'),
+            'confirmed_open_order_ids' => [$created['id']],
             'system_password_absent' => true,
         ])->assertCreated()->json();
         $this->assertNull(DB::table('service_orders')->where('id', $withoutPassword['id'])->value('system_password'));

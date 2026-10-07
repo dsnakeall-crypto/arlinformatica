@@ -25,12 +25,19 @@ export async function api(page: Page, path: string, method = 'GET', body?: unkno
     : body;
   return page.evaluate(async ({ path, method, body }) => {
     const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
-    const response = await fetch(`/api${path}`, {
+    const send = (payload: unknown) => fetch(`/api${path}`, {
       method, credentials: 'same-origin',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: payload === undefined ? undefined : JSON.stringify(payload),
     });
-    return { status: response.status, body: await response.json().catch(() => null) };
+    let response = await send(body);
+    let result = await response.json().catch(() => null);
+    // Fixture creation explicitly acknowledges existing calls. UI confirmation is tested separately.
+    if (path === '/orders' && method === 'POST' && response.status === 409 && result?.code === 'CLIENT_HAS_OPEN_ORDERS' && !(body as any)?.confirmed_open_order_ids) {
+      response = await send({ ...(body as any), confirmed_open_order_ids: result.open_orders.map((order: any) => order.id) });
+      result = await response.json().catch(() => null);
+    }
+    return { status: response.status, body: result };
   }, { path, method, body: requestBody });
 }
 

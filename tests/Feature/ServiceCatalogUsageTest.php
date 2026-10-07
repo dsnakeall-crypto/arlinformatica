@@ -57,6 +57,7 @@ class ServiceCatalogUsageTest extends TestCase
         foreach ([2, 1] as $quantity) {
             $order = $this->postJson('/api/orders', [
                 'client_id' => $client->id,
+                'confirmed_open_order_ids' => $orderIds,
                 'equipment_type_id' => DB::table('equipment_types')->value('id'),
                 'attendance_type' => 'bench',
                 'reported_problem' => 'Uso do catálogo '.$quantity,

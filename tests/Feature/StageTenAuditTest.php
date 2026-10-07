@@ -64,9 +64,12 @@ class StageTenAuditTest extends TestCase
         ]);
         $order->checklists()->create(['label' => 'Tela riscada', 'note' => 'lado esquerdo']);
 
-        $this->actingAs($user)->getJson('/api/me')->assertOk()->assertExactJson([
+        $context = $this->actingAs($user)->getJson('/api/me')->assertOk();
+        $this->assertNotEmpty($context->json('csrf_token'));
+        $context->assertExactJson([
             'id' => $user->id, 'name' => $user->name, 'login' => $user->login, 'role' => 'Funcionário',
             'sidebar_pinned' => false,
+            'csrf_token' => $context->json('csrf_token'),
         ]);
         $detail = $this->getJson("/api/orders/{$order->id}")->assertOk()->json();
         $this->assertStringContainsString('wa.me', $detail['mobile_actions']['whatsapp_url']);

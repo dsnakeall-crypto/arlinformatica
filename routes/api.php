@@ -70,6 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/clients/document-status', [ClientController::class, 'documentStatus']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::get('/clients/{client}', [ClientController::class, 'show']);
+    Route::get('/clients/{client}/open-orders', [ServiceOrderController::class, 'clientOpenOrders']);
     Route::put('/clients/{client}', [ClientController::class, 'update'])->middleware('role:Master,Administrador');
     Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->middleware('role:Master,Administrador');
     Route::get('/catalogs/checklist', [CatalogController::class, 'checklist']);

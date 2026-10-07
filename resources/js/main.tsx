@@ -1,8 +1,10 @@
 import '../css/sidebar-new-order.css';
+import '../css/open-orders-warning.css';
 import NewOrderClientPicker from "./new-order-client-picker";
 import { CACHE_POLICIES, sessionCache } from './session-memory-cache';
 import { completedRequest, connectCacheTabs, clearSessionCache, safeAuxiliary, orderListPresentation } from './cache-requests';
 import CacheBoundary from './cache-boundary';
+import OrderPopup from './order-popup';
 import "./session-security";
 import "../css/session-security.css";
 import ClientImport from "./client-import";
@@ -169,7 +171,7 @@ const requestApi = async (url: string, options: RequestInit = {}) => {
   if (!r.ok)
     throw Object.assign(
       new Error(json.message || "Não foi possível concluir."),
-      { errors: json.errors },
+      { errors: json.errors, code: json.code, open_orders: json.open_orders },
     );
   return json;
 };
@@ -978,6 +980,10 @@ function Orders({ open, role, initialTab, onCountersChanged }: any) {
 }
 
 function NewOrder({ done, initialClient }: { done: (id: number) => void; initialClient?: Client }) {
+  const [existingOrders, setExistingOrders] = useState<Order[]>([]);
+  const [openOrderWarning, setOpenOrderWarning] = useState(false);
+  const submitAfterConfirmation = useRef(false);
+  const confirmedOrders = useRef<number[]>([]);
   const [clients, setClients] = useState<Client[]>([]),
     [services, setServices] = useState<Catalog[]>([]),
     [orderItems, setOrderItems] = useState<any[]>([]);
@@ -1021,6 +1027,22 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
     window.__arlSelectedClient = initialClient;
   }, [initialClient]);
   const currentClient = clients.find((c) => c.id === client);
+  useEffect(() => {
+    confirmedOrders.current = [];
+    submitAfterConfirmation.current = false;
+    setExistingOrders([]);
+    setOpenOrderWarning(false);
+    if (!client) return;
+    const controller = new AbortController();
+    api(`/clients/${client}/open-orders`, { signal: controller.signal })
+      .then(result => {
+        if (controller.signal.aborted) return;
+        setExistingOrders(result.data);
+        setOpenOrderWarning(result.data.length > 0);
+      })
+      .catch(() => { /* Submission checks again on the server, even if this preview fails. */ });
+    return () => controller.abort();
+  }, [client]);
   const photoPreviews = useMemo(
     () => photos.map((file) => ({ file, url: URL.createObjectURL(file) })),
     [photos],
@@ -1083,8 +1105,9 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
     (sum, x) => sum + x.quantity * x.price_cents,
     0,
   );
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const submit = async (e?: FormEvent) => {
+    e?.preventDefault();
+    if (busy) return;
     setBusy(true);
     setError("");
     try {
@@ -1105,6 +1128,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
         method: "POST",
         body: JSON.stringify({
           client_id: client,
+          confirmed_open_order_ids: confirmedOrders.current,
           equipment_type_id: type,
           manufacturer_id: null,
           equipment_description: equipmentDescription.trim(),
@@ -1125,6 +1149,12 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
       }
       done(order.id);
     } catch (x: any) {
+      if (x.code === 'CLIENT_HAS_OPEN_ORDERS') {
+        submitAfterConfirmation.current = true;
+        setExistingOrders(x.open_orders);
+        setOpenOrderWarning(true);
+        return;
+      }
       setError(
         (Object.values(x.errors || {}).flat()[0] as string) || x.message,
       );
@@ -1431,6 +1461,30 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
           </button>
         </div>
       </form>
+      {openOrderWarning && <OrderPopup
+        title="Cliente com chamado em aberto"
+        eyebrow="CONFIRMAR NOVA OS"
+        description={`${currentClient?.name || 'Este cliente'} já possui chamado em aberto. Confirma a abertura de um novo chamado?`}
+        icon={ClipboardList} variant="budget" closeLabel="Cancelar nova abertura"
+        onClose={() => { setOpenOrderWarning(false); confirmedOrders.current = []; }}
+      >
+        <div className="arl-open-orders-warning">
+          {existingOrders.map(order => <article key={order.id}>
+            <strong>OS #{order.number} · {status[order.status]}</strong>
+            <small>{order.equipment_description || 'Equipamento'} · {formatBrasiliaDateTime(order.received_at)}</small>
+            <b>Problema relatado</b>
+            <p>{order.reported_problem}</p>
+          </article>)}
+        </div>
+        <footer className="arl-3d-footer">
+          <button type="button" onClick={() => { setOpenOrderWarning(false); confirmedOrders.current = []; }}>Cancelar</button>
+          <button type="button" className="primary" onClick={() => {
+            confirmedOrders.current = existingOrders.map(order => order.id);
+            setOpenOrderWarning(false);
+            if (submitAfterConfirmation.current) void submit();
+          }}>Confirmar novo chamado</button>
+        </footer>
+      </OrderPopup>}
       {camera && (
         <CameraModal
           onClose={() => setCamera(false)}
@@ -2995,23 +3049,45 @@ function FinancePage({ role, openOrder }: any) {
   );
 }
 function Dashboard({ go, desk = false, role, mobileLayout = false, onCountersChanged }: any) {
-  const [items, setItems] = useState<Order[]>([]),
-    [closedItems, setClosedItems] = useState<Order[]>([]),
-    [completed, setCompleted] = useState(0),
+  const [initial] = useState(() => sessionCache.read<{ items: Order[]; closedItems: Order[]; completed: number }>('dashboard'));
+  const [items, setItems] = useState<Order[]>(initial?.value.items ?? []),
+    [closedItems, setClosedItems] = useState<Order[]>(initial?.value.closedItems ?? []),
+    [completed, setCompleted] = useState(initial?.value.completed ?? 0),
     [quick, setQuick] = useState(false),
-    [loading, setLoading] = useState(true),
+    [loading, setLoading] = useState(!initial),
+    [loadError, setLoadError] = useState(''),
     [interrupt, setInterrupt] = useState<Order>();
-  const load = () => {
-    setLoading(true);
-    api("/orders/desk")
-      .then(setItems)
-      .finally(() => setLoading(false));
-    api("/orders?tab=closed_week&per_page=100").then((x) => {
-      setClosedItems(x.data);
-      setCompleted(x.total);
-    });
+  const dashboardRequest = useRef<AbortController | null>(null);
+  const load = (force = false) => {
+    if (!sessionCache.ready) return;
+    dashboardRequest.current?.abort();
+    const cached = sessionCache.read<{ items: Order[]; closedItems: Order[]; completed: number }>('dashboard');
+    if (cached) { setItems(cached.value.items); setClosedItems(cached.value.closedItems); setCompleted(cached.value.completed); setLoading(false); }
+    if (cached?.fresh && !force) return;
+    const controller = new AbortController();
+    dashboardRequest.current = controller;
+    const ticket = sessionCache.begin('dashboard');
+    if (!cached) setLoading(true);
+    void Promise.all([
+      api('/orders/desk', { signal: controller.signal }),
+      api('/orders?tab=closed_week&per_page=100', { signal: controller.signal }),
+    ]).then(([open, closed]) => {
+      const value = { items: orderListPresentation({ data: open }).data as Order[], closedItems: orderListPresentation(closed).data as Order[], completed: closed.total };
+      if (controller.signal.aborted || !sessionCache.write(ticket, value, CACHE_POLICIES.orders)) return;
+      setItems(open); setClosedItems(closed.data); setCompleted(closed.total); setLoadError('');
+    }).catch(error => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setLoadError(error.message); })
+      .finally(() => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setLoading(false); });
   };
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+    const unsubscribe = sessionCache.subscribe(event => {
+      if (event.type === 'revoke' && event.resources.includes('dashboard')) { dashboardRequest.current?.abort(); setItems([]); setClosedItems([]); setCompleted(0); setLoading(false); }
+      else if (event.type === 'invalidate' && event.resources.includes('dashboard')) load(true);
+      else if (event.type === 'session' && sessionCache.ready) load();
+    });
+    const scope = sessionCache.sessionKey;
+    return () => { if (sessionCache.sessionKey === scope) sessionCache.touch('dashboard'); dashboardRequest.current?.abort(); unsubscribe(); };
+  }, []);
   if (desk)
     return (
       <>
@@ -3128,6 +3204,7 @@ function Dashboard({ go, desk = false, role, mobileLayout = false, onCountersCha
         </article>
       </div>
       <section className="panel dashboard-orders">
+        {loadError && <p role="alert">{loadError}</p>}
         <div className="dashboard-list-head">
           <div>
             <h2>Ordens em andamento</h2>
@@ -5228,31 +5305,25 @@ function App() {
   useEffect(() => {
     let active = true, sequence = 0;
     const disconnect = connectCacheTabs();
-    const verify = async (refreshToken = false) => {
+    const verify = async () => {
       const request = ++sequence;
       sessionCache.pause();
       try {
-        if (refreshToken) {
-          const response = await fetch('/session/csrf-token', { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' } });
-          const body = await response.json();
-          if (!response.ok || !body.authenticated) throw new Error('Sessão encerrada');
-          if (!active || sequence !== request) return;
-          const meta = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]');
-          if (meta && typeof body.csrf_token === 'string') {
-            // Detect a replaced server session without putting its token in cache keys.
-            if (meta.content !== body.csrf_token) clearSessionCache(false);
-            meta.content = body.csrf_token;
-          }
-        }
-        const user = await api('/me');
+        // Identity and CSRF are confirmed in one private response, rather than two serial round trips.
+        const { csrf_token: csrfToken, ...user } = await api('/me', { cache: 'no-store' });
         if (!active || sequence !== request) return;
+        const meta = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]');
+        if (meta && typeof csrfToken === 'string') {
+          if (meta.content !== csrfToken) clearSessionCache(false);
+          meta.content = csrfToken;
+        }
         sessionCache.confirm(user.id, user.role, 'tab-local');
         setMe(user); setSidebarPinned(Boolean(user.sidebar_pinned));
       } catch { if (active && sequence === request) clearSessionCache(); }
     };
-    const visibility = () => { if (document.hidden) { sequence++; sessionCache.pause(); } else void verify(true); };
+    const visibility = () => { if (document.hidden) { sequence++; sessionCache.pause(); } else void verify(); };
     const expired = () => { sequence++; clearSessionCache(); };
-    const verified = () => { void verify(true); };
+    const verified = () => { void verify(); };
     document.addEventListener('visibilitychange', visibility);
     window.addEventListener('arl-cache-session-expired', expired);
     window.addEventListener('arl-cache-verify', verified);
@@ -5629,7 +5700,7 @@ function App() {
             }
           />
         ) : page === "dashboard" ? (
-          <Dashboard go={go} role={me?.role} mobileLayout={mobileLayout} onCountersChanged={countersChanged} />
+          <CacheBoundary><Dashboard go={go} role={me?.role} mobileLayout={mobileLayout} onCountersChanged={countersChanged} /></CacheBoundary>
         ) : page === "orders" ? (
           <CacheBoundary><Orders open={go} role={me?.role} initialTab={ordersTab} onCountersChanged={countersChanged} /></CacheBoundary>
         ) : page === "clients" ? (

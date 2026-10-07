@@ -70,7 +70,7 @@ export function completedRequest(path: string, options: RequestInit, status: num
   if (status === 401 || status === 419) { clearSessionCache(); return; }
   if (status === 403) {
     const resource = auxiliaryResource(path)?.resource ?? (/^\/clients/.test(path) ? 'clients' : /^\/orders/.test(path) ? 'orders' : undefined);
-    if (resource) sessionCache.invalidate([resource], true);
+    if (resource) sessionCache.invalidate(resource === 'orders' ? ['orders', 'dashboard'] : [resource], true);
     return;
   }
   if (status < 200 || status >= 300 || (options.method || 'GET').toUpperCase() === 'GET') return;
