@@ -1,5 +1,9 @@
 # ARL Informática — Projeto Mestre
 
+## Atualização autorizada — 07/10/2026
+
+Nova OS deve avisar em popup quando o cliente tiver chamado operacional aberto, mostrando número e problema relatado e exigindo confirmação para outra abertura. Conferência também no backend, inclusive abertura concorrente; concluídas/interrompidas ficam fora. Retorno da aba confirma identidade/CSRF em uma consulta privada; Painel reutiliza apresentação segura por 15s em memória, com invalidação após alterações. Detalhes e validação em `docs/NAVEGACAO_CHAMADOS_2026-10-07.md`. Publicação autorizada após correções e validações, preservando banco e arquivos privados.
+
 ## 1. Objetivo
 
 Construir do zero um sistema completo de gestão para assistência técnica de informática, em português do Brasil, rápido, profissional, responsivo, seguro e independente de ChatGPT, Codex, Supabase ou qualquer serviço da OpenAI para funcionar depois de pronto.

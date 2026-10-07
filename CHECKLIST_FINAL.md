@@ -741,3 +741,10 @@ Esta seção atualiza a situação da publicação registrada acima; relatórios
 - [OK] Backup externo de 2.102 arquivos, alterações e histórico Git verificado; 312 arquivos protegidos conferidos sem mudanças. Arquivos e alterações preexistentes preservados e fora dos commits desta etapa. Sem migration nova, mudanças no banco em uso ou publicação.
 - [OK] Relatório com arquitetura, commits/arquivos, políticas, invalidações, testes, limites, rollback do código e escopo em `docs/PERFORMANCE_ETAPA2A.md`; implementação em `codex/performance-etapa2a`, baseada em `main`.
 - [PENDENTE] Revisão/CI remota e eventual publicação sob autorização separada; medições reais de latência, volume e memória na KingHost após publicação. Não são entregas efetuadas por esta tarefa.
+## Navegação e aviso de chamado aberto — 07/10/2026
+
+- [OK] Identidade/CSRF confirmados em uma consulta privada ao retornar; token excluído de estado/cache. Sessão, geração, permissões e rejeição de respostas antigas preservadas.
+- [OK] Painel reutiliza apresentação por 15s; retorno vencido mantém linhas, mutações invalidam e consultas anteriores são descartadas. Sem cache financeiro novo.
+- [OK] Popup de OS existente com número/status/relato; cancelamento sem gravação e confirmação explícita. Backend transacional rejeita aberturas concorrentes não confirmadas. Sem migration.
+- [OK] Backup externo de arquivos/alterações/Git validado; testes em cópia/banco isolados. 311 testes backend/6.479 verificações, 36 frontend, lint, TypeScript/build e Pint aprovados.
+- [PENDENTE] CI do commit final e publicação autorizada com backup atual de banco/privados, rollback e smoke test; resultados finais no relatório externo da execução.
