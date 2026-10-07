@@ -80,6 +80,9 @@ for (const [index, status] of statuses.entries()) {
   test(`status ${status.label}: criação, persistência e exibição preservam o estado operacional`, async ({ page }) => {
     const { clientName, order } = await createOrder(page, index + 1, status.label);
     await moveToStatus(page, order, status);
+    // Fixtures write directly via fetch, outside the UI's cache invalidation.
+    // Start the status/display contract with a fresh server-backed presentation.
+    await page.reload();
 
     const persisted = await api(page, `/orders/${order.id}`);
     expect(persisted.status, `Persistência de ${status.label}: GET da OS falhou`).toBe(200);
