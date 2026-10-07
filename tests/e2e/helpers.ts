@@ -76,9 +76,16 @@ export function uniqueDocument(seed = Date.now()) {
 }
 
 // Select through the React search rather than the retired hidden select.
-export async function selectNewOrderClient(page: Page, id: number) {
+export async function selectNewOrderClient(page: Page, id: number, confirmExisting = true) {
   const client = await api(page, '/clients/' + id);
   expect(client.status).toBe(200);
   await page.locator('.arl-client-search input').fill(client.body.client.name);
+  const preview = page.waitForResponse(response => new URL(response.url()).pathname === `/api/clients/${id}/open-orders`);
   await page.locator('.arl-client-results button[data-id="' + id + '"]').click();
+  const open = await (await preview).json();
+  // Existing UI fixtures deliberately open another call; exercise the actual confirmation button.
+  if (confirmExisting && open.data?.length) {
+    await page.getByRole('dialog', { name: 'Cliente com chamado em aberto' })
+      .getByRole('button', { name: 'Confirmar novo chamado', exact: true }).click();
+  }
 }
