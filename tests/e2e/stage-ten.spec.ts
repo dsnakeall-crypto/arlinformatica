@@ -161,11 +161,11 @@ test('Financeiro carrega o mês no topo e reaproveita os dados na aba mensal', a
   await page.locator('aside').getByRole('button', { name: 'Financeiro' }).click();
   await expect(page.getByRole('heading', { name: 'Financeiro' })).toBeVisible();
   await expect(page.getByText('RECEBIDO NO MÊS')).toBeVisible();
-  await expect.poll(() => monthRequests.length).toBe(2);
+  await expect.poll(() => monthRequests.length).toBe(1);
 
   await page.getByRole('button', { name: 'Mensal', exact: true }).click();
   await expect(page.getByText('Faturamento', { exact: true })).toBeVisible();
-  expect(monthRequests).toHaveLength(2);
+  expect(monthRequests).toHaveLength(1);
 });
 
 test('Movimentações usa botões para preservar os cinco filtros do lançamento', async ({ page }) => {
