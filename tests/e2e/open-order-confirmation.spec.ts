@@ -1,6 +1,29 @@
 import { expect, test } from '@playwright/test';
 import { api, login, selectNewOrderClient, uniqueDocument } from './helpers';
 
+test('Alterar status no Painel atualiza as listas uma vez, sem recarga duplicada', async ({ page }) => {
+  await login(page);
+  const client = await api(page, '/clients', 'POST', { name: 'Cliente Atualização Painel', document: uniqueDocument(), phone: '35999999999', street: 'Rua Teste', number: '1', district: 'Centro', city: 'Campos Gerais', state: 'MG', postal_code: '37160000' });
+  expect(client.status).toBe(201);
+  const equipment = await api(page, '/catalogs/equipment');
+  const order = await api(page, '/orders', 'POST', { client_id: client.body.id, equipment_type_id: equipment.body[0].id, attendance_type: 'bench', reported_problem: 'Teste de atualização do Painel.' });
+  expect(order.status).toBe(201);
+  await page.reload();
+  const row = page.locator('.dashboard-orders .order-row').filter({ hasText: order.body.number });
+  await expect(row).toBeVisible();
+  let desk = 0, closed = 0;
+  page.on('request', request => {
+    const url = new URL(request.url());
+    if (url.pathname === '/api/orders/desk') desk++;
+    if (url.pathname === '/api/orders' && url.searchParams.get('tab') === 'closed_week') closed++;
+  });
+  await row.getByRole('combobox').selectOption('waiting_part');
+  await expect(row.getByRole('combobox')).toHaveValue('waiting_part');
+  expect(desk).toBe(1);
+  expect(closed).toBe(1);
+  expect((await api(page, `/orders/${order.body.id}`)).body.status).toBe('waiting_part');
+});
+
 for (const width of [1366, 390]) {
 test(`Nova OS avisa com relato, cancela sem gravação e confirma segundo chamado (${width}px)`, async ({ page }) => {
   await page.setViewportSize({ width, height: 800 });

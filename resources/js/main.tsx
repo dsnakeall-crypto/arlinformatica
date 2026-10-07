@@ -3106,7 +3106,6 @@ function Dashboard({ go, desk = false, role, mobileLayout = false, onCountersCha
       body: JSON.stringify({ status: next }),
     });
     onCountersChanged?.();
-    load();
   };
   const remove = async (o: Order) => {
     if (!["Master", "Administrador"].includes(role)) return;
@@ -3117,7 +3116,6 @@ function Dashboard({ go, desk = false, role, mobileLayout = false, onCountersCha
     ) {
       await api(`/orders/${o.id}`, { method: "DELETE" });
       onCountersChanged?.();
-      load();
     }
   };
   return (
@@ -3230,7 +3228,6 @@ function Dashboard({ go, desk = false, role, mobileLayout = false, onCountersCha
           onSaved={() => {
             setInterrupt(undefined);
             onCountersChanged?.();
-            load();
           }}
         />
       )}

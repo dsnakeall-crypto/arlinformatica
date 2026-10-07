@@ -29,3 +29,5 @@ Testes em cópia externa com SQLite/discos descartáveis. PHP CLI do Windows foi
 ## Publicação autorizada
 
 O proprietário autorizou a publicação após as correções. Exige CI aprovada para o commit exato, pacote de fonte oficial, backup atual de banco/privados validado, conferência de migrations, preservação byte a byte do `.env`, armazenamento compartilhado e rollback. Não há SQL, seed ou migration a executar. Evidências finais de CI/servidor/rollback ficam no relatório externo da publicação, evitando alterar o commit já validado apenas para registrar resultados.
+
+A atualização do Painel após mudar status, interromper ou excluir OS usa somente a invalidação central já existente, evitando uma segunda recarga concorrente. Teste pelo formulário real verifica persistência do status e exatamente uma atualização de cada lista; os quatro cenários de confirmação/retorno/Painel passaram juntos.
