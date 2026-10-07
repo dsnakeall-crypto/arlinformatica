@@ -6,6 +6,14 @@ Ao voltar de uma aba oculta, a identidade e o token CSRF são confirmados juntos
 
 O Painel passa a reutilizar somente a apresentação das listas de OS e o contador semanal, em memória por usuário/geração, por 15 segundos, com retenção de dois minutos sem uso. Retorno fresco não repete as duas consultas. No retorno vencido a apresentação permanece enquanto a consulta atualiza. Alterações de OS/clientes invalidam o Painel; respostas obsoletas e consultas de telas desmontadas são descartadas. Saldos, pagamentos, senhas, fotos e detalhes completos não são armazenados. Financeiro, Fornecedores e Controle de Gasto não recebem cache novo. Não se promete eliminar latência de rede/hospedagem nem recargas completas do navegador.
 
+## Financeiro e diagnóstico ampliado
+
+Após o relato de lentidão em todas as abas, principalmente Financeiro, foram verificadas dez rotas em produção por leitura dentro de transação revertida. Tempos internos nesta amostra: 18–191 ms; isso não representa o tempo total percebido no navegador. Uma amostra HTTPS pública ficou em aproximadamente 213–229 ms. Em cópia isolada, Painel, Financeiro, Fornecedores e Controle de Gasto não apresentaram ciclos de mutação/requestAnimationFrame durante a janela de um segundo em repouso. São amostras pontuais, não garantia de ausência de outros gargalos.
+
+Financeiro abria com cinco GETs: overview (sem uso na tela), diário, a receber, mês atual e mês anterior. Agora abre apenas o mês atual. Diário e A Receber consultam ao abrir suas abas; mês anterior somente em Relatórios. Nenhum cache novo de saldos. As consultas usam AbortController e descartam respostas antigas ao trocar período, aba ou desmontar. A falha de uma seção não impede usar a navegação ou outra seção. Mutações atualizam o mês e somente os auxiliares abertos, sem repetir A Receber duas vezes. Indicadores ficam em carregamento/indisponível, sem apresentar zero como se fosse saldo confirmado.
+
+Teste de navegador cobre contagem de chamadas, abas Diário/A Receber/Mensal/Relatórios e resposta de mês antigo deliberadamente atrasada. Onze testes de navegador do Financeiro/operação passaram em base isolada; 36 testes frontend, lint, typecheck e build também passaram. Evidências externas: production-latency-before.json, browser-idle-profile.json e e2e-finance.log. Não se atribui toda a lentidão ao banco nem se promete ganho percentual de tempo com base nessas amostras.
+
 ## Chamado existente
 
 Selecionar cliente na Nova OS consulta `GET /api/clients/{client}/open-orders`, autenticado e sujeito às permissões atuais. Se houver OS operacional em aberto, mostra popup com número, status, data, equipamento e relato original, mantendo quebras de linha e escapando o texto pelo React. Cancelar/fechar não grava; Confirmar novo chamado autoriza continuar o formulário. Se o aviso surgir ao enviar, confirmar conclui aquele envio.

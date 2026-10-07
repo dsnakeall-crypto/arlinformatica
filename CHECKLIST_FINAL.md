@@ -1,3 +1,10 @@
+## Complemento Financeiro — 07/10/2026
+
+- [OK] Abertura com apenas o mês atual; diário, A Receber e comparação sob demanda.
+- [OK] Cancelamento e descarte de respostas de períodos anteriores; sem cache novo de saldos.
+- [OK] Testes de navegação e operação financeira: 11 aprovados em banco isolado.
+- [PENDENTE] CI do commit exato e publicação; evidência final no relatório externo da execução.
+
 # Checklist final — cabeçalhos brancos dos popups
 
 - [OK] Backup de código, alterações locais e histórico Git criado e verificado; backups anteriores preservados.

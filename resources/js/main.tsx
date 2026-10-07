@@ -2458,81 +2458,62 @@ function DailyRevenueChart({ data }: any) {
 }
 function FinancePage({ role, openOrder }: any) {
   const [tab, setTab] = useState("overview"),
-    [overview, setOverview] = useState<any>(),
     [daily, setDaily] = useState<any>(),
     [month, setMonth] = useState<any>(),
     [previous, setPrevious] = useState<any>(),
     [receivables, setReceivables] = useState<any>(),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState(""),
-    [monthLoading, setMonthLoading] = useState(false),
+    [monthLoading, setMonthLoading] = useState(true),
     [monthError, setMonthError] = useState(""),
-    [receivablesLoading, setReceivablesLoading] = useState(false),
+    [dailyLoading, setDailyLoading] = useState(true),
+    [dailyError, setDailyError] = useState(""),
+    [previousLoading, setPreviousLoading] = useState(true),
+    [previousError, setPreviousError] = useState(""),
+    [receivablesLoading, setReceivablesLoading] = useState(true),
     [receivablesError, setReceivablesError] = useState(""),
+    [refresh, setRefresh] = useState(0),
     [quick, setQuick] = useState(false),
     [expense, setExpense] = useState(false),
     [editingExpense, setEditingExpense] = useState<any>(),
     [moveFilter, setMoveFilter] = useState("all"),
     [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
-  const loadBase = async () => {
-    setLoading(true);
-    try {
-      const [o, d, r] = await Promise.all([
-        api("/finance/overview"),
-        api("/finance/daily"),
-        api("/finance/receivables"),
-      ]);
-      setOverview(o);
-      setDaily(d);
-      setReceivables(r);
-      setError("");
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const loadMonth = async () => {
+  useEffect(() => {
+    const controller = new AbortController();
     setMonthLoading(true);
     setMonthError("");
-    try {
-      const date = new Date(`${period}-01T12:00:00Z`);
-      date.setUTCMonth(date.getUTCMonth() - 1);
-      const prior = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
-      const [current, before] = await Promise.all([
-        api("/finance/month?period=" + period),
-        api("/finance/month?period=" + prior),
-      ]);
-      setMonth(current);
-      setPrevious(before);
-    } catch (e: any) {
-      setMonthError(e.message);
-    } finally {
-      setMonthLoading(false);
-    }
-  };
-  const loadReceivables = async () => {
-    setReceivablesLoading(true);
-    setReceivablesError("");
-    try {
-      setReceivables(await api("/finance/receivables"));
-    } catch (e: any) {
-      setReceivablesError(e.message);
-    } finally {
-      setReceivablesLoading(false);
-    }
-  };
+    api("/finance/month?period=" + period, { signal: controller.signal })
+      .then(result => { if (!controller.signal.aborted) setMonth(result); })
+      .catch(error => { if (!controller.signal.aborted) setMonthError(error.message); })
+      .finally(() => { if (!controller.signal.aborted) setMonthLoading(false); });
+    return () => controller.abort();
+  }, [period, refresh]);
   useEffect(() => {
-    void loadBase();
-  }, []);
+    if (tab !== "daily" && tab !== "receivables") return;
+    const controller = new AbortController();
+    const isDaily = tab === "daily";
+    const setBusy = isDaily ? setDailyLoading : setReceivablesLoading;
+    const setFailure = isDaily ? setDailyError : setReceivablesError;
+    setBusy(true);
+    setFailure("");
+    api(isDaily ? "/finance/daily" : "/finance/receivables", { signal: controller.signal })
+      .then(result => { if (!controller.signal.aborted) (isDaily ? setDaily : setReceivables)(result); })
+      .catch(error => { if (!controller.signal.aborted) setFailure(error.message); })
+      .finally(() => { if (!controller.signal.aborted) setBusy(false); });
+    return () => controller.abort();
+  }, [tab, refresh]);
   useEffect(() => {
-    void loadMonth();
-  }, [period]);
-  useEffect(() => {
-    if (tab === "receivables") void loadReceivables();
-  }, [tab]);
-  if (loading) return <div className="state">Carregando financeiro real…</div>;
-  if (error) return <div className="state error">{error}</div>;
+    if (tab !== "reports") return;
+    const controller = new AbortController();
+    const date = new Date(`${period}-01T12:00:00Z`);
+    date.setUTCMonth(date.getUTCMonth() - 1);
+    const prior = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+    setPreviousLoading(true);
+    setPreviousError("");
+    api("/finance/month?period=" + prior, { signal: controller.signal })
+      .then(result => { if (!controller.signal.aborted) setPrevious(result); })
+      .catch(error => { if (!controller.signal.aborted) setPreviousError(error.message); })
+      .finally(() => { if (!controller.signal.aborted) setPreviousLoading(false); });
+    return () => controller.abort();
+  }, [tab, period, refresh]);
   const canReport = role === "Master" || role === "Administrador";
   const tabs: [string, string, React.ComponentType<any>][] = [
     ["overview", "Visão Geral", LayoutDashboard],
@@ -2550,11 +2531,7 @@ function FinancePage({ role, openOrder }: any) {
     });
     window.open(d.url);
   };
-  const reload = () => {
-    void loadBase();
-    void loadMonth();
-    if (tab === "receivables") void loadReceivables();
-  };
+  const reload = () => setRefresh(value => value + 1);
   const daysInMonth = Number(period.slice(5, 7))
     ? new Date(
         Date.UTC(Number(period.slice(0, 4)), Number(period.slice(5, 7)), 0),
@@ -2669,7 +2646,7 @@ function FinancePage({ role, openOrder }: any) {
         ].map(([label, value, kind]: any) => (
           <article className={kind} key={label}>
             <small>{label}</small>
-            <strong>{monthLoading ? "…" : money(value)}</strong>
+            <strong>{monthLoading ? "…" : monthError ? "—" : money(value)}</strong>
           </article>
         ))}
         <span>{period.split("-").reverse().join("/")}</span>
@@ -2686,13 +2663,10 @@ function FinancePage({ role, openOrder }: any) {
           </button>
         ))}
       </div>
-      {tab === "overview" && (
+      {monthLoading && <div className="state" role="status">Carregando mês financeiro…</div>}
+      {monthError && <div className="state error" role="alert">Dados do mês indisponíveis: {monthError}</div>}
+      {tab === "overview" && !monthLoading && !monthError && (
         <>
-          {monthError && (
-            <div className="state error">
-              Dados do mês indisponíveis: {monthError}
-            </div>
-          )}
           <section
             className="payment-method-section panel"
             aria-labelledby="payment-method-title"
@@ -2786,7 +2760,7 @@ function FinancePage({ role, openOrder }: any) {
           </section>
         </>
       )}
-      {tab === "daily" && (
+      {tab === "daily" && (dailyLoading ? <div className="state">Carregando caixa diário…</div> : dailyError ? <div className="state error">{dailyError}</div> : daily && (
         <section className="panel finance-daily">
           <h2>Caixa Diário automático</h2>
           <strong className={daily.total_cents >= 0 ? "amount-positive" : "amount-negative"}>Total: {money(daily.total_cents)}</strong>
@@ -2808,8 +2782,8 @@ function FinancePage({ role, openOrder }: any) {
             <div className="state">Nenhuma movimentação no período.</div>
           )}
         </section>
-      )}
-      {tab === "moves" && (
+      ))}
+      {tab === "moves" && !monthLoading && !monthError && (
         <section className="panel finance-movements">
           <div className="section-title">
             <div>
@@ -2919,7 +2893,7 @@ function FinancePage({ role, openOrder }: any) {
           )}
         </section>
       )}
-      {tab === "month" && (
+      {tab === "month" && !monthLoading && !monthError && (
         <section className="panel finance-monthly">
           <div className="finance-cards">
             <article>
@@ -2961,7 +2935,7 @@ function FinancePage({ role, openOrder }: any) {
           </div>
         </section>
       )}
-      {tab === "reports" && (
+      {tab === "reports" && !monthLoading && !monthError && (previousLoading ? <div className="state">Carregando comparação mensal…</div> : previousError ? <div className="state error">{previousError}</div> : (
         <>
           <section
             className="report-summary"
@@ -3010,8 +2984,8 @@ function FinancePage({ role, openOrder }: any) {
             <button onClick={() => openMoves("refund")}>Ver lançamentos</button>
           </section>
         </>
-      )}
-      {tab === "expenses" && (
+      ))}
+      {tab === "expenses" && !monthLoading && !monthError && (
         <section className="panel finance-expenses">
           <h2>Despesas do mês</h2>
           <div className="finance-table-wrap">
