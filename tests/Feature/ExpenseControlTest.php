@@ -53,6 +53,52 @@ class ExpenseControlTest extends TestCase
         return [...['request_key' => (string) Str::uuid(), 'installment_ids' => $ids, 'kind' => 'payment', 'target' => 'one', 'paid_by' => 1, 'occurred_on' => '2026-10-02', 'amount_cents' => null, 'notes' => null], ...$extra];
     }
 
+    public function test_monthly_invoices_group_cards_but_keep_each_loan_and_all_responsibilities(): void
+    {
+        $this->createDebt(['name' => 'Cartão Allan', 'responsibility' => 'one', 'amount_cents' => 10000]);
+        $this->createDebt(['name' => 'Cartão Carol', 'responsibility' => 'two', 'amount_cents' => 20000]);
+        $this->createDebt(['name' => 'Cartão casal', 'amount_cents' => 30000]);
+        $loan = $this->postJson('/api/expense-control/catalogs/types', ['name' => 'Empréstimo', 'active' => true])->json('id');
+        $this->createDebt(['type_id' => $loan, 'name' => 'Reforma casa', 'amount_cents' => 40000]);
+        $this->createDebt(['type_id' => $loan, 'name' => 'Videogame', 'amount_cents' => 50000]);
+        $this->createDebt(['name' => 'Só novembro', 'start_month' => '2026-11', 'amount_cents' => 99000]);
+        $rows = $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk()->json('monthly_invoices');
+        $this->assertCount(3, $rows);
+        $this->assertSame(60000, collect($rows)->firstWhere('debt_id', null)['remaining_cents']);
+        $this->assertSame(150000, array_sum(array_column($rows, 'remaining_cents')));
+        $detail = $this->getJson('/api/expense-control/projection?details=1&month=2026-10&person=one')->assertOk();
+        $detail->assertJsonPath('total_cents', 150000)->assertJsonPath('one_cents', 70000)->assertJsonPath('two_cents', 80000)->assertJsonPath('shared_cents', 120000);
+        $this->assertSame(70000, array_sum(array_column($detail->json('data'), 'scope_cents')));
+        $this->getJson('/api/expense-control/projection?details=1&month=2026-10&person=invalid')->assertUnprocessable();
+    }
+
+    public function test_expense_notifications_are_private_transactional_and_idempotent_and_history_only_deletions(): void
+    {
+        $admin = $this->account('Administrador');
+        $expense = $this->account('Controle de Gasto');
+        $employee = $this->account('Funcionário');
+        $data = $this->payload(['name' => str_repeat('Compra ', 20)]);
+        $debt = $this->postJson('/api/expense-control/debts', $data)->assertCreated()->json();
+        $this->postJson('/api/expense-control/debts', $data)->assertCreated();
+        $notifications = DB::table('notifications')->where('type', 'expense_control')->get();
+        $this->assertCount(3, $notifications);
+        $this->assertEqualsCanonicalizing([$this->master->id, $admin->id, $expense->id], $notifications->pluck('user_id')->all());
+        $this->assertLessThanOrEqual(250, mb_strlen($notifications->first()->description));
+        $this->assertSame(30003, json_decode($notifications->first()->data, true)['amount_cents']);
+        $payment = $this->payment([$debt['installments'][0]['id']]);
+        $this->postJson('/api/expense-control/operations', $payment)->assertCreated();
+        $this->postJson('/api/expense-control/operations', $payment)->assertCreated();
+        $this->assertSame(6, DB::table('notifications')->where('type', 'expense_control')->count());
+        $this->getJson('/api/expense-control/activity')->assertOk()->assertJsonPath('total', 0);
+        $this->postJson('/api/expense-control/debts/'.$debt['debt']['id'].'/cancel', ['reason' => 'Duplicada no teste'])->assertOk();
+        $this->getJson('/api/expense-control/activity')->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.reason', 'Duplicada no teste')->assertJsonPath('data.0.debt_name', trim($data['name']));
+        $this->actingAs($employee)->getJson('/api/expense-control/projection?details=1&month=2026-10&person=one')->assertForbidden();
+        $this->getJson('/api/notifications')->assertOk()->assertJsonPath('unread', 0);
+        $this->actingAs($admin);
+        $this->postJson('/api/expense-control/operations', $this->payment([$debt['installments'][0]['id']]))->assertUnprocessable();
+        $this->assertSame(6, DB::table('notifications')->where('type', 'expense_control')->count());
+    }
+
     public function test_spending_history_preserves_original_shares_and_separates_advances(): void
     {
         $shared = $this->createDebt(['amount_cents' => 10001, 'installment_count' => 2]);
@@ -277,7 +323,7 @@ class ExpenseControlTest extends TestCase
     {
         $limited = $this->account('Controle de Gasto');
         $this->actingAs($limited);
-        foreach (['clients', 'orders', 'catalogs/services', 'suppliers', 'finance/overview', 'settings', 'users', 'navigation-summary', 'notifications', 'operational-settings'] as $path) {
+        foreach (['clients', 'orders', 'catalogs/services', 'suppliers', 'finance/overview', 'settings', 'users', 'navigation-summary', 'operational-settings'] as $path) {
             $this->getJson('/api/'.$path)->assertForbidden();
         }
         $this->postJson('/api/clients', [])->assertForbidden();

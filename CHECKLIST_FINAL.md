@@ -818,3 +818,14 @@ Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produç
 - [PENDENTE] CI e publicação desta organização, junto ao novo Clean e retenção de quatro backups.
 
 - [OK] Correção do clique no interruptor do WhatsApp: camada decorativa não intercepta eventos; interação de mouse e teclado coberta. Simulação de falha/atraso de módulos isolada do service worker no teste, sem mudança na PWA de produção.
+
+## Controle de Gasto — faturas e projeção, 08/10/2026
+
+- [OK] Faturas mensais integrais por instituição/cartão e contratos separados; Fixos de Casa por último, com seleção pessoal preservada nos indicadores.
+- [OK] Projeção em popup independente, divisão por pessoa/casal e paginação; consulta não muda o mês principal. Viewports 1366, 390 e 320 verificados no navegador.
+- [OK] Pagamentos organizados por instituição, tipo e compra; mês próprio e consulta de estornos preservada.
+- [OK] Histórico de exclusões com motivo, autor e data, sem apagar auditoria interna.
+- [OK] Notificações internas transacionais e deduplicadas, com destinatários autorizados; push posterior ao commit e à resposta HTTP.
+- [OK] Backend completo 317 testes/6555 verificações e repetição focada 33/515 após ajustes; 41 testes frontend, lint, TypeScript, Pint e build aprovados. Testes de navegador em banco isolado.
+- [PENDENTE] Recebimento físico das notificações depende de permissão/inscrição de cada telefone; conferir nos aparelhos reais.
+- [PENDENTE] CI do commit final, publicação e zeramento autorizado dos registros de teste; comprovantes serão registrados no relatório externo de publicação.

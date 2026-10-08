@@ -165,7 +165,11 @@ test('controle: perfil exclusivo não vê nem acessa dados da empresa', async ({
   await expect(page.getByRole('heading', { name: 'Controle de Gasto', exact: true })).toBeVisible();
   await expect(page.locator('aside nav button')).toHaveCount(1);
   await expect(page.getByRole('button', { name: 'Nova OS', exact: true })).toHaveCount(0);
-  for (const path of ['/clients', '/orders', '/finance/overview', '/suppliers', '/settings', '/notifications']) expect((await api(page, path)).status).toBe(403);
+  for (const path of ['/clients', '/orders', '/finance/overview', '/suppliers', '/settings']) expect((await api(page, path)).status).toBe(403);
+  const notifications = await api(page, '/notifications');
+  expect(notifications.status).toBe(200);
+  expect(notifications.body.data.every((n: any) => n.type === 'expense_control')).toBe(true);
+  await expect(page.getByRole('button', { name: 'Notificações', exact: true })).toBeVisible();
   await expect(page.locator('main')).not.toContainText('não foi possível');
 });
 
@@ -326,6 +330,7 @@ test('controle: fatura paga somente o mês e quitar compra liquida todas as parc
   await expect(page.locator('.cg-payments-panel .cg-entry')).toHaveCount(0);
   await expect(bankPayments).toContainText('1.200,00');
   await page.screenshot({ path: 'output/controle-gasto/pagamentos-instituicoes.png', fullPage: true });
+  await bankPayments.getByRole('button', { name: 'Ver pagamentos de ' + catalog.institution.name, exact: true }).click();
   await bankPayments.locator('.cg-payment-types > div > button').filter({ hasText: catalog.type.name }).click();
   await expect(bankPayments.locator('.cg-paid-purchase')).toHaveCount(1);
   await expect(bankPayments.locator('.cg-paid-purchase')).toContainText('12 parcelas');
@@ -348,10 +353,10 @@ test('controle: voltar ao menu Gastos restaura filtros e resumo agrupa venciment
     expect((await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: catalog.institution.id, type_id: catalog.type.id, name: 'Vencimento junto ' + n, recurrence: 'once', responsibility: 'shared', percent_one: 50, amount_cents: 10000, installment_count: 1, first_number: 1, start_month: month, due_day: 12, notes: null })).status).toBe(201);
   }
   await page.goto('/expense-control');
-  const bankRow = page.locator('.cg-attention-panel .cg-due-row').filter({ hasText: catalog.institution.name });
+  const bankRow = page.locator('.cg-invoice-card').filter({ hasText: catalog.institution.name });
   await expect(bankRow).toHaveCount(1);
   await expect(bankRow).toContainText('300,00');
-  await expect(bankRow).toContainText('3 compras');
+  await expect(bankRow).toContainText(catalog.type.name);
   await page.screenshot({ path: 'output/controle-gasto/vencimentos-instituicao.png', fullPage: true });
   await expect(page.getByRole('heading', { name: 'Compromissos do mês' })).toHaveCount(0);
   await page.getByRole('tab', { name: 'Gastos', exact: true }).click();

@@ -103,6 +103,7 @@ class ExpenseControl
                 DB::table('cg_installments')->insert($this->generate($debt, $start->addMonths($n), $debt->first_number + $n));
             }
             app(Audit::class)->record($request, 'expense_control.debt_created', 'expense_control', $id, null, ['name' => $debt->name, 'amount_cents' => $debt->amount_cents]);
+            app(ExpenseNotifications::class)->debt($request, $debt);
 
             return $id;
         });
@@ -213,6 +214,7 @@ class ExpenseControl
                     'notes' => 'Pagamento da instituição · '.($data['notes'] ?? ''), 'created_at' => now(), 'updated_at' => now()]);
             }
             $audit->record($request, 'expense_control.operation_created', 'expense_control', $operation, null, [...$data, 'allocations' => $plan['allocations']]);
+            app(ExpenseNotifications::class)->operation($request, $operation);
 
             return ['id' => $operation, 'replayed' => false];
         }, 3);
@@ -254,6 +256,7 @@ class ExpenseControl
                     'notes' => 'Quitação integral da compra · '.($data['notes'] ?? ''), 'created_at' => now(), 'updated_at' => now()]);
             }
             $audit->record($request, 'expense_control.operation_created', 'expense_control', $operation, null, ['debt_id' => $id, 'total_cents' => $plan['total_cents'], ...$data]);
+            app(ExpenseNotifications::class)->operation($request, $operation);
 
             return ['id' => $operation, 'replayed' => false];
         }, 3);
@@ -302,6 +305,7 @@ class ExpenseControl
                 ]);
             }
             $audit->record($request, 'expense_control.operation_created', 'expense_control', $operation, null, $data);
+            app(ExpenseNotifications::class)->operation($request, $operation);
 
             return ['id' => $operation, 'replayed' => false];
         }, 3);

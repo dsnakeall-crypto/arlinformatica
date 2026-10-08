@@ -232,7 +232,18 @@ class ExpenseControlController extends Controller
             ];
         }
 
-        return response()->json(['month' => $month->format('Y-m'), 'totals' => $totals, 'views' => $views, 'institutions' => $sortInstitutions($banks), 'count' => $items->count(), 'next_due' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(), 'overdue' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
+        $invoices = $items->filter(fn ($i) => $i['remaining_cents'] > 0)->groupBy(function ($i) {
+            // Types are user-defined: only credit-card types consolidate the monthly invoice.
+            $creditCard = preg_match('/cart[aã]o|cr[eé]dito/iu', $i['type_name']) && ! preg_match('/d[eé]bito/iu', $i['type_name']);
+
+            return $creditCard ? 'card:'.$i['institution_id'] : 'debt:'.$i['debt_id'];
+        })->map(function ($rows, $key) use ($householdIds) {
+            $first = $rows->first();
+
+            return ['key' => $key, 'institution_id' => $first['institution_id'], 'institution_name' => $first['institution_name'], 'type_name' => $first['type_name'], 'debt_id' => str_starts_with($key, 'card:') ? null : $first['debt_id'], 'name' => str_starts_with($key, 'card:') ? 'Fatura do cartão' : $first['name'], 'due_on' => $rows->min('due_on'), 'remaining_cents' => $rows->sum('remaining_cents'), 'count' => $rows->count(), 'household' => in_array((int) $first['institution_id'], $householdIds, true)];
+        })->sortBy(fn ($i) => [$i['household'] ? 1 : 0, $i['institution_name'], $i['type_name'], $i['name']])->values();
+
+        return response()->json(['month' => $month->format('Y-m'), 'monthly_invoices' => $invoices, 'totals' => $totals, 'views' => $views, 'institutions' => $sortInstitutions($banks), 'count' => $items->count(), 'next_due' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(), 'overdue' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
             'partial_installments' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['remaining_cents'] < $i['amount_cents'])->values(),
             'personal_next_due' => $personal->filter(fn ($i) => $i['due_on'] >= today()->toDateString())->take(5)->values(), 'personal_overdue' => $personal->filter(fn ($i) => $i['due_on'] < today()->toDateString())->take(5)->values()]);
     }
@@ -504,6 +515,16 @@ class ExpenseControlController extends Controller
     public function projection(Request $r): JsonResponse
     {
         $start = $this->period($r);
+        if ($r->boolean('details')) {
+            $r->validate(['person' => 'required|in:one,two,shared', 'page' => 'nullable|integer|min:1']);
+            $this->control->ensureMonth($start);
+            $scope = $r->query('person');
+            $items = $this->control->installments()->whereNull('d.cancelled_at')->where('i.month_on', $start->toDateString())->orderBy('i.due_on')->orderBy('i.id')->get()->map(fn ($i) => $this->control->figures($i));
+            $rows = $items->filter(fn ($i) => $scope === 'shared' ? $i['responsibility'] === 'shared' && $i['remaining_cents'] > 0 : $i['remaining_'.$scope.'_cents'] > 0)->map(fn ($i) => [...$i, 'scope_cents' => $scope === 'shared' ? $i['remaining_cents'] : $i['remaining_'.$scope.'_cents']])->values();
+            $page = max(1, $r->integer('page', 1));
+
+            return response()->json(['month' => $start->format('Y-m'), 'total_cents' => $items->sum('remaining_cents'), 'one_cents' => $items->sum('remaining_one_cents'), 'two_cents' => $items->sum('remaining_two_cents'), 'shared_cents' => $items->where('responsibility', 'shared')->sum('remaining_cents'), 'data' => $rows->slice(($page - 1) * 5, 5)->values(), 'current_page' => $page, 'last_page' => max(1, (int) ceil($rows->count() / 5)), 'total' => $rows->count()]);
+        }
         $months = [];
         for ($n = 0; $n < 12; $n++) {
             $this->control->ensureMonth($start->addMonths($n));
@@ -539,6 +560,17 @@ class ExpenseControlController extends Controller
 
     public function activity(): JsonResponse
     {
-        return response()->json(DB::table('audit_logs')->leftJoin('users', 'users.id', '=', 'audit_logs.user_id')->where('subject_type', 'expense_control')->orderByDesc('audit_logs.id')->select('audit_logs.id', 'audit_logs.action', 'audit_logs.created_at', 'users.name as user_name')->paginate(20));
+        $result = DB::table('audit_logs')->leftJoin('users', 'users.id', '=', 'audit_logs.user_id')->where('subject_type', 'expense_control')->where('action', 'expense_control.debt_cancelled')->orderByDesc('audit_logs.id')->select('audit_logs.id', 'audit_logs.action', 'audit_logs.created_at', 'audit_logs.before', 'audit_logs.after', 'users.name as user_name')->paginate(20);
+        $result->getCollection()->transform(function ($row) {
+            $before = json_decode($row->before ?? '{}', true);
+            $after = json_decode($row->after ?? '{}', true);
+            $row->debt_name = $before['name'] ?? 'Dívida removida';
+            $row->reason = $after['reason'] ?? 'Motivo não registrado no histórico antigo';
+            unset($row->before, $row->after);
+
+            return $row;
+        });
+
+        return response()->json($result);
     }
 }

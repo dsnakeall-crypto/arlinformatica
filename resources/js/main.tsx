@@ -1503,7 +1503,8 @@ function NotificationBell({ go }: any) {
       window.location.assign(n.url);
       return;
     }
-    if (n.url === "/post-sale") go("post-sale");
+    if (n.type === "expense_control" && n.url === "/expense-control") go("expense-control");
+    else if (n.url === "/post-sale") go("post-sale");
     else if (n.data?.service_order_id || n.url?.startsWith("/orders/"))
       go("orders", n.data?.service_order_id || +n.url.split("/").pop());
     else go("clients");
@@ -2311,7 +2312,7 @@ function App() {
               <option value="mobile">Mobile / Tablet</option>
             </select>
           </label>
-          {!expenseOnly && <NotificationBell go={go} />}
+          <NotificationBell go={go} />
         </header>
         {detail && openingFallback?.id === detail && <div className="notice" role="status">A OS foi criada. O navegador não abriu o WhatsApp. <a href={openingFallback.url} target="_blank" rel="noreferrer" onClick={() => setOpeningFallback(undefined)}>Abrir mensagem de abertura no WhatsApp</a> <button type="button" onClick={() => setOpeningFallback(undefined)}>Dispensar</button></div>}
         {!me ? <p role="status">Carregando sessão…</p> : expenseOnly || page === "expense-control" ? (

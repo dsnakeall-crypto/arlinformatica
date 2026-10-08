@@ -78,11 +78,11 @@ test('mobile gastos: quatro ícones, resumo correto das partes, instituição, m
   const summary = (await api(page, '/expense-control/summary?month=2028-05')).body;
   await expect(page.locator('.cgm-total>strong')).toHaveText(money(summary.totals.remaining_cents));
   for (const [index, key] of ['one', 'two', 'shared'].entries()) await expect(page.locator('.cgm-person>strong').nth(index)).toHaveText(money(summary.totals[key + '_remaining_cents']));
-  const institution = page.locator('.cgm-institution').filter({ hasText: bank.name });
+  const institution = page.locator('.cg-invoice-card').filter({ hasText: bank.name });
   await expect(institution).toContainText('R$ 600,00');
   await expect(institution).toContainText('12/05');
-  await expect(institution.locator('.cgm-split')).toContainText('R$ 250,00');
-  await expect(institution.locator('.cgm-split')).toContainText('R$ 350,00');
+  await expect(page.locator('.cgm-person>strong').first()).toHaveText(money(summary.totals.one_remaining_cents));
+  await expect(page.locator('.cgm-person>strong').nth(1)).toHaveText(money(summary.totals.two_remaining_cents));
   await page.screenshot({ path: 'output/controle-gasto/mobile-resumo-novo.png', fullPage: true });
   await noOverflow(page);
   await page.setViewportSize({ width: 320, height: 740 }); await noOverflow(page);
@@ -94,7 +94,8 @@ test('mobile gastos: quatro ícones, resumo correto das partes, instituição, m
   }
   await page.setViewportSize({ width: 393, height: 851 });
   await page.locator('.cgm-person').first().click();
-  await expect(institution.locator('.cgm-institution-amount')).toHaveText('R$ 250,00');
+  // Personal totals change; the complete monthly invoice intentionally includes both people.
+  await expect(institution.locator('strong')).toHaveText('R$ 600,00');
   await page.setViewportSize({ width: 393, height: 1600 });
   await institution.scrollIntoViewIfNeeded();
   await institution.screenshot({ path: 'output/controle-gasto/mobile-instituicao-compacta.png' });

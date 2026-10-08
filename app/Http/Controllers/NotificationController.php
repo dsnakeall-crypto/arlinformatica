@@ -15,8 +15,14 @@ class NotificationController extends Controller
             app(SupplierPayables::class)->remind();
         }
         $query = DB::table('notifications')->where('user_id', $request->user()->id)->where('active', true);
+        if ($request->user()->role?->name === 'Controle de Gasto') {
+            $query->where('type', 'expense_control');
+        }
         if (! in_array($request->user()->role?->name, ['Master', 'Administrador'], true)) {
             $query->where('type', '!=', 'supplier_due');
+        }
+        if (! in_array($request->user()->role?->name, ['Master', 'Administrador', 'Controle de Gasto'], true)) {
+            $query->where('type', '!=', 'expense_control');
         }
 
         return response()->json(['unread' => (clone $query)->whereNull('read_at')->count(), 'data' => $query->latest()->limit(50)->get()]);

@@ -1,5 +1,7 @@
 # Controle de Gasto — primeira etapa funcional (02/10/2026)
 
+Atualização vigente de 08/10/2026: [faturas mensais, pagamentos por instituição, exclusões, notificações e popup independente de projeção](CONTROLE_GASTO_FATURAS_PROJECAO.md). Essa revisão substitui as descrições históricas abaixo de navegação Projeção → Resumo e do painel O que merece atenção.
+
 ## Escopo aprovado
 
 Prioridade sobre a reformulação de Fornecedores. Cadastro do zero, sem importar despesas do aplicativo antigo. A organização do site de referência e o PDF de documentação orientam o funcionamento; a identidade visual segue a ARL: cabeçalhos brancos, vermelho, cards arredondados, sombras e diálogos aprovados da OS. Agenda, Contas e cadastro por voz ficam fora do escopo. Cadastro por foto possui leitura local e revisão obrigatória antes de salvar, além de alternativa opcional Gemini Pro documentada em [GEMINI_FATURAS.md](GEMINI_FATURAS.md). As descrições de processamento exclusivamente no aparelho abaixo se referem ao leitor local.

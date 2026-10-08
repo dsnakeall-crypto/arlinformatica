@@ -1138,3 +1138,7 @@ Original preservado como padrão; Clean optativo em Configurações > Identidade
 
 ## Aparência e backups — 08/10/2026
 O proprietário autorizou substituir o acabamento Clean pela referência codex-clipboard-02eb1f6e-1f43-4d93-8439-9e9728ac2713.png, somente aparência, preservando Original e todas as regras/posições. Retenção passa a quatro backups armazenados no servidor, somando manual, automático, upload e segurança. Validar os quatro mais recentes antes de apagar os anteriores, registrar auditoria e impedir limpeza da origem durante restauração. Download temporário não elimina um ponto de recuperação armazenado. Cópias externas no PC não participam da retenção.
+
+## Controle de Gasto — revisão de 08/10/2026
+
+Substitui a navegação anterior de Projeção para Resumo: Ver mês abre popup independente e responsivo sem mudar o mês principal, com detalhes por responsável/compartilhado paginados. Resumo apresenta faturas integrais do mês, consolidando cartões por instituição e separando cada contrato das demais dívidas. Pagamentos começa por instituição e permite consultar mês sem acumular lançamentos abertos. Histórico exibe apenas exclusões com motivo, preservando a auditoria interna. Notificações Gestor de Gastos para contas autorizadas em novos cadastros e pagamentos/quitações; push depende da permissão por aparelho. Preservar demais módulos e dados; limpeza excepcional de testes somente no escopo financeiro autorizado. Regras, backups e validações: docs/CONTROLE_GASTO_FATURAS_PROJECAO.md.
