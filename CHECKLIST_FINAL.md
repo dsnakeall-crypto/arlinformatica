@@ -816,3 +816,5 @@ Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produç
 
 - [OK] Configurações em seis abas, Sistema com submenus autorizados, cartões responsivos e interruptor acessível; alinhamento de clientes conferido em 1280/1366/1920 pixels. Testes isolados aprovados.
 - [PENDENTE] CI e publicação desta organização, junto ao novo Clean e retenção de quatro backups.
+
+- [OK] Correção do clique no interruptor do WhatsApp: camada decorativa não intercepta eventos; interação de mouse e teclado coberta. Simulação de falha/atraso de módulos isolada do service worker no teste, sem mudança na PWA de produção.

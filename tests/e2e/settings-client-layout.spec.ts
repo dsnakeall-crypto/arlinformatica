@@ -44,6 +44,9 @@ test('Configurações organiza cartões e Sistema; clientes alinham colunas em r
   await page.getByRole('tab', { name: 'Mensagens', exact: true }).click();
   const toggle = page.getByRole('switch', { name: 'Abrir WhatsApp automaticamente após criar OS' });
   const checked = await toggle.isChecked();
+  await toggle.setChecked(!checked);
+  expect(await toggle.isChecked()).toBe(!checked);
+  await toggle.setChecked(checked);
   await toggle.focus();
   await page.keyboard.press('Space');
   expect(await toggle.isChecked()).toBe(!checked);

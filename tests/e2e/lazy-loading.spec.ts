@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { login } from './helpers';
 
+// Network fault injection must reach Playwright instead of the PWA service worker.
+test.use({ serviceWorkers: 'block' });
+
 test('módulos carregam sob demanda e a navegação reutiliza o código já carregado', async ({ page }) => {
   const modules: string[] = [];
   let identityRequests = 0;
