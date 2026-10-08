@@ -785,3 +785,12 @@ Esta seção atualiza a situação da publicação registrada acima; relatórios
 - [OK] Consulta inicial duplicada de identidade eliminada; quatro E2E, lint, 38 testes frontend e build aprovados.
 - [PENDENTE] Reproduzir o engasgo no navegador oficial autenticado do proprietário e concluir diagnóstico de GPU/Alt+Tab.
 - [PENDENTE] CI e publicação desta investigação; visual e aplicativo oficial ainda preservados.
+
+## Caixa diário, A Receber e ditado — 08/10/2026
+- [OK] Entradas diárias por forma, calculadas dos lançamentos do dia sem estornos/despesas, mantendo centavos e classificando entradas sem método em Outro.
+- [OK] Acesso compacto à OS por ícone de olho com nome acessível em A Receber.
+- [OK] Integração real com reconhecimento de voz do navegador no Laudo Final editável; rascunho revisável, salvamento manual e encerramento ao sair.
+- [PENDENTE] Homologação com microfone físico e serviço de voz no navegador do proprietário; automação usa reconhecimento simulado para verificar ciclo de eventos, não precisão de áudio.
+- [PENDENTE] Publicação destas alterações; nenhuma mudança de banco/schema/migrations nesta entrega.
+
+Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produção em cópia isolada com Vite oficial, três E2E (cards diários/olho, ditado e carregamento seletivo financeiro) aprovados. Ditado E2E cobre preservação do rascunho/edição, ausência de salvamento automático, resultados repetidos, parada, permissão negada, encerramento ao sair com confirmação de alterações não salvas e navegador sem suporte. Conferência visual desktop/mobile nos cards e desktop nos botões do laudo. Backup externo incremental verificado: C:/Users/Allan/ARL-backups/finance-dictation-20261008, baseado no backup integral performance-investigation-20261008/source-before.zip, com delta, manifesto e Git bundle verificados. Vite local, arquivos privados e demais alterações anteriores preservados. Build isolado: C:/Users/Allan/ARL-backups/navigation-open-order-20261007-144055/test-source/public/build. Sem publicação.

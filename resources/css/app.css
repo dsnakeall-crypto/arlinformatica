@@ -195,3 +195,9 @@
 .layout-mobile .arl-global-mobile-nav.arl-mobile-icon-nav.has-expenses { grid-template-columns:repeat(4,minmax(0,1fr)); }
 .layout-mobile .arl-global-mobile-nav.arl-mobile-icon-nav button { min-height:48px; padding:9px; }
 .layout-mobile .arl-global-mobile-nav.arl-mobile-icon-nav svg { width:23px; height:23px; }
+
+/* Caixa diário e acesso compacto à OS: 08/10/2026. */
+.finance-daily-methods{margin-top:18px;padding:0}.finance-daily-methods h3{margin:0 0 6px}.finance-daily-methods .payment-method-grid{margin-top:12px}
+.finance-receivables .transaction button.finance-open-order-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;min-width:36px;min-height:36px;padding:6px!important;border:0!important;background:transparent!important;box-shadow:none!important;color:#374151!important;border-radius:8px}
+.finance-receivables .transaction button.finance-open-order-icon:hover{background:#eaf2ff!important}.finance-open-order-icon svg{width:19px;height:19px}
+.arl-report-text-tools{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-top:10px}.arl-report-text-tools>.arl-text-improvement{flex:1;min-width:180px;margin-top:0}.arl-report-dictation{display:grid;gap:5px}.arl-report-dictation button{display:inline-flex;align-items:center;justify-content:center;gap:6px}.arl-report-dictation svg{width:16px;height:16px}.arl-report-dictation small{font-size:12px;max-width:280px;color:#596477}.arl-report-dictation small:empty{display:none}.arl-report-dictation button[aria-pressed="true"]{outline:2px solid #c9001c;outline-offset:2px}

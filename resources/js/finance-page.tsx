@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
-import { ArrowDown, ArrowUp, ClipboardList, LayoutDashboard, Plus, Wallet, X, Banknote, CreditCard, Landmark, RotateCcw, Clock3, BarChart3, CalendarDays, CircleDollarSign, ReceiptText } from "lucide-react";
+import { ArrowDown, ArrowUp, ClipboardList, LayoutDashboard, Plus, Wallet, X, Banknote, CreditCard, Landmark, RotateCcw, Clock3, BarChart3, CalendarDays, CircleDollarSign, ReceiptText, Eye } from "lucide-react";
 import PageHeader from "./page-header";
 import { FinanceDate } from "./finance-date";
 import { api, Field, money, brazilianDate, movementTitle, expenseCategoryLabel, financeMethodLabel } from './app-shared';
+import { dailyPaymentMethods } from "./daily-payment-methods";
 import { QuickEntry } from './lazy-pages';
 
 export function ExpenseEntry({ open, onClose, onSaved, item }: any) {
@@ -292,6 +293,7 @@ export function FinancePage({ role, openOrder }: any) {
     ["transfer", "Transferência", Landmark],
     ["other", "Outro", Wallet],
   ] as const;
+  const dailyMethods = dailyPaymentMethods(daily?.transactions || []);
   const openMoves = (filter: string) => {
     setMoveFilter(filter);
     setTab("moves");
@@ -485,6 +487,19 @@ export function FinancePage({ role, openOrder }: any) {
       {tab === "daily" && (dailyLoading ? <div className="state">Carregando caixa diário…</div> : dailyError ? <div className="state error">{dailyError}</div> : daily && (
         <section className="panel finance-daily">
           <h2>Caixa Diário automático</h2>
+          <section className="payment-method-section finance-daily-methods" aria-labelledby="daily-payment-method-title">
+            <h3 id="daily-payment-method-title">Entradas do dia por forma de pagamento</h3>
+            <small>{brazilianDate(daily.date)} · America/Sao_Paulo</small>
+            <div className="payment-method-grid">
+              {methods.map(([key, label, Icon]) => {
+                const entry = dailyMethods[key];
+                return <article key={key}>
+                  <div className={`method-icon ${key}`}><Icon aria-hidden="true" /></div>
+                  <div><small>{label}</small><strong className="amount-positive">Entrada {money(entry)}</strong></div>
+                </article>;
+              })}
+            </div>
+          </section>
           <strong className={daily.total_cents >= 0 ? "amount-positive" : "amount-negative"}>Total: {money(daily.total_cents)}</strong>
           {daily.transactions.length ? (
             daily.transactions.map((t: any) => (
@@ -602,8 +617,8 @@ export function FinancePage({ role, openOrder }: any) {
                         </small>
                       </div>
                       <strong>Falta {money(r.balance_cents)}</strong>
-                      <button onClick={() => openOrder?.(r.id)}>
-                        Abrir OS
+                      <button type="button" className="finance-open-order-icon" aria-label={`Abrir OS ${r.number}`} title={`Abrir OS ${r.number}`} onClick={() => openOrder?.(r.id)}>
+                        <Eye aria-hidden="true" />
                       </button>
                     </article>
                   ))

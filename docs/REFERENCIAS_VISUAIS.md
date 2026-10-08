@@ -181,3 +181,6 @@ Substitui a alternância Cards/Lista e os filtros recolhidos somente em Gastos m
 ### Projeção mobile: divisão em linhas — 04/10/2026
 
 Mês e total preservados no topo. Responsáveis e Casal empilhados, com retratos de homem/mulher/casal, valor à direita e linha divisória entre as três linhas. Primeiro responsável em verde, segundo em preto, Casal em amarelo escuro para contraste no azul. Nomes continuam configuráveis. Aplica-se à Projeção futura mobile em Lista e Cards; desktop e cálculos preservados. Backup externo verificado: C:/Users/Allan/ARL-backups/projecao-mobile-linhas-20261004-030841. Captura: output/controle-gasto/mobile-projecao-corrigida.png.
+
+## Financeiro e laudo — 08/10/2026
+Caixa Diário reutiliza ícones, cores e moldura dos cards de formas de pagamento da Visão Geral, com entrada apenas e sem faixa de saída/percentual mensal. A Receber usa olho de 19px em área clicável de 36px, transparente, foco/hover acessíveis. Ditar laudo e Melhorar texto ficam lado a lado quando há espaço, com cápsula preto/vermelho; quebram linha em telas pequenas. Capturas em output/finance-dictation no ambiente isolado.

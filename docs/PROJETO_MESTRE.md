@@ -1126,3 +1126,9 @@ Configurações > Mensagens: abertura automática opcional do WhatsApp após OS 
 ### Carregamento dos módulos sob demanda — 07/10/2026
 
 As áreas do aplicativo carregam seu código quando abertas, com indicação de carregamento e menu disponível. Reutilizar módulos já carregados; preservar permissões, navegação e regras de dados. Inicialização da sessão e segurança permanecem imediatas. Sem mudanças no banco ou dependências de produção. Arquitetura, validações e cuidados de publicação em `docs/LAZY_LOADING.md`.
+
+## Caixa diário e ditado do laudo — 08/10/2026
+
+Por autorização do proprietário, Caixa Diário apresenta as seis formas de pagamento com entradas somente do dia em America/Sao_Paulo. Usa os lançamentos já filtrados pelo backend e seus valores efetivos auditados; despesas/estornos não contam como entrada. Entrada Rápida sem forma identificada aparece em Outro. Não modifica o saldo líquido existente nem adiciona consulta ao servidor. Em A Receber, acesso à OS passa a ícone de olho com nome acessível e tooltip, sem botão vermelho.
+
+Laudo Final editável oferece Ditar laudo antes de Melhorar texto, com o mesmo acabamento. Usa SpeechRecognition/webkitSpeechRecognition em pt-BR, iniciado exclusivamente pelo clique; pode depender do serviço de voz do navegador e de internet/permissão. O app não contrata API paga nem grava arquivo de áudio. Resultados finais acrescentam texto ao rascunho atual sem salvar automaticamente, preservando edição manual. Resultado parcial é apenas prévia. Parar encerra o ditado; sair do componente aborta e remove callbacks; ocultar a aba solicita parada. OS concluída/interrompida/arquivada mantém laudo somente leitura, sem ditado. Revisão e salvamento normais permanecem obrigatórios.

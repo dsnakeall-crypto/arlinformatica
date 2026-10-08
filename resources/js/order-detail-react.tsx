@@ -32,6 +32,7 @@ import { OrderPaymentFigures } from "./finance-refund-summary";
 import { finalMessageValue } from "./whatsapp-opening-flow";
 import { isReopenedOrder } from "./order-reopened";
 import TextImprovement from "./text-improvement";
+import ReportDictation from "./report-dictation";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
 import { createInFlightGet } from "./in-flight-get";
 import { completedRequest, safeAuxiliary } from './cache-requests';
@@ -777,6 +778,13 @@ function FinalReportPanel({
       />
       {validationMessage && <div className="alert">{validationMessage}</div>}
       {!readOnly && (
+        <div className="arl-report-text-tools">
+        <ReportDictation onTranscript={(text) => {
+          if (!text) return;
+          setValue((previous: string) => previous ? `${previous}${/\s$/.test(previous) ? '' : ' '}${text}` : text);
+          onValidationClear?.();
+          onDirtyChange?.(true);
+        }} />
         <TextImprovement
           value={value}
           onUse={(text) => {
@@ -784,6 +792,7 @@ function FinalReportPanel({
             onDirtyChange?.(true);
           }}
         />
+        </div>
       )}
       {!readOnly && (
         <div className="arl-od-report-actions">
