@@ -807,3 +807,5 @@ Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produç
 - [PENDENTE] Homologação visual pelo proprietário, CI do novo commit e eventual publicação. Servidor oficial e banco não foram alterados nesta tarefa. A repaginação não comprova resolução da lentidão de servidor relatada.
 
 - [OK] Isolamento da CI PHP corrigido para não exigir manifesto nos testes de servidor. Suíte completa sem public/build no ambiente isolado: 313 testes / 6505 verificações aprovados; Pint do arquivo de teste aprovado. Login com build real continua coberto pelo E2E.
+
+- [OK] Menus do Clean mais arredondados e com relevo leve; build e quatro testes de aparência aprovados em ambiente isolado (08/10/2026).

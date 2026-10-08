@@ -31,3 +31,6 @@ Testes unitários verificam preferência inválida, padrão Original e contraste
 
 ### Ajuste de isolamento da CI PHP
 A primeira CI identificou seis respostas 500 em testes PHP de login: a nova entrada visual exige manifesto Vite, ausente intencionalmente nos jobs backend. Tests/TestCase.php passa a usar withoutVite() nos testes de servidor, sem remover nenhuma asserção de autenticação/permissão. O E2E continua validando o login com build real. A suíte PHP completa passou com o build temporariamente retirado da cópia isolada: 313 testes e 6505 verificações. No Windows, o processo de teste usou memory_limit=512M para as imagens sintéticas; nenhuma configuração de produção foi alterada.
+
+## Refinamento dos menus — 08/10/2026
+Menus do Clean com cantos de 14 px e relevo estático discreto, sem degradê, blur ou animação adicional. Posições, dimensões e Original preservados. Backup externo verificado: C:/Users/Allan/ARL-backups/clean-menu-relief-20261008. Build com TypeScript aprovado e quatro cenários Playwright de aparência aprovados (sete cores, contraste, mobile, geometria, Original, impressão e login).

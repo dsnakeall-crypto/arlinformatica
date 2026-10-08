@@ -123,4 +123,14 @@
   html:root[data-arl-appearance="clean"][data-arl-palette] body .arl-finalization>.actions>.primary {
     background:var(--clean-accent)!important; color:var(--clean-on-accent)!important; box-shadow:none!important; border-color:var(--clean-accent)!important;
   }
+  /* Small static relief emphasizes navigation without motion or blurred layers. */
+  html:root[data-arl-appearance="clean"][data-arl-palette] body aside nav .nav-group button,
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(.order-tabs,.finance-tabs,.cg-tabs,.cg-summary-filter,.cg-summary-scope,.supplier-tabs,.supplier-detail-tabs,.arl-settings-tabs,.arl-order-subtabs,.arl-document-subtabs,.arl-catalog-picker-tabs,.mobile-nav,.mobile-bottom-nav) button {
+    border-radius:14px!important;
+    box-shadow:inset 0 1px 0 #ffffff80,0 1px 0 #24354b12,0 2px 4px #24354b0a!important;
+  }
+  html:root[data-arl-appearance="clean"][data-arl-palette] body aside nav .nav-group button.active,
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(.order-tabs,.finance-tabs,.cg-tabs,.cg-summary-filter,.cg-summary-scope,.supplier-tabs,.supplier-detail-tabs,.arl-settings-tabs,.arl-order-subtabs,.arl-document-subtabs,.arl-catalog-picker-tabs,.mobile-nav,.mobile-bottom-nav) button:is(.active,[aria-selected="true"],[aria-pressed="true"]) {
+    box-shadow:inset 0 1px 0 #ffffff38,0 1px 0 #24354b20,0 3px 6px #24354b12!important;
+  }
 }
