@@ -65,7 +65,7 @@ test('abertura da OS vai direto à ficha e mantém a mensagem fixa no menu de PD
   expect(term.status()).toBe(200);
 });
 
-test('Configurações não oferece mais edição da mensagem de abertura', async ({ page }) => {
+test('Configurações oferece mensagens separadas sem reativar editores legados', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
@@ -73,7 +73,10 @@ test('Configurações não oferece mais edição da mensagem de abertura', async
   await expect(page.locator('.arl-settings-tabs')).toBeVisible();
 
   const messages = page.locator('.arl-settings-tab[data-section="messages"]');
-  await expect(messages).toHaveCount(0);
+  await expect(messages).toHaveCount(1);
+  await messages.click();
+  await expect(page.locator('textarea[name="order_opened_internal_message"]')).toBeVisible();
+  await expect(page.locator('textarea[name="order_opened_external_message"]')).toBeVisible();
   await expect(page.locator('.arl-message-subnav [data-msg-tab="opening"]')).toHaveCount(0);
   await expect(page.locator('.arl-opening-message-panel')).toBeHidden();
   await expect(page.locator('.arl-message-subnav')).toBeHidden();

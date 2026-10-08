@@ -2,6 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 const e2ePort = process.env.E2E_PORT || '8011';
 const e2eBaseUrl = `http://127.0.0.1:${e2ePort}`;
+// Node fixtures and browser dates must agree with the application's business day.
+process.env.TZ = 'America/Sao_Paulo';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -12,6 +14,7 @@ export default defineConfig({
   reporter: process.env.CI ? [['html', { open: 'never' }], ['github']] : 'list',
   use: {
     baseURL: e2eBaseUrl,
+    timezoneId: 'America/Sao_Paulo',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
