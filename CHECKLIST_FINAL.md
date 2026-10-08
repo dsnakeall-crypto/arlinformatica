@@ -768,6 +768,8 @@ Esta seção atualiza a situação da publicação registrada acima; relatórios
 
 ## Lazy loading dos módulos — 08/10/2026
 
+- [OK] Carregamento visual com blocos claros, relevo 3D, brilho suave e texto “Preparando suas informações…”, exibido somente após 300 ms. Sem atraso artificial para abrir a tela; animações desativadas quando o dispositivo solicita redução de movimento. Lint, TypeScript/build e três cenários específicos no navegador aprovados em ambiente isolado.
+
 - [OK] Painel, Ordens, Nova OS, detalhe da OS, Clientes, Serviços/Produtos, Fornecedores, Financeiro, Controle de Gasto, Pós-Venda e Configurações carregam código sob demanda. Câmera, importação, editor de termos, zeramento e lançamento rápido também são adiados; sessão e segurança continuam imediatas.
 - [OK] Testes de rede confirmam ausência de módulos não abertos no carregamento inicial, reutilização nas próximas visitas, menu disponível durante lentidão e navegação preservada após falha de download.
 - [OK] JavaScript principal reduzido de 430.152 para 41.384 bytes; build completo com 81 arquivos. Raiz e cópia com configuração limpa geraram arquivos idênticos. Esse número não representa redução de latência do servidor.

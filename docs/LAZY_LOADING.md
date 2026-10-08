@@ -23,7 +23,10 @@ continuam compartilhadas pelo build, sem uma cópia por tela.
 
 ## Estados de carregamento
 
-Enquanto o módulo é baixado, aparece “Carregando área…”. O menu permanece
+Enquanto o módulo é baixado, após 300 ms aparece “Preparando suas informações…”
+com blocos claros em relevo e brilho animado. Carregamentos rápidos não exibem
+a animação; a tela abre assim que o código chega, sem tempo mínimo artificial.
+A preferência de reduzir movimento desativa as animações. O menu permanece
 utilizável. Sair da área antes da conclusão não permite que o módulo atrasado
 troque a seleção atual. O código importado é reutilizado nas próximas visitas.
 
