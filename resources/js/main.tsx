@@ -1,5 +1,6 @@
 import '../css/sidebar-new-order.css';
 import '../css/open-orders-warning.css';
+import { reserveOpeningWindow, openCreatedOrderMessage } from "./whatsapp-opening-flow";
 import NewOrderClientPicker from "./new-order-client-picker";
 import { CACHE_POLICIES, sessionCache } from './session-memory-cache';
 import { completedRequest, connectCacheTabs, clearSessionCache, safeAuxiliary, orderListPresentation } from './cache-requests';
@@ -979,7 +980,9 @@ function Orders({ open, role, initialTab, onCountersChanged }: any) {
   );
 }
 
-function NewOrder({ done, initialClient }: { done: (id: number) => void; initialClient?: Client }) {
+function NewOrder({ done, initialClient }: { done: (id: number, fallback?: string) => void; initialClient?: Client }) {
+  const [autoWhatsapp, setAutoWhatsapp] = useState(false);
+  useEffect(() => { let active = true; api("/operational-settings").then(s => { if (active) setAutoWhatsapp(s.order_opened_auto_whatsapp === true); }).catch(() => {}); return () => { active = false; }; }, []);
   const [existingOrders, setExistingOrders] = useState<Order[]>([]);
   const [openOrderWarning, setOpenOrderWarning] = useState(false);
   const submitAfterConfirmation = useRef(false);
@@ -1110,6 +1113,8 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
     if (busy) return;
     setBusy(true);
     setError("");
+    let conversation: Window | null = null;
+    let createdOrder: any;
     try {
       if (!client) throw new Error("Selecione um cliente cadastrado.");
       if (!type)
@@ -1124,6 +1129,7 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
         quantity: x.quantity,
         ...(x.free_price ? { unit_price_cents: x.price_cents } : {}),
       }));
+      conversation = reserveOpeningWindow(autoWhatsapp);
       const order = await api("/orders", {
         method: "POST",
         body: JSON.stringify({
@@ -1142,13 +1148,21 @@ function NewOrder({ done, initialClient }: { done: (id: number) => void; initial
           items,
         }),
       });
+      createdOrder = order;
       for (const photo of photos) {
         const form = new FormData();
         form.append("photo", photo);
         await api(`/orders/${order.id}/photos`, { method: "POST", body: form });
       }
-      done(order.id);
+      const fallback = openCreatedOrderMessage(order.opening_whatsapp, conversation);
+      done(order.id, fallback);
     } catch (x: any) {
+      conversation?.close();
+      if (createdOrder) {
+        window.alert("A OS foi criada, mas não foi possível concluir os anexos ou abrir o WhatsApp. Confira a OS antes de tentar novamente.");
+        done(createdOrder.id, createdOrder.opening_whatsapp?.auto_open ? createdOrder.opening_whatsapp?.url : undefined);
+        return;
+      }
       if (x.code === 'CLIENT_HAS_OPEN_ORDERS') {
         submitAfterConfirmation.current = true;
         setExistingOrders(x.open_orders);
@@ -3882,6 +3896,7 @@ function SettingsPage({ role, initialSection = "company" }: any) {
     ["company", "Empresa", "▣"],
     ["identity", "Identidade", "◆"],
     ["documents", "Documentos", "▧"],
+    ["messages", "Mensagens", "✉"],
     ["notifications", "Notificações", "♢"],
     ...(role === "Master"
       ? [
@@ -3894,7 +3909,7 @@ function SettingsPage({ role, initialSection = "company" }: any) {
     ["storage", "Armazenamento", "▥"],
   ];
   const generalSave =
-    ["company", "identity"].includes(section) ||
+    ["company", "identity", "messages"].includes(section) ||
     section === "documents";
   return (
     <>
@@ -4056,6 +4071,14 @@ function SettingsPage({ role, initialSection = "company" }: any) {
               </label>
             </>
           )}
+          {section === "messages" && <>
+            <h2>Mensagens de abertura da OS</h2>
+            <label className="check"><input type="checkbox" name="order_opened_auto_whatsapp" checked={String(data.order_opened_auto_whatsapp) === "1"} onChange={change} /> Abrir WhatsApp automaticamente após criar OS</label>
+            <p>A OS abre normalmente. Ativado, o WhatsApp abre com a mensagem pronta; você confirma o envio. Se o navegador bloquear, haverá um botão para abrir a conversa.</p>
+            <p>Variáveis: {"{{nome_cliente}}"}, {"{{numero_os}}"} e {"{{empresa}}"}. As linhas em branco são mantidas.</p>
+            <label className="field"><span>Atendimento interno</span><textarea name="order_opened_internal_message" value={data.order_opened_internal_message || ""} onChange={change} required maxLength={6000} rows={12} /></label>
+            <label className="field"><span>Atendimento externo</span><textarea name="order_opened_external_message" value={data.order_opened_external_message || ""} onChange={change} required maxLength={6000} rows={14} /></label>
+          </>}
           {message && <div className="notice">{message}</div>}
           <div className="actions">
             <button type="button" onClick={() => window.print()}>
@@ -5355,6 +5378,7 @@ function App() {
     orderId: number;
   }>();
   const [newOrderClient, setNewOrderClient] = useState<Client>();
+  const [openingFallback, setOpeningFallback] = useState<{ id: number; url: string }>();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [mobileQuickEntry, setMobileQuickEntry] = useState(false);
   const [mobileLogoutConfirm, setMobileLogoutConfirm] = useState(false);
@@ -5649,6 +5673,7 @@ function App() {
           </label>
           {!expenseOnly && <NotificationBell go={go} />}
         </header>
+        {detail && openingFallback?.id === detail && <div className="notice" role="status">A OS foi criada. O navegador não abriu o WhatsApp. <a href={openingFallback.url} target="_blank" rel="noreferrer" onClick={() => setOpeningFallback(undefined)}>Abrir mensagem de abertura no WhatsApp</a> <button type="button" onClick={() => setOpeningFallback(undefined)}>Dispensar</button></div>}
         {!me ? <p role="status">Carregando sessão…</p> : expenseOnly || page === "expense-control" ? (
           <ExpenseControlPage mobile={mobileLayout} />
         ) : detail ? (
@@ -5707,7 +5732,7 @@ function App() {
         ) : page === "settings" ? (
           <SettingsPage role={me?.role} />
         ) : (
-          <NewOrder initialClient={newOrderClient} done={(id: number) => { countersChanged(); go("orders", id); }} />
+          <NewOrder initialClient={newOrderClient} done={(id: number, fallback?: string) => { setOpeningFallback(fallback ? { id, url: fallback } : undefined); countersChanged(); go("orders", id); }} />
         )}
       </main>
       {mobileLayout && !expenseOnly && <MobileBottomBar go={go} page={page} canExpenses={canAdminister} />}

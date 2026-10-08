@@ -9,6 +9,7 @@ use App\Services\CompanySettings;
 use App\Services\ContactLinks;
 use App\Services\InventoryService;
 use App\Services\NotificationService;
+use App\Services\OpeningMessage;
 use App\Services\OrderNumber;
 use App\Services\PhotoOptimizer;
 use Illuminate\Database\Eloquent\Builder;
@@ -165,7 +166,10 @@ class ServiceOrderController extends Controller
         });
         $notifications->notifyUsers('order_created', 'Nova OS aberta', "OS {$order->number} — {$order->client->name}", "/orders/{$order->id}", "order-created:{$order->id}", ['service_order_id' => $order->id]);
 
-        return response()->json($order->load(['client', 'items']), 201);
+        $payload = $order->load(['client', 'items', 'checklists'])->toArray();
+        $payload['opening_whatsapp'] = app(OpeningMessage::class)->payload($order);
+
+        return response()->json($payload, 201)->header('Cache-Control', 'no-store, private');
     }
 
     private function openOrdersForClient(Client $client): Builder
@@ -191,6 +195,7 @@ class ServiceOrderController extends Controller
         }
         $payload['display_status'] = $this->displayStatus($order, $this->paidCentsForOrder($order));
         $payload['has_system_password'] = $order->system_password !== null;
+        $payload['opening_whatsapp'] = app(OpeningMessage::class)->payload($order);
         $payload['reopened'] = $order->histories->contains(fn ($history) => $history->from_status === 'completed' && $history->to_status === 'analysis');
         $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;
         $payload['interruption_work_done'] = $order->status === 'interrupted' ? $order->interruption_work_done : null;

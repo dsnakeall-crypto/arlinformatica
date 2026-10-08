@@ -1117,3 +1117,8 @@ Por solicitação posterior do proprietário, no Web/PC o menu desfixado fica se
 Por solicitação do proprietário, Clientes e lista de Ordens preservam dados/estado seguros em memória por usuário e geração da sessão. Clientes usa TTL 30s; Ordens, 15s; ambas retêm por até 2min sem uso. O retorno fresco evita nova consulta; o stale mantém linhas enquanto atualiza, sem apagar pesquisa, aba ou paginação. Sessão/identidade deve ser confirmada antes de mostrar cache; logout/expiração/troca limpa e respostas anteriores são descartadas. Mutações confirmadas invalidam os assuntos relacionados.
 
 Equipamentos, fabricantes, checklist e configuração operacional têm allowlist explícita e TTL de 5min, sem cache de estoque decisivo, pagamentos, saldos, tokens/senhas ou detalhe completo de OS. Nenhum cache persistente novo, alteração de backend/banco/Financeiro/Controle de Gasto/Pós-Venda/Fornecedores/service worker/enhancers ou mudança no destino de Voltar da OS. Relatório, limites e evidências: `docs/PERFORMANCE_ETAPA2A.md`. Entrega em branch própria, sem publicação nesta tarefa.
+
+
+### Mensagens de abertura e quitação — 07/10/2026
+
+Configurações > Mensagens: abertura automática opcional do WhatsApp após OS criada, desativada por padrão, com confirmação manual do envio. Textos interno e externo separados; manter parágrafos e acesso manual no menu PDF. Mensagem final inclui `*(PGTO Já Realizado)*` após o valor somente com pagamento integral efetivo, considerando correções e estornos. Especificação e limites: `docs/WHATSAPP_ABERTURA_2026-10-07.md`.

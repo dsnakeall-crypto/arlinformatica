@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\DB;
 class CompanySettings
 {
     public const DEFAULTS = [
+        'order_opened_auto_whatsapp' => '0',
+        'order_opened_internal_message' => OpeningMessage::INTERNAL,
+        'order_opened_external_message' => OpeningMessage::EXTERNAL,
         'company_name' => 'ARL Informática', 'trade_name' => 'ARL Informática', 'cnpj' => '18588208000139', 'phone' => '35988285777', 'email' => 'arlinfocg@gmail.com',
         'postal_code' => '37160000', 'street' => 'Rua Nossa Senhora do Carmo', 'number' => '331', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG', 'complement' => '',
         'instagram' => 'https://www.instagram.com/allanluttembarck', 'google_review' => 'https://g.page/r/CSxkz5Y88MaJEBM/review',

@@ -755,3 +755,12 @@ Esta seção atualiza a situação da publicação registrada acima; relatórios
 - [OK] Popup de OS existente com número/status/relato; cancelamento sem gravação e confirmação explícita. Backend transacional rejeita aberturas concorrentes não confirmadas. Sem migration.
 - [OK] Backup externo de arquivos/alterações/Git validado; testes em cópia/banco isolados. 311 testes backend/6.479 verificações, 36 frontend, lint, TypeScript/build e Pint aprovados.
 - [PENDENTE] CI do commit final e publicação autorizada com backup atual de banco/privados, rollback e smoke test; resultados finais no relatório externo da execução.
+
+## WhatsApp e revisão focada — 07/10/2026
+
+- [OK] Opção desativada por padrão para abrir WhatsApp após criar OS; mensagens interna/externa separadas, parágrafos preservados e ação manual mantida.
+- [OK] Marcador de pagamento integral na mensagem final considera correções e estornos; PDFs históricos preservados.
+- [OK] 313 testes backend, 38 frontend, lint, TypeScript e 18 cenários relacionados no navegador aprovados em ambiente isolado.
+- [OK] Backup local e backup protegido de produção #17 verificados; nenhuma migration adicionada.
+- [PENDENTE] CI do commit final, publicação autorizada e conferência após ativação; evidências finais no relatório externo.
+- [PENDENTE] Revisão completa da responsividade dos demais módulos, excluída deste escopo pelo usuário.

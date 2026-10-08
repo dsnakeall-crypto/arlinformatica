@@ -6,6 +6,7 @@ use App\Models\ServiceOrder;
 use App\Services\Audit;
 use App\Services\CompanySettings;
 use App\Services\DocumentService;
+use App\Services\OrderPaymentStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +44,7 @@ class FinalShareController extends Controller
             'url' => route('orders.final.public', ['token' => $token]),
             'expires_at' => $expiresAt->toIso8601String(),
             'revision' => (int) $document->revision,
+            'payment_settled' => app(OrderPaymentStatus::class)->settled($order),
         ]);
     }
 

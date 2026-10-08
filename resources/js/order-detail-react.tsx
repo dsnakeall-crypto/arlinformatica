@@ -29,6 +29,7 @@ import OrderAuditHistory from "./order-audit-history";
 import OrderLabel from "./order-label";
 import "../css/order-detail-layout.css";
 import { OrderPaymentFigures } from "./finance-refund-summary";
+import { finalMessageValue } from "./whatsapp-opening-flow";
 import { isReopenedOrder } from "./order-reopened";
 import TextImprovement from "./text-improvement";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
@@ -2133,7 +2134,7 @@ function DocumentsBox({ order, embedded = false }: any) {
   );
 }
 
-function finalWhatsappMessage(order: any, pdfUrl: string) {
+function finalWhatsappMessage(order: any, pdfUrl: string, paid = false) {
   return [
     `Olá, ${order.client?.name || "cliente"}`,
     "",
@@ -2143,7 +2144,7 @@ function finalWhatsappMessage(order: any, pdfUrl: string) {
     pdfUrl,
     "",
     "",
-    `- Valor: ${money(order.total_cents || 0)}`,
+    finalMessageValue(money(order.total_cents || 0), paid),
     "",
     "Formas de Pagamento: ",
     "",
@@ -2181,7 +2182,7 @@ function FinalShareCard({
               const full = phone.startsWith("55") ? phone : `55${phone}`;
               if (!full)
                 throw new Error("O cliente não possui telefone para WhatsApp.");
-              return `https://wa.me/${full}?text=${whatsappText(finalWhatsappMessage(order, freshShare.url))}`;
+              return `https://wa.me/${full}?text=${whatsappText(finalWhatsappMessage(order, freshShare.url, freshShare.payment_settled === true))}`;
             })();
       if (target) target.location.href = destination;
       else window.location.href = destination;
@@ -2607,7 +2608,7 @@ export default function OrderDetailPage({
     try {
       const share = await api(`/orders/${order.id}/final-share`);
       const full = phone.startsWith("55") ? phone : `55${phone}`;
-      const destination = `https://wa.me/${full}?text=${whatsappText(finalWhatsappMessage(order, share.url))}`;
+      const destination = `https://wa.me/${full}?text=${whatsappText(finalWhatsappMessage(order, share.url, share.payment_settled === true))}`;
       setFinalLinkStatus({
         active: true,
         expires_at: share.expires_at,
@@ -2661,31 +2662,7 @@ export default function OrderDetailPage({
         </small>
       </>
     ) : null;
-  const openingPhone = digits(order.client?.phone || "");
-  const openingFullPhone = openingPhone
-    ? openingPhone.startsWith("55")
-      ? openingPhone
-      : `55${openingPhone}`
-    : "";
-  const openingCondition = String(order.intake_condition || "").trim();
-  const openingMessage = [
-    `Olá, ${order.client?.name || "cliente"}`,
-    "",
-    `Informamos que a sua *Ordem de Serviço nº ${order.number}* foi aberta com sucesso na *ARL Informática*.`,
-    ...(openingCondition
-      ? ["", "Estado físico registrado na abertura:", openingCondition, ""]
-      : [""]),
-    "Nosso departamento técnico já iniciou os procedimentos necessários. Em breve, entraremos em contato para atualizar o status do serviço e apresentar os detalhes da verificação do seu equipamento.",
-    "",
-    "Permanecemos à disposição para qualquer dúvida.",
-    "",
-    "Atenciosamente,",
-    "",
-    "*ARL Informática*",
-  ].join("\n");
-  const openingWhatsapp = openingFullPhone
-    ? `https://wa.me/${openingFullPhone}?text=${whatsappText(openingMessage)}`
-    : "";
+  const openingWhatsapp = order.opening_whatsapp?.url || "";
   const mapsAddress = [
     order.client?.street,
     order.client?.number,

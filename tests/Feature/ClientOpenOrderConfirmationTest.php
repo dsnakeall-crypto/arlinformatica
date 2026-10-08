@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Role;
 use App\Models\ServiceOrder;
 use App\Models\User;
+use App\Services\OpeningMessage;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,30 @@ class ClientOpenOrderConfirmationTest extends TestCase
         $client = Client::create(['name' => 'Cliente Confirmação', 'document' => '52998224725', 'phone' => '35999999999', 'street' => 'Rua Teste', 'number' => '1', 'district' => 'Centro', 'city' => 'Campos Gerais', 'state' => 'MG', 'postal_code' => '37160000']);
 
         return ['client_id' => $client->id, 'equipment_type_id' => DB::table('equipment_types')->value('id'), 'attendance_type' => 'bench', 'reported_problem' => "Não liga\nApós queda", 'system_password_absent' => true];
+    }
+
+    public function test_opening_message_selects_attendance_and_preserves_paragraphs_and_settings_permissions(): void
+    {
+        $settings = $this->getJson('/api/settings')->assertOk()->json();
+        $this->assertSame('0', $settings['order_opened_auto_whatsapp']);
+        $settings['order_opened_auto_whatsapp'] = true;
+        $settings['order_opened_internal_message'] = "Interno {{nome_cliente}}\n\nOS {{numero_os}}";
+        $this->putJson('/api/settings', $settings)->assertOk();
+        $this->getJson('/api/operational-settings')->assertJsonPath('order_opened_auto_whatsapp', true);
+        $payload = $this->payload();
+        $created = $this->postJson('/api/orders', [...$payload, 'attendance_type' => 'external'])->assertCreated()->json();
+        $this->assertTrue($created['opening_whatsapp']['auto_open']);
+        parse_str(parse_url($created['opening_whatsapp']['url'], PHP_URL_QUERY), $query);
+        $this->assertSame(strtr(OpeningMessage::EXTERNAL, ['{{nome_cliente}}' => 'Cliente Confirmação', '{{numero_os}}' => $created['number']]), $query['text']);
+        $this->getJson('/api/orders/'.$created['id'])->assertJsonPath('opening_whatsapp.url', $created['opening_whatsapp']['url']);
+        $settings['order_opened_auto_whatsapp'] = false;
+        $this->putJson('/api/settings', $settings)->assertOk();
+        $internal = $this->postJson('/api/orders', [...$payload, 'confirmed_open_order_ids' => [$created['id']]])->assertCreated()->json();
+        $this->assertFalse($internal['opening_whatsapp']['auto_open']);
+        parse_str(parse_url($internal['opening_whatsapp']['url'], PHP_URL_QUERY), $query);
+        $this->assertSame("Interno Cliente Confirmação\n\nOS ".$internal['number'], $query['text']);
+        $employee = User::create(['role_id' => Role::where('name', 'Funcionário')->value('id'), 'name' => 'Operador', 'login' => 'opening-employee', 'password' => bcrypt('Teste!123'), 'active' => true]);
+        $this->actingAs($employee)->putJson('/api/settings', $settings)->assertForbidden();
     }
 
     public function test_second_opening_requires_confirmation_and_does_not_create_anything_on_cancel(): void

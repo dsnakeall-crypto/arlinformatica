@@ -21,6 +21,7 @@ class SettingsController extends Controller
             'budget_validity_days' => (int) $all['budget_validity_days'],
             'company_name' => (string) $all['company_name'],
             'trade_name' => (string) $all['trade_name'],
+            'order_opened_auto_whatsapp' => filter_var($all['order_opened_auto_whatsapp'], FILTER_VALIDATE_BOOL),
         ]);
     }
 
@@ -62,6 +63,9 @@ class SettingsController extends Controller
             'complement' => 'nullable|string|max:100', 'instagram' => 'nullable|url|max:255', 'google_review' => 'nullable|url|max:255', 'privacy_policy_url' => 'nullable|url|max:255',
             'budget_validity_days' => 'required|integer|min:1|max:365', 'budget_observation' => 'nullable|string|max:2000', 'budget_institutional_text' => 'required|string|max:1000', 'term_text' => 'required|string|max:10000',
             'show_company_document' => 'required|boolean', 'show_company_address' => 'required|boolean',
+            'order_opened_auto_whatsapp' => 'sometimes|boolean',
+            'order_opened_internal_message' => 'sometimes|required|string|max:6000',
+            'order_opened_external_message' => 'sometimes|required|string|max:6000',
         ], [
             'cnpj.regex' => 'O CNPJ deve conter 14 números.',
             'phone.regex' => 'O telefone deve conter 10 ou 11 números.',

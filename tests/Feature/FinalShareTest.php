@@ -55,6 +55,19 @@ class FinalShareTest extends TestCase
         $this->assertTrue(Carbon::parse($first['expires_at'])->between(now()->addDays(29)->addHours(23), now()->addDays(30)->addMinute()));
     }
 
+    public function test_share_reports_current_settlement_without_treating_partial_or_refunded_payment_as_paid(): void
+    {
+        $this->order->forceFill(['total_cents' => 8000])->save();
+        $url = "/api/orders/{$this->order->id}/final-share";
+        $this->getJson($url)->assertOk()->assertJsonPath('payment_settled', false);
+        $this->postJson("/api/orders/{$this->order->id}/payment", ['amount_cents' => 3000, 'method' => 'pix', 'idempotency_key' => 'share-partial-test'])->assertCreated();
+        $this->getJson($url)->assertOk()->assertJsonPath('payment_settled', false);
+        $this->postJson("/api/orders/{$this->order->id}/payment", ['amount_cents' => 5000, 'method' => 'pix', 'idempotency_key' => 'share-rest-test'])->assertCreated();
+        $this->getJson($url)->assertOk()->assertJsonPath('payment_settled', true);
+        $this->postJson("/api/orders/{$this->order->id}/refunds", ['amount_cents' => 1000, 'method' => 'pix', 'reason' => 'Estorno de teste'])->assertCreated();
+        $this->getJson($url)->assertOk()->assertJsonPath('payment_settled', false);
+    }
+
     public function test_valid_link_has_private_headers_and_counts_each_access(): void
     {
         $url = $this->getJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json('url');

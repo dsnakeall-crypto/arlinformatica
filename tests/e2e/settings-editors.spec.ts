@@ -86,11 +86,14 @@ test('configurações mantém somente o termo na aba Documentos', async ({ page 
   await expect(page.getByRole('heading', { name: 'Modelos de laudos', exact: true })).toBeHidden();
 });
 
-test('configurações oculta integralmente Mensagens da navegação', async ({ page }) => {
+test('configurações permite mensagens de abertura e preserva editores legados ocultos', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
-  await expect(page.locator('.arl-settings-tab[data-section="messages"]')).toHaveCount(0);
+  await expect(page.locator('.arl-settings-tab[data-section="messages"]')).toBeVisible();
+  await page.getByRole('tab', { name: 'Mensagens', exact: true }).click();
+  await expect(page.getByLabel('Abrir WhatsApp automaticamente após criar OS')).toBeVisible();
+  await expect(page.locator('textarea[name="order_opened_external_message"]')).toBeVisible();
   await expect(page.locator('.arl-opening-message-panel')).toBeHidden();
   await expect(page.locator('.arl-message-subnav [data-msg-tab="opening"]')).toHaveCount(0);
   await expect(page.getByLabel('Mensagem de acompanhamento')).toBeHidden();
@@ -98,16 +101,16 @@ test('configurações oculta integralmente Mensagens da navegação', async ({ p
   await expect(page.locator('.arl-post-message-panel')).toBeHidden();
 });
 
-test('configurações exibe somente as nove abas permitidas em uma linha', async ({ page }) => {
+test('configurações exibe somente as dez abas permitidas em uma linha', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
   const tabs = page.locator('.arl-settings-tab');
-  await expect(tabs).toHaveCount(9);
-  await expect(tabs.locator('b')).toHaveText(['Empresa', 'Identidade', 'Documentos', 'Notificações', 'Usuários', 'Backup', 'Zeramento', 'Sistema', 'Armazenamento']);
+  await expect(tabs).toHaveCount(10);
+  await expect(tabs.locator('b')).toHaveText(['Empresa', 'Identidade', 'Documentos', 'Mensagens', 'Notificações', 'Usuários', 'Backup', 'Zeramento', 'Sistema', 'Armazenamento']);
   const tops = await tabs.evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
   expect(new Set(tops).size).toBe(1);
-  for (const hidden of ['orders', 'messages', 'finance']) {
+  for (const hidden of ['orders', 'finance']) {
     await expect(page.locator(`.arl-settings-tab[data-section="${hidden}"]`)).toHaveCount(0);
   }
 
