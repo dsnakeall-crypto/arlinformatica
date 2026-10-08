@@ -19,7 +19,7 @@ class RunBackup extends Command
             return self::SUCCESS;
         }
 
-        $backup = $service->create(null, 'automatic');
+        $backup = $service->create(null, 'automatic', false, false);
         $removed = $service->applyRetention();
         $this->components->info("Backup #{$backup->id} criado; $removed backup(s) removido(s) pela retenção.");
 

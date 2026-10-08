@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Backup;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -15,11 +16,11 @@ use ZipArchive;
 
 class BackupService
 {
-    public const AUTOMATIC_RETENTION = 2;
+    public const AUTOMATIC_RETENTION = 4;
 
     private const EXCLUDED_TABLES = ['backups', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'sessions', 'password_reset_tokens'];
 
-    public function create(?User $user = null, string $kind = 'manual', bool $protected = false): Backup
+    public function create(?User $user = null, string $kind = 'manual', bool $protected = false, bool $retain = true): Backup
     {
         $backup = Backup::create(['kind' => $kind, 'path' => 'pending', 'sha256' => str_repeat('0', 64), 'bytes' => 0, 'manifest' => [], 'status' => 'creating', 'protected' => $protected, 'created_by' => $user?->id]);
         $work = storage_path('app/backup-work/'.Str::uuid());
@@ -63,15 +64,19 @@ class BackupService
             $storedBytes = $disk->size($path);
             throw_unless($storedBytes > 0, RuntimeException::class, 'O arquivo de backup foi gerado vazio.');
             $backup->update(['path' => $path, 'sha256' => hash_file('sha256', $archive), 'bytes' => $storedBytes, 'manifest' => $manifest, 'status' => 'ready']);
+            $this->validate($disk->path($path));
             $this->audit($user, $kind === 'automatic' ? 'backup.automatic_created' : 'backup.created', $backup->id, ['bytes' => $backup->bytes, 'sha256' => $backup->sha256]);
-
-            return $backup->fresh();
         } catch (Throwable $e) {
             $backup->update(['status' => 'failed', 'error' => Str::limit($e->getMessage(), 1000)]);
             throw $e;
         } finally {
             File::deleteDirectory($work);
         }
+        if ($retain) {
+            $this->applyRetention();
+        }
+
+        return $backup->fresh();
     }
 
     public function validate(string $archive): array
@@ -108,10 +113,21 @@ class BackupService
 
     public function restore(Backup $source, User $user): Backup
     {
+        try {
+            // Retention cannot remove the source while a restore is reading it.
+            return Cache::lock('backup-retention', 1800)->block(10, fn () => $this->restoreSnapshot($source, $user));
+        } finally {
+            $this->applyRetention();
+        }
+    }
+
+    private function restoreSnapshot(Backup $source, User $user): Backup
+    {
         throw_unless($source->status === 'ready' && Storage::disk(config('backup.disk'))->exists($source->path), RuntimeException::class, 'Backup indisponível.');
         $archive = Storage::disk(config('backup.disk'))->path($source->path);
         $this->validate($archive);
-        $safety = $this->create($user, 'safety', true);
+        // Keep the restore source until its ZIP has been consumed, even if it is oldest.
+        $safety = $this->create($user, 'safety', true, false);
         $this->audit($user, 'backup.restore_started', $source->id, ['safety_backup_id' => $safety->id]);
         $zip = new ZipArchive;
         $zip->open($archive);
@@ -169,13 +185,27 @@ class BackupService
 
     public function applyRetention(): int
     {
-        $eligible = Backup::where('kind', 'automatic')->where('status', 'ready')->latest('id')->get()->slice(self::AUTOMATIC_RETENTION);
-        foreach ($eligible as $backup) {
-            Storage::disk(config('backup.disk'))->delete($backup->path);
-            $backup->delete();
-        }
+        return Cache::lock('backup-retention', 120)->block(10, function () {
+            $disk = Storage::disk(config('backup.disk'));
+            $backups = Backup::whereIn('status', ['ready', 'restored'])->latest('id')->get();
+            if ($backups->count() <= self::AUTOMATIC_RETENTION) {
+                return 0;
+            }
+            // Never remove an older recovery point without four valid replacements.
+            foreach ($backups->take(self::AUTOMATIC_RETENTION) as $backup) {
+                throw_unless($disk->exists($backup->path) && hash_equals($backup->sha256, hash_file('sha256', $disk->path($backup->path))), RuntimeException::class, 'Retenção suspensa: backup recente indisponível ou corrompido.');
+                $this->validate($disk->path($backup->path));
+            }
+            $removed = 0;
+            foreach ($backups->slice(self::AUTOMATIC_RETENTION) as $backup) {
+                throw_unless(! $disk->exists($backup->path) || $disk->delete($backup->path), RuntimeException::class, 'Não foi possível remover o backup antigo.');
+                $this->audit(null, 'backup.retention_deleted', $backup->id, ['kind' => $backup->kind, 'sha256' => $backup->sha256]);
+                $backup->delete();
+                $removed++;
+            }
 
-        return $eligible->count();
+            return $removed;
+        });
     }
 
     public function automaticSettings(): array

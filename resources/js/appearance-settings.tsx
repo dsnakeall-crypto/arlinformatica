@@ -15,7 +15,7 @@ export default function AppearanceSettings() {
   };
   return <fieldset className="appearance-settings">
     <legend>Aparência do aplicativo</legend>
-    <p>Escolha o visual neste dispositivo. A mudança é imediata e mantém as funções e posições dos controles.</p>
+    <p>Escolha o visual neste dispositivo. O Clean usa superf�cies suaves e cores transl�cidas. A mudança é imediata e mantém as funções e posições dos controles.</p>
     <div className="appearance-modes" role="group" aria-label="Estilo do aplicativo">
       <button type="button" aria-pressed={value.mode === 'original'} onClick={() => change({ ...value, mode: 'original' })}>Original</button>
       <button type="button" aria-pressed={value.mode === 'clean'} onClick={() => change({ ...value, mode: 'clean' })}>Clean</button>

@@ -42,7 +42,8 @@ class BackupController extends Controller
         $backup = null;
 
         try {
-            $backup = $service->create($request->user());
+            // A download is temporary and must not evict a stored recovery point.
+            $backup = $service->create($request->user(), 'manual', false, false);
             $disk = Storage::disk(config('backup.disk'));
             throw_unless($backup->status === 'ready' && $disk->exists($backup->path), \RuntimeException::class, 'O arquivo de backup não foi gerado.');
             throw_unless($disk->size($backup->path) > 0, \RuntimeException::class, 'O arquivo de backup foi gerado vazio.');
@@ -84,6 +85,8 @@ class BackupController extends Controller
         $name = 'uploaded-'.now()->format('Ymd-His').'-'.bin2hex(random_bytes(4)).'.zip';
         $path = $data['backup']->storeAs(config('backup.directory'), $name, config('backup.disk'));
         $backup = Backup::create(['kind' => 'uploaded', 'path' => $path, 'sha256' => hash_file('sha256', $data['backup']->getRealPath()), 'bytes' => $data['backup']->getSize(), 'manifest' => $manifest, 'status' => 'ready', 'protected' => true, 'created_by' => $request->user()->id]);
+        $service->validate(Storage::disk(config('backup.disk'))->path($path));
+        $service->applyRetention();
 
         return response()->json($this->resource($backup), 201);
     }

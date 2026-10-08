@@ -809,3 +809,7 @@ Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produç
 - [OK] Isolamento da CI PHP corrigido para não exigir manifesto nos testes de servidor. Suíte completa sem public/build no ambiente isolado: 313 testes / 6505 verificações aprovados; Pint do arquivo de teste aprovado. Login com build real continua coberto pelo E2E.
 
 - [OK] Menus do Clean mais arredondados e com relevo leve; build e quatro testes de aparência aprovados em ambiente isolado (08/10/2026).
+
+- [OK] Novo acabamento Clean pastel/translúcido, menus arredondados e relevo estático; Original, posições, dados e impressão preservados. Quatro cenários de aparência passaram nas sete paletas, dez módulos, mobile e restauração do Original.
+- [OK] Retenção unificada de quatro backups com validação SHA256/ZIP, auditoria e proteção da origem durante restauração. 315 testes PHP / 6513 verificações passaram em ambiente isolado; 41 testes frontend, lint, Pint e TypeScript/build aprovados.
+- [PENDENTE] CI do novo commit, publicação da nova aparência e aplicação/conferência da retenção no acúmulo da KingHost.

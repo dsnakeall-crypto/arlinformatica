@@ -34,3 +34,6 @@ A primeira CI identificou seis respostas 500 em testes PHP de login: a nova entr
 
 ## Refinamento dos menus — 08/10/2026
 Menus do Clean com cantos de 14 px e relevo estático discreto, sem degradê, blur ou animação adicional. Posições, dimensões e Original preservados. Backup externo verificado: C:/Users/Allan/ARL-backups/clean-menu-relief-20261008. Build com TypeScript aprovado e quatro cenários Playwright de aparência aprovados (sete cores, contraste, mobile, geometria, Original, impressão e login).
+
+## Nova referência autorizada — 08/10/2026
+A referência codex-clipboard-02eb1f6e-1f43-4d93-8439-9e9728ac2713.png substitui o acabamento anterior: fundo estático azul/rosado suave, superfícies translúcidas, bordas claras, cantos de 18px nos painéis e relevo discreto. Sem blur, movimento de fundo ou alteração de posições, regras, APIs, ícones ou impressão. As sete paletas e o Original permanecem disponíveis. Backup externo verificado: C:/Users/Allan/ARL-backups/clean-glass-retention-20261008.

@@ -1135,3 +1135,6 @@ Laudo Final editável oferece Ditar laudo antes de Melhorar texto, com o mesmo a
 
 ## Aparência alternativa — 08/10/2026
 Original preservado como padrão; Clean optativo em Configurações > Identidade, com sete cores (verde, azul, amarelo, roxo, vermelho, preto e claro). Repaginação somente visual de todo o sistema, sem mover controles, alterar regras ou dados. Preferência por navegador/dispositivo; impressões e documentos preservados. Implementação e validação em docs/APARENCIA_CLEAN.md.
+
+## Aparência e backups — 08/10/2026
+O proprietário autorizou substituir o acabamento Clean pela referência codex-clipboard-02eb1f6e-1f43-4d93-8439-9e9728ac2713.png, somente aparência, preservando Original e todas as regras/posições. Retenção passa a quatro backups armazenados no servidor, somando manual, automático, upload e segurança. Validar os quatro mais recentes antes de apagar os anteriores, registrar auditoria e impedir limpeza da origem durante restauração. Download temporário não elimina um ponto de recuperação armazenado. Cópias externas no PC não participam da retenção.

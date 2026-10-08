@@ -187,3 +187,6 @@ Caixa Diário reutiliza ícones, cores e moldura dos cards de formas de pagament
 
 ## Clean alternativo — 08/10/2026
 Referência enviada pelo proprietário: codex-clipboard-5953c524-e357-4165-815e-8802aeb5920e.png. Aplicar apenas como aparência optativa: fundo cinza claro, superfícies brancas, bordas discretas, botões sólidos arredondados e sombras suaves. Preservar posições e todas as ações existentes; não copiar calendário, conteúdo ou estrutura da referência. Original permanece selecionável e intacto. Sete cores, inclusive amarelo/claro com texto escuro. Ver docs/APARENCIA_CLEAN.md.
+
+## Clean translúcido — 08/10/2026
+Nova referência: codex-clipboard-02eb1f6e-1f43-4d93-8439-9e9728ac2713.png. Tons pastel azul/rosado, painéis suaves translúcidos, cantos arredondados e sombras leves, mantendo a organização ARL existente. Fundo estático, sem desfoque pesado. Original preservado. Prévia e capturas: C:/Users/Allan/ARL-backups/clean-glass-retention-20261008/clean-preview.png e ambiente isolado/output/clean.

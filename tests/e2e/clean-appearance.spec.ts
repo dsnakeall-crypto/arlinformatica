@@ -19,7 +19,7 @@ test('Clean troca sete cores, persiste e restaura Original sem mudar geometria',
     await expect(page.locator('html')).toHaveAttribute('data-arl-appearance','clean');
     const current = await snapshot();
     expect({ ...current, background:original.background }).toEqual(original);
-    expect(current.background).toBe('none');
+    expect(current.background).toContain('linear-gradient');
     const colorButton=appearance.getByRole('button',{name:`Clean ${color}`,exact:true});
     await colorButton.hover();
     expect(await colorButton.evaluate(el=> {

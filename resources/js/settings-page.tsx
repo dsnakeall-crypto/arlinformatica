@@ -149,7 +149,7 @@ export function InfrastructureSettings({ section }: { section: string }) {
                 <option value="monthly">Mensal</option>
               </select>
             </label>
-            <span>Retenção fixa: 2 arquivos mais recentes</span>
+            <span>Retenção fixa: 4 backups mais recentes, incluindo os de segurança</span>
             <button
               onClick={async () => {
                 await api("/backups/automatic", {

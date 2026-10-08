@@ -53,8 +53,9 @@ test('controle: cadastro manual, parte individual, lote, quitadas e retorno aos 
 test('controle: quitar Allan mantém Carol pendente no resumo e aceita pagamento parcial', async ({ page }) => {
   await login(page);
   const catalog = await catalogs(page, 'pagamento-' + Date.now());
+  const purchaseName = 'Parcela casal 350 ' + catalog.institution.id;
   const month = new Date().toLocaleDateString('sv-SE').slice(0, 7);
-  const created = await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: catalog.institution.id, type_id: catalog.type.id, name: 'Parcela casal 350', recurrence: 'once', responsibility: 'shared', percent_one: 50, amount_cents: 35000, installment_count: 1, first_number: 1, start_month: month, due_day: 12, notes: null });
+  const created = await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: catalog.institution.id, type_id: catalog.type.id, name: purchaseName, recurrence: 'once', responsibility: 'shared', percent_one: 50, amount_cents: 35000, installment_count: 1, first_number: 1, start_month: month, due_day: 12, notes: null });
   expect(created.status).toBe(201);
   await page.goto('/expense-control');
   // Moving out of the sidebar changes the content width. Settle that layout
@@ -65,8 +66,8 @@ test('controle: quitar Allan mantém Carol pendente no resumo e aceita pagamento
   const expensesTab = page.getByRole('tab', { name: 'Gastos', exact: true });
   await expensesTab.click();
   await expect(expensesTab).toHaveAttribute('aria-selected', 'true');
-  await page.getByLabel('Pesquisar compra ou instituição').fill('Parcela casal 350');
-  await page.locator('.cg-debt-row').filter({ hasText: 'Parcela casal 350' }).click();
+  await page.getByLabel('Pesquisar compra ou instituição').fill(purchaseName);
+  await page.locator('.cg-debt-row').filter({ hasText: purchaseName }).click();
   await page.locator('.cg-table-wrap tbody tr').getByRole('button', { name: 'Pagar', exact: true }).click();
   const payment = page.getByRole('dialog', { name: 'Registrar pagamento ou abatimento' });
   await payment.getByRole('button', { name: /Quitar parte de Allan/ }).click();
@@ -76,7 +77,7 @@ test('controle: quitar Allan mantém Carol pendente no resumo e aceita pagamento
   await payment.getByRole('button', { name: 'Confirmar lançamento' }).click();
   await expect(payment).not.toBeVisible();
   await page.getByRole('tab', { name: 'Resumo', exact: true }).click();
-  const partial = page.locator('.cg-partial-summary>article').filter({ hasText: 'Parcela casal 350' });
+  const partial = page.locator('.cg-partial-summary>article').filter({ hasText: purchaseName });
   await expect(partial).toContainText('Parte quitada');
   await expect(partial).toContainText('Falta R$ 175,00');
   await page.screenshot({ path: 'output/controle-gasto/resumo-parcial.png', fullPage: true });

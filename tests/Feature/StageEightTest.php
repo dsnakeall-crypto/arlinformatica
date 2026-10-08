@@ -147,21 +147,57 @@ class StageEightTest extends TestCase
     public function test_automatic_retention_and_scheduler_heartbeat(): void
     {
         $master = $this->user('Master', 'master');
-        app(BackupService::class)->create($master, 'automatic');
-        app(BackupService::class)->create($master, 'automatic');
-        $latest = app(BackupService::class)->create($master, 'automatic', true);
-        $this->assertSame(1, app(BackupService::class)->applyRetention());
+        $service = app(BackupService::class);
+        $old = $service->create($master, 'safety', true);
+        foreach (['manual', 'automatic', 'safety', 'automatic'] as $kind) {
+            $latest = $service->create($master, $kind, $kind === 'safety');
+        }
+        $this->assertSame(0, $service->applyRetention());
+        $this->assertDatabaseMissing('backups', ['id' => $old->id]);
+        Storage::disk('local')->assertMissing($old->path);
         $this->assertDatabaseHas('backups', ['id' => $latest->id]);
-        $this->assertSame(2, Backup::where('kind', 'automatic')->count());
+        $this->assertSame(4, Backup::count());
         $this->artisan('scheduler:heartbeat')->assertSuccessful();
         $this->assertDatabaseHas('settings', ['key' => 'scheduler_heartbeat_at']);
+    }
+
+    public function test_retention_preserves_old_backups_if_recent_copy_is_corrupt(): void
+    {
+        $service = app(BackupService::class);
+        $old = $service->create(null, 'safety', true, false);
+        for ($i = 0; $i < 4; $i++) {
+            $recent = $service->create(null, 'manual', false, false);
+        }
+        Storage::disk('local')->put($recent->path, 'corrupted');
+        try {
+            $service->applyRetention();
+            $this->fail('Retention must reject corrupt replacement');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('backup recente', $e->getMessage());
+        }
+        $this->assertSame(5, Backup::count());
+        Storage::disk('local')->assertExists($old->path);
+    }
+
+    public function test_restore_oldest_copy_keeps_source_until_restore_finishes(): void
+    {
+        $master = $this->user('Master', 'master');
+        $service = app(BackupService::class);
+        $source = $service->create($master);
+        for ($i = 0; $i < 3; $i++) {
+            $service->create($master);
+        }
+        $safety = $service->restore($source, $master);
+        $this->assertDatabaseHas('backups', ['id' => $safety->id, 'status' => 'ready']);
+        $this->assertSame(4, Backup::count());
+        Storage::disk('local')->assertMissing($source->path);
     }
 
     public function test_master_can_persist_automatic_backup_configuration_with_audit(): void
     {
         $master = $this->user('Master', 'master');
         $this->actingAs($master)->putJson('/api/backups/automatic', ['enabled' => true, 'frequency' => 'weekly'])
-            ->assertOk()->assertJson(['enabled' => true, 'frequency' => 'weekly', 'retention' => 2]);
+            ->assertOk()->assertJson(['enabled' => true, 'frequency' => 'weekly', 'retention' => 4]);
         $this->assertDatabaseHas('settings', ['key' => 'backup_frequency', 'value' => 'weekly']);
         $this->assertDatabaseHas('audit_logs', ['action' => 'backup.automatic_settings_updated']);
     }
