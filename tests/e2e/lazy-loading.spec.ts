@@ -1,0 +1,47 @@
+import { expect, test } from '@playwright/test';
+import { login } from './helpers';
+
+test('módulos carregam sob demanda e a navegação reutiliza o código já carregado', async ({ page }) => {
+  const modules: string[] = [];
+  page.on('request', request => {
+    if (/\/assets\/.*\.js$/.test(new URL(request.url()).pathname)) modules.push(request.url());
+  });
+  await login(page);
+  await expect(page.getByRole('heading', { name: 'Painel', exact: true })).toBeVisible();
+  expect(modules.some(url => /finance-page-/.test(url))).toBe(false);
+  expect(modules.some(url => /suppliers-page-/.test(url))).toBe(false);
+  expect(modules.some(url => /expense-control-page-/.test(url))).toBe(false);
+  expect(modules.some(url => /quick-entry-/.test(url))).toBe(false);
+  await page.getByRole('button', { name: 'Financeiro', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Formas de pagamento', exact: true })).toBeVisible();
+  expect(modules.filter(url => /finance-page-/.test(url))).toHaveLength(1);
+  await page.getByRole('button', { name: 'Painel', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Painel', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Financeiro', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Formas de pagamento', exact: true })).toBeVisible();
+  expect(modules.filter(url => /finance-page-/.test(url))).toHaveLength(1);
+});
+
+test('carregamento lento mantém o menu utilizável e não troca a página escolhida depois', async ({ page }) => {
+  await login(page);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/assets/suppliers-page-*.js', async route => { await gate; await route.continue(); });
+  await page.getByRole('button', { name: 'Fornecedores', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Carregando área' })).toBeVisible();
+  await page.getByRole('button', { name: 'Painel', exact: true }).click();
+  release();
+  await expect(page.getByRole('heading', { name: 'Painel', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Fornecedores', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Fornecedores', exact: true })).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('fornecedores-lazy.png'), fullPage: true });
+});
+
+test('falha ao baixar módulo apresenta aviso e permite continuar em outra área', async ({ page }) => {
+  await login(page);
+  await page.route('**/assets/suppliers-page-*.js', route => route.abort());
+  await page.getByRole('button', { name: 'Fornecedores', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Não foi possível carregar esta área');
+  await page.getByRole('button', { name: 'Painel', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Painel', exact: true })).toBeVisible();
+});
