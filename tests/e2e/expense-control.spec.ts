@@ -368,11 +368,12 @@ test('controle: voltar ao menu Gastos restaura filtros e resumo agrupa venciment
 
 test('controle: Fixos de Casa usa cartão próprio e aceita somente despesas da casa', async ({ page }) => {
   await login(page);
-  const created = await api(page, '/expense-control/catalogs/institutions', 'POST', { name: 'Fixos de Casa teste', active: true, due_day: 10, color: '#a0afc0', artwork_key: 'household', household: true });
+  const householdName = 'Fixos de Casa teste ' + Date.now();
+  const created = await api(page, '/expense-control/catalogs/institutions', 'POST', { name: householdName, active: true, due_day: 10, color: '#a0afc0', artwork_key: 'household', household: true });
   expect(created.status).toBe(200);
   await page.goto('/expense-control');
   await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
-  const bank = page.locator('.cg-institution').filter({ hasText: 'Fixos de Casa teste' });
+  const bank = page.locator('.cg-institution').filter({ hasText: householdName });
   await expect(bank.locator('img')).toHaveAttribute('src', '/arl-assets/expense-cards/fixos-casa-v2.png');
   await bank.click();
   await expect(page.locator('.cg-type-grid > button')).toHaveCount(1);
