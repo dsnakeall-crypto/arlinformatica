@@ -761,6 +761,7 @@ Esta seção atualiza a situação da publicação registrada acima; relatórios
 - [OK] Opção desativada por padrão para abrir WhatsApp após criar OS; mensagens interna/externa separadas, parágrafos preservados e ação manual mantida.
 - [OK] Marcador de pagamento integral na mensagem final considera correções e estornos; PDFs históricos preservados.
 - [OK] 313 testes backend, 38 frontend, lint, TypeScript e 18 cenários relacionados no navegador aprovados em ambiente isolado.
+- [OK] Revisão focada nas seis seções e calendário em 320/390/768/1280px aprovada sem vazamento horizontal; 19 cenários relacionados no total, sem retries.
 - [OK] Backup local e backup protegido de produção #17 verificados; nenhuma migration adicionada.
 - [PENDENTE] CI do commit final, publicação autorizada e conferência após ativação; evidências finais no relatório externo.
 - [PENDENTE] Revisão completa da responsividade dos demais módulos, excluída deste escopo pelo usuário.
