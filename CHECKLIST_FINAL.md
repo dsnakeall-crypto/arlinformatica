@@ -805,3 +805,5 @@ Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produç
 - [OK] 36 cenários E2E distintos aprovados ao longo das rodadas: 31 fluxos existentes com Clean (OS, fornecedores, compras/recebimentos/devoluções, controle/pagamentos/quitações/perfis, OCR mobile, orçamento, etiqueta e adaptação desktop), quatro cenários próprios de aparência e fatura no Original. Dois achados visuais iniciais corrigidos e seus testes aprovados novamente; sem retries automáticos. Dados e arquivos de teste isolados da base real.
 - [OK] Backup externo incremental e histórico Git verificados em C:/Users/Allan/ARL-backups/clean-appearance-20261008; detalhes em docs/APARENCIA_CLEAN.md.
 - [PENDENTE] Homologação visual pelo proprietário, CI do novo commit e eventual publicação. Servidor oficial e banco não foram alterados nesta tarefa. A repaginação não comprova resolução da lentidão de servidor relatada.
+
+- [OK] Isolamento da CI PHP corrigido para não exigir manifesto nos testes de servidor. Suíte completa sem public/build no ambiente isolado: 313 testes / 6505 verificações aprovados; Pint do arquivo de teste aprovado. Login com build real continua coberto pelo E2E.

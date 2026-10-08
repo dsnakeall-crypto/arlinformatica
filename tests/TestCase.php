@@ -8,6 +8,15 @@ use Illuminate\Support\Facades\Storage;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // PHP suites validate server responses without requiring compiled assets.
+        // Playwright validates the real Vite build, including the login page.
+        $this->withoutVite();
+    }
+
     public function createApplication()
     {
         $app = parent::createApplication();

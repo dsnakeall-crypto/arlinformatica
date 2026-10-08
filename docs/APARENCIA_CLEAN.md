@@ -28,3 +28,6 @@ Esta repaginação permite comparar aparências; **não comprova a resolução d
 ## Validação
 
 Testes unitários verificam preferência inválida, padrão Original e contraste das sete paletas. Testes de navegador verificam escolha, persistência, ausência de gravações no backend durante a escolha, restauração do Original, geometria, impressão, dez destinos principais, popup de dívida e seis abas mobile. Fluxos existentes também são exercitados com Clean ativo em banco isolado; resultados finais registrados em CHECKLIST_FINAL.md.
+
+### Ajuste de isolamento da CI PHP
+A primeira CI identificou seis respostas 500 em testes PHP de login: a nova entrada visual exige manifesto Vite, ausente intencionalmente nos jobs backend. Tests/TestCase.php passa a usar withoutVite() nos testes de servidor, sem remover nenhuma asserção de autenticação/permissão. O E2E continua validando o login com build real. A suíte PHP completa passou com o build temporariamente retirado da cópia isolada: 313 testes e 6505 verificações. No Windows, o processo de teste usou memory_limit=512M para as imagens sintéticas; nenhuma configuração de produção foi alterada.
