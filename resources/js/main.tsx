@@ -1,3 +1,4 @@
+import './appearance';
 import '../css/sidebar-new-order.css';
 import '../css/open-orders-warning.css';
 import "./session-security";

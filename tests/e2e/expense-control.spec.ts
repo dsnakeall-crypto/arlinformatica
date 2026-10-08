@@ -294,7 +294,12 @@ test('controle: fatura paga somente o mês e quitar compra liquida todas as parc
   const monthly = page.getByRole('dialog', { name: 'Pagar fatura do mês', exact: true });
   await expect(monthly.locator('.cg-payment-preview strong')).toHaveText('R$ 50,00');
   await expect(monthly.getByLabel('Tipo de lançamento')).toHaveCount(0);
-  expect(await page.locator('.cg-popup-blue button').evaluateAll(buttons => buttons.every(button => { const background = getComputedStyle(button).backgroundImage; return background.includes('rgb(241, 247, 255)') || background.includes('rgb(230, 240, 255)'); }))).toBe(true);
+  expect(await page.locator('.cg-popup-blue button').evaluateAll(buttons => buttons.every(button => {
+    const background = getComputedStyle(button).backgroundImage;
+    return document.documentElement.dataset.arlAppearance === 'clean'
+      ? background === 'none'
+      : background.includes('rgb(241, 247, 255)') || background.includes('rgb(230, 240, 255)');
+  }))).toBe(true);
   await page.screenshot({ path: 'output/controle-gasto/fatura-do-mes.png', fullPage: true });
   await monthly.getByRole('button', { name: /Quitar minha parte/ }).click();
   await monthly.getByRole('button', { name: 'Simular distribuição' }).click();

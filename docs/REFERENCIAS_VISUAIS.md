@@ -184,3 +184,6 @@ Mês e total preservados no topo. Responsáveis e Casal empilhados, com retratos
 
 ## Financeiro e laudo — 08/10/2026
 Caixa Diário reutiliza ícones, cores e moldura dos cards de formas de pagamento da Visão Geral, com entrada apenas e sem faixa de saída/percentual mensal. A Receber usa olho de 19px em área clicável de 36px, transparente, foco/hover acessíveis. Ditar laudo e Melhorar texto ficam lado a lado quando há espaço, com cápsula preto/vermelho; quebram linha em telas pequenas. Capturas em output/finance-dictation no ambiente isolado.
+
+## Clean alternativo — 08/10/2026
+Referência enviada pelo proprietário: codex-clipboard-5953c524-e357-4165-815e-8802aeb5920e.png. Aplicar apenas como aparência optativa: fundo cinza claro, superfícies brancas, bordas discretas, botões sólidos arredondados e sombras suaves. Preservar posições e todas as ações existentes; não copiar calendário, conteúdo ou estrutura da referência. Original permanece selecionável e intacto. Sete cores, inclusive amarelo/claro com texto escuro. Ver docs/APARENCIA_CLEAN.md.

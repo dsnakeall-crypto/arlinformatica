@@ -6,6 +6,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
+                'resources/js/appearance.ts',
                 'resources/js/main.tsx',
                 'resources/js/brand2026.ts',
                 'resources/js/opening-whatsapp.ts',

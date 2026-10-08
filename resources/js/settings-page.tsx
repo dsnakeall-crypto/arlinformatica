@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import PageHeader from "./page-header";
+import AppearanceSettings from './appearance-settings';
 import { Camera, ChevronDown, Settings, Users, Trash2, FileSignature } from "lucide-react";
 import { api, formatCompanySettings, serializeCompanySettings, masks, Field } from './app-shared';
 import { ClientImport, TermTextEditor, DatabaseResetPanel } from './lazy-pages';
@@ -502,6 +503,7 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
           {section === "identity" && (
             <>
               <h2>Identidade Visual</h2>
+              <AppearanceSettings />
               <label className="upload">
                 <Camera />
                 <span>

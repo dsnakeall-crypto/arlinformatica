@@ -14,6 +14,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="./arl-assets/icons/icon-16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="./arl-assets/icons/icon-180.png">
     <title>ARL Informática</title>
+    @vite('resources/js/appearance.ts')
     @auth
         @vite(['resources/js/brand2026.ts','resources/js/brand2026-access.ts','resources/js/client-search.ts','resources/js/order-maintenance.ts','resources/js/order-workflow.ts','resources/js/new-order-search.ts','resources/js/opening-whatsapp.ts','resources/js/completion-polish.ts','resources/js/record-management.ts','resources/js/ui-final-polish.ts','resources/js/ui-regression-guard.ts','resources/js/main.tsx','resources/js/mobile-home.ts','resources/js/page-isolation.ts','resources/js/official-icons.ts','resources/css/brand2026.css','resources/css/action-buttons.css'])
         <style>
