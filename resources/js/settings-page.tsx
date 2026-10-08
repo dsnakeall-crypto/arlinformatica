@@ -377,17 +377,20 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
     ["identity", "Identidade", "◆"],
     ["documents", "Documentos", "▧"],
     ["messages", "Mensagens", "✉"],
-    ["notifications", "Notificações", "♢"],
     ...(role === "Master"
       ? [
           ["users", "Usuários", "♙"],
-          ["backup", "Backup", "▦"],
-          ["reset", "Zeramento", "⚠"],
-          ["system", "Sistema", "⌁"],
         ]
       : []),
-    ["storage", "Armazenamento", "▥"],
+    ["system", "Sistema", "⌁"],
   ];
+  const systemTabs = [
+    ...(role === "Master" ? [["system", "Diagnóstico", "⌁"]] : []),
+    ["notifications", "Notificações", "♢"],
+    ["storage", "Armazenamento", "▥"],
+    ...(role === "Master" ? [["backup", "Backup", "▦"], ["reset", "Zeramento", "⚠"]] : []),
+  ];
+  const inSystem = systemTabs.some(([id]) => id === section);
   const generalSave =
     ["company", "identity", "messages"].includes(section) ||
     section === "documents";
@@ -409,11 +412,11 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
             key={id}
             type="button"
             role="tab"
-            aria-selected={section === id}
-            className={`arl-settings-tab ${section === id ? "active" : ""}`}
+            aria-selected={id === "system" ? inSystem : section === id}
+            className={`arl-settings-tab ${(id === "system" ? inSystem : section === id) ? "active" : ""}`}
             data-section={id}
             onClick={() => {
-              setSection(id);
+              setSection(id === "system" && role !== "Master" ? "notifications" : id);
               setMessage("");
             }}
           >
@@ -422,6 +425,9 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
           </button>
         ))}
       </div>
+      {inSystem && <div className="arl-document-subtabs settings-system-tabs" role="tablist" aria-label="Seções do Sistema">
+        {systemTabs.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={section === id} className={section === id ? "active" : ""} onClick={() => { setSection(id); setMessage(""); }}>{label}</button>)}
+      </div>}
       {section === "documents" && (
         <div
           className="arl-document-subtabs"
@@ -501,9 +507,8 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
             </>
           )}
           {section === "identity" && (
-            <>
-              <h2>Identidade Visual</h2>
-              <AppearanceSettings />
+            <div className="settings-two-column">
+            <section className="settings-subcard"><h2>Logomarca e assinatura</h2><p>Imagens usadas nos novos documentos da empresa.</p>
               <label className="upload">
                 <Camera />
                 <span>
@@ -541,7 +546,8 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
                   </button>
                 </div>
               )}
-            </>
+            </section><section className="settings-subcard"><AppearanceSettings /></section>
+            </div>
           )}
           {section === "documents" && (
             <>
@@ -553,12 +559,17 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
             </>
           )}
           {section === "messages" && <>
-            <h2>Mensagens de abertura da OS</h2>
-            <label className="check"><input type="checkbox" name="order_opened_auto_whatsapp" checked={String(data.order_opened_auto_whatsapp) === "1"} onChange={change} /> Abrir WhatsApp automaticamente após criar OS</label>
-            <p>A OS abre normalmente. Ativado, o WhatsApp abre com a mensagem pronta; você confirma o envio. Se o navegador bloquear, haverá um botão para abrir a conversa.</p>
+            <h2>Mensagens de abertura do WhatsApp</h2>
+            <div className="settings-message-options">
+              <label className="settings-switch"><input type="checkbox" role="switch" name="order_opened_auto_whatsapp" checked={String(data.order_opened_auto_whatsapp) === "1"} onChange={change} /><span className="settings-switch-track" aria-hidden="true"/><span>Abrir WhatsApp automaticamente após criar OS</span></label>
+              <p>Ative e salve as configurações. Ao criar uma nova OS, a ficha abre normalmente e o WhatsApp abre com a mensagem do tipo de atendimento. Você confirma o envio no WhatsApp; não há envio sem sua confirmação.</p>
+              <small>Se o navegador bloquear a janela, use o botão para abrir a conversa na ficha da OS. Desativado, o acesso manual às mensagens continua disponível.</small>
+            </div>
             <p>Variáveis: {"{{nome_cliente}}"}, {"{{numero_os}}"} e {"{{empresa}}"}. As linhas em branco são mantidas.</p>
-            <label className="field"><span>Atendimento interno</span><textarea name="order_opened_internal_message" value={data.order_opened_internal_message || ""} onChange={change} required maxLength={6000} rows={12} /></label>
-            <label className="field"><span>Atendimento externo</span><textarea name="order_opened_external_message" value={data.order_opened_external_message || ""} onChange={change} required maxLength={6000} rows={14} /></label>
+            <div className="settings-two-column">
+              <section className="settings-subcard"><h3>Atendimento interno</h3><p>Para o equipamento recebido na assistência.</p><label className="field"><span>Mensagem de atendimento interno</span><textarea name="order_opened_internal_message" value={data.order_opened_internal_message || ""} onChange={change} required maxLength={6000} rows={14} /></label></section>
+              <section className="settings-subcard"><h3>Atendimento externo</h3><p>Para o chamado com deslocamento ao cliente.</p><label className="field"><span>Mensagem de atendimento externo</span><textarea name="order_opened_external_message" value={data.order_opened_external_message || ""} onChange={change} required maxLength={6000} rows={14} /></label></section>
+            </div>
           </>}
           {message && <div className="notice">{message}</div>}
           <div className="actions">

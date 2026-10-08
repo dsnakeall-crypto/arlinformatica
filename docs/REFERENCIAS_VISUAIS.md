@@ -190,3 +190,8 @@ Referência enviada pelo proprietário: codex-clipboard-5953c524-e357-4165-815e-
 
 ## Clean translúcido — 08/10/2026
 Nova referência: codex-clipboard-02eb1f6e-1f43-4d93-8439-9e9728ac2713.png. Tons pastel azul/rosado, painéis suaves translúcidos, cantos arredondados e sombras leves, mantendo a organização ARL existente. Fundo estático, sem desfoque pesado. Original preservado. Prévia e capturas: C:/Users/Allan/ARL-backups/clean-glass-retention-20261008/clean-preview.png e ambiente isolado/output/clean.
+
+## Configurações e alinhamento de clientes — 08/10/2026
+Configurações usa seis destinos: Empresa, Identidade, Documentos, Mensagens, Usuários e Sistema. Diagnóstico, Notificações, Armazenamento, Backup e Zeramento ficam em Sistema, mantendo permissões existentes. Identidade e mensagens têm dois cartões no desktop e uma coluna mobile. Abas arredondadas com contorno em degradê e relevo estático; interruptor de WhatsApp acessível pelo teclado. Abertura automática continua optativa e exige salvamento; nenhum envio automático sem confirmação no WhatsApp.
+Clientes desktop: colunas estáveis para código, telefone, divisórias e ações, endereço com pequeno recuo. Divisórias e conteúdo centralizados verticalmente. Mobile preservado.
+Backup local verificado: C:/Users/Allan/ARL-backups/settings-organized-20261008. Testes isolados: dez cenários de configurações/permissões/alinhamento aprovados, gestão de clientes aprovada, 41 testes frontend, lint e TypeScript/build. Nenhuma mudança de schema ou regra de OS.

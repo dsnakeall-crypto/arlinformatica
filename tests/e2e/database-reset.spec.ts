@@ -16,6 +16,7 @@ test('Master vê o zeramento, mas a confirmação fica bloqueada sem a frase exa
     });
   });
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
+  await page.getByRole('tab', { name: 'Sistema', exact: true }).click();
   await page.getByRole('tab', { name: /Zeramento/ }).click();
 
   await expect(page.getByTestId('database-reset-panel')).toBeVisible();

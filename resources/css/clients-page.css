@@ -55,3 +55,4 @@
  .clients-list-panel .client-list article.clients-row{grid-template-columns:1fr}.clients-phone{grid-column:1;grid-row:auto}.clients-address,.clients-actions{grid-column:1!important}.clients-actions{justify-content:space-between!important;gap:4px!important}
 }
 .clients-main .clients-nickname{color:#737985;font-size:10.5px;font-weight:500}
+@media(min-width:1201px){.clients-list-panel .client-list article.clients-row{grid-template-columns:88px minmax(150px,1.1fr) 1px 138px 1px minmax(230px,1.4fr) 1px 240px}.clients-list-panel .clients-row>.clients-separator{align-self:center;justify-self:center}.clients-list-panel .clients-row>.clients-phone{justify-content:center}.clients-list-panel .clients-row>.clients-address{padding-left:4px}}

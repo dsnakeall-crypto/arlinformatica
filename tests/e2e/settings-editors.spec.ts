@@ -57,10 +57,11 @@ test('Empresa persiste alterações e abas sem edição não exibem a barra gera
   await expect(reloadedForm.getByLabel('Telefone / WhatsApp')).toHaveValue('(35) 98828-5777');
   await expect(reloadedForm.getByLabel('CEP (somente números)')).toHaveValue('37160-000');
 
-  await page.locator('.arl-settings-tab[data-section="notifications"]').click();
+  await page.getByRole("tab", { name: "Sistema", exact: true }).click();
+  await page.getByRole("tab", { name: /^Notifica/ }).click();
   await expect(page.locator('form.settings-form .actions')).toBeHidden();
 
-  await page.locator('.arl-settings-tab[data-section="storage"]').click();
+  await page.getByRole("tab", { name: /Armazenamento/ }).click();
   await expect(page.locator('form.settings-form .actions')).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Fotos e Armazenamento' })).toBeVisible();
 });
@@ -101,13 +102,13 @@ test('configurações permite mensagens de abertura e preserva editores legados 
   await expect(page.locator('.arl-post-message-panel')).toBeHidden();
 });
 
-test('configurações exibe somente as dez abas permitidas em uma linha', async ({ page }) => {
+test('configurações exibe somente as seis abas permitidas em uma linha', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
   const tabs = page.locator('.arl-settings-tab');
-  await expect(tabs).toHaveCount(10);
-  await expect(tabs.locator('b')).toHaveText(['Empresa', 'Identidade', 'Documentos', 'Mensagens', 'Notificações', 'Usuários', 'Backup', 'Zeramento', 'Sistema', 'Armazenamento']);
+  await expect(tabs).toHaveCount(6);
+  await expect(tabs.locator("b")).toHaveText(["Empresa", "Identidade", "Documentos", "Mensagens", "Usuários", "Sistema"]);
   const tops = await tabs.evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
   expect(new Set(tops).size).toBe(1);
   for (const hidden of ['orders', 'finance']) {
@@ -162,7 +163,12 @@ test('Empresa e Backup permanecem isolados após múltiplos ciclos dos observers
   await expect(page.getByLabel('Nome fantasia')).toBeVisible();
   const root = page.locator('[data-arl-settings-react="1"]');
   for (const section of ['company', 'backup', 'documents', 'company']) {
-    await page.locator(`.arl-settings-tab[data-section="${section}"]`).click();
+    if (section === "backup") {
+      await page.getByRole("tab", { name: "Sistema", exact: true }).click();
+      await page.getByRole("tab", { name: /Backup/ }).click();
+    } else {
+      await page.locator(`.arl-settings-tab[data-section="${section}"]`).click();
+    }
     if (section === 'company') {
       await expect(root.locator('h2')).toHaveText(['Dados da Empresa']);
       await root.getByText('Informações complementares', { exact: true }).click();
