@@ -1,0 +1,35 @@
+import { test, expect } from '@playwright/test';
+import { api, login } from './helpers';
+
+for (const width of [1366, 390]) test(`divisão por valores e popup manual em ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: width === 390 ? 844 : 768 });
+  await login(page);
+  const stamp = Date.now();
+  const bank = (await api(page, '/expense-control/catalogs/institutions', 'POST', { name: 'Valores ' + stamp, active: true, due_day: 10, color: '#123456' })).body;
+  const type = (await api(page, '/expense-control/catalogs/types', 'POST', { name: 'Cartão valores ' + stamp, active: true })).body;
+  await page.getByRole('navigation', { name: width === 390 ? 'Navegação Mobile / Tablet' : 'Menu principal', exact: true }).getByRole('button', { name: 'Controle de Gasto', exact: true }).click();
+  await page.getByRole('button', { name: 'Nova dívida', exact: true }).click();
+  if (width === 390) await page.getByRole('button', { name: 'Cadastro manual' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Cadastrar nova dívida', exact: true });
+  await dialog.getByLabel('Nome da dívida ou compra').fill('Compra dividida ' + stamp);
+  await dialog.getByRole('combobox', { name: 'Instituição', exact: true }).selectOption(String(bank.id));
+  await dialog.getByRole('combobox', { name: 'Tipo de dívida', exact: true }).selectOption(String(type.id));
+  await dialog.getByLabel('Quem paga esta fatura?').selectOption('shared');
+  await dialog.getByLabel('Valor de cada parcela (R$)').fill('40000');
+  await dialog.getByLabel('Quantidade total de parcelas').fill('10');
+  await dialog.getByRole('button', { name: 'Por valores', exact: true }).click();
+  const split = dialog.locator('.cg-split-fields');
+  await split.getByRole('textbox').first().fill('30000');
+  await expect(split.getByRole('textbox').nth(1)).toHaveValue('100,00');
+  expect(await dialog.evaluate(e => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
+  await page.screenshot({ path: `output/expense-entry/manual-${width}.png`, fullPage: true });
+  const response = page.waitForResponse(r => r.url().endsWith('/expense-control/debts') && r.request().method() === 'POST');
+  await dialog.getByRole('button', { name: 'Salvar', exact: true }).click();
+  const saved = await response;
+  expect(saved.status()).toBe(201);
+  const detail = await saved.json();
+  expect(detail.installments).toHaveLength(10);
+  for (const item of detail.installments) expect(item).toMatchObject({ amount_cents: 40000, share_one_cents: 30000, share_two_cents: 10000 });
+  await expect(dialog).not.toBeVisible();
+});
+

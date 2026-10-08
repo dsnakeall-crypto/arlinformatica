@@ -21,3 +21,16 @@ npm-debug.log*
 
 # OCR runtime/language assets are recreated from locked npm packages by prebuild/predev.
 /public/arl-assets/expense-ocr/
+
+# Private data and generated local validation artifacts must never be published.
+*.sql
+*.tsbuildinfo
+/.phpunit.result.cache
+/storage/app/
+/storage/framework/testing/
+/output/
+/visual-artifacts/
+/analise.txt
+/teste-e2e.txt
+/playwright.8001.config.ts
+/scripts/e2e-server-8001.sh

@@ -53,6 +53,51 @@ class ExpenseControlTest extends TestCase
         return [...['request_key' => (string) Str::uuid(), 'installment_ids' => $ids, 'kind' => 'payment', 'target' => 'one', 'paid_by' => 1, 'occurred_on' => '2026-10-02', 'amount_cents' => null, 'notes' => null], ...$extra];
     }
 
+    public function test_exact_amount_split_preserves_cents_for_all_installments_and_retries(): void
+    {
+        $payload = $this->payload(['amount_cents' => 45000, 'installment_count' => 10, 'split_mode' => 'amount', 'share_one_cents' => 30001, 'share_two_cents' => 14999]);
+        $first = $this->postJson('/api/expense-control/debts', $payload)->assertCreated()->json('debt.id');
+        $this->postJson('/api/expense-control/debts', $payload)->assertCreated();
+        $this->assertSame(10, DB::table('cg_installments')->where('debt_id', $first)->count());
+        $this->assertSame(10, DB::table('cg_installments')->where('debt_id', $first)->where('share_one_cents', 30001)->where('share_two_cents', 14999)->count());
+        $this->assertSame(1, DB::table('cg_debts')->count());
+    }
+
+    public function test_invalid_exact_split_rolls_back_without_creating_debt(): void
+    {
+        foreach ([[30000, 10001], [-1, 40001], [null, 40000]] as [$one, $two]) {
+            $this->postJson('/api/expense-control/debts', $this->payload(['amount_cents' => 40000, 'split_mode' => 'amount', 'share_one_cents' => $one, 'share_two_cents' => $two]))->assertUnprocessable();
+        }
+        $this->assertSame(0, DB::table('cg_debts')->count());
+        $this->assertSame(0, DB::table('cg_installments')->count());
+    }
+
+    public function test_exact_split_edit_changes_only_unpaid_installment_and_preserves_history(): void
+    {
+        $debt = $this->createDebt(['amount_cents' => 40000, 'split_mode' => 'amount', 'share_one_cents' => 30000, 'share_two_cents' => 10000]);
+        $id = $debt['installments'][0]['id'];
+        $data = ['amount_cents' => 40000, 'percent_one' => 50, 'split_mode' => 'amount', 'share_one_cents' => 29999, 'share_two_cents' => 10001, 'due_on' => '2026-10-30'];
+        $this->putJson('/api/expense-control/installments/'.$id, $data)->assertOk();
+        $this->assertDatabaseHas('cg_installments', ['id' => $id, 'share_one_cents' => 29999, 'share_two_cents' => 10001]);
+        $this->postJson('/api/expense-control/operations', $this->payment([$id]))->assertCreated();
+        $this->putJson('/api/expense-control/installments/'.$id, $data)->assertUnprocessable();
+        $this->assertDatabaseHas('cg_installments', ['id' => $debt['installments'][1]['id'], 'share_one_cents' => 30000, 'share_two_cents' => 10000]);
+    }
+
+    public function test_photo_import_exact_values_and_invalid_batch_are_atomic(): void
+    {
+        $item = $this->payload(['amount_cents' => 40000, 'split_mode' => 'amount', 'share_one_cents' => 30000, 'share_two_cents' => 10000]);
+        unset($item['start_month'], $item['due_day']);
+        $item['reviewed'] = true;
+        $data = ['request_key' => (string) Str::uuid(), 'source_hash' => str_repeat('a', 64), 'start_month' => '2026-10', 'due_day' => 10, 'items' => [$item, [...$item, 'request_key' => (string) Str::uuid(), 'share_two_cents' => 9999]]];
+        $this->postJson('/api/expense-control/photo-imports', $data)->assertUnprocessable();
+        $this->assertSame(0, DB::table('cg_debts')->count());
+        $data['items'] = [$item];
+        $this->postJson('/api/expense-control/photo-imports', $data)->assertCreated();
+        $this->postJson('/api/expense-control/photo-imports', $data)->assertOk()->assertJsonPath('replayed', true);
+        $this->assertSame(3, DB::table('cg_installments')->where('share_one_cents', 30000)->where('share_two_cents', 10000)->count());
+    }
+
     public function test_monthly_invoices_group_cards_but_keep_each_loan_and_all_responsibilities(): void
     {
         $this->createDebt(['name' => 'Cartão Allan', 'responsibility' => 'one', 'amount_cents' => 10000]);

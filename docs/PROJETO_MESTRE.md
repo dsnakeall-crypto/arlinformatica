@@ -8,7 +8,7 @@ Nova OS deve avisar em popup quando o cliente tiver chamado operacional aberto, 
 
 Construir do zero um sistema completo de gestão para assistência técnica de informática, em português do Brasil, rápido, profissional, responsivo, seguro e independente de ChatGPT, Codex, Supabase ou qualquer serviço da OpenAI para funcionar depois de pronto.
 
-O GitHub privado é a fonte oficial do código. O primeiro alvo de produção é hospedagem compartilhada KingHost, mas o sistema deve permanecer portátil para outro shared hosting, VPS, cloud ou servidor próprio.
+O GitHub é a fonte oficial do código. O repositório é público por decisão explícita do proprietário em 08/10/2026; credenciais, dados e backups permanecem privados. O primeiro alvo de produção é hospedagem compartilhada KingHost, mas o sistema deve permanecer portátil para outro shared hosting, VPS, cloud ou servidor próprio.
 
 ## 2. Arquitetura obrigatória
 

@@ -829,3 +829,9 @@ Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produç
 - [OK] Backend completo 317 testes/6555 verificações e repetição focada 33/515 após ajustes; 41 testes frontend, lint, TypeScript, Pint e build aprovados. Testes de navegador em banco isolado.
 - [PENDENTE] Recebimento físico das notificações depende de permissão/inscrição de cada telefone; conferir nos aparelhos reais.
 - [PENDENTE] CI do commit final, publicação e zeramento autorizado dos registros de teste; comprovantes serão registrados no relatório externo de publicação.
+
+## Divisão por valores e popups — 08/10/2026
+- [OK] Divisão exata em centavos por parcela sem migration; validação de soma e histórico protegido.
+- [OK] Novos formulários manual/foto preservam campos e conferência.
+- [OK] Backup externo local e higiene de artefatos sem exclusão dos arquivos locais.
+- [PENDENTE] CI do commit final, conferência visual e publicação com backup atual validado.

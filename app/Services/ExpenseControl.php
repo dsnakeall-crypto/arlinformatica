@@ -44,6 +44,27 @@ class ExpenseControl
         return [$one, $amount - $one];
     }
 
+    public function allocation(array $data): array
+    {
+        $responsibility = $data['responsibility'];
+        $percent = match ($responsibility) {
+            'one' => 100, 'two' => 0, default => $data['percent_one']
+        };
+        if ($responsibility !== 'shared' || ($data['split_mode'] ?? 'percent') !== 'amount') {
+            return $this->shares((int) $data['amount_cents'], (int) $percent);
+        }
+        if (($data['recurrence'] ?? null) === 'monthly') {
+            throw ValidationException::withMessages(['split_mode' => 'Para cobranças fixas mensais, use porcentagem. Valores exatos estão disponíveis em compras únicas e parceladas.']);
+        }
+        $one = $data['share_one_cents'] ?? null;
+        $two = $data['share_two_cents'] ?? null;
+        if (! is_numeric($one) || ! is_numeric($two) || (int) $one < 0 || (int) $two < 0 || (int) $one + (int) $two !== (int) $data['amount_cents']) {
+            throw ValidationException::withMessages(['share_one_cents' => 'A soma das duas partes deve ser exatamente o valor de cada parcela.']);
+        }
+
+        return [(int) $one, (int) $two];
+    }
+
     public function generate(object $debt, CarbonImmutable $month, int $number): array
     {
         [$one, $two] = $this->shares((int) $debt->amount_cents, (int) $debt->percent_one);
@@ -91,6 +112,13 @@ class ExpenseControl
             $percent = match ($data['responsibility']) {
                 'one' => 100, 'two' => 0, default => $data['percent_one']
             };
+            [$one, $two] = $this->allocation($data);
+            $exact = $data['responsibility'] === 'shared' && ($data['split_mode'] ?? 'percent') === 'amount';
+            if ($exact) {
+                // Compatibility metadata only: installment snapshots remain the exact financial source.
+                $percent = $one === 0 ? 0 : ($two === 0 ? 100 : max(1, min(99, (int) round($one * 100 / $data['amount_cents']))));
+            }
+            unset($data['split_mode'], $data['share_one_cents'], $data['share_two_cents']);
             $start = $this->month($data['start_month']);
             unset($data['start_month']);
             $id = DB::table('cg_debts')->insertGetId([
@@ -100,7 +128,12 @@ class ExpenseControl
             $debt = DB::table('cg_debts')->find($id);
             $count = $debt->recurrence === 'installments' ? $debt->installment_count - $debt->first_number + 1 : 1;
             for ($n = 0; $n < $count; $n++) {
-                DB::table('cg_installments')->insert($this->generate($debt, $start->addMonths($n), $debt->first_number + $n));
+                $row = $this->generate($debt, $start->addMonths($n), $debt->first_number + $n);
+                if ($exact) {
+                    $row['share_one_cents'] = $one;
+                    $row['share_two_cents'] = $two;
+                }
+                DB::table('cg_installments')->insert($row);
             }
             app(Audit::class)->record($request, 'expense_control.debt_created', 'expense_control', $id, null, ['name' => $debt->name, 'amount_cents' => $debt->amount_cents]);
             app(ExpenseNotifications::class)->debt($request, $debt);

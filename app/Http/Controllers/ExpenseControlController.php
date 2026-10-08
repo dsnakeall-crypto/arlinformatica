@@ -329,11 +329,14 @@ class ExpenseControlController extends Controller
             'institution_id' => 'nullable|integer|exists:cg_institutions,id',
             'start_month' => 'required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12',
             'due_day' => 'required|integer|min:1|max:31', 'items' => 'required|array|min:1|max:100',
-            'items.*' => 'required|array:request_key,reviewed,name,institution_id,type_id,recurrence,responsibility,percent_one,amount_cents,installment_count,first_number,notes',
+            'items.*' => 'required|array:request_key,reviewed,name,institution_id,type_id,recurrence,responsibility,percent_one,amount_cents,installment_count,first_number,notes,split_mode,share_one_cents,share_two_cents',
             'items.*.request_key' => 'required|uuid|distinct', 'items.*.reviewed' => 'required|accepted',
             'items.*.institution_id' => 'nullable|integer|exists:cg_institutions,id',
             'items.*.name' => 'required|string|max:200', 'items.*.type_id' => 'required|integer|exists:cg_types,id',
             'items.*.recurrence' => 'required|in:installments,once', 'items.*.responsibility' => 'required|in:one,two,shared',
+            'items.*.split_mode' => 'sometimes|in:percent,amount',
+            'items.*.share_one_cents' => 'nullable|integer|min:0|max:100000000',
+            'items.*.share_two_cents' => 'nullable|integer|min:0|max:100000000',
             'items.*.percent_one' => 'required|integer|min:0|max:100',
             'items.*.amount_cents' => 'required|integer|min:1|max:100000000',
             'items.*.installment_count' => 'required|integer|min:1|max:360',
@@ -362,7 +365,7 @@ class ExpenseControlController extends Controller
 
     private function debtData(Request $r): array
     {
-        $data = $r->validate(['request_key' => 'required|uuid', 'institution_id' => 'required|integer|exists:cg_institutions,id', 'type_id' => 'required|integer|exists:cg_types,id',
+        $data = $r->validate(['split_mode' => 'sometimes|in:percent,amount', 'share_one_cents' => 'nullable|integer|min:0|max:100000000', 'share_two_cents' => 'nullable|integer|min:0|max:100000000', 'request_key' => 'required|uuid', 'institution_id' => 'required|integer|exists:cg_institutions,id', 'type_id' => 'required|integer|exists:cg_types,id',
             'name' => 'required|string|max:200', 'recurrence' => 'required|in:installments,monthly,once', 'responsibility' => 'required|in:one,two,shared',
             'percent_one' => 'required|integer|min:0|max:100', 'amount_cents' => 'required|integer|min:1|max:100000000', 'installment_count' => 'required|integer|min:1|max:360',
             'first_number' => 'required|integer|min:1|lte:installment_count', 'start_month' => 'required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12',
@@ -390,7 +393,7 @@ class ExpenseControlController extends Controller
 
     public function installment(Request $r, int $id, Audit $audit): JsonResponse
     {
-        $data = $r->validate(['amount_cents' => 'required|integer|min:1|max:100000000', 'percent_one' => 'required|integer|min:0|max:100', 'due_on' => 'required|date_format:Y-m-d']);
+        $data = $r->validate(['split_mode' => 'sometimes|in:percent,amount', 'share_one_cents' => 'nullable|integer|min:0|max:100000000', 'share_two_cents' => 'nullable|integer|min:0|max:100000000', 'amount_cents' => 'required|integer|min:1|max:100000000', 'percent_one' => 'required|integer|min:0|max:100', 'due_on' => 'required|date_format:Y-m-d']);
         DB::transaction(function () use ($r, $id, $data, $audit) {
             $parent = DB::table('cg_installments')->find($id);
             abort_unless($parent, 404);
@@ -402,7 +405,7 @@ class ExpenseControlController extends Controller
             $percent = match ($debt->responsibility) {
                 'one' => 100, 'two' => 0, default => $data['percent_one']
             };
-            [$one, $two] = $this->control->shares($data['amount_cents'], $percent);
+            [$one, $two] = $this->control->allocation([...$data, 'responsibility' => $debt->responsibility, 'percent_one' => $percent]);
             DB::table('cg_installments')->where('id', $id)->update(['amount_cents' => $data['amount_cents'], 'due_on' => $data['due_on'], 'share_one_cents' => $one, 'share_two_cents' => $two, 'updated_at' => now()]);
             $audit->record($r, 'expense_control.installment_updated', 'expense_control', $id, $before, $data);
         });
