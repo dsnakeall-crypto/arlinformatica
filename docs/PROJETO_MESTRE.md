@@ -1122,3 +1122,7 @@ Equipamentos, fabricantes, checklist e configuração operacional têm allowlist
 ### Mensagens de abertura e quitação — 07/10/2026
 
 Configurações > Mensagens: abertura automática opcional do WhatsApp após OS criada, desativada por padrão, com confirmação manual do envio. Textos interno e externo separados; manter parágrafos e acesso manual no menu PDF. Mensagem final inclui `*(PGTO Já Realizado)*` após o valor somente com pagamento integral efetivo, considerando correções e estornos. Especificação e limites: `docs/WHATSAPP_ABERTURA_2026-10-07.md`.
+
+### Carregamento dos módulos sob demanda — 07/10/2026
+
+As áreas do aplicativo carregam seu código quando abertas, com indicação de carregamento e menu disponível. Reutilizar módulos já carregados; preservar permissões, navegação e regras de dados. Inicialização da sessão e segurança permanecem imediatas. Sem mudanças no banco ou dependências de produção. Arquitetura, validações e cuidados de publicação em `docs/LAZY_LOADING.md`.

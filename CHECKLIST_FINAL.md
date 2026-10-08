@@ -765,3 +765,13 @@ Esta seção atualiza a situação da publicação registrada acima; relatórios
 - [OK] Backup local e backup protegido de produção #17 verificados; nenhuma migration adicionada.
 - [PENDENTE] CI do commit final, publicação autorizada e conferência após ativação; evidências finais no relatório externo.
 - [PENDENTE] Revisão completa da responsividade dos demais módulos, excluída deste escopo pelo usuário.
+
+## Lazy loading dos módulos — 08/10/2026
+
+- [OK] Painel, Ordens, Nova OS, detalhe da OS, Clientes, Serviços/Produtos, Fornecedores, Financeiro, Controle de Gasto, Pós-Venda e Configurações carregam código sob demanda. Câmera, importação, editor de termos, zeramento e lançamento rápido também são adiados; sessão e segurança continuam imediatas.
+- [OK] Testes de rede confirmam ausência de módulos não abertos no carregamento inicial, reutilização nas próximas visitas, menu disponível durante lentidão e navegação preservada após falha de download.
+- [OK] JavaScript principal reduzido de 430.152 para 41.384 bytes; build completo com 81 arquivos. Raiz e cópia com configuração limpa geraram arquivos idênticos. Esse número não representa redução de latência do servidor.
+- [OK] Regressão completa: 166/167 aprovados inicialmente. O cenário restante recebeu espera pela montagem do formulário e revelou conflito de fonte na pesquisa de serviços mobile, corrigido com regra restrita ao componente. Reteste final de 21 cenários relacionados aprovado sem retries, incluindo o cenário que falhou.
+- [OK] 38 testes frontend, ESLint, TypeScript, build de produção e git diff --check aprovados. Banco/armazenamento isolados usados nos testes; nenhuma mudança em backend, migrations ou dados reais.
+- [OK] Backup externo verificado em C:/Users/Allan/ARL-backups/lazy-loading-20261007; checkpoint adicional em resume-20261008. Alterações anteriores preservadas, sete arquivos protegidos conferidos por hash e cache de TypeScript restaurado ao conteúdo anterior.
+- [PENDENTE] CI remota do commit final, revisão/merge e publicação com autorização específica. Servidor e banco de produção não foram alterados nesta etapa.
