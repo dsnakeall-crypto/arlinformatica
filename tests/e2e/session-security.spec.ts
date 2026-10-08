@@ -65,10 +65,14 @@ test('desativação em outra sessão bloqueia funcionário já conectado', async
     const employee = await context.newPage();
     await login(employee, account.login);
     expect((await api(employee, '/clients')).status).toBe(200);
+    // A background request may invalidate the session before the explicit probe.
+    const inactiveResponse = employee.waitForResponse(async response =>
+      new URL(response.url()).pathname.startsWith('/api/') && response.status() === 401
+      && (await response.json()).code === 'ACCOUNT_INACTIVE');
     expect((await api(page, `/users/${created.body.id}`, 'PUT', { ...account, active: false })).status).toBe(200);
     const denied = await api(employee, '/clients');
     expect(denied.status).toBe(401);
-    expect(denied.body.code).toBe('ACCOUNT_INACTIVE');
+    expect((await (await inactiveResponse).json()).code).toBe('ACCOUNT_INACTIVE');
     await expect(employee.locator('#arl-session-notice')).toBeVisible();
     expect((await api(employee, '/clients', 'POST', { name: 'Não deve salvar' })).status).not.toBe(201);
     expect((await api(employee, '/me')).status).toBe(401);
