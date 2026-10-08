@@ -229,6 +229,8 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
 
   await bottom.getByRole('button', { name: 'Nova OS', exact: true }).click();
   const fields = page.locator('.os-form input:not([type="hidden"]), .os-form select, .os-form textarea');
+  // The form is in a deferred module; measure only after its first field mounts.
+  await expect(fields.first()).toBeVisible();
   const fontSizes = await fields.evaluateAll((elements) => elements.map((element) => parseFloat(getComputedStyle(element).fontSize)));
   expect(fontSizes.length).toBeGreaterThan(0);
   for (const fontSize of fontSizes) expect(fontSize).toBeGreaterThanOrEqual(16);
