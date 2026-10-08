@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "postbuild": "node scripts/prepare-static-delivery.mjs",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc -b --pretty false",
     "test:unit": "node --experimental-strip-types --test tests/frontend/*.test.mjs",

@@ -777,3 +777,11 @@ Esta seção atualiza a situação da publicação registrada acima; relatórios
 - [OK] 38 testes frontend, ESLint, TypeScript, build de produção e git diff --check aprovados. Banco/armazenamento isolados usados nos testes; nenhuma mudança em backend, migrations ou dados reais.
 - [OK] Backup externo verificado em C:/Users/Allan/ARL-backups/lazy-loading-20261007; checkpoint adicional em resume-20261008. Alterações anteriores preservadas, sete arquivos protegidos conferidos por hash e cache de TypeScript restaurado ao conteúdo anterior.
 - [PENDENTE] CI remota do commit final, revisão/merge e publicação com autorização específica. Servidor e banco de produção não foram alterados nesta etapa.
+
+## Investigação de navegação — 08/10/2026
+- [OK] Backup externo de arquivos/alterações/Git verificado antes das edições.
+- [OK] Medição de endpoints reais e bootstrap, sem migrations ou reescrita de dados de negócio.
+- [OK] Compressão estática preparada e validada em pasta temporária na KingHost (66,5% menos bytes no JS medido).
+- [OK] Consulta inicial duplicada de identidade eliminada; quatro E2E, lint, 38 testes frontend e build aprovados.
+- [PENDENTE] Reproduzir o engasgo no navegador oficial autenticado do proprietário e concluir diagnóstico de GPU/Alt+Tab.
+- [PENDENTE] CI e publicação desta investigação; visual e aplicativo oficial ainda preservados.

@@ -3,11 +3,15 @@ import { login } from './helpers';
 
 test('módulos carregam sob demanda e a navegação reutiliza o código já carregado', async ({ page }) => {
   const modules: string[] = [];
+  let identityRequests = 0;
   page.on('request', request => {
+    if (new URL(request.url()).pathname === '/api/me') identityRequests++;
     if (/\/assets\/.*\.js$/.test(new URL(request.url()).pathname)) modules.push(request.url());
   });
   await login(page);
   await expect(page.getByRole('heading', { name: 'Painel', exact: true })).toBeVisible();
+  // Legacy order controls must not repeat session verification on unrelated React pages.
+  expect(identityRequests).toBe(1);
   expect(modules.some(url => /finance-page-/.test(url))).toBe(false);
   expect(modules.some(url => /suppliers-page-/.test(url))).toBe(false);
   expect(modules.some(url => /expense-control-page-/.test(url))).toBe(false);
