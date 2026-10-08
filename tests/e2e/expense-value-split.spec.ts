@@ -32,4 +32,3 @@ for (const width of [1366, 390]) test(`divisão por valores e popup manual em ${
   for (const item of detail.installments) expect(item).toMatchObject({ amount_cents: 40000, share_one_cents: 30000, share_two_cents: 10000 });
   await expect(dialog).not.toBeVisible();
 });
-
