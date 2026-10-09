@@ -843,3 +843,8 @@ Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produç
 - [OK] Original/Clean em Ajustes, desktop/mobile, e estabilidade visual ao carregar cadastro por foto.
 - [OK] Testes backend e frontend, navegador isolado e comparação visual.
 - [PENDENTE] CI, sincronização main e publicação; registrar comprovantes no relatório externo após executar.
+
+## Gastos por mês — 09/10/2026
+- [OK] Gastos filtra saldo pendente do mês antes da paginação e das contagens; Quitadas e quitação integral preservadas.
+- [OK] Filtro Mês após Responsável substitui Situação; testes focados, lint e TypeScript aprovados.
+- [PENDENTE] Build/publicação; CI não aguardada e novo backup dispensado expressamente pelo usuário nesta entrega.

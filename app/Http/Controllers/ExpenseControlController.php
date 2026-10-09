@@ -282,6 +282,9 @@ class ExpenseControlController extends Controller
                 ? $q->where('totals.remaining_cents', 0)->where(fn ($q) => $q->where('d.recurrence', '!=', 'monthly')->orWhereNotNull('d.ended_on'))
                 : $q->where(fn ($q) => $q->where('totals.remaining_cents', '>', 0)->orWhere(fn ($q) => $q->where('d.recurrence', 'monthly')->whereNull('d.ended_on')));
         }
+        if ($status === 'active' && $r->boolean('month_only')) {
+            $q->where('totals.month_remaining_cents', '>', 0);
+        }
         match ($r->query('sort')) {
             'oldest' => $q->orderBy('d.id'), 'name' => $q->orderBy('d.name')->orderBy('d.id'), 'value' => $q->orderByDesc('totals.remaining_cents')->orderBy('d.id'), default => $q->orderByDesc('d.id')
         };

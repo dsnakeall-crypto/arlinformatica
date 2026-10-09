@@ -53,6 +53,19 @@ class ExpenseControlTest extends TestCase
         return [...['request_key' => (string) Str::uuid(), 'installment_ids' => $ids, 'kind' => 'payment', 'target' => 'one', 'paid_by' => 1, 'occurred_on' => '2026-10-02', 'amount_cents' => null, 'notes' => null], ...$extra];
     }
 
+    public function test_monthly_debt_filter_excludes_future_and_paid_months_before_pagination(): void
+    {
+        $active = $this->createDebt(['name' => 'Outubro pendente']);
+        $future = $this->createDebt(['name' => 'Novembro somente', 'start_month' => '2026-11']);
+        $paid = $this->createDebt(['name' => 'Outubro quitado']);
+        $this->postJson('/api/expense-control/operations', $this->payment([$paid['installments'][0]['id']], ['target' => 'both']))->assertSuccessful();
+        $url = '/api/expense-control/debts?month=2026-10&month_only=1&institution='.$this->bank.'&type='.$this->type;
+        $this->getJson($url)->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.id', $active['debt']['id'])->assertJsonPath('catalog_counts.0.count', 1);
+        $this->getJson('/api/expense-control/debts?month=2026-09&month_only=1')->assertOk()->assertJsonPath('total', 0);
+        $this->getJson('/api/expense-control/debts?month=2026-11&month_only=1')->assertOk()->assertJsonPath('total', 3);
+        $this->getJson('/api/expense-control/debts?month=2026-10')->assertOk()->assertJsonPath('total', 3);
+    }
+
     public function test_exact_amount_split_preserves_cents_for_all_installments_and_retries(): void
     {
         $payload = $this->payload(['amount_cents' => 45000, 'installment_count' => 10, 'split_mode' => 'amount', 'share_one_cents' => 30001, 'share_two_cents' => 14999]);
