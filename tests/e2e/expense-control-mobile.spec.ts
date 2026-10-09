@@ -68,7 +68,7 @@ test('mobile gastos: quatro ícones, resumo correto das partes, instituição, m
   await expect(nav.locator('button span')).toHaveCount(0);
   await nav.getByRole('button', { name: 'Controle de Gasto' }).click();
   await expect(page.getByRole('region', { name: 'Resumo financeiro mobile' })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Ajustes', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: 'Ajustes', exact: true })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Histórico', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Selecionar mês do Controle de Gasto', exact: true }).click();
   const calendar = page.getByRole('dialog', { name: 'Selecionar mês e ano' });
