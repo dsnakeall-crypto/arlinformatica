@@ -23,7 +23,7 @@ class ExpenseControl
         return DB::table('cg_installments as i')->join('cg_debts as d', 'd.id', '=', 'i.debt_id')
             ->join('cg_institutions as bank', 'bank.id', '=', 'd.institution_id')->join('cg_types as type', 'type.id', '=', 'd.type_id')
             ->leftJoinSub($credits, 'credits', fn ($j) => $j->on('credits.installment_id', '=', 'i.id'))
-            ->select('i.*', 'd.name', 'd.institution_id', 'd.type_id', 'd.recurrence', 'd.responsibility', 'd.installment_count', 'd.cancelled_at', 'bank.name as institution_name', 'type.name as type_name')
+            ->select('i.*', 'd.name', 'd.notes as purchase_notes', 'd.institution_id', 'd.type_id', 'd.recurrence', 'd.responsibility', 'd.installment_count', 'd.cancelled_at', 'bank.name as institution_name', 'type.name as type_name')
             ->selectRaw('COALESCE(credits.credit_one, 0) AS credit_one, COALESCE(credits.credit_two, 0) AS credit_two, COALESCE(credits.paid, 0) AS paid_cents, COALESCE(credits.discounted, 0) AS discount_cents, COALESCE(credits.paid_one, 0) AS paid_one_cents, COALESCE(credits.paid_two, 0) AS paid_two_cents');
     }
 

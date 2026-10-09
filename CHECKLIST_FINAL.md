@@ -835,3 +835,11 @@ Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produç
 - [OK] Novos formulários manual/foto preservam campos e conferência.
 - [OK] Backup externo local e higiene de artefatos sem exclusão dos arquivos locais.
 - [PENDENTE] CI do commit final, conferência visual e publicação com backup atual validado.
+
+## Compras, assinaturas e aparência — 08/10/2026
+- [OK] Observação por compra nos dois cadastros e leitura nas parcelas/faturas/projeção.
+- [OK] Assinatura mensal por foto e manual até encerrar recorrência.
+- [OK] Correção transacional de cartão e calendário antes de histórico financeiro, preservando valores e divisão.
+- [OK] Original/Clean em Ajustes, desktop/mobile, e estabilidade visual ao carregar cadastro por foto.
+- [OK] Testes backend e frontend, navegador isolado e comparação visual.
+- [PENDENTE] CI, sincronização main e publicação; registrar comprovantes no relatório externo após executar.

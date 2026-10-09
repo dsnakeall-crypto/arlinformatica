@@ -63,6 +63,55 @@ class ExpenseControlTest extends TestCase
         $this->assertSame(1, DB::table('cg_debts')->count());
     }
 
+    public function test_correcting_card_and_first_month_preserves_installment_ids_and_exact_shares(): void
+    {
+        $debt = $this->createDebt(['amount_cents' => 40000, 'split_mode' => 'amount', 'share_one_cents' => 30000, 'share_two_cents' => 10000]);
+        $other = $this->postJson('/api/expense-control/catalogs/institutions', ['name' => 'Samsung', 'due_day' => 10, 'active' => true, 'color' => '#333333'])->assertOk()->json('id');
+        $id = $debt['debt']['id'];
+        $edit = ['name' => 'Compra corrigida', 'notes' => 'Monitor Mercado Livre', 'institution_id' => $other, 'start_month' => '2027-01', 'due_day' => 31];
+        $this->putJson('/api/expense-control/debts/'.$id, $edit)->assertOk();
+        foreach ($debt['installments'] as $index => $row) {
+            $this->assertDatabaseHas('cg_installments', ['id' => $row['id'], 'due_on' => ['2027-01-31', '2027-02-28', '2027-03-31'][$index], 'share_one_cents' => 30000, 'share_two_cents' => 10000]);
+        }
+        $this->assertDatabaseHas('cg_debts', ['id' => $id, 'institution_id' => $other, 'start_on' => '2027-01-01']);
+        // Backward movement also preserves the unique month key.
+        $this->putJson('/api/expense-control/debts/'.$id, [...$edit, 'start_month' => '2026-11'])->assertOk();
+        $this->assertDatabaseHas('cg_installments', ['id' => $debt['installments'][0]['id'], 'due_on' => '2026-11-30']);
+        $detail = $this->getJson('/api/expense-control/debts/'.$id)->assertOk();
+        $detail->assertJsonPath('installments.0.purchase_notes', 'Monitor Mercado Livre');
+        $summary = $this->getJson('/api/expense-control/summary?month=2026-11')->assertOk();
+        $this->assertStringContainsString('Monitor Mercado Livre', $summary->json('monthly_invoices.0.notes'));
+    }
+
+    public function test_bulk_correction_is_atomic_and_blocked_by_financial_history_even_after_reversal(): void
+    {
+        $debt = $this->createDebt();
+        $id = $debt['debt']['id'];
+        $entry = $this->postJson('/api/expense-control/operations', $this->payment([$debt['installments'][0]['id']]))->assertCreated();
+        $this->putJson('/api/expense-control/debts/'.$id, ['name' => 'Não alterar', 'start_month' => '2026-11', 'due_day' => 10])->assertUnprocessable();
+        $this->assertDatabaseHas('cg_debts', ['id' => $id, 'name' => 'Geladeira', 'start_on' => '2026-10-01']);
+        $entryId = DB::table('cg_entries')->value('id');
+        $this->postJson('/api/expense-control/entries/'.$entryId.'/reverse', ['reason' => 'Pagamento incorreto'])->assertOk();
+        $this->putJson('/api/expense-control/debts/'.$id, ['name' => 'Não alterar', 'start_month' => '2026-11'])->assertUnprocessable();
+        $this->putJson('/api/expense-control/debts/'.$id, ['name' => 'Nome corrigido', 'notes' => 'Observação permitida'])->assertOk();
+        $this->assertDatabaseHas('cg_installments', ['id' => $debt['installments'][0]['id'], 'due_on' => '2026-10-31']);
+    }
+
+    public function test_photo_subscription_repeats_without_end_date_until_explicit_cancellation(): void
+    {
+        $item = $this->payload(['name' => 'OneDrive', 'recurrence' => 'monthly', 'notes' => 'Armazenamento da família']);
+        unset($item['start_month'], $item['due_day']);
+        $item['reviewed'] = true;
+        $data = ['request_key' => (string) Str::uuid(), 'source_hash' => str_repeat('c', 64), 'start_month' => '2026-10', 'due_day' => 10, 'items' => [$item]];
+        $id = $this->postJson('/api/expense-control/photo-imports', $data)->assertCreated()->json('debt_ids.0');
+        $this->getJson('/api/expense-control/summary?month=2027-02')->assertOk();
+        $this->assertDatabaseHas('cg_debts', ['id' => $id, 'recurrence' => 'monthly', 'ended_on' => null, 'notes' => 'Armazenamento da família']);
+        $this->assertSame(5, DB::table('cg_installments')->where('debt_id', $id)->count());
+        $this->postJson('/api/expense-control/debts/'.$id.'/end-recurring', ['end_month' => '2026-12'])->assertOk();
+        $this->getJson('/api/expense-control/summary?month=2027-06')->assertOk();
+        $this->assertSame(3, DB::table('cg_installments')->where('debt_id', $id)->count());
+    }
+
     public function test_invalid_exact_split_rolls_back_without_creating_debt(): void
     {
         foreach ([[30000, 10001], [-1, 40001], [null, 40000]] as [$one, $two]) {

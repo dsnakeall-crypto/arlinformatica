@@ -3,6 +3,8 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+    // Resolve lazy dependencies to the same absolute URL as Laravel's stylesheet tags.
+    base: './',
     plugins: [
         laravel({
             input: [

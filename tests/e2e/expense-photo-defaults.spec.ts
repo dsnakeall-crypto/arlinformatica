@@ -60,6 +60,9 @@ test('Padrões opcionais, cartão por compra e divisão somente para Casal', asy
   await dialog.getByRole('combobox', { name: 'Selecionar tipo de dívida', exact: true }).selectOption('');
   await dialog.getByLabel('Responsável pela compra 1', { exact: true }).selectOption('one');
   await dialog.getByLabel('Responsável pela compra 2', { exact: true }).selectOption('one');
+  await dialog.getByLabel('Recorrência da compra 2', { exact: true }).selectOption('monthly');
+  await dialog.getByLabel('Observação da compra 2', { exact: true }).fill('Assinatura OneDrive da família');
+  await dialog.getByLabel('Observação da compra 1', { exact: true }).fill('Geladeira Mercado Livre');
   await expect(dialog.getByLabel('Dia de vencimento', { exact: true })).toBeEnabled();
   await page.screenshot({ path: 'output/revisao/individual-desktop.png', fullPage: true });
   await dialog.getByLabel('Conferi a compra 1', { exact: true }).check();
@@ -76,5 +79,9 @@ test('Padrões opcionais, cartão por compra e divisão somente para Casal', asy
   expect((await api(page, '/expense-control/debts/' + body.debt_ids[0])).body.installments).toHaveLength(8);
   expect((await api(page, '/expense-control/debts/' + body.debt_ids[0])).body.debt.institution_id).toBe(bank.id);
   expect((await api(page, '/expense-control/debts/' + body.debt_ids[1])).body.debt.institution_id).toBe(bankTwo.id);
+  const subscription = (await api(page, '/expense-control/debts/' + body.debt_ids[1])).body;
+  expect(subscription.debt.recurrence).toBe('monthly');
+  expect(subscription.debt.ended_on).toBeNull();
+  expect(subscription.installments[0].purchase_notes).toContain('Assinatura OneDrive');
   expect(calls).toBe(1);
 });

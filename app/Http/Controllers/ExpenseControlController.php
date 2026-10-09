@@ -240,7 +240,7 @@ class ExpenseControlController extends Controller
         })->map(function ($rows, $key) use ($householdIds) {
             $first = $rows->first();
 
-            return ['key' => $key, 'institution_id' => $first['institution_id'], 'institution_name' => $first['institution_name'], 'type_name' => $first['type_name'], 'debt_id' => str_starts_with($key, 'card:') ? null : $first['debt_id'], 'name' => str_starts_with($key, 'card:') ? 'Fatura do cartão' : $first['name'], 'due_on' => $rows->min('due_on'), 'remaining_cents' => $rows->sum('remaining_cents'), 'count' => $rows->count(), 'household' => in_array((int) $first['institution_id'], $householdIds, true)];
+            return ['notes' => $rows->pluck('purchase_notes')->filter()->unique()->take(2)->map(fn ($note) => mb_substr($note, 0, 160))->implode(' · '), 'key' => $key, 'institution_id' => $first['institution_id'], 'institution_name' => $first['institution_name'], 'type_name' => $first['type_name'], 'debt_id' => str_starts_with($key, 'card:') ? null : $first['debt_id'], 'name' => str_starts_with($key, 'card:') ? 'Fatura do cartão' : $first['name'], 'due_on' => $rows->min('due_on'), 'remaining_cents' => $rows->sum('remaining_cents'), 'count' => $rows->count(), 'household' => in_array((int) $first['institution_id'], $householdIds, true)];
         })->sortBy(fn ($i) => [$i['household'] ? 1 : 0, $i['institution_name'], $i['type_name'], $i['name']])->values();
 
         return response()->json(['month' => $month->format('Y-m'), 'monthly_invoices' => $invoices, 'totals' => $totals, 'views' => $views, 'institutions' => $sortInstitutions($banks), 'count' => $items->count(), 'next_due' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(), 'overdue' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
@@ -333,7 +333,7 @@ class ExpenseControlController extends Controller
             'items.*.request_key' => 'required|uuid|distinct', 'items.*.reviewed' => 'required|accepted',
             'items.*.institution_id' => 'nullable|integer|exists:cg_institutions,id',
             'items.*.name' => 'required|string|max:200', 'items.*.type_id' => 'required|integer|exists:cg_types,id',
-            'items.*.recurrence' => 'required|in:installments,once', 'items.*.responsibility' => 'required|in:one,two,shared',
+            'items.*.recurrence' => 'required|in:installments,once,monthly', 'items.*.responsibility' => 'required|in:one,two,shared',
             'items.*.split_mode' => 'sometimes|in:percent,amount',
             'items.*.share_one_cents' => 'nullable|integer|min:0|max:100000000',
             'items.*.share_two_cents' => 'nullable|integer|min:0|max:100000000',
@@ -351,6 +351,10 @@ class ExpenseControlController extends Controller
                 $item[$key] = (int) $item[$key];
             }
             $item['reviewed'] = true;
+            if ($item['recurrence'] === 'monthly') {
+                $item['first_number'] = 1;
+                $item['installment_count'] = 1;
+            }
             abort_if($item['first_number'] > $item['installment_count'], 422, 'A parcela atual da compra '.($index + 1).' não pode superar o total de parcelas.');
             if ($item['recurrence'] === 'once') {
                 abort_unless($item['first_number'] === 1 && $item['installment_count'] === 1, 422, 'Compra única possui somente uma parcela.');
@@ -380,13 +384,45 @@ class ExpenseControlController extends Controller
 
     public function update(Request $r, int $id, Audit $audit): JsonResponse
     {
-        $data = $r->validate(['name' => 'required|string|max:200', 'notes' => 'nullable|string|max:2000', 'payment_method' => 'nullable|in:pix,cash,boleto,card,transfer,other']);
+        $data = $r->validate(['name' => 'required|string|max:200', 'notes' => 'nullable|string|max:2000', 'payment_method' => 'nullable|in:pix,cash,boleto,card,transfer,other',
+            'institution_id' => 'sometimes|required|integer|exists:cg_institutions,id',
+            'start_month' => 'sometimes|required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12',
+            'due_day' => 'sometimes|required|integer|min:1|max:31']);
         DB::transaction(function () use ($r, $id, $data, $audit) {
+            $initial = DB::table('cg_debts')->find($id);
+            abort_unless($initial, 404);
+            // Match the catalog -> debt lock order used by payments and catalog removal.
+            DB::table('cg_institutions')->whereIn('id', [$initial->institution_id, $data['institution_id'] ?? $initial->institution_id])->orderBy('id')->lockForUpdate()->get();
+            DB::table('cg_types')->where('id', $initial->type_id)->lockForUpdate()->first();
             $before = DB::table('cg_debts')->where('id', $id)->lockForUpdate()->first();
             abort_unless($before, 404);
+            abort_unless($before->institution_id === $initial->institution_id, 409, 'A dívida foi alterada por outra pessoa. Abra a edição novamente.');
+            $start = isset($data['start_month']) ? $this->control->month($data['start_month']) : CarbonImmutable::parse($before->start_on);
+            $day = $data['due_day'] ?? $before->due_day;
+            $bank = $data['institution_id'] ?? $before->institution_id;
+            $changedDates = $start->toDateString() !== $before->start_on || (int) $day !== (int) $before->due_day;
+            if ($changedDates || (int) $bank !== (int) $before->institution_id) {
+                abort_if($before->cancelled_at || $before->ended_on, 422, 'Não altere cartão ou vencimentos de uma dívida cancelada ou encerrada.');
+                $rows = DB::table('cg_installments')->where('debt_id', $id)->orderBy('month_on')->lockForUpdate()->get();
+                abort_if(DB::table('cg_entries')->whereIn('installment_id', $rows->pluck('id'))->exists(), 422, 'Esta dívida possui histórico financeiro. Cartão e vencimentos em lote não podem ser alterados, inclusive após estorno.');
+                $this->control->activeCatalog(['institution_id' => $bank, 'type_id' => $before->type_id]);
+                if ($changedDates) {
+                    // Moving forward requires descending updates to preserve the unique debt/month key.
+                    if ($start->gt(CarbonImmutable::parse($before->start_on))) {
+                        $rows = $rows->reverse();
+                    }
+                    foreach ($rows as $row) {
+                        $month = $start->addMonths((int) $row->number - (int) $before->first_number);
+                        abort_if($month->year > 2099, 422, 'O último vencimento deve ficar até dezembro de 2099.');
+                        DB::table('cg_installments')->where('id', $row->id)->update(['month_on' => $month->toDateString(), 'due_on' => $month->day(min((int) $day, $month->daysInMonth))->toDateString(), 'updated_at' => now()]);
+                    }
+                }
+            }
+            unset($data['start_month']);
+            $data['start_on'] = $start->toDateString();
             DB::table('cg_debts')->where('id', $id)->update([...$data, 'updated_at' => now()]);
             $audit->record($r, 'expense_control.debt_updated', 'expense_control', $id, $before, $data);
-        });
+        }, 3);
 
         return $this->show($id);
     }
