@@ -7,6 +7,7 @@ use App\Models\ServiceOrder;
 use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -39,8 +40,8 @@ class FinalShareTest extends TestCase
 
     public function test_token_is_unpredictable_stored_only_as_hash_and_valid_for_thirty_days(): void
     {
-        $first = $this->getJson("/api/orders/{$this->order->id}/final-share")->assertOk()->assertJsonPath('revision', 1)->json();
-        $second = $this->getJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json();
+        $first = $this->postJson("/api/orders/{$this->order->id}/final-share")->assertOk()->assertJsonPath('revision', 1)->json();
+        $second = $this->postJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json();
         $firstToken = basename((string) parse_url($first['url'], PHP_URL_PATH));
         $secondToken = basename((string) parse_url($second['url'], PHP_URL_PATH));
 
@@ -59,18 +60,18 @@ class FinalShareTest extends TestCase
     {
         $this->order->forceFill(['total_cents' => 8000])->save();
         $url = "/api/orders/{$this->order->id}/final-share";
-        $this->getJson($url)->assertOk()->assertJsonPath('payment_settled', false);
+        $this->postJson($url)->assertOk()->assertJsonPath('payment_settled', false);
         $this->postJson("/api/orders/{$this->order->id}/payment", ['amount_cents' => 3000, 'method' => 'pix', 'idempotency_key' => 'share-partial-test'])->assertCreated();
-        $this->getJson($url)->assertOk()->assertJsonPath('payment_settled', false);
+        $this->postJson($url)->assertOk()->assertJsonPath('payment_settled', false);
         $this->postJson("/api/orders/{$this->order->id}/payment", ['amount_cents' => 5000, 'method' => 'pix', 'idempotency_key' => 'share-rest-test'])->assertCreated();
-        $this->getJson($url)->assertOk()->assertJsonPath('payment_settled', true);
+        $this->postJson($url)->assertOk()->assertJsonPath('payment_settled', true);
         $this->postJson("/api/orders/{$this->order->id}/refunds", ['amount_cents' => 1000, 'method' => 'pix', 'reason' => 'Estorno de teste'])->assertCreated();
-        $this->getJson($url)->assertOk()->assertJsonPath('payment_settled', false);
+        $this->postJson($url)->assertOk()->assertJsonPath('payment_settled', false);
     }
 
     public function test_valid_link_has_private_headers_and_counts_each_access(): void
     {
-        $url = $this->getJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json('url');
+        $url = $this->postJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json('url');
         auth()->logout();
         $this->get($url)->assertOk()->assertHeader('Content-Type', 'application/pdf')->assertHeader('Cache-Control', 'no-store, private')->assertHeader('Pragma', 'no-cache')->assertHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
         $this->get($url)->assertOk();
@@ -82,13 +83,13 @@ class FinalShareTest extends TestCase
     public function test_expired_and_revoked_links_return_the_specific_privacy_messages(): void
     {
         config(['app.debug' => false]);
-        $expiredUrl = $this->getJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json('url');
+        $expiredUrl = $this->postJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json('url');
         DB::table('final_share_tokens')->update(['expires_at' => now()->subSecond()]);
         auth()->logout();
         $this->get($expiredUrl)->assertGone()->assertSeeText('Este link de acesso expirou.')->assertSeeText('Se precisar do documento, entre em contato com a ARL Informática.')->assertDontSee('Symfony')->assertDontSee('HttpException');
 
         $this->actingAs($this->user);
-        $revokedUrl = $this->getJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json('url');
+        $revokedUrl = $this->postJson("/api/orders/{$this->order->id}/final-share")->assertOk()->json('url');
         $this->deleteJson("/api/orders/{$this->order->id}/final-share")->assertOk()->assertJsonPath('revoked', 1);
         $this->getJson("/api/orders/{$this->order->id}/final-share/status")->assertOk()->assertJsonPath('active', false);
         auth()->logout();
@@ -122,5 +123,91 @@ class FinalShareTest extends TestCase
         $html = view('documents.final', ['company' => [], 'order' => ['number' => '0000001', 'received_at' => now(), 'attendance_type' => 'bench', 'reported_problem' => 'Falha', 'intake_condition' => null, 'client' => ['name' => 'Cliente', 'document' => '52998224725', 'phone' => '35999999999', 'street' => 'Rua A', 'number' => '1', 'district' => '', 'city' => 'Cidade', 'state' => 'MG']], 'finalization' => ['completed_at' => now(), 'technical_report' => 'Laudo', 'subtotal_cents' => 1000, 'discount_cents' => 0, 'total_cents' => 1000], 'photos' => [], 'items' => [], 'result_label' => 'Reparo realizado', 'technical_signature' => null])->render();
         $this->assertStringContainsString('Proteção de Dados: Os dados deste documento são tratados pela ARL Informática', $html);
         $this->assertStringNotContainsString('Resultado:', $html);
+    }
+
+    private function enforceCsrf(): array
+    {
+        $this->app->bind(ValidateCsrfToken::class, fn ($app) => new class($app, $app['encrypter']) extends ValidateCsrfToken
+        {
+            protected function runningUnitTests()
+            {
+                return false;
+            }
+        });
+        $this->withSession(['_token' => 'final-share-csrf-token']);
+
+        return ['X-CSRF-TOKEN' => 'final-share-csrf-token'];
+    }
+
+    public function test_get_cannot_issue_tokens_and_status_get_has_no_emission_side_effects(): void
+    {
+        $this->enforceCsrf();
+        $auditCount = DB::table('audit_logs')->count();
+        $this->getJson("/api/orders/{$this->order->id}/final-share")->assertStatus(405);
+        $this->getJson("/api/orders/{$this->order->id}/final-share/status")->assertOk()->assertJsonPath('active', false);
+        $this->assertDatabaseCount('final_share_tokens', 0);
+        $this->assertSame($auditCount, DB::table('audit_logs')->count());
+    }
+
+    public function test_post_requires_valid_csrf_and_does_not_write_on_rejection(): void
+    {
+        $headers = $this->enforceCsrf();
+        $url = "/api/orders/{$this->order->id}/final-share";
+        $auditCount = DB::table('audit_logs')->count();
+        $this->postJson($url)->assertStatus(419)->assertJsonPath('code', 'SESSION_EXPIRED');
+        $this->postJson($url, [], ['X-CSRF-TOKEN' => 'invalid-token'])->assertStatus(419);
+        $this->assertDatabaseCount('final_share_tokens', 0);
+        $this->assertSame($auditCount, DB::table('audit_logs')->count());
+        $this->postJson($url, [], $headers)->assertOk()->assertJsonPath('revision', 1);
+        $this->assertDatabaseCount('final_share_tokens', 1);
+    }
+
+    public function test_existing_operational_roles_can_issue_with_csrf(): void
+    {
+        $headers = $this->enforceCsrf();
+        foreach (['Master', 'Administrador', 'Administrador Simples', 'Funcionário', 'Usuário local'] as $index => $role) {
+            $user = User::create(['role_id' => Role::where('name', $role)->value('id'), 'name' => $role, 'login' => 'share-role-'.$index, 'password' => bcrypt('safe-password'), 'active' => true]);
+            $this->actingAs($user)->postJson("/api/orders/{$this->order->id}/final-share", [], $headers)->assertOk();
+        }
+        $this->assertDatabaseCount('final_share_tokens', 5);
+    }
+
+    public function test_guest_restricted_role_and_inactive_account_cannot_issue(): void
+    {
+        $headers = $this->enforceCsrf();
+        $url = "/api/orders/{$this->order->id}/final-share";
+        auth()->logout();
+        $this->postJson($url, [], $headers)->assertUnauthorized();
+        $restricted = User::create(['role_id' => Role::where('name', 'Controle de Gasto')->value('id'), 'name' => 'Restricted', 'login' => 'share-restricted', 'password' => bcrypt('safe-password'), 'active' => true]);
+        $this->actingAs($restricted)->postJson($url, [], $headers)->assertForbidden();
+        $this->user->forceFill(['active' => false])->save();
+        $this->actingAs($this->user)->postJson($url, [], $headers)->assertUnauthorized();
+        $this->assertDatabaseCount('final_share_tokens', 0);
+    }
+
+    public function test_existing_legacy_token_still_downloads_its_original_revision(): void
+    {
+        $token = str_repeat('a', 64);
+        DB::table('final_share_tokens')->insert([
+            'service_order_id' => $this->order->id,
+            'generated_document_id' => DB::table('generated_documents')->where('service_order_id', $this->order->id)->value('id'),
+            'revision' => 1, 'token_hash' => hash('sha256', $token), 'expires_at' => now()->addDays(5),
+            'created_at' => now()->subDays(25), 'updated_at' => now()->subDays(25),
+        ]);
+        auth()->logout();
+        $this->get('/share/final/'.$token)->assertOk()->assertHeader('Content-Type', 'application/pdf')->assertHeader('Cache-Control', 'no-store, private');
+        $this->assertDatabaseCount('final_share_tokens', 1);
+    }
+
+    public function test_unfinished_order_and_missing_document_do_not_issue_a_link(): void
+    {
+        $headers = $this->enforceCsrf();
+        $url = "/api/orders/{$this->order->id}/final-share";
+        $this->order->forceFill(['status' => 'analysis'])->save();
+        $this->postJson($url, [], $headers)->assertStatus(409);
+        $this->order->forceFill(['status' => 'completed'])->save();
+        DB::table('generated_documents')->where('service_order_id', $this->order->id)->update(['type' => 'term']);
+        $this->postJson($url, [], $headers)->assertNotFound();
+        $this->assertDatabaseCount('final_share_tokens', 0);
     }
 }

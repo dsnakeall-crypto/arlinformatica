@@ -149,7 +149,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/photos/{photo}', [ServiceOrderController::class, 'photo']);
     Route::patch('/orders/{order}/status', [ServiceOrderController::class, 'updateStatus']);
     Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store'])->middleware('role:Master,Administrador,Administrador Simples');
-    Route::get('/orders/{order}/final-share', [FinalShareController::class, 'show']);
+    Route::post('/orders/{order}/final-share', [FinalShareController::class, 'show']);
     Route::get('/orders/{order}/final-share/status', [FinalShareController::class, 'status']);
     Route::delete('/orders/{order}/final-share', [FinalShareController::class, 'revoke']);
     Route::middleware('role:Master,Administrador,Administrador Simples')->group(function () {

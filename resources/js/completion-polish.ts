@@ -175,7 +175,8 @@ function showFinalShare(order: FinalOrder) {
   const prepare = async (kind: 'pdf' | 'whatsapp') => {
     const target = window.open('about:blank', '_blank');
     try {
-      const response = await fetch(`/api/orders/${order.id}/final-share`, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+      const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
+      const response = await fetch(`/api/orders/${order.id}/final-share`, { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': token } });
       if (!response.ok) throw new Error('Não foi possível gerar o link do PDF.');
       const share = await response.json() as FinalShare;
       const destination = kind === 'pdf' ? share.url : whatsappUrl(order.client?.phone || '', finalMessage(order, share.url));

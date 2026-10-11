@@ -219,7 +219,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const blockedBudget = await api(page, `/orders/${orderId}/budgets`, 'POST', {});
     expect(blockedBudget.status).toBe(409);
     expect(blockedBudget.body?.message).toBe('Não é possível criar orçamento para uma OS fechada.');
-    const finalShareResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/final-share`) && response.request().method() === 'GET');
+    const finalShareResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/final-share`) && response.request().method() === 'POST');
     const popupPromise = page.context().waitForEvent('page');
     await page.getByRole('status', { name: 'Compartilhar fechamento da OS' }).getByRole('button', { name: 'Enviar link ao cliente' }).click();
     const whatsappPage = await popupPromise;

@@ -2181,7 +2181,7 @@ function FinalShareCard({
     setBusy(true);
     setShareError("");
     try {
-      const freshShare = await api(`/orders/${order.id}/final-share`);
+      const freshShare = await api(`/orders/${order.id}/final-share`, { method: "POST" });
       onLinkCreated?.();
       const destination =
         kind === "pdf"
@@ -2615,7 +2615,7 @@ export default function OrderDetailPage({
     const target = window.open("about:blank", "_blank");
     setFinalLinkBusy(true);
     try {
-      const share = await api(`/orders/${order.id}/final-share`);
+      const share = await api(`/orders/${order.id}/final-share`, { method: "POST" });
       const full = phone.startsWith("55") ? phone : `55${phone}`;
       const destination = `https://wa.me/${full}?text=${whatsappText(finalWhatsappMessage(order, share.url, share.payment_settled === true))}`;
       setFinalLinkStatus({
