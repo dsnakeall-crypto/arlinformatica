@@ -18,7 +18,7 @@ test('Configurações importa CSV e mostra resumo, duplicidade e erros', async (
   await expect(card.getByRole('alert')).toContainText('Cabeçalho inválido');
   await page.setViewportSize({ width: 390, height: 844 });
   await setDeviceLayout(page, 'mobile');
-  await expect(page.getByRole('button', { name: 'Abrir menu', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Abrir menu', exact: true })).toBeVisible();
   await expect(page.locator('aside')).not.toHaveClass(/open/);
   await expect(card.getByRole('button', { name: 'Importar clientes', exact: true })).toBeVisible();
   const bounds = await card.evaluate(element => ({ width: element.clientWidth, content: element.scrollWidth }));

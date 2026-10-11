@@ -38,15 +38,19 @@ export function Dashboard({ go, desk = false, role, mobileLayout = false, onCoun
       .finally(() => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setLoading(false); });
   };
   useEffect(() => {
-    load();
+    // Na Home Mobile, a lista visível é carregada por mobile-home.ts.
+    // Evitar solicitar novamente /orders/desk e closed_week de um
+    // componente cujas listas ficam ocultas neste layout.
+    const needsDashboardData = !mobileLayout || desk;
+    if (needsDashboardData) load();
     const unsubscribe = sessionCache.subscribe(event => {
       if (event.type === 'revoke' && event.resources.includes('dashboard')) { dashboardRequest.current?.abort(); setItems([]); setClosedItems([]); setCompleted(0); setLoading(false); }
-      else if (event.type === 'invalidate' && event.resources.includes('dashboard')) load(true);
-      else if (event.type === 'session' && sessionCache.ready) load();
+      else if (needsDashboardData && event.type === 'invalidate' && event.resources.includes('dashboard')) load(true);
+      else if (needsDashboardData && event.type === 'session' && sessionCache.ready) load();
     });
     const scope = sessionCache.sessionKey;
     return () => { if (sessionCache.sessionKey === scope) sessionCache.touch('dashboard'); dashboardRequest.current?.abort(); unsubscribe(); };
-  }, []);
+  }, [mobileLayout, desk]);
   if (desk)
     return (
       <>

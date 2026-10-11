@@ -241,8 +241,19 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await page.screenshot({path:"output/fornecedores/historico-detalhado-desktop.png"});
   await setDeviceLayout(page, 'mobile');
   await page.setViewportSize({width:390,height:844});
-  await historyCard.scrollIntoViewIfNeeded();
-  expect(await historyCard.evaluate(element => element.scrollWidth <= element.clientWidth+1)).toBe(true);
+  // A troca de layout recarrega o React e limpa a seleção volátil de abas.
+  // Reabrir o mesmo fornecedor preservado no banco e seu histórico financeiro.
+  await page.goto('/suppliers?supplier=' + supplierContact.body.data[0].id);
+  await page.getByRole('tab', {name:'Financeiro',exact:true}).click();
+  // A ficha financeira Mobile usa resumo de parcelas por compra; o cartão de
+  // histórico detalhado pertence à visualização anterior, ainda coberta no Desktop.
+  const mobilePurchase = page.getByRole('button', {name:/Compra #/}).first();
+  await expect(mobilePurchase).toBeVisible();
+  await expect(mobilePurchase).toContainText('Em aberto');
+  await expect(mobilePurchase).toContainText('R$ 600,00');
+  await expect(mobilePurchase).toContainText('NF-1001');
+  await mobilePurchase.scrollIntoViewIfNeeded();
+  expect(await mobilePurchase.evaluate(element => element.scrollWidth <= element.clientWidth+1)).toBe(true);
   await page.screenshot({path:"output/fornecedores/historico-detalhado-mobile.png"});
   await page.setViewportSize({width:1440,height:1000});
   await setDeviceLayout(page, 'desktop');

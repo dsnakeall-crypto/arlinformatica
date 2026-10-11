@@ -67,7 +67,8 @@ test('volume integrado: 30 clientes/OS, 30 fornecedores/compras e 48 dívidas na
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator('.cg-mobile-summary')).toBeVisible();
   await checkWidth(); await page.screenshot({ path: 'output/homologacao-geral/volume-mobile-summary.png', fullPage: true });
-  await page.getByRole('tab', { name: 'Pagamentos', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Menu do Controle de Gastos' }).getByRole('button', { name: 'Projeção', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Submenus de gastos e projeção' }).getByRole('button', { name: 'Pagamentos', exact: true }).click();
   await checkWidth();
   expect(errors).toEqual([]);
   expect((await api(page, '/expense-control/debts/' + firstDebt)).status).toBe(200);

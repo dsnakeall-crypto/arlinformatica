@@ -122,7 +122,17 @@ function installAll() {
     document.querySelectorAll<HTMLInputElement>('.arl-client-search input[type="search"]').forEach(installStrongClientSearch);
 }
 
-const observer = new MutationObserver(() => window.requestAnimationFrame(installAll));
+// Muitas mutações do React podem ocorrer no mesmo quadro; pesquisar apenas
+// uma vez por frame e somente quando houver o formulário legado presente.
+let searchFrame = 0;
+const queueClientSearch = () => {
+    if (searchFrame || !document.querySelector('.arl-client-search input[type="search"]')) return;
+    searchFrame = window.requestAnimationFrame(() => {
+        searchFrame = 0;
+        installAll();
+    });
+};
+const observer = new MutationObserver(queueClientSearch);
 observer.observe(document.documentElement, { childList: true, subtree: true });
-document.addEventListener('DOMContentLoaded', installAll);
-installAll();
+document.addEventListener('DOMContentLoaded', queueClientSearch);
+queueClientSearch();

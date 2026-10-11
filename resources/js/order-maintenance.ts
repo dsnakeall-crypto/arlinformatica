@@ -151,7 +151,18 @@ async function syncOrders(force = false) {
 }
 
 installStyles();
-const observer = new MutationObserver(() => window.requestAnimationFrame(() => void syncOrders()));
+// A lista de OS em React não usa este aprimoramento legado; evitar
+// consultas DOM/API duplicadas entre múltiplas mutações do mesmo frame.
+let maintenanceFrame = 0;
+const queueOrderMaintenance = () => {
+  if (maintenanceFrame || reactPageActive('orders')) return;
+  if (!document.querySelector('.order-list')) return;
+  maintenanceFrame = window.requestAnimationFrame(() => {
+    maintenanceFrame = 0;
+    void syncOrders();
+  });
+};
+const observer = new MutationObserver(queueOrderMaintenance);
 observer.observe(document.documentElement, { childList: true, subtree: true });
 document.addEventListener('DOMContentLoaded', () => void syncOrders(true));
 void syncOrders(true);

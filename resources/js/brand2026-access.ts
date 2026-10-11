@@ -304,7 +304,16 @@ document.addEventListener('change', (event) => {
   }
 });
 
-const observer = new MutationObserver(() => window.requestAnimationFrame(syncSettingsAccess));
+// Em atualizações React, agrupar as notificações do DOM em uma única passagem.
+let accessFrame = 0;
+const queueSettingsAccess = () => {
+  if (accessFrame) return;
+  accessFrame = window.requestAnimationFrame(() => {
+    accessFrame = 0;
+    syncSettingsAccess();
+  });
+};
+const observer = new MutationObserver(queueSettingsAccess);
 observer.observe(document.documentElement, { childList: true, subtree: true });
-document.addEventListener('DOMContentLoaded', syncSettingsAccess);
-syncSettingsAccess();
+document.addEventListener('DOMContentLoaded', queueSettingsAccess);
+queueSettingsAccess();

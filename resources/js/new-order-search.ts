@@ -221,7 +221,17 @@ function installAll() { if (reactPageActive('new-order')) return;
   installServiceSearch();
 }
 
-const observer = new MutationObserver(() => window.requestAnimationFrame(installAll));
+// Aprimoramento somente do formulário antigo: React gerencia a tela nova.
+let searchFrame = 0;
+const queueOrderSearch = () => {
+  if (searchFrame || reactPageActive('new-order')) return;
+  if (!document.querySelector('.os-form, .arl-service-search')) return;
+  searchFrame = window.requestAnimationFrame(() => {
+    searchFrame = 0;
+    installAll();
+  });
+};
+const observer = new MutationObserver(queueOrderSearch);
 observer.observe(document.documentElement, { childList: true, subtree: true });
-document.addEventListener('DOMContentLoaded', installAll);
-installAll();
+document.addEventListener('DOMContentLoaded', queueOrderSearch);
+queueOrderSearch();

@@ -211,8 +211,9 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
     '/arl-assets/icons/icon-whatsapp.png',
     '/arl-assets/icons/icon-maps.png',
     '/arl-assets/icons/icon-editar.png',
-    '/arl-assets/icons/icon-lixeira.png',
   ]);
+  // Excluir não é exibido nos cartões mobile; a ação segue disponível no Desktop.
+  await expect(page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' }).getByRole('button', { name: /Excluir cliente/ })).toHaveCount(0);
   await expect(page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' }).getByRole('button', { name: 'Visualizar' }).locator('svg.clients-action-eye')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-mobile.png', fullPage: true });
 

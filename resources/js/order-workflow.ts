@@ -285,7 +285,16 @@ function syncUi() {
 
 installStyles();
 installFetchWorkflow();
-const observer = new MutationObserver(() => window.requestAnimationFrame(syncUi));
+// Evita executar a varredura inteira uma vez para cada lote de mutações.
+let workflowFrame = 0;
+const queueOrderWorkflow = () => {
+  if (workflowFrame) return;
+  workflowFrame = window.requestAnimationFrame(() => {
+    workflowFrame = 0;
+    syncUi();
+  });
+};
+const observer = new MutationObserver(queueOrderWorkflow);
 observer.observe(document.documentElement, { childList: true, subtree: true });
-document.addEventListener('DOMContentLoaded', syncUi);
-syncUi();
+document.addEventListener('DOMContentLoaded', queueOrderWorkflow);
+queueOrderWorkflow();
