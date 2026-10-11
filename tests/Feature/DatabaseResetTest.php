@@ -98,7 +98,7 @@ class DatabaseResetTest extends TestCase
             'type' => 'term',
             'revision' => 1,
             'path' => "documents/orders/$orderId/term-r1.pdf",
-            'sha256' => str_repeat('a', 64),
+            'sha256' => hash('sha256', 'pdf'),
             'snapshot' => '{}',
             'issued_at' => now(),
             'issued_by' => $master->id,
