@@ -98,7 +98,7 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
         cachedMonthSummary ?? api<Summary>('/summary?month=' + month, 'GET', undefined, controller.signal),
       ]);
       if (controller.signal.aborted) return;
-      configurationCache.current = { value: configuration, revision, savedAt: Date.now() };
+      if (!cachedConfiguration) configurationCache.current = { value: configuration, revision, savedAt: Date.now() };
       summaryCache.current = { value: monthSummary, month, revision };
       if (preferenceAccount.current !== configuration.account_id) {
         preferenceAccount.current = configuration.account_id;
