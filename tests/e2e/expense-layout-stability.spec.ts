@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { login } from './helpers';
+import { login, openExpenseSection } from './helpers';
 
 for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 1080 }]) {
   test(`controle: foto preserva estilos e geometria da página ${viewport.width}`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await login(page);
     await page.goto('/expense-control');
-    await expect(page.getByRole('heading', { name: 'Visão geral do mês', exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Indicadores do mês' })).toBeVisible();
     await expect(page.getByText('Atualizando informações…', { exact: true })).not.toBeVisible();
     const snapshot = () => page.evaluate(() => {
       const main = document.querySelector('main')!;
@@ -31,7 +31,7 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 108
       await expect.poll(snapshot).toEqual(before);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+    await openExpenseSection(page, 'Gastos');
     await expect(page.getByRole('button', { name: 'Nova dívida', exact: true })).toBeVisible();
   });
 }

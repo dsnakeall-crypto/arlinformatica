@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { api, login, uniqueDocument } from './helpers';
+import { api, login, uniqueDocument, setDeviceLayout } from './helpers';
 
 test('etiqueta 40x20: botão discreto, nome local editável e impressão isolada desktop/mobile', async ({ page }) => {
   await login(page);
@@ -41,7 +41,7 @@ test('etiqueta 40x20: botão discreto, nome local editável e impressão isolada
   await expect(dialog.getByRole('button', { name: 'Imprimir', exact: true })).toBeDisabled();
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  await setDeviceLayout(page, 'mobile');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('.arl-intake-dates').getByRole('button', { name: 'Imprimir Etiqueta', exact: true }).click();
   await expect(dialog).toBeVisible();

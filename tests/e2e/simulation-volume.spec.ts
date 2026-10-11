@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { api, login, uniqueDocument } from './helpers';
+import { api, login, uniqueDocument, setDeviceLayout } from './helpers';
 
 test('volume integrado: 30 clientes/OS, 30 fornecedores/compras e 48 dívidas na interface', async ({ page }) => {
   test.setTimeout(240_000);
@@ -63,7 +63,7 @@ test('volume integrado: 30 clientes/OS, 30 fornecedores/compras e 48 dívidas na
   await expect(page.locator('.cg-institution').filter({ hasText: banks[0].name })).toBeVisible();
   await checkWidth(); await page.screenshot({ path: 'output/homologacao-geral/volume-expenses.png' });
   await page.getByRole('tab', { name: 'Resumo', exact: true }).click();
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  await setDeviceLayout(page, 'mobile');
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator('.cg-mobile-summary')).toBeVisible();
   await checkWidth(); await page.screenshot({ path: 'output/homologacao-geral/volume-mobile-summary.png', fullPage: true });

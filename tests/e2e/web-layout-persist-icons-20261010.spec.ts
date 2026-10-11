@@ -67,13 +67,16 @@ test('Web Clean usa ícones 3D para olho, lápis e lixeira, mantendo WhatsApp e 
   });
   expect(created.status, JSON.stringify(created.body)).toBe(201);
   await page.getByRole('navigation', { name: 'Menu principal' }).getByRole('button', { name: 'Clientes' }).click();
+  // A lista é paginada no servidor; encontre a fixture via busca, não pela primeira página.
+  await page.getByRole('textbox', { name: 'Buscar clientes' }).fill('Cliente Ícones Web Clean');
   const row = page.locator('.clients-row').filter({ hasText: 'Cliente Ícones Web Clean' });
   await expect(row).toBeVisible();
   for (const [name, filename] of [['Visualizar','eye'],['Editar','edit'],['Excluir cliente Cliente Ícones Web Clean','delete']]) {
     const button = row.getByRole('button', { name });
     await expect(button).toBeVisible();
     const background = await button.evaluate(el => getComputedStyle(el).backgroundImage);
-    expect(background).toContain('icon-web-' + filename + '.png');
+    // Layout final aprovado usa arquivos compact-2x sem aro.
+    expect(background).toContain('icon-web-' + filename + '-compact-2x.png');
     const response = await page.request.get('/arl-assets/icons/icon-web-' + filename + '.png');
     expect(response.status()).toBe(200);
   }

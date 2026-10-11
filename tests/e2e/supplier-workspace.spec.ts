@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { api, login, uniqueDocument } from './helpers';
+import { api, login, uniqueDocument, setDeviceLayout } from './helpers';
 test('ficha profissional com vinte fornecedores, vínculos, documentos, devolução e mobile', async ({page}) => {
  await page.setViewportSize({width:1440,height:1000});
  await login(page); const stamp=Date.now(); let supplier:any;
@@ -26,5 +26,5 @@ test('ficha profissional com vinte fornecedores, vínculos, documentos, devoluç
  await page.getByRole('tab',{name:'Documentos',exact:true}).click(); await page.getByRole('button',{name:'Anexar documento',exact:true}).click(); await checkFrame(); await page.getByRole('dialog').getByLabel('Arquivo PDF').setInputFiles({name:'nota.xml',mimeType:'text/xml',buffer:Buffer.from('<?xml version="1.0"?><nfe><numero>123</numero></nfe>')}); await page.getByRole('dialog').getByLabel('Conferi os dados').check(); await page.getByRole('dialog').getByRole('button',{name:'Confirmar e salvar'}).click(); await expect(page.locator('.supplier-document-row')).toContainText('nota.xml');
  await page.getByRole('tab',{name:'Devoluções',exact:true}).click(); await page.getByRole('button',{name:'Registrar devolução'}).click(); await checkFrame(); const item=(await api(page,`/supplier-purchases/${purchase.id}`)).body.items[0]; await page.getByRole('dialog').getByLabel('Produto recebido').selectOption(String(item.id)); await page.getByRole('dialog').getByLabel('Motivo da devolução').fill('Produto defeituoso'); await page.getByRole('dialog').getByLabel('Acordo com fornecedor').selectOption('credit'); await page.getByRole('dialog').getByLabel('Conferi os dados').check(); await page.getByRole('dialog').getByRole('button',{name:'Confirmar e salvar'}).click(); await expect(page.getByRole('dialog')).not.toBeVisible(); await expect(page.getByText('Produto defeituoso')).toBeVisible();
  await page.getByRole('tab',{name:'Relatórios',exact:true}).click(); await expect(page.getByText('L-2026',{exact:false})).toBeVisible();
- await page.getByLabel('Layout neste dispositivo').selectOption('mobile'); await page.setViewportSize({width:390,height:844}); await page.screenshot({path:'output/fornecedores/nova-ficha-mobile.png',fullPage:true}); expect(await page.locator('.supplier-page').evaluate(e=>e.scrollWidth<=e.clientWidth+1)).toBe(true);
+ await setDeviceLayout(page, 'mobile'); await page.setViewportSize({width:390,height:844}); await page.screenshot({path:'output/fornecedores/nova-ficha-mobile.png',fullPage:true}); expect(await page.locator('.supplier-page').evaluate(e=>e.scrollWidth<=e.clientWidth+1)).toBe(true);
 });

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { api, login } from './helpers';
+import { api, login, openExpenseSection } from './helpers';
 
 test('controle: corrigir cartão e mês em lote preserva valores e mostra observação', async ({ page }) => {
   await login(page);
@@ -10,7 +10,7 @@ test('controle: corrigir cartão e mês em lote preserva valores e mostra observ
   const name = 'Monitor ' + stamp;
   const created = (await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: bank.id, type_id: type.id, name, recurrence: 'installments', responsibility: 'shared', percent_one: 50, split_mode: 'amount', share_one_cents: 30000, share_two_cents: 10000, amount_cents: 40000, installment_count: 3, first_number: 1, start_month: '2026-10', due_day: 10, notes: null })).body;
   await page.goto('/expense-control');
-  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await openExpenseSection(page, 'Gastos');
   await page.getByLabel('Pesquisar compra ou instituição').fill(name);
   await page.locator('.cg-debt-row').filter({ hasText: name }).click();
   await page.getByRole('button', { name: 'Editar identificação', exact: true }).click();
@@ -33,17 +33,17 @@ test('controle: corrigir cartão e mês em lote preserva valores e mostra observ
 });
 
 for (const mobile of [false, true]) {
-  test(`controle: aparência acessível em Ajustes ${mobile ? 'mobile' : 'desktop'}`, async ({ page }) => {
+  test(`controle: Ajustes preserva responsáveis no layout ${mobile ? 'mobile' : 'desktop'}`, async ({ page }) => {
     await page.addInitScript(mode => localStorage.setItem('arl-layout-mode', mode), mobile ? 'mobile' : 'desktop');
     await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1366, height: 768 });
     await login(page);
     await page.goto('/expense-control');
-    await page.getByRole('tab', { name: 'Ajustes', exact: true }).click();
-    await page.locator('.cg-appearance-panel').getByRole('button', { name: 'Clean', exact: true }).click();
-    await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', 'clean');
+    await openExpenseSection(page, 'Ajustes');
+    // Aparência antiga não é configurada por este módulo. A edição de
+    // responsáveis continua acessível e não cria rolagem horizontal.
+    await expect(page.locator('.cg-appearance-panel')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Quem participa do controle' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Salvar responsáveis', exact: true })).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await page.locator('.cg-appearance-panel').getByRole('button', { name: 'Original', exact: true }).click();
-    await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', 'original');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   });
 }

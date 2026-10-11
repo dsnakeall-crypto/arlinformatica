@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { login } from './helpers';
+import { login, setDeviceLayout } from './helpers';
 
 // Network fault injection must reach Playwright instead of the PWA service worker.
 test.use({ serviceWorkers: 'block' });
@@ -38,12 +38,12 @@ test('carregamento lento mantém o menu utilizável e não troca a página escol
   await expect(page.getByRole('status').filter({ hasText: 'Preparando suas informações' })).toBeVisible();
   await expect(page.locator('.arl-loading-tile')).toHaveCount(3);
   await page.screenshot({ path: test.info().outputPath('carregamento-3d.png'), fullPage: true });
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  await setDeviceLayout(page, 'mobile');
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   await page.screenshot({ path: test.info().outputPath('carregamento-3d-mobile.png'), fullPage: true });
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.getByLabel('Layout neste dispositivo').selectOption('desktop');
+  await setDeviceLayout(page, 'desktop');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(page.locator('.arl-loading-emblem i').first()).toHaveCSS('animation-name', 'none');
   await page.getByRole('button', { name: 'Painel', exact: true }).click();

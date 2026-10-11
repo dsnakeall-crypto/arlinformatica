@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { api, login } from './helpers';
+import { api, login, setDeviceLayout } from './helpers';
 
 const expectedGroups = {
   'Operação': ['Painel', 'Ordens'],
@@ -11,6 +11,9 @@ const expectedGroups = {
 test('menu agrupa destinos, destaca Nova OS e mostra contadores vindos do backend nos dois layouts', async ({ page }) => {
   await page.route('**/api/navigation-summary', route => route.fulfill({ json: { open_orders: 7, available_post_sales: 3 } }));
   await login(page);
+  // O perfil no banco pode ter sido fixado por outro cenário.
+  expect((await api(page, '/me/sidebar', 'PATCH', { sidebar_pinned: false })).status).toBe(200);
+  await page.reload();
   const aside = page.locator('aside');
 
   await aside.getByRole('button', { name: 'Fixar menu lateral', exact: true }).click();
@@ -28,13 +31,16 @@ test('menu agrupa destinos, destaca Nova OS e mostra contadores vindos do backen
   await newOrder.click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS', exact: true })).toBeVisible();
 
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  await setDeviceLayout(page, 'mobile');
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveCount(0);
+  // Layout atual usa barra inferior e também botão para acessar o menu completo.
+  await expect(page.getByRole('button', { name: 'Abrir menu' })).toBeVisible();
   const bottomBar = page.locator('.arl-global-mobile-nav');
   expect((await api(page, '/me/sidebar', 'PATCH', { sidebar_pinned: false })).status).toBe(200);
-  await expect(bottomBar.getByRole('button')).toHaveCount(4);
-  for(const name of ['OS abertas','Nova OS','Clientes','Controle de Gasto']) await expect(bottomBar.getByRole('button',{name,exact:true})).toBeVisible();
+  await expect(bottomBar.getByRole('button')).toHaveCount(5);
+  for(const name of ['Painel', 'Clientes', 'Abrir OS', 'Financeiro', 'Gestor de Gasto']) {
+    await expect(bottomBar.getByRole('button', { name, exact: true })).toBeVisible();
+  }
 });
 
 test('menu desfixado mantém largura no hover e mostra os nomes dos ícones', async ({ page }) => {

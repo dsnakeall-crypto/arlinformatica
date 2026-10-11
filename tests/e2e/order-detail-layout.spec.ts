@@ -154,8 +154,9 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
 
   await expect(workflow.locator('.arl-order-record'), 'Registro da OS deve permanecer oculto sem remover os dados históricos').toHaveCount(0);
 
-  const layoutText = await page.locator('.device-layout').innerText();
-  expect((layoutText.match(/Layout/g) ?? []).length, 'Cabeçalho global não pode renderizar "Layout Layout"').toBe(1);
+  // Não reintroduzir o antigo seletor redundante no cabeçalho.
+  await expect(page.locator('.device-layout')).toHaveCount(0);
+  await expect(page.locator('.shell.layout-desktop')).toBeVisible();
 
   await page.setViewportSize({ width: 768, height: 1024 });
   await expect(header).toBeVisible();

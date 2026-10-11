@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { api, login, uniqueDocument } from './helpers';
+import { api, login, uniqueDocument, setDeviceLayout } from './helpers';
 
 test('Caixa Diário mostra entradas por forma e A Receber abre por ícone', async ({ page }) => {
   await login(page);
@@ -20,12 +20,12 @@ test('Caixa Diário mostra entradas por forma e A Receber abre por ícone', asyn
   await expect(methods.locator('article').filter({ hasText: 'Outro' })).toContainText('R$ 3,00');
   await expect(methods).not.toContainText('Saída');
   await page.screenshot({ path: 'output/finance-dictation/daily-desktop.png', fullPage: true });
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  await setDeviceLayout(page, 'mobile');
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: 'output/finance-dictation/daily-mobile.png', fullPage: true });
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.getByLabel('Layout neste dispositivo').selectOption('desktop');
+  await setDeviceLayout(page, 'desktop');
   await page.getByRole('button', { name: 'A Receber', exact: true }).click();
   const eye = page.getByRole('button', { name: 'Abrir OS 0000123', exact: true });
   await expect(eye).toBeVisible();

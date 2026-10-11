@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { api, login } from './helpers';
+import { api, login, openExpenseSection } from './helpers';
 
 async function fixture(page: Page) {
   await login(page);
@@ -24,7 +24,7 @@ async function fixture(page: Page) {
 test('histórico desktop: consulta real, divisão individual e quitada compacta com pagador', async ({ page }) => {
   const data = await fixture(page);
   await page.goto('/expense-control');
-  await page.getByRole('tab', { name: 'Projeção', exact: true }).click();
+  await openExpenseSection(page, 'Projeção');
   await expect(page.locator('.cg-projection-list')).toBeVisible();
   await page.getByRole('button', { name: 'Histórico de gastos', exact: true }).click();
   await page.getByLabel('Mês inicial do histórico').fill(data.month);
@@ -56,7 +56,7 @@ test('histórico desktop: consulta real, divisão individual e quitada compacta 
   }
   await expect(page.locator('.cg-history-totals article').last()).toContainText(money(report.advance_cents));
   await page.screenshot({ path: 'output/controle-gasto/historico-desktop.png', fullPage: true });
-  await page.getByRole('tab', { name: 'Quitadas', exact: true }).click();
+  await openExpenseSection(page, 'Quitadas');
   await page.getByLabel('Pesquisar compra ou instituição').fill(data.debt.debt.name);
   const row = page.locator('.cg-settled-row').filter({ hasText: data.debt.debt.name });
   await expect(row).toContainText('Pago por Carol');
@@ -71,7 +71,7 @@ test('mobile documento: projeção sem sobreposição, gastos só em lista e íc
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/expense-control');
   await expect(page.locator('.cg-mobile')).toBeVisible();
-  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await openExpenseSection(page, 'Gastos');
   await expect(page.getByLabel('Pesquisar compra ou instituição')).not.toBeVisible();
   await expect(page.getByRole('button', { name: 'Lista', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Cards', exact: true })).toHaveCount(0);
@@ -85,14 +85,14 @@ test('mobile documento: projeção sem sobreposição, gastos só em lista e íc
   await expect(page.getByLabel('Filtrar por responsável')).not.toBeVisible();
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   await page.screenshot({ path: 'output/controle-gasto/mobile-lista-compacta.png', fullPage: true });
-  await page.getByRole('tab', { name: 'Instituições', exact: true }).click();
+  await openExpenseSection(page, 'Instituições');
   const bank = page.locator('article.cg-institution').filter({ hasText: data.bank.name });
   const sizes = await bank.locator('footer>button').evaluateAll(buttons => buttons.map(b => ({ w: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height })));
   expect(sizes).toHaveLength(3);
   expect(new Set(sizes.map(s => s.w + ':' + s.h)).size).toBe(1);
   await expect(bank.getByRole('button', { name: 'Ver gastos de ' + data.bank.name })).toHaveText('');
   await page.screenshot({ path: 'output/controle-gasto/mobile-instituicoes-icones.png', fullPage: true });
-  await page.getByRole('tab', { name: 'Projeção', exact: true }).click();
+  await openExpenseSection(page, 'Projeção');
   const projection = page.locator('.cg-projection-list>.cg-panel').first();
   await expect(projection).toBeVisible();
   const button = await projection.getByRole('button', { name: 'Ver mês' }).boundingBox();
@@ -109,7 +109,7 @@ test('mobile documento: projeção sem sobreposição, gastos só em lista e íc
   await page.setViewportSize({ width: 320, height: 740 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('tab', { name: 'Gastos', exact: true }).click();
+  await openExpenseSection(page, 'Gastos');
   await expect(page.locator('.cg-bank-list')).toBeVisible();
   await expect(page.locator('#cg-debt-filters')).toHaveCount(0);
   await row.locator('button.cg-institution').click();

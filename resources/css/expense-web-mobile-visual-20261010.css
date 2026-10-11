@@ -417,7 +417,10 @@ html body .layout-desktop .cg-page.cg-expense-web-mirror .arl-expense-subnav but
 html body .layout-desktop .cg-page.cg-expense-web-mirror .arl-expense-subnav button svg{
   flex:none;width:21px;height:21px;stroke-width:2.5;
 }
-html body .layout-desktop .cg-page.cg-expense-web-mirror .cg-projection-sections{display:none!important}
+/* Histórico continua funcional: não ocultar os botões que alternam Projeção/Histórico. */
+html body .layout-desktop .cg-page.cg-expense-web-mirror .cg-projection-sections{
+  display:flex!important;align-items:center;gap:8px;flex-wrap:wrap;
+}
 html body .layout-desktop .cg-page.cg-expense-web-mirror .cg-view-toggle{
   display:inline-flex!important;align-items:center;gap:7px!important;
   margin:0 0 14px!important;padding:5px!important;

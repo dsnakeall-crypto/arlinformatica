@@ -58,30 +58,39 @@ test('Painel alinha cabeçalho e linha nas seis colunas operacionais', async ({ 
 
 test('layout detecta o aparelho sem preferência e preserva a escolha manual por dispositivo', async ({ page }) => {
   await login(page);
-  const selector = page.getByLabel('Layout neste dispositivo');
-  await expect(selector).toHaveValue('desktop');
-  await expect(selector.locator('option')).toHaveCount(2);
-  await expect(selector.locator('option', { hasText: 'Automático' })).toHaveCount(0);
+  const shell = page.locator('.shell');
+  await expect(shell).toHaveClass(/layout-desktop/);
   await expect(page.getByLabel('Sair da conta')).toHaveCount(0);
-  await selector.selectOption('mobile');
-  await expect(page.locator('.shell')).toHaveClass(/layout-mobile/);
+
+  // Seleção atual: Configurações > Layouts > cartões, sem o seletor antigo.
+  await page.goto('/settings');
+  await page.getByRole('tab', { name: 'Layouts', exact: true }).click();
+  await page.getByRole('button', { name: 'Mobile — barra inferior' }).click();
+  await expect(shell).toHaveClass(/layout-mobile/);
   await expect(page.getByLabel('Sair da conta')).toBeVisible();
   await page.reload();
-  await expect(selector).toHaveValue('mobile');
-  await selector.selectOption('desktop');
-  await expect(page.locator('.shell')).toHaveClass(/layout-desktop/);
+  await expect(shell).toHaveClass(/layout-mobile/);
+  await expect(page.getByRole('navigation', { name: 'Categorias de Configurações' })).toBeVisible();
+  await page.getByRole('navigation', { name: 'Categorias de Configurações' })
+    .getByRole('button', { name: /Layouts/ }).click();
+  await page.getByRole('button', { name: 'Web / PC' }).click();
+  await expect(shell).toHaveClass(/layout-desktop/);
   await page.reload();
-  await expect(selector).toHaveValue('desktop');
+  await expect(shell).toHaveClass(/layout-desktop/);
+
+  // Preferência antiga/inválida: detectar pela largura, sem modo Automático na interface.
   await page.evaluate(() => localStorage.setItem('arl-layout-mode', 'automatic'));
   await page.reload();
-  await expect(selector).toHaveValue('desktop');
+  await expect(shell).toHaveClass(/layout-desktop/);
   await page.evaluate(() => localStorage.removeItem('arl-layout-mode'));
   await page.setViewportSize({ width: 768, height: 1024 });
   await page.reload();
-  await expect(selector).toHaveValue('mobile');
-  await selector.selectOption('desktop');
+  await expect(shell).toHaveClass(/layout-mobile/);
+  await page.getByRole('navigation', { name: 'Categorias de Configurações' })
+    .getByRole('button', { name: /Layouts/ }).click();
+  await page.getByRole('button', { name: 'Web / PC' }).click();
   await page.reload();
-  await expect(selector).toHaveValue('desktop');
+  await expect(shell).toHaveClass(/layout-desktop/);
 });
 
 test('Funcionário vê somente operação e o backend continua sendo a autoridade', async ({ page }) => {
@@ -366,7 +375,9 @@ test('Configurações usa abas exclusivas e não exibe a garantia geral desativa
 
   const form = page.locator('form.settings-form');
   await expect(form.locator('[name="layout_mode"]')).toHaveCount(0);
-  await expect(page.getByLabel('Layout neste dispositivo')).toBeVisible();
+  await tabs.getByRole('tab', { name: 'Layouts', exact: true }).click();
+  await expect(page.getByRole('group', { name: 'Opções de layout' })).toBeVisible();
+  await documents.click();
   await expect(tabs.getByRole('tab', { name: 'Garantia', exact: true })).toHaveCount(0);
   await expect(form.getByLabel('Mostrar garantia geral no PDF final')).toHaveCount(0);
   await expect(form.getByLabel('Texto da garantia geral')).toHaveCount(0);

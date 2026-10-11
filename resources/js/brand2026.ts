@@ -99,11 +99,6 @@ function brandImage():HTMLImageElement{
   return img;
 }
 
-function enhanceShell(){
-  // React owns the entire sidebar: never mutate its logo, labels, counters or decoration.
-  const layout=q<HTMLElement>('.device-layout'); if(layout) layout.classList.add('arl-device-layout');
-}
-
 function titleEyebrow(title:HTMLElement, label:string){
   title.classList.add('page-title'); if(title.classList.contains('arl-page-header')) return;
   const group=title.firstElementChild as HTMLElement|null; if(!group) return;
@@ -273,9 +268,20 @@ function enhanceServicesSettingsBoundary(){
   if(text(q('h1'))==='Configurações') qa<HTMLElement>('.admin-list').forEach(x=>x.classList.add('arl-settings-admin-card'));
 }
 
-function runEnhancements(){installFixedTheme();enhanceShell();enhanceDashboard();enhanceClients();enhanceNewOrder();enhanceOrderView();enhancePostSale();enhanceSettings();enhanceServicesSettingsBoundary()}
+function runEnhancements(){installFixedTheme();enhanceDashboard();enhanceClients();enhanceNewOrder();enhanceOrderView();enhancePostSale();enhanceSettings();enhanceServicesSettingsBoundary()}
 
 installFixedTheme();installFetchObserver();
-const observer=new MutationObserver(()=>{window.requestAnimationFrame(runEnhancements)});
-observer.observe(document.documentElement,{childList:true,subtree:true});
-document.addEventListener('DOMContentLoaded',runEnhancements);runEnhancements();
+// Coalesce React DOM mutations into one enhancement pass per animation frame.
+let enhancementsQueued = false;
+const queueEnhancements = () => {
+  if (enhancementsQueued) return;
+  enhancementsQueued = true;
+  window.requestAnimationFrame(() => {
+    enhancementsQueued = false;
+    runEnhancements();
+  });
+};
+const observer = new MutationObserver(queueEnhancements);
+observer.observe(document.documentElement, { childList: true, subtree: true });
+document.addEventListener('DOMContentLoaded', queueEnhancements);
+runEnhancements();

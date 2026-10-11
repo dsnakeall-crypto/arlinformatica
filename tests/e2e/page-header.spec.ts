@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { login } from './helpers';
+import { login, setDeviceLayout } from './helpers';
 
 const screens = [
   ['Painel', 'Painel'],
@@ -46,7 +46,7 @@ test('ações e contador integram a linha compacta do título', async ({ page })
 
 test('cabeçalho se adapta ao modo Mobile / Tablet sem overflow', async ({ page }) => {
   await login(page);
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  await setDeviceLayout(page, 'mobile');
   const home = page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' });
   for (const width of [390, 768]) {
     await page.setViewportSize({ width, height: 900 });

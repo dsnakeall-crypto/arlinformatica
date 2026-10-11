@@ -102,13 +102,13 @@ test('configurações permite mensagens de abertura e preserva editores legados 
   await expect(page.locator('.arl-post-message-panel')).toBeHidden();
 });
 
-test('configurações exibe somente as seis abas permitidas em uma linha', async ({ page }) => {
+test('configurações exibe sete abas incluindo Layouts sem abas obsoletas', async ({ page }) => {
   await login(page);
 
   await page.getByRole('button', { name: 'Configurações', exact: true }).click();
   const tabs = page.locator('.arl-settings-tab');
-  await expect(tabs).toHaveCount(6);
-  await expect(tabs.locator("b")).toHaveText(["Empresa", "Identidade", "Documentos", "Mensagens", "Usuários", "Sistema"]);
+  await expect(tabs).toHaveCount(7);
+  await expect(tabs.locator("b")).toHaveText(["Empresa", "Layouts", "Identidade", "Documentos", "Mensagens", "Usuários", "Sistema"]);
   const tops = await tabs.evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
   expect(new Set(tops).size).toBe(1);
   for (const hidden of ['orders', 'finance']) {

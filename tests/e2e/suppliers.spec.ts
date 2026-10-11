@@ -1,3 +1,4 @@
+import { setDeviceLayout } from './helpers';
 import { test, expect } from "@playwright/test";
 import { api, login, uniqueDocument } from "./helpers";
 
@@ -238,13 +239,13 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
   await expect(historyCard).toContainText("Boleto");
   await historyCard.scrollIntoViewIfNeeded();
   await page.screenshot({path:"output/fornecedores/historico-detalhado-desktop.png"});
-  await page.getByLabel("Layout neste dispositivo").selectOption("mobile");
+  await setDeviceLayout(page, 'mobile');
   await page.setViewportSize({width:390,height:844});
   await historyCard.scrollIntoViewIfNeeded();
   expect(await historyCard.evaluate(element => element.scrollWidth <= element.clientWidth+1)).toBe(true);
   await page.screenshot({path:"output/fornecedores/historico-detalhado-mobile.png"});
   await page.setViewportSize({width:1440,height:1000});
-  await page.getByLabel("Layout neste dispositivo").selectOption("desktop");
+  await setDeviceLayout(page, 'desktop');
   const products = (await api(page, "/catalogs/products")).body;
   const product = products.find((row: any) => row.name === productName);
   expect(product.stock_quantity).toBe(0);
@@ -391,7 +392,7 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
     page.getByRole("heading", { name: supplierName, exact: true }),
   ).toBeVisible();
   await page.screenshot({ path: "output/fornecedores/ficha-desktop.png" });
-  await page.getByLabel("Layout neste dispositivo").selectOption("mobile");
+  await setDeviceLayout(page, 'mobile');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: "output/fornecedores/ficha-mobile.png" });
   expect(
@@ -416,7 +417,7 @@ test("fornecedor registra compra, recebe parcialmente sem duplicar e preserva br
     .getByRole("button", { name: "Cancelar", exact: true })
     .click();
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.getByLabel("Layout neste dispositivo").selectOption("desktop");
+  await setDeviceLayout(page, 'desktop');
   await page.getByRole("button", { name: "Produtos", exact: true }).click();
   const card = page.locator(".services-row").filter({ hasText: productName });
   await card

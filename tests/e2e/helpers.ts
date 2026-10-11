@@ -89,3 +89,59 @@ export async function selectNewOrderClient(page: Page, id: number, confirmExisti
       .getByRole('button', { name: 'Confirmar novo chamado', exact: true }).click();
   }
 }
+
+/**
+ * Test utility for E2E scenarios that need to switch device modes without
+ * testing the settings form itself. The retired select was replaced by
+ * Settings > Layouts preview cards. Reopening the same URL exercises the
+ * persisted browser preference and never modifies production settings.
+ */
+export async function setDeviceLayout(page: Page, next: 'desktop' | 'mobile') {
+  await page.evaluate(mode => {
+    localStorage.setItem('arl-layout-mode', mode);
+  }, next);
+  await page.reload();
+  await expect(page.locator('.shell')).toHaveClass(next === 'mobile' ? /layout-mobile/ : /layout-desktop/);
+}
+
+/** Select current Expense Control navigation in desktop or mobile UI. */
+export async function openExpenseSection(page: Page, name: string) {
+  // ExpenseControlPage is lazy loaded; do not inspect navigation before mount.
+  await expect(page.locator('.cg-page')).toBeVisible();
+  const desktop = page.getByRole('tab', { name, exact: true });
+  if (await desktop.isVisible()) {
+    await desktop.click();
+    return;
+  }
+  if (name === 'Ajustes') {
+    const settings = page.getByRole('navigation', { name: 'Navegação do Controle de Gastos' })
+      .getByRole('button', { name: 'Ajustes', exact: true });
+    await settings.click();
+    return;
+  }
+  const mobile = page.getByRole('navigation', { name: 'Menu do Controle de Gastos' });
+  const direct = mobile.getByRole('button', { name, exact: true });
+  if (await direct.isVisible()) {
+    await direct.click();
+    return;
+  }
+  if (name === 'Pagamentos' || name === 'Quitadas' || name === 'Histórico') {
+    await mobile.getByRole('button', { name: name === 'Histórico' ? 'Projeção' : 'Gastos', exact: true }).click();
+    await page.getByRole('button', { name: name === 'Histórico' ? 'Histórico de gastos' : name, exact: true }).click();
+    return;
+  }
+  throw new Error('Seção de gastos indisponível no layout atual: ' + name);
+}
+
+/** Open the actual new-expense form, including the mobile manual/photo choice. */
+export async function openNewExpenseDebt(page: Page) {
+  await expect(page.locator('.cg-page')).toBeVisible();
+  const desktop = page.getByRole('button', { name: 'Nova dívida', exact: true });
+  if (await desktop.isVisible()) {
+    await desktop.click();
+    return;
+  }
+  await page.getByRole('navigation', { name: 'Menu do Controle de Gastos' })
+    .getByRole('button', { name: 'Adicionar dívida' }).click();
+  await page.getByRole('button', { name: 'Cadastro manual' }).click();
+}

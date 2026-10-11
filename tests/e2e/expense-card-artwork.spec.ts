@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { login } from './helpers';
+import { login, openExpenseSection } from './helpers';
 
 test('cartões: galeria, edição sem perda da imagem, upload e enquadramento', async ({ page }) => {
   await login(page);
   await page.getByRole('button', { name: 'Controle de Gasto', exact: true }).click();
-  await page.getByRole('tab', { name: 'Instituições', exact: true }).click();
+  await openExpenseSection(page, 'Instituições');
   await page.getByRole('button', { name: 'Cadastrar instituição', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Cadastrar instituição', exact: true });
   await expect(dialog.getByRole('button', { name: /^Selecionar cartão / })).toHaveCount(12);
@@ -52,7 +52,7 @@ test('cartões: galeria utilizável no celular e botão salvar acessível', asyn
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => localStorage.setItem('arl-layout-mode', 'mobile'));
   await page.reload();
-  await page.getByRole('tab', { name: 'Instituições', exact: true }).click();
+  await openExpenseSection(page, 'Instituições');
   await page.getByRole('button', { name: 'Cadastrar instituição', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Cadastrar instituição', exact: true });
   await dialog.getByLabel('Buscar banco na galeria').fill('mercado');

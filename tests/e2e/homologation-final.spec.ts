@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { api, login, selectNewOrderClient, uniqueDocument } from './helpers';
+import { api, login, selectNewOrderClient, uniqueDocument, setDeviceLayout } from './helpers';
 
 test('homologação final: itens da abertura, clientes desktop e fechamento real do menu mobile', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -81,7 +81,7 @@ test('homologação final: itens da abertura, clientes desktop e fechamento real
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
   await page.goto('/settings');
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  await setDeviceLayout(page, 'mobile');
   const mobileNavigation = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
   await mobileNavigation.getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();

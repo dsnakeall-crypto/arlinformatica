@@ -15,9 +15,9 @@ test('catálogos de serviços e produtos são separados e preservam produtos exi
   await expect(page.getByRole('heading', { name: 'Mais usados', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Serviços cadastrados', exact: true })).toBeVisible();
 
-  const layoutText = await page.locator('.device-layout').innerText();
-  expect((layoutText.match(/Layout/g) ?? []).length).toBe(1);
-  await expect(page.locator('.device-layout .arl-layout-label')).toHaveCount(0);
+  // O seletor global de layout foi removido; a escolha atual vive em Configurações.
+  await expect(page.locator('.device-layout')).toHaveCount(0);
+  await expect(page.locator('.shell.layout-desktop')).toBeVisible();
 
   const topCardLocator = page.getByTestId('service-top-card');
   await expect(topCardLocator.first()).toBeVisible();

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { api, login, selectNewOrderClient, uniqueDocument } from './helpers';
+import { api, login, selectNewOrderClient, uniqueDocument, setDeviceLayout } from './helpers';
 
 async function waitForOfficialIcons(page: Page, sources: string[]) {
   for (const src of sources) {
@@ -135,13 +135,13 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.screenshot({ path: 'visual-artifacts/04-status-os-desktop.png', fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  await setDeviceLayout(page, 'mobile');
   await page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).getByRole('button', { name: 'Painel' }).click();
   const mobileHome = page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' });
   await expect(mobileHome).toBeVisible();
   await expect(mobileHome.getByText(`OS #${orderResponse.body.number} · Em Análise`, { exact: true })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/01-painel-mobile.png', fullPage: true });
-  await page.getByLabel('Layout neste dispositivo').selectOption('desktop');
+  await setDeviceLayout(page, 'desktop');
   await page.setViewportSize({ width: 1440, height: 900 });
 
   const finalization = await api(page, `/orders/${orderResponse.body.id}/finalize`, 'POST', {
@@ -201,7 +201,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.screenshot({ path: 'visual-artifacts/08-configuracoes-desktop.png', fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  await setDeviceLayout(page, 'mobile');
   await page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await page.getByLabel('Buscar clientes').fill('Cliente Homologação Visual');

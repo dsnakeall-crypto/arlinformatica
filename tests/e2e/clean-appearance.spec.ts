@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login, password } from './helpers';
+import { login, password, setDeviceLayout } from './helpers';
 
 test('Clean troca sete cores, persiste e restaura Original sem mudar geometria', async ({ page }) => {
   await login(page);
@@ -59,15 +59,22 @@ test('Clean cobre módulos, popups e Controle de Gasto mobile', async ({ page })
   await expect(dialog).toBeVisible();
   await page.screenshot({path:'output/clean/debt-dialog.png',fullPage:true});
   await dialog.getByRole('button',{name:'Cancelar',exact:true}).click();
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
+  await setDeviceLayout(page, 'mobile');
   await page.setViewportSize({width:390,height:844});
-  for (const tab of ['Resumo','Gastos','Instituições','Pagamentos','Projeção','Quitadas']) {
-    await page.getByRole('tab',{name:tab,exact:true}).click();
+  const expenseNav = page.getByRole('navigation', { name: 'Menu do Controle de Gastos' });
+  for (const tab of ['Resumo', 'Gastos', 'Instituições', 'Projeção']) {
+    await expenseNav.getByRole('button', { name: tab, exact: true }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await page.screenshot({path:`output/clean/mobile-${tab}.png`,fullPage:true});
+    await page.screenshot({ path: `output/clean/mobile-${tab}.png`, fullPage: true });
   }
+  await expenseNav.getByRole('button', { name: 'Projeção', exact: true }).click();
+  await page.getByRole('button', { name: 'Pagamentos', exact: true }).click();
+  await page.screenshot({ path: 'output/clean/mobile-Pagamentos.png', fullPage: true });
+  await expenseNav.getByRole('button', { name: 'Gastos', exact: true }).click();
+  await page.getByRole('button', { name: 'Quitadas', exact: true }).click();
+  await page.screenshot({ path: 'output/clean/mobile-Quitadas.png', fullPage: true });
   await page.setViewportSize({width:1280,height:720});
-  await page.getByLabel('Layout neste dispositivo').selectOption('desktop');
+  await setDeviceLayout(page, 'desktop');
 });
 
 test('Original é restaurado também no conteúdo e Clean não altera impressão', async ({ page }) => {

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { api, login } from './helpers';
+import { api, login, openExpenseSection } from './helpers';
 
 test('projeção abre detalhes, mantém mês principal e cabe em desktop e mobile', async ({ page }) => {
   test.setTimeout(120000);
@@ -15,9 +15,9 @@ test('projeção abre detalhes, mantém mês principal e cabe em desktop e mobil
   }
   for (const viewport of [{ width: 1366, height: 768 }, { width: 390, height: 844 }, { width: 320, height: 740 }]) {
     await page.setViewportSize(viewport);
-    await page.evaluate(mobile => localStorage.setItem('arl-layout-mode', mobile ? 'mobile' : 'web'), viewport.width < 1024);
+    await page.evaluate(mobile => localStorage.setItem('arl-layout-mode', mobile ? 'mobile' : 'desktop'), viewport.width < 1024);
     await page.goto('/expense-control');
-    await page.getByRole('tab', { name: 'Projeção', exact: true }).click();
+    await openExpenseSection(page, 'Projeção');
     const row = page.locator('.cg-projection-grid>.cg-panel').nth(1);
     await expect(row).toBeVisible();
     await row.getByRole('button', { name: 'Ver mês', exact: true }).click();
@@ -39,9 +39,13 @@ test('projeção abre detalhes, mantém mês principal e cabe em desktop e mobil
     expect(await dialog.evaluate(e => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
     await page.screenshot({ path: `output/controle-gasto/projecao-popup-${viewport.width}.png` });
     await dialog.getByRole('button', { name: 'Fechar projeção do mês' }).click();
-    await expect(page.getByRole('tab', { name: 'Projeção', exact: true })).toHaveAttribute('aria-selected', 'true');
+    if (viewport.width < 1024) {
+      await expect(page.getByRole('navigation', { name: 'Menu do Controle de Gastos' }).getByRole('button', { name: 'Projeção', exact: true })).toHaveAttribute('aria-current', 'page');
+    } else {
+      await expect(page.getByRole('tab', { name: 'Projeção', exact: true })).toHaveAttribute('aria-selected', 'true');
+    }
     for (const label of ['Resumo', 'Gastos', 'Instituições', 'Pagamentos', 'Quitadas']) {
-      await page.getByRole('tab', { name: label, exact: true }).click();
+      await openExpenseSection(page, label);
       await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     }
@@ -58,7 +62,7 @@ test('pagamentos abre instituição e consulta outro mês sem mudar mês princip
   expect(created.status, JSON.stringify(created.body)).toBe(201);
   expect((await api(page, '/expense-control/operations', 'POST', { request_key: crypto.randomUUID(), installment_ids: [created.body.installments[0].id], kind: 'payment', target: 'one', paid_by: 1, occurred_on: new Date().toLocaleDateString('sv-SE') })).status).toBe(201);
   await page.goto('/expense-control');
-  await page.getByRole('tab', { name: 'Pagamentos', exact: true }).click();
+  await openExpenseSection(page, 'Pagamentos');
   const bankCard = page.locator('.cg-payment-bank').filter({ hasText: bank.name });
   await expect(bankCard).toContainText('100,00');
   await expect(bankCard.locator('.cg-payment-types')).toHaveCount(0);

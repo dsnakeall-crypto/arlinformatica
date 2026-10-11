@@ -79,7 +79,9 @@ test('Faturas do mês WEB: valor BRL visível, data alinhada, 1 barra azul por f
   const scope=page.locator('.cg-page.cg-expense-web-mirror');
   const box=scope.locator('.cg-monthly-invoices');
   await expect(box).toBeVisible();
-  await expect(box.locator('.cg-invoice-card')).toHaveCount(3);
+  // Banco de teste acumula fixtures de outros cenários; conte apenas esta instituição.
+  await expect(box.locator('.cg-invoice-card').filter({hasText:'Instituição Fatura '+stamp})).toHaveCount(2);
+  await expect(box.locator('.cg-invoice-card').filter({hasText:'Outra instituição '+stamp})).toHaveCount(1);
   await expect(box).toContainText('Empréstimos');
   await expect(box).toContainText('R$ 127,45');
   await expect(box).toContainText('R$ 999,90');
