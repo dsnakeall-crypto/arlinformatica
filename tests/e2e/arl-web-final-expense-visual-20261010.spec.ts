@@ -13,12 +13,24 @@ test('Controle de Gastos Web usa resumo e acabamento do mobile sem perder menu d
  });
  await page.reload();
  const nav=page.getByRole('navigation',{name:'Menu principal'});
- await nav.getByRole('button',{name:'Controle de Gasto'}).click();
+ // O resumo inicial usa uma conta vazia e é remontado quando a configuração
+ // chega. Visibilidade sozinha pode capturar um nó removido entre evaluate e
+ // getComputedStyle; aguardar as respostas reais e o commit de carregamento.
+ const [configurationResponse,summaryResponse]=await Promise.all([
+  page.waitForResponse(response=>new URL(response.url()).pathname==='/api/expense-control/configuration' && response.request().method()==='GET'),
+  page.waitForResponse(response=>new URL(response.url()).pathname==='/api/expense-control/summary' && response.request().method()==='GET'),
+  nav.getByRole('button',{name:'Controle de Gasto'}).click(),
+ ]);
+ expect(configurationResponse.status()).toBe(200);
+ expect(summaryResponse.status()).toBe(200);
  const main=page.locator('main[data-arl-expense-control-react="1"]');
  const shell=page.locator('.shell.layout-desktop');
  await expect(main.locator('.cg-page.cg-expense-web-mirror')).toBeVisible();
+ await expect(main.locator('.cg-loading')).toHaveCount(0);
+ await expect(main.locator('.cg-alert')).toHaveCount(0);
  await expect(main.locator('.cg-mobile-summary')).toBeVisible();
  await expect(main.locator('.cgo-indicators')).toBeVisible();
+ await expect(main.locator('.cgo-indicators>.cgo-indicator')).toHaveCount(5);
  await expect(main.locator('.cgo-people')).toBeVisible();
  await expect(main.locator('.cg-monthly-invoices')).toBeVisible();
  await expect(main.locator('.cg-navigation .cg-tabs')).toBeVisible();
