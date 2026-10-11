@@ -25,7 +25,9 @@ class BudgetController extends Controller
     {
         abort_if(in_array($order->status, ['completed', 'interrupted'], true), 409, 'Não é possível criar orçamento para uma OS fechada.');
         $data = $request->validate(['diagnosis' => 'required|string|max:5000', 'proposal' => 'required|string|max:5000', 'observation' => 'nullable|string|max:2000', 'validity_days' => 'required|integer|min:1|max:365', 'items' => 'required|array|min:1', 'items.*.catalog_id' => 'nullable|exists:service_catalog,id', 'items.*.description' => 'required|string|max:255', 'items.*.quantity' => 'required|integer|min:1|max:999', 'items.*.unit_price_cents' => 'required|integer|min:0|max:999999999', 'items.*.warranty_enabled' => 'boolean', 'items.*.warranty_term' => 'nullable|required_if:items.*.warranty_enabled,true|integer|min:1|max:999', 'items.*.warranty_unit' => 'nullable|required_if:items.*.warranty_enabled,true|in:days,months,years']);
-        $budget = DB::transaction(function () use ($data, $order, $request, $settings) {
+        $budget = DB::transaction(function () use ($data, $order, $request, $settings, $documents) {
+            $order = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            abort_if(in_array($order->status, ['completed', 'interrupted'], true), 409, 'Não é possível criar orçamento para uma OS fechada.');
             $revision = ((int) DB::table('budgets')->where('service_order_id', $order->id)->max('revision')) + 1;
             $company = $settings->snapshot();
             $total = 0;
@@ -40,11 +42,14 @@ class BudgetController extends Controller
                 DB::table('budget_items')->insert(['budget_id' => $id, 'catalog_id' => $item['catalog_id'] ?? null, 'description' => $item['description'], 'quantity' => $item['quantity'], 'unit_price_cents' => $item['unit_price_cents'], 'subtotal_cents' => $item['subtotal_cents'], 'warranty_snapshot' => $item['warranty_snapshot'], 'created_at' => now(), 'updated_at' => now()]);
             }
 
-            return DB::table('budgets')->find($id);
+            $budget = DB::table('budgets')->find($id);
+            $documentItems = $this->itemsWithStock($budget->id)->map(fn ($x) => (array) $x)->all();
+            $snapshot = json_decode($budget->snapshot, true);
+            $documents->issue($order, 'budget', ['budget' => (array) $budget, 'items' => $documentItems, 'company' => $snapshot['company'], 'order' => $order->load('client')->toArray()], $request->user()->id, $budget->revision);
+
+            return $budget;
         });
         $items = $this->itemsWithStock($budget->id)->map(fn ($x) => (array) $x)->all();
-        $snapshot = json_decode($budget->snapshot, true);
-        $documents->issue($order, 'budget', ['budget' => (array) $budget, 'items' => $items, 'company' => $snapshot['company'], 'order' => $order->load('client')->toArray()], $request->user()->id, $budget->revision);
 
         return response()->json(['budget' => $budget, 'items' => $items], 201);
     }

@@ -91,7 +91,7 @@ class FinalizationController extends Controller
             throw ValidationException::withMessages(['is_paid' => 'Não é possível registrar pagamento para uma OS com total zerado.']);
         }
         $snapshot = ['company' => $company, 'order' => $order->toArray(), 'result_label' => $resultLabel, 'photos' => $photos, 'technical_signature' => $technicalSignature, 'show_item_warranties' => $showItemWarranties, 'payment' => ['is_paid' => $isPaid, 'method' => $paymentMethod]];
-        $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot, $isPaid, $paymentMethod, $inventory) {
+        $finalization = DB::transaction(function () use ($data, $order, $request, $subtotal, $total, $snapshot, $isPaid, $paymentMethod, $inventory, $documents, $replacedDocuments, $company, $resultLabel, $photos, $technicalSignature, $showItemWarranties) {
             $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             abort_if(in_array($locked->status, ['completed', 'interrupted'], true), 409, 'A OS já foi fechada e não pode ser finalizada.');
             $inventory->applyFinalOrderProducts($locked, $data['items'], $request->user()->id);
@@ -125,16 +125,18 @@ class FinalizationController extends Controller
             $paymentId = $isPaid ? $this->registerFinalizationPayment($request, $locked, $total, (string) $paymentMethod, $revision) : null;
             DB::table('audit_logs')->insert(['user_id' => $request->user()->id, 'action' => 'service_order.finalized', 'subject_type' => 'service_order', 'subject_id' => $order->id, 'before' => $previous ? json_encode(['revision' => $previous->revision, 'result' => $previous->result, 'total_cents' => $previous->total_cents]) : null, 'after' => json_encode(['finalization_id' => $id, 'revision' => $revision, 'result' => $data['result'], 'total_cents' => $total, 'previous_total_cents' => $previous ? (int) $previous->total_cents : null, 'paid_cents_before_refinalization' => $paidBeforeRefinalization, 'settled_by_previous_payments' => $settledByPreviousPayments, 'payment_id' => $paymentId, 'approved_budget_id' => $data['approved_budget_id'] ?? null]), 'ip_address' => $request->ip(), 'created_at' => now()]);
 
-            return DB::table('service_order_finalizations')->find($id);
+            $finalization = DB::table('service_order_finalizations')->find($id);
+            $items = DB::table('service_order_items')->where('finalization_id', $finalization->id)->get()->map(fn ($item) => (array) $item)->all();
+            $documentOrder = $order->fresh()->load(['client', 'snapshot', 'checklists']);
+            $documentOrderData = $documentOrder->toArray();
+            $documentOrderData['intake_condition'] = $documentOrder->intake_condition;
+            $documents->issue($documentOrder, 'final', ['company' => $company, 'order' => $documentOrderData, 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos, 'technical_signature' => $technicalSignature, 'show_item_warranties' => $showItemWarranties], $request->user()->id, (int) $finalization->revision);
+            if ((int) $finalization->revision > 1) {
+                $replacedDocuments->replacePrevious($documentOrder, (int) $finalization->revision - 1, (int) $finalization->revision, $request->user()->id, $request->ip());
+            }
+
+            return $finalization;
         });
-        $items = DB::table('service_order_items')->where('finalization_id', $finalization->id)->get()->map(fn ($item) => (array) $item)->all();
-        $documentOrder = $order->fresh()->load(['client', 'snapshot', 'checklists']);
-        $documentOrderData = $documentOrder->toArray();
-        $documentOrderData['intake_condition'] = $documentOrder->intake_condition;
-        $documents->issue($documentOrder, 'final', ['company' => $company, 'order' => $documentOrderData, 'finalization' => (array) $finalization, 'items' => $items, 'result_label' => $resultLabel, 'photos' => $photos, 'technical_signature' => $technicalSignature, 'show_item_warranties' => $showItemWarranties], $request->user()->id, (int) $finalization->revision);
-        if ((int) $finalization->revision > 1) {
-            $replacedDocuments->replacePrevious($documentOrder, (int) $finalization->revision - 1, (int) $finalization->revision, $request->user()->id, $request->ip());
-        }
 
         $freshOrder = $order->fresh();
         $orderPayload = $freshOrder->toArray();

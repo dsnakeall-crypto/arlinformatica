@@ -31,13 +31,16 @@ class DocumentController extends Controller
 
     public function term(Request $request, ServiceOrder $order, DocumentService $documents)
     {
-        $existing = DB::table('generated_documents')->where(['service_order_id' => $order->id, 'type' => 'term', 'revision' => 1])->exists();
-        if (! $existing) {
-            $order->load('snapshot');
-            $orderData = $order->toArray();
-            $orderData['intake_condition'] = $order->intake_condition;
-            $documents->issue($order, 'term', ['order' => $orderData, 'snapshot' => $order->snapshot->toArray()], $request->user()->id);
-        }
+        DB::transaction(function () use ($request, $order, $documents) {
+            $locked = ServiceOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $existing = DB::table('generated_documents')->where(['service_order_id' => $locked->id, 'type' => 'term', 'revision' => 1])->exists();
+            if (! $existing) {
+                $locked->load('snapshot');
+                $orderData = $locked->toArray();
+                $orderData['intake_condition'] = $locked->intake_condition;
+                $documents->issue($locked, 'term', ['order' => $orderData, 'snapshot' => $locked->snapshot->toArray()], $request->user()->id);
+            }
+        });
 
         return $documents->response($order, 'term');
     }
