@@ -85,7 +85,7 @@ class SupplierPayables
     {
         $today = now('America/Sao_Paulo')->toDateString();
         $limit = now('America/Sao_Paulo')->addDays(3)->toDateString();
-        $users = User::where('active', true)->whereHas('role', fn ($q) => $q->whereIn('name', ['Master', 'Administrador']))->pluck('id');
+        $users = User::where('active', true)->whereHas('role', fn ($q) => $q->whereIn('name', ['Master', 'Administrador', 'Administrador Simples']))->pluck('id');
         DB::table('supplier_payables as p')->join('supplier_purchases as c', 'c.id', '=', 'p.purchase_id')->whereNull('p.paid_on')->whereNull('p.voided_at')->where('p.due_on', '<=', $limit)->select('p.*', 'c.supplier_id')->orderBy('p.id')->chunk(100, function ($rows) use ($users, $today) {
             foreach ($rows as $row) {
                 DB::transaction(function () use ($row, $users, $today) {

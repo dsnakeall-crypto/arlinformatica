@@ -10,7 +10,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $now = now();
-        foreach (['Master', 'Administrador', 'Funcionário'] as $name) {
+        foreach (['Master', 'Administrador', 'Administrador Simples', 'Funcionário'] as $name) {
             DB::table('roles')->updateOrInsert(['name' => $name], ['permissions' => json_encode($name === 'Master' ? ['*'] : ['orders', 'clients']), 'created_at' => $now, 'updated_at' => $now]);
         } foreach (['Computador', 'Notebook', 'Impressora', 'Tablet', 'Mac Apple', 'iPad'] as $name) {
             DB::table('equipment_types')->updateOrInsert(['name' => $name], ['active' => true, 'created_at' => $now, 'updated_at' => $now]);

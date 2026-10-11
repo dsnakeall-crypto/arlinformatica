@@ -33,7 +33,7 @@ test(`Nova OS avisa com relato, cancela sem gravação e confirma segundo chamad
   const equipment = await api(page, '/catalogs/equipment');
   const first = await api(page, '/orders', 'POST', { client_id: client.body.id, equipment_type_id: equipment.body[0].id, attendance_type: 'bench', reported_problem: 'Notebook não liga após queda.' });
   expect(first.status).toBe(201);
-  if (width < 1024) await page.locator('.arl-global-mobile-nav').getByRole('button', { name: 'Nova OS', exact: true }).click();
+  if (width < 1024) await page.locator('.arl-global-mobile-nav').getByRole('button', { name: 'Abrir OS', exact: true }).click();
   else await page.getByRole('button', { name: 'Nova OS', exact: true }).first().click();
   await selectNewOrderClient(page, client.body.id, false);
   const popup = page.getByRole('dialog', { name: 'Cliente com chamado em aberto' });

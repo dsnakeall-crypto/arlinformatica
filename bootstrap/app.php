@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\DiscardInvalidRememberCookie;
 use App\Http\Middleware\EnsureActiveUser;
+use App\Http\Middleware\RequireExpenseAccess;
 use App\Http\Middleware\RequireRole;
 use App\Http\Middleware\RestrictModuleAccess;
 use Illuminate\Auth\AuthenticationException;
@@ -39,7 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(SubstituteBindings::class, RestrictModuleAccess::class);
         $middleware->prependToPriorityList(RestrictModuleAccess::class, EnsureActiveUser::class);
         $middleware->prependToPriorityList(AuthenticatesRequests::class, DiscardInvalidRememberCookie::class);
-        $middleware->alias(['role' => RequireRole::class]);
+        $middleware->alias(['role' => RequireRole::class, 'expense.access' => RequireExpenseAccess::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*') || $request->expectsJson());

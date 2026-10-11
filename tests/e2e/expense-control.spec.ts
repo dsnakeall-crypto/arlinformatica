@@ -124,18 +124,22 @@ test('controle: filtro de responsável preserva cartões e contagens por tipo', 
   await expect(page.locator('.cg-debt-row').filter({ hasText: 'Compra two' })).toHaveCount(0);
 });
 
-test('controle: resumo alterna responsáveis e projeção oferece lista e cards', async ({ page }) => {
+test('controle: resumo com cinco indicadores e projeção oferece lista e cards', async ({ page }) => {
   await login(page);
   await page.goto('/expense-control');
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   const month = await page.getByRole('button', { name: 'Selecionar mês do Controle de Gasto', exact: true }).getAttribute('data-month');
   const data = (await api(page, '/expense-control/summary?month=' + month)).body;
   const money = (n: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n / 100);
-  for (const [name, key] of [['Allan', 'one'], ['Carol', 'two'], ['Casal', 'shared']]) {
-    await page.locator('.cg-summary-filter').getByRole('button', { name, exact: true }).click();
-    await expect(page.locator('.cg-metrics article').nth(0).locator('strong')).toHaveText(money(data.views[key].remaining_cents));
-    await expect(page.locator('.cg-metrics article').nth(2).locator('strong')).toHaveText(money(data.views[key].paid_cents));
+  // 09/10/2026: o seletor Allan/Carol/Casal foi removido; cinco indicadores mostram original e falta pagar ao mesmo tempo.
+  await expect(page.locator('.cg-summary-filter')).toHaveCount(0);
+  const indicators = page.getByRole('region', { name: 'Indicadores do mês' });
+  for (const key of ['month', 'one', 'two', 'shared']) {
+    const prefix = key === 'month' ? '' : key + '_';
+    await expect(indicators.locator('.cgo-' + key + ' .cgo-original')).toContainText(money(data.totals[prefix + 'original_cents']));
+    await expect(indicators.locator('.cgo-' + key + ' .cgo-remaining b')).toHaveText(money(data.totals[prefix + 'remaining_cents']));
   }
+  await expect(page.locator('.cgo-person')).toHaveCount(2);
   await expect(page.getByRole('button', { name: 'Meu resumo', exact: true })).toHaveCount(0);
   await page.screenshot({ path: 'output/controle-gasto/resumo-seletores.png', fullPage: true });
   await page.getByRole('tab', { name: 'Projeção', exact: true }).click();
@@ -178,7 +182,7 @@ test('controle: visual desktop e mobile sem vazamento de layout nos popups', asy
   await catalogs(page, 'visual-' + Date.now());
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/expense-control');
-  await expect(page.getByRole('heading', { name: 'Visão geral do casal', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Visão geral do mês', exact: true })).toBeVisible();
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   await expect(page.getByRole('tab', { name: 'Visão geral', exact: true })).toHaveCount(0);
   const month = page.getByRole('button', { name: 'Selecionar mês do Controle de Gasto', exact: true });

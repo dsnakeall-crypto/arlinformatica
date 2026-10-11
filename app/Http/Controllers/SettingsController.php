@@ -42,6 +42,15 @@ class SettingsController extends Controller
         return response()->json($settings->theme());
     }
 
+    public function overview(CompanySettings $settings): JsonResponse
+    {
+        // Uma lista explícita impede exposição de tokens, modelos e configurações privadas.
+        return response()->json(collect($settings->all())->only([
+            'company_name', 'trade_name', 'city', 'state', 'phone',
+            'street', 'number', 'district', 'postal_code', 'instagram',
+        ])->all())->header('Cache-Control', 'no-store, private');
+    }
+
     public function show(CompanySettings $settings): JsonResponse
     {
         return response()->json($settings->all());

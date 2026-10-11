@@ -1,0 +1,361 @@
+/* ARL Informática — Web Clean Premium inspirado na referência aprovada 10/10/2026.
+   Somente Web/PC + aparência Clean. Preserva Web Original, mobile, páginas
+   de Controle de Gasto, regras de negócio, dimensões funcionais e impressão.
+   Importado DEPOIS dos estilos legados para evitar alterar o tema original. */
+@media screen {
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] {
+    --arl-web-rose: #e31348;
+    --arl-web-rose-light: #fa6884;
+    --arl-web-rose-dark: #c9003e;
+    --arl-web-ink: #142139;
+    --arl-web-muted: #70809a;
+    --arl-web-line: #e6eaf1;
+    --arl-web-panel: rgba(255,255,255,.94);
+    --arl-web-raised: inset 0 1px 0 #fff, 0 8px 24px -15px #43546c55, 0 2px 7px #53617c0b;
+    --arl-web-card-shadow: 0 16px 38px -26px #45546a75, 0 3px 13px #2c3f5b0c, inset 0 1px 0 #fff;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body:has(.shell.layout-desktop) {
+    color:var(--arl-web-ink)!important;
+    background:
+      radial-gradient(ellipse 60% 75% at 0% 15%,#dceefa 0%,transparent 65%),
+      radial-gradient(ellipse 60% 65% at 100% 0%,#fae6ee 0%,transparent 63%),
+      linear-gradient(125deg,#f8fafc 3%,#fdfcfd 55%,#f5f5fb 100%)!important;
+    background-attachment:fixed!important;
+  }
+
+  /* Sidebar ARL: vidro fosco claro, grupos legíveis e seleção rosa elegante. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar {
+    background:linear-gradient(160deg,rgba(255,255,255,.91),rgba(255,251,253,.87) 70%,rgba(248,250,254,.93))!important;
+    border:1px solid rgba(255,255,255,.96)!important;
+    border-radius:21px!important;
+    box-shadow:0 12px 36px #44516b16, inset 0 1px 0 #fff!important;
+    color:var(--arl-web-ink)!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar::before,
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar::after{content:none!important}
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .sidebar-brand { background:transparent!important; box-shadow:none!important; }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .sidebar-brand img {filter:none!important}
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group {border-color:#e9edf377!important}
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group h2 {
+    color:#8490a7!important;letter-spacing:.12em!important;font-weight:850!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group button {
+    background:linear-gradient(180deg,#ffffffed,#ffffffbd)!important;
+    color:#526079!important;
+    border:1px solid #ffffffaa!important;
+    border-radius:12px!important;
+    box-shadow:inset 0 1px 0 #ffffff,0 2px 8px #53627d08!important;
+    text-shadow:none!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group button:hover:not(.active){
+    background:linear-gradient(110deg,#fff,#fff2f5)!important;
+    border-color:#f6d4dd!important;color:#bd1643!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group button.active {
+    background:linear-gradient(125deg,#fff4f7 0%,#ffe0e9 100%)!important;
+    border-color:#ffcee0!important;color:#d40843!important;
+    box-shadow:inset 0 1px 0 #fff,0 6px 18px -10px #eb35645f!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group button.active :is(.nav-icon,.nav-label,svg) {
+    color:#d40843!important;stroke:currentColor!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group .nav-badge {
+    color:#fff!important;background:linear-gradient(140deg,#ff7e96,#e31852)!important;
+    box-shadow:0 3px 9px #e91c5538!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .new-order-shortcut {
+    background:linear-gradient(180deg,#ff8192 0%,#ee4b72 55%,#e63362 100%)!important;
+    color:#fff!important;border:1px solid #fa8497!important;
+    border-radius:999px!important;
+    box-shadow:inset 0 1px 0 #ffffff80,0 9px 19px -8px #ed3e6b95!important;
+    text-shadow:none!important;font-weight:800!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .sidebar-footer {
+    background:transparent!important;box-shadow:none!important;
+    border-color:#e5eaf2!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .profile {
+    background:transparent!important;box-shadow:none!important;
+    border-color:#e7eaf1!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .profile :is(b,strong){color:var(--arl-web-ink)!important}
+
+  /* Cabeçalhos e ações da ARL: manter posições, trocar apenas o acabamento. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"]) :is(.page-title h1,.arl-page-header h1) {
+    color:#121c30!important;letter-spacing:-.035em!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"]) :is(.arl-eyebrow,.arl-page-header-eyebrow){
+    color:#8390a8!important;letter-spacing:.15em!important;font-weight:850!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"]) :is(.page-title p,.arl-page-header-description){
+    color:var(--arl-web-muted)!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"]) .arl-page-header-icon {
+    background:linear-gradient(145deg,#fff,#ffe6ed)!important;
+    color:#e2144c!important;border:1px solid #fff!important;
+    border-radius:16px!important;
+    box-shadow:var(--arl-web-raised)!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"]) .bell {
+    border:1px solid #fff!important;border-radius:50%!important;
+    background:linear-gradient(150deg,#fff,#fff9fb)!important;
+    color:#172139!important;box-shadow:var(--arl-web-raised)!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(button.primary,a.primary,.primary-shortcut,.arl-header-primary,.arl-page-header-actions .primary):not(:disabled) {
+    background:linear-gradient(180deg,#ff8295 0%,#f52f60 50%,#d90043 100%)!important;
+    color:#fff!important;border:1px solid #fb7b90!important;
+    box-shadow:inset 0 1px 0 #ffffff73,0 9px 18px -10px #e21a53b9!important;
+    border-radius:14px!important;
+  }
+
+  /* Cartões, tabelas e formulários — sem alterar grade e sem afetar Gastos. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.panel,.form-card,.dashboard-section,.dashboard-cards article,.status-cards article,
+    .orders-panel,.clients-list-panel,.arl-clients-panel,.services-list-card,.services-create-card,
+    .services-edit-card,.supplier-panel,.supplier-history-card,.supplier-detail-section,
+    .supplier-workspace-metrics article,.finance-cards article,.finance-total-cards article,
+    .setting-cards article,.arl-3d-panel,.arl-layout-settings,.post-sale-panel,.post-sale-card,
+    .detail-grid section,.os-form section,.os-form details) {
+    background:var(--arl-web-panel)!important;
+    border:1px solid #ffffffed!important;border-radius:20px!important;
+    box-shadow:var(--arl-web-card-shadow)!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.orders-order-list,.client-list,.clients-list,.supplier-list,.finance-table) {
+    background:transparent!important;
+    border-color:var(--arl-web-line)!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.orders-order-list thead,.orders-order-list thead th,.dashboard-row.head,.finance-table th,
+    .clients-table thead,.supplier-table thead,.order-row.head){
+    background:linear-gradient(180deg,#f8fafc,#f2f5f9)!important;
+    color:#7c889e!important;border-color:#edf0f5!important;
+    font-size:11px!important;letter-spacing:.02em!important;font-weight:800!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.orders-order-list tbody tr,.dashboard-row:not(.head),.client-list article,.supplier-row,.finance-row) {
+    border-color:#edf0f5!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.orders-order-list tbody tr:hover,.dashboard-row:not(.head):hover,.supplier-row:hover) {
+    background:#fff8fa!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.filters,.clients-toolbar,.order-tabs,.finance-tabs,.supplier-tabs,.supplier-detail-tabs,
+    .arl-settings-tabs,.settings-system-tabs,.order-filters,.orders-filters) {
+    background:linear-gradient(135deg,#f8fafdeb,#fffafbdb)!important;
+    border-color:#f0f2f6!important;
+    box-shadow:inset 0 1px 0 #ffffffd9!important;
+    border-radius:16px!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.filters input,.filters select,.clients-toolbar input,.orders-panel input,
+    .field input,.field select,.field textarea,.finance-period input,.clients-search input) {
+    background:linear-gradient(180deg,#ffffff,#fafbfd)!important;
+    color:#25324c!important;border:1px solid #e2e8f1!important;
+    border-radius:12px!important;box-shadow:inset 0 1px 2px #3c50650a!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.order-tabs,.finance-tabs,.supplier-tabs,.arl-settings-tabs,.settings-system-tabs) button:not(:disabled) {
+    background:linear-gradient(180deg,#fff,#fafbfd)!important;
+    border:1px solid #f3f4f8!important;color:#526078!important;
+    box-shadow:var(--arl-web-raised)!important;border-radius:12px!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.order-tabs,.finance-tabs,.supplier-tabs,.arl-settings-tabs,.settings-system-tabs)
+  button:is(.active,[aria-selected="true"],[aria-pressed="true"]):not(:disabled) {
+    background:linear-gradient(180deg,#ff788e 0%,#f02257 54%,#d0003c 100%)!important;
+    color:#fff!important;border:1px solid #f65f7a!important;
+    box-shadow:inset 0 1px 0 #ffffff63,0 7px 18px -9px #de1450bf!important;
+  }
+  /* Ícones de ações: círculos leves semelhantes à referência (desktop apenas). */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  .orders-order-list .order-actions :is(a,button) {
+    border-radius:50%!important;
+    box-shadow:0 2px 7px #2c405216,inset 0 1px 0 #fff!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  .orders-order-list .order-actions :is(.order-view,.order-edit) {
+    background:linear-gradient(140deg,#fff,#f1f5fd)!important;
+    border:1px solid #ecf0f7!important;color:#255cb5!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  .orders-order-list .order-actions .arl-order-delete {
+    background:linear-gradient(140deg,#fff,#fff1f4)!important;
+    border:1px solid #fbe1e6!important;color:#dc163e!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.modal-card,.order-modal,.clients-modal-card,.services-modal,.supplier-form,.arl-system-password-dialog) {
+    background:linear-gradient(155deg,#fff,#fffbfc)!important;
+    border:1px solid #fff!important;
+    box-shadow:0 23px 55px #26344a33!important;border-radius:22px!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"]) :is(a,button,input,select,textarea):focus-visible {
+    outline:2px solid #df2455!important;outline-offset:2px!important;
+  }
+}
+@media screen and (prefers-reduced-motion:reduce) {
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body .shell.layout-desktop button {
+    transition:none!important;
+  }
+}
+
+
+/* Ajustes de acabamento aprovados: vermelho no lugar do rosa forte.
+   Exclusivamente Web Clean; não altera o visual Original ou o mobile. */
+@media screen {
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] {
+    --arl-web-rose: #cb092b;
+    --arl-web-rose-light: #ed304e;
+    --arl-web-rose-dark: #96001a;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .new-order-shortcut,
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(button.primary,a.primary,.primary-shortcut,.arl-header-primary,.arl-page-header-actions .primary):not(:disabled) {
+    background:linear-gradient(180deg,#f83d59 0%,#d9002c 53%,#ab001e 100%)!important;
+    border-color:#e72848!important;
+    box-shadow:inset 0 1px 0 #ffffff78,0 8px 17px -9px #b60028ab!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group button.active {
+    background:linear-gradient(115deg,#fff2f2,#ffe0e1 100%)!important;
+    border-color:#f6c5cb!important;color:#c0002b!important;
+    box-shadow:inset 0 1px 0 #fff,0 5px 14px -10px #a9002b7d!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group button.active :is(.nav-icon,.nav-label,svg){
+    color:#c0002b!important;stroke:currentColor!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group .nav-badge {
+    background:linear-gradient(145deg,#ed3a57,#c20028)!important;
+    box-shadow:0 3px 8px #a9002840!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.order-tabs,.finance-tabs,.supplier-tabs,.arl-settings-tabs,.settings-system-tabs)
+  button:is(.active,[aria-selected="true"],[aria-pressed="true"]):not(:disabled) {
+    background:linear-gradient(180deg,#f6435e 0%,#d40029 53%,#ac001e 100%)!important;
+    border-color:#d92243!important;
+    box-shadow:inset 0 1px 0 #ffffff61,0 7px 18px -9px #a80026b8!important;
+  }
+
+  /* Três pictogramas 3D baseados na imagem enviada. Mantém WhatsApp/Maps
+     e preserva os elementos e cliques originais dos botões. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label="Visualizar"],button[aria-label="Editar"],button[aria-label^="Excluir cliente"],.order-view,.order-edit,.arl-order-delete) {
+    background-color:#fff!important;
+    background-repeat:no-repeat!important;
+    background-size:30px 30px!important;
+    background-position:center!important;
+    min-width:36px!important;min-height:36px!important;
+    border:1px solid #edf0f5!important;
+    border-radius:50%!important;
+    box-shadow:0 2px 7px #30405a16,inset 0 1px #fff!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label="Visualizar"],.order-view){
+    background-image:url('/arl-assets/icons/icon-web-eye.png')!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label="Editar"],.order-edit){
+    background-image:url('/arl-assets/icons/icon-web-edit.png')!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label^="Excluir cliente"],.arl-order-delete){
+    background-image:url('/arl-assets/icons/icon-web-delete.png')!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label="Visualizar"],button[aria-label="Editar"],button[aria-label^="Excluir cliente"],.order-view,.order-edit,.arl-order-delete)
+  :is(svg,img,.clients-action-eye,.clients-action-icon) {
+    visibility:hidden!important;
+  }
+}
+
+/* Precedência contra CSS carregado sob demanda (Clientes/Ordens).
+   Com #arl-main-sidebar + main o pictograma 3D não é sobreposto
+   por background shorthand das páginas React. */
+@media screen {
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.clients-react-page .client-list .clients-row .clients-actions > button[aria-label="Visualizar"],
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.orders-order-list .order-actions > button.order-view,
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.dashboard-order-list .order-actions > button.order-view {
+  background:#fff url('/arl-assets/icons/icon-web-eye.png') center/30px 30px no-repeat!important;
+}
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.clients-react-page .client-list .clients-row .clients-actions > button[aria-label="Editar"],
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.orders-order-list .order-actions > button.order-edit,
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.dashboard-order-list .order-actions > button.order-edit {
+  background:#fff url('/arl-assets/icons/icon-web-edit.png') center/30px 30px no-repeat!important;
+}
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.clients-react-page .client-list .clients-row .clients-actions > button[aria-label^="Excluir cliente"],
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.orders-order-list .order-actions > button.arl-order-delete,
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.dashboard-order-list .order-actions > button.arl-order-delete {
+  background:#fff url('/arl-assets/icons/icon-web-delete.png') center/30px 30px no-repeat!important;
+}
+}

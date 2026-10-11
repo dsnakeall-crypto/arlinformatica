@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import PageHeader from "./page-header";
 import AppearanceSettings from './appearance-settings';
-import { Camera, ChevronDown, Settings, Users, Trash2, FileSignature } from "lucide-react";
+import LayoutsSettings, { type LayoutSettingsProps } from './layouts-settings';
+import { ArrowLeft, Camera, ChevronDown, Settings, Users, Trash2, FileSignature } from "lucide-react";
 import { api, formatCompanySettings, serializeCompanySettings, masks, Field } from './app-shared';
 import { ClientImport, TermTextEditor, DatabaseResetPanel } from './lazy-pages';
 
@@ -9,6 +10,7 @@ export function InfrastructureSettings({ section }: { section: string }) {
   const [backups, setBackups] = useState<any>(),
     [diagnostic, setDiagnostic] = useState<any>(),
     [message, setMessage] = useState(""),
+    [restoringId, setRestoringId] = useState<number | null>(null),
     [upload, setUpload] = useState<File>();
   const load = () => {
     api("/backups")
@@ -187,24 +189,35 @@ export function InfrastructureSettings({ section }: { section: string }) {
                 BAIXAR
               </a>
               <button
-                disabled={b.status !== "ready"}
+                disabled={b.status !== "ready" || restoringId !== null}
                 onClick={async () => {
                   if (
                     window.prompt("Digite RESTAURAR BACKUP para confirmar") !==
                     "RESTAURAR BACKUP"
                   )
                     return;
-                  await api(`/backups/${b.id}/restore`, {
-                    method: "POST",
-                    body: JSON.stringify({ confirmation: "RESTAURAR BACKUP" }),
-                  });
-                  setMessage(
-                    "Restauração concluída; backup de segurança preservado.",
-                  );
-                  load();
+                  setRestoringId(b.id);
+                  setMessage("Restaurando backup. Aguarde a confirmação do servidor…");
+                  try {
+                    await api(`/backups/${b.id}/restore`, {
+                      method: "POST",
+                      body: JSON.stringify({ confirmation: "RESTAURAR BACKUP" }),
+                    });
+                    const success = "Restauração concluída; backup de segurança preservado.";
+                    setMessage(success);
+                    window.alert(success);
+                    load();
+                  } catch (error) {
+                    const detail = error instanceof Error ? error.message : "Resposta inesperada do servidor.";
+                    const failure = `Não foi possível confirmar a restauração: ${detail} Confira o histórico antes de tentar novamente.`;
+                    setMessage(failure);
+                    window.alert(failure);
+                  } finally {
+                    setRestoringId(null);
+                  }
                 }}
               >
-                RESTAURAR
+                {restoringId === b.id ? "RESTAURANDO…" : "RESTAURAR"}
               </button>
               <button
                 disabled={b.protected || b.status === "creating"}
@@ -299,10 +312,13 @@ export function InfrastructureSettings({ section }: { section: string }) {
   );
 }
 
-export function SettingsPage({ role, initialSection = "company" }: any) {
+export function SettingsPage({ role, initialSection = "company", deviceLayout }: { role?: string; initialSection?: string; deviceLayout?: LayoutSettingsProps }) {
   const [data, setData] = useState<any>();
   const [message, setMessage] = useState("");
   const [section, setSection] = useState(initialSection);
+  // Mobile/Tablet (09/10/2026): Configurações abre por categorias em cartões, com retorno explícito.
+  const mobileSettings = Boolean(deviceLayout && deviceLayout.selected !== "desktop");
+  const [mobileMenu, setMobileMenu] = useState(() => initialSection === "company");
   const [logo, setLogo] = useState<File | null>(null);
   const [signature, setSignature] = useState<File | null>(null);
   const [removingSignature, setRemovingSignature] = useState(false);
@@ -374,6 +390,7 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
   };
   const tabs = [
     ["company", "Empresa", "▣"],
+    ...(deviceLayout ? [["layouts", "Layouts", "▤"]] : []),
     ["identity", "Identidade", "◆"],
     ["documents", "Documentos", "▧"],
     ["messages", "Mensagens", "✉"],
@@ -394,18 +411,63 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
   const generalSave =
     ["company", "identity", "messages"].includes(section) ||
     section === "documents";
+  const header = (
+    <PageHeader
+      eyebrow="ADMINISTRAÇÃO"
+      title="Configurações"
+      description="Layouts, identidade, documentos e infraestrutura do sistema."
+      icon={Settings}
+    />
+  );
+  const categoryHints: Record<string, string> = {
+    company: "Dados cadastrais da empresa",
+    layouts: "Navegação deste aparelho",
+    identity: "Logo, assinatura e aparência",
+    documents: "Termo, orçamento e laudos",
+    messages: "Textos do WhatsApp",
+    users: "Contas e permissões",
+    system: "Backup, notificações e diagnóstico",
+  };
+  const openCategory = (id: string) => {
+    setSection(id === "system" && role !== "Master" ? "notifications" : id);
+    setMessage("");
+    setMobileMenu(false);
+  };
+  if (mobileSettings && mobileMenu)
+    return (
+      <>
+        {header}
+        <nav className="arl-settings-mobile-home" aria-label="Categorias de Configurações">
+          <h2>Escolha uma categoria</h2>
+          <div className="arl-settings-mobile-grid">
+            {tabs.map(([id, label, icon]) => (
+              <button key={id} type="button" className="arl-settings-mobile-card" data-section={id} onClick={() => openCategory(id)}>
+                <span aria-hidden="true">{icon}</span>
+                <b>{label}</b>
+                <small>{categoryHints[id]}</small>
+              </button>
+            ))}
+          </div>
+        </nav>
+      </>
+    );
+  const currentCategory = tabs.find(([id]) => (id === "system" ? inSystem : section === id));
   return (
     <>
-      <PageHeader
-        eyebrow="ADMINISTRAÇÃO"
-        title="Configurações"
-        description="Identidade, documentos, garantias e infraestrutura do sistema."
-        icon={Settings}
-      />
+      {header}
+      {mobileSettings && (
+        <>
+          <button type="button" className="arl-settings-mobile-back" onClick={() => setMobileMenu(true)}>
+            <ArrowLeft aria-hidden="true" /> Configurações
+          </button>
+          {currentCategory && <h2 className="arl-settings-mobile-title">{currentCategory[1]}</h2>}
+        </>
+      )}
       <div
         className="arl-settings-tabs"
         role="tablist"
         aria-label="Seções de Configurações"
+        hidden={mobileSettings}
       >
         {tabs.map(([id, label, icon]) => (
           <button
@@ -428,6 +490,7 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
       {inSystem && <div className="arl-document-subtabs settings-system-tabs" role="tablist" aria-label="Seções do Sistema">
         {systemTabs.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={section === id} className={section === id ? "active" : ""} onClick={() => { setSection(id); setMessage(""); }}>{label}</button>)}
       </div>}
+      {section === "layouts" && deviceLayout && <LayoutsSettings {...deviceLayout} />}
       {section === "documents" && (
         <div
           className="arl-document-subtabs"
@@ -546,7 +609,7 @@ export function SettingsPage({ role, initialSection = "company" }: any) {
                   </button>
                 </div>
               )}
-            </section><section className="settings-subcard"><AppearanceSettings /></section>
+            </section><section className="settings-subcard"><AppearanceSettings mobileOnly={mobileSettings} /></section>
             </div>
           )}
           {section === "documents" && (
@@ -706,6 +769,7 @@ export function UsersAdmin() {
                 email: "",
                 role_id: data.roles[0]?.id,
                 active: true,
+                expense_control_access: false,
                 password: "",
                 password_confirmation: "",
               });
@@ -782,6 +846,14 @@ export function UsersAdmin() {
               />{" "}
               Usuário ativo
             </label>
+            {['Administrador', 'Administrador Simples'].includes(data.roles.find((role: any) => Number(role.id) === Number(form.role_id))?.name) && (
+              <label className="field">
+                <span><input type="checkbox" checked={Boolean(form.expense_control_access)}
+                  onChange={event => setForm({ ...form, expense_control_access: event.target.checked })} />
+                  Permitir Controle de Gastos pessoal</span>
+                <small>Permissão individual. Não é concedida automaticamente pelo perfil.</small>
+              </label>
+            )}
             {!form.id && (
               <>
                 <Field

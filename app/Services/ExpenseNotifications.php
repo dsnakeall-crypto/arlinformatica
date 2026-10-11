@@ -31,7 +31,7 @@ class ExpenseNotifications
         $details = $debts->map(fn ($d) => ['id' => $d->id, 'name' => $d->name, 'responsibility' => $d->responsibility === 'shared' ? 'Casal' : ($people[$d->responsibility === 'one' ? 1 : 2] ?? 'Responsável')])->values();
         $description = Str::limit($request->user()->name.' · '.$event.' · R$ '.number_format($amount / 100, 2, ',', '.').' · '.$details->map(fn ($d) => $d['name'].' ('.$d['responsibility'].')')->implode('; '), 250);
         $data = ['event' => $event, 'actor' => $request->user()->name, 'amount_cents' => $amount, 'debts' => $details];
-        $recipients = User::query()->where('active', true)->whereHas('role', fn ($q) => $q->whereIn('name', ['Master', 'Administrador', 'Controle de Gasto']))->pluck('id');
+        $recipients = User::query()->with('role:id,name')->where('active', true)->get()->filter(fn (User $user) => $user->canUseExpenseControl())->pluck('id');
         $inserted = [];
         foreach ($recipients as $userId) {
             if (DB::table('notifications')->insertOrIgnore(['id' => (string) Str::uuid(), 'user_id' => $userId, 'type' => 'expense_control', 'deduplication_key' => 'expense:'.$key, 'title' => 'Gestor de Gastos · '.$event, 'description' => $description, 'url' => '/expense-control', 'data' => json_encode($data), 'active' => true, 'created_at' => now(), 'updated_at' => now()])) {

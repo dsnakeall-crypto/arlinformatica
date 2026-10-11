@@ -199,6 +199,26 @@ class ServiceOrderSystemPasswordTest extends TestCase
             ->assertJsonPath('equipment_details', 'Acessórios corrigidos pelo Master');
     }
 
+    public function test_order_with_password_encrypted_by_another_key_still_opens_without_changing_the_stored_ciphertext(): void
+    {
+        $master = $this->user('Master', 'legacy-key-master');
+        $created = $this->actingAs($master)->postJson('/api/orders', [
+            ...$this->orderPayload('OS importada de outra instalação'),
+            'system_password_absent' => true,
+        ])->assertCreated()->json();
+        $legacyCiphertext = 'eyJpdiI6ImtleS1kZS1vdXRyYS1pbnN0YWxhY2FvIiwidmFsdWUiOiJpbmNvbXBhdGl2ZWwiLCJtYWMiOiJvdXRyYS1jaGF2ZSJ9';
+        DB::table('service_orders')->where('id', $created['id'])->update(['system_password' => $legacyCiphertext]);
+
+        $this->getJson('/api/orders/'.$created['id'])->assertOk()
+            ->assertJsonPath('has_system_password', true)->assertJsonMissingPath('system_password');
+        $this->getJson('/api/orders/'.$created['id'].'/system-password')->assertStatus(409)
+            ->assertJsonPath('code', 'SYSTEM_PASSWORD_KEY_MISMATCH')->assertJsonMissingPath('password');
+        $this->patchJson('/api/orders/'.$created['id'], ['reported_problem' => 'Correção sem alterar a senha'])
+            ->assertOk()->assertJsonPath('reported_problem', 'Correção sem alterar a senha');
+        $this->assertSame($legacyCiphertext, DB::table('service_orders')->where('id', $created['id'])->value('system_password'));
+        $this->assertSame(0, DB::table('audit_logs')->where('action', 'service_order.system_password_viewed')->count());
+    }
+
     private function orderPayload(string $problem = 'Equipamento não inicia'): array
     {
         $client = Client::firstOrCreate(['document' => '52998224725'], [

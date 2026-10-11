@@ -58,11 +58,6 @@ class ServiceOrderController extends Controller
             },
         };
 
-        $summary = [
-            'open' => ServiceOrder::whereNotIn('status', ['completed', 'interrupted'])->count(),
-            'completed_week' => ServiceOrder::whereIn('status', ['completed', 'interrupted'])->where('completed_at', '>=', now('America/Sao_Paulo')->startOfWeek())->count(),
-        ];
-
         $perPage = max(1, min(100, (int) $r->integer('per_page', 12)));
 
         $orders = $q->paginate($perPage);
@@ -73,6 +68,18 @@ class ServiceOrderController extends Controller
 
             return $order;
         });
+
+        // O Painel usa somente data/total da semana. Evitar três consultas
+        // de contadores gerais em toda abertura do Painel; a rota normal de
+        // Ordens continua devolvendo os contadores e o resumo completos.
+        if ($tab === 'closed_week' && $r->boolean('panel_light')) {
+            return response()->json($orders);
+        }
+
+        $summary = [
+            'open' => ServiceOrder::whereNotIn('status', ['completed', 'interrupted'])->count(),
+            'completed_week' => ServiceOrder::whereIn('status', ['completed', 'interrupted'])->where('completed_at', '>=', now('America/Sao_Paulo')->startOfWeek())->count(),
+        ];
 
         return response()->json([...$orders->toArray(), 'summary' => $summary, 'tab_counts' => $this->tabCounts()]);
     }
@@ -194,7 +201,9 @@ class ServiceOrderController extends Controller
             $payload['client'] = $order->snapshot->client;
         }
         $payload['display_status'] = $this->displayStatus($order, $this->paidCentsForOrder($order));
-        $payload['has_system_password'] = $order->system_password !== null;
+        // Presença da senha não exige descriptografia: um backup importado pode ter sido
+        // cifrado com outra APP_KEY. Nunca modificar o conteúdo original por isso.
+        $payload['has_system_password'] = $order->getRawOriginal('system_password') !== null;
         $payload['opening_whatsapp'] = app(OpeningMessage::class)->payload($order);
         $payload['reopened'] = $order->histories->contains(fn ($history) => $history->from_status === 'completed' && $history->to_status === 'analysis');
         $payload['interruption_reason'] = $order->status === 'interrupted' ? $order->technical_report : null;

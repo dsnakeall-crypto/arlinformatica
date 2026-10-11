@@ -1,5 +1,18 @@
 # ARL Informática — Projeto Mestre
 
+## Atualização autorizada — 09/10/2026 (reforma mobile e permissões)
+
+- No Mobile/Tablet, a home principal apresenta apenas os cartões de OS abertas; listas e totais de status do desktop não são renderizados nesse modo. Web/PC conserva sua composição anterior.
+- Dois modos de navegação mobile por conta e dispositivo: (A) barra inferior com Painel, Clientes, central Abrir OS, Financeiro e Gestor de Gasto, mais menu lateral para demais destinos; (B) barra lateral compacta de ícones. Configurações concentra os seletores de layout e navegação.
+- Controle de Gastos torna-se miniapp visual independente da moldura da ARL, com Voltar para ARL e Ajustes, navegação inferior própria: Resumo, Gastos, Adicionar dívida, Instituições, Projeção. Quitadas fica em Gastos; Pagamentos fica em Projeção. Os cartões e cálculos do Resumo existente não devem ser refeitos.
+- Novo perfil Administrador Simples: acesso operacional à ARL e Financeiro; Configurações administrativas apenas como resumo de leitura com campos explicitamente permitidos, sem segredos, senhas, tokens ou gerenciamento de usuários/backups; pode alterar somente as preferências pessoais de layout/menu no dispositivo.
+- O acesso ao Controle de Gastos pessoal deixa de ser automático pelo cargo Administrador. Permissão explícita `expense_control_access` por usuário para Administrador/Administrador Simples, inicialmente desligada; Master e perfil exclusivo Controle de Gasto continuam autorizados, Usuário local continua sem acesso. Notificações financeiras também respeitam essa permissão.
+- Nenhum banco DDEV, arquivo .env, SQL, backup, PDFs ou fotos particulares pode ser enviado ao servidor oficial. Na KingHost, os registros oficiais devem ser preservados; implantação futura requer autorização, backup remoto validado e migrations aditivas revisadas.
+- Implementar em etapas com testes por fase; auditoria/otimização global de performance fica para a versão funcional completa, sem aceitar regressões graves introduzidas por alterações novas. Projeto pessoal primeiro; eventual produto por assinatura pertence a estudo posterior separado.
+
+Consulte `docs/REFORMA_MOBILE_PERMISSOES_2026_10_09.md` para os detalhes de implementação e as pendências da versão local.
+
+
 ## Atualização autorizada — 07/10/2026
 
 Nova OS deve avisar em popup quando o cliente tiver chamado operacional aberto, mostrando número e problema relatado e exigindo confirmação para outra abertura. Conferência também no backend, inclusive abertura concorrente; concluídas/interrompidas ficam fora. Retorno da aba confirma identidade/CSRF em uma consulta privada; Painel reutiliza apresentação segura por 15s em memória, com invalidação após alterações. Detalhes e validação em `docs/NAVEGACAO_CHAMADOS_2026-10-07.md`. Publicação autorizada após correções e validações, preservando banco e arquivos privados.

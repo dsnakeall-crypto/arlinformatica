@@ -35,7 +35,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
-    Route::prefix('expense-control')->middleware('role:Master,Administrador,Controle de Gasto')->group(function () {
+    Route::prefix('expense-control')->middleware('expense.access')->group(function () {
         Route::post('/photo-imports', [ExpenseControlController::class, 'importPhoto']);
         Route::get('/photo-ai', [ExpensePhotoAiController::class, 'configuration']);
         Route::post('/photo-ai/read', [ExpensePhotoAiController::class, 'read'])->middleware('throttle:5,1');
@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/catalogs/{catalog}/{id}', [ExpenseControlController::class, 'catalog'])->whereNumber('id');
         Route::delete('/catalogs/{catalog}/{id}', [ExpenseControlController::class, 'deleteCatalog'])->whereNumber('id');
         Route::get('/summary', [ExpenseControlController::class, 'summary']);
+    Route::get('/statement-details', [ExpenseControlController::class, 'statementDetails']);
         Route::get('/projection', [ExpenseControlController::class, 'projection']);
         Route::get('/spending-history', [ExpenseControlController::class, 'spendingHistory']);
         Route::get('/advances', [ExpenseControlController::class, 'advances']);
@@ -66,16 +67,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::patch('/me/sidebar', [AuthController::class, 'updateSidebarPreference']);
     Route::get('/navigation-summary', [NavigationController::class, 'summary']);
+    Route::get('/settings/overview', [SettingsController::class, 'overview'])->middleware('role:Master,Administrador,Administrador Simples');
     Route::get('/clients', [ClientController::class, 'index']);
     Route::get('/clients/document-status', [ClientController::class, 'documentStatus']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::get('/clients/{client}', [ClientController::class, 'show']);
     Route::get('/clients/{client}/open-orders', [ServiceOrderController::class, 'clientOpenOrders']);
-    Route::put('/clients/{client}', [ClientController::class, 'update'])->middleware('role:Master,Administrador');
+    Route::put('/clients/{client}', [ClientController::class, 'update'])->middleware('role:Master,Administrador,Administrador Simples');
     Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->middleware('role:Master,Administrador');
     Route::get('/catalogs/checklist', [CatalogController::class, 'checklist']);
     Route::get('/catalogs/{catalog}', [CatalogController::class, 'index']);
-    Route::middleware('role:Master,Administrador')->group(function () {
+    Route::middleware('role:Master,Administrador,Administrador Simples')->group(function () {
         Route::get('/suppliers', [SupplierController::class, 'index']);
         Route::post('/suppliers', [SupplierController::class, 'store']);
         Route::post('/supplier-document/lookup', [SupplierController::class, 'lookupDocument'])->middleware('throttle:20,1');
@@ -136,9 +138,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/system-password', [ServiceOrderPasswordController::class, 'show'])->middleware('role:Master,Administrador');
     Route::get('/orders/{order}/audit-history', [ServiceOrderAuditController::class, 'index']);
     Route::patch('/orders/{order}', [ServiceOrderMaintenanceController::class, 'update']);
+    Route::patch('/orders/{order}/closing-reference', [ServiceOrderMaintenanceController::class, 'updateClosingReference'])->middleware('role:Master,Administrador,Administrador Simples');
+    Route::delete('/orders/{order}/closing-reference', [ServiceOrderMaintenanceController::class, 'clearClosingReference'])->middleware('role:Master,Administrador,Administrador Simples');
     Route::middleware('role:Master,Administrador')->group(function () {
-        Route::patch('/orders/{order}/closing-reference', [ServiceOrderMaintenanceController::class, 'updateClosingReference']);
-        Route::delete('/orders/{order}/closing-reference', [ServiceOrderMaintenanceController::class, 'clearClosingReference']);
         Route::delete('/photos/{photo}', [StorageController::class, 'destroy']);
         Route::delete('/orders/{order}', [ServiceOrderMaintenanceController::class, 'destroy']);
         Route::post('/orders/{order}/reopen', [ServiceOrderMaintenanceController::class, 'reopen']);
@@ -146,11 +148,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders/{order}/photos', [ServiceOrderController::class, 'uploadPhoto']);
     Route::get('/orders/{order}/photos/{photo}', [ServiceOrderController::class, 'photo']);
     Route::patch('/orders/{order}/status', [ServiceOrderController::class, 'updateStatus']);
-    Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store'])->middleware('role:Master,Administrador');
+    Route::post('/orders/{order}/finalize', [FinalizationController::class, 'store'])->middleware('role:Master,Administrador,Administrador Simples');
     Route::get('/orders/{order}/final-share', [FinalShareController::class, 'show']);
     Route::get('/orders/{order}/final-share/status', [FinalShareController::class, 'status']);
     Route::delete('/orders/{order}/final-share', [FinalShareController::class, 'revoke']);
-    Route::middleware('role:Master,Administrador')->group(function () {
+    Route::middleware('role:Master,Administrador,Administrador Simples')->group(function () {
         Route::get('/orders/{order}/payment', [FinanceController::class, 'payment']);
         Route::get('/orders/{order}/payments', [FinanceController::class, 'payments']);
         Route::post('/orders/{order}/payment', [FinanceController::class, 'pay']);
@@ -177,7 +179,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/post-sales/settings', [PostSaleController::class, 'updateSettings']);
     });
     Route::get('/settings/logo/{variant}', [SettingsController::class, 'logoFile']);
-    Route::get('/settings/signature', [SettingsController::class, 'signatureFile']);
+    Route::get('/settings/signature', [SettingsController::class, 'signatureFile'])->middleware('role:Master,Administrador');
     Route::get('/operational-settings', [SettingsController::class, 'operational']);
     Route::get('/orders/{order}/term', [DocumentController::class, 'term']);
     Route::post('/orders/{order}/budgets/{revision}/share', [BudgetShareController::class, 'store'])->whereNumber('revision');

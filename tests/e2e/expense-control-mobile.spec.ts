@@ -26,13 +26,15 @@ test('mobile gastos: conta vinculada abre saldo pessoal e mantém escolha de out
       await page.goto('/expense-control');
       await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
       const summary = (await api(page, '/expense-control/summary?month=' + month)).body;
-      await expect(page.locator('.cgm-person').nth(id - 1)).toHaveAttribute('aria-pressed', 'true');
-      await expect(page.locator('.cgm-total>strong')).toHaveText(money(summary.views[id === 1 ? 'one' : 'two'].remaining_cents));
-      await expect(page.locator('.cgm-total')).toContainText(people[id - 1].name + ' · falta pagar');
-      await page.getByRole('button', { name: 'Todos', exact: true }).click();
-      await expect(page.locator('.cgm-total>strong')).toHaveText(money(summary.totals.remaining_cents));
+      // 09/10/2026: o resumo não tem mais seletor de visão; os 5 indicadores e os 2 cards são iguais para qualquer vínculo.
+      const indicators = page.getByRole('region', { name: 'Indicadores do mês' });
+      await expect(indicators.locator('.cgo-month .cgo-original')).toContainText(money(summary.totals.original_cents));
+      // Total geral aprovado mostra só o valor original; saldo fica nos cartões de responsável.
+      await expect(indicators.locator('.cgo-month .cgo-remaining')).toHaveCount(0);
+      await expect(page.locator('.cgo-person')).toHaveCount(2);
+      await expect(page.locator('.cgo-person h3').nth(id - 1)).toHaveText(people[id - 1].name);
       await page.reload();
-      await expect(page.locator('.cgm-person').nth(id - 1)).toHaveAttribute('aria-pressed', 'true');
+      await expect(indicators.locator('.cgo-indicator')).toHaveCount(5);
       await page.screenshot({ path: 'output/controle-gasto/mobile-vinculo-' + id + '.png', fullPage: true });
     }
   } finally { expect((await api(page, '/expense-control/people', 'PUT', { people })).status).toBe(200); }
@@ -47,7 +49,8 @@ test('mobile gastos: OCR no aparelho funciona sem subtle e sem randomUUID', asyn
   await setup(page);
   await page.goto('/expense-control');
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
-  await page.getByRole('button', { name: 'Nova dívida', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Menu do Controle de Gastos' })
+    .getByRole('button', { name: 'Adicionar dívida' }).click();
   await page.getByRole('button', { name: 'Cadastrar por foto' }).click();
   const photo = page.getByRole('dialog');
   await photo.getByLabel('Foto da fatura', { exact: true }).setInputFiles(path.resolve('tests/fixtures/expense-invoice.png'));
@@ -58,17 +61,17 @@ test('mobile gastos: OCR no aparelho funciona sem subtle e sem randomUUID', asyn
   await noOverflow(page);
 });
 
-test('mobile gastos: quatro ícones, resumo correto das partes, instituição, mês e parcelas tocáveis', async ({ page }) => {
+test('mobile gastos: cinco ícones, resumo correto das partes, instituição, mês e parcelas tocáveis', async ({ page }) => {
   const { bank, kind } = await setup(page);
   for (const [responsibility, amount_cents] of [['one', 10000], ['two', 20000], ['shared', 30000]] as const) {
     expect((await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: bank.id, type_id: kind.id, name: 'Mobile compra ' + responsibility, recurrence: 'installments', responsibility, percent_one: 50, amount_cents, installment_count: 2, first_number: 1, start_month: '2028-05', due_day: 12 })).status).toBe(201);
   }
   const nav = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
-  await expect(nav.locator('button')).toHaveCount(4);
-  await expect(nav.locator('button span')).toHaveCount(0);
-  await nav.getByRole('button', { name: 'Controle de Gasto' }).click();
+  await expect(nav.locator('button')).toHaveCount(5);
+  await expect(nav.locator('button .arl-nav-icon-disc')).toHaveCount(5);
+  await nav.getByRole('button', { name: 'Gestor de Gasto' }).click();
   await expect(page.getByRole('region', { name: 'Resumo financeiro mobile' })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Ajustes', exact: true })).toBeVisible();
+  await expect(page.locator('.arl-expense-own-header').getByRole('button', { name: 'Ajustes' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Histórico', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Selecionar mês do Controle de Gasto', exact: true }).click();
   const calendar = page.getByRole('dialog', { name: 'Selecionar mês e ano' });
@@ -76,25 +79,43 @@ test('mobile gastos: quatro ícones, resumo correto das partes, instituição, m
   await calendar.getByRole('button', { name: 'Maio de 2028', exact: true }).click();
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   const summary = (await api(page, '/expense-control/summary?month=2028-05')).body;
-  await expect(page.locator('.cgm-total>strong')).toHaveText(money(summary.totals.remaining_cents));
-  for (const [index, key] of ['one', 'two', 'shared'].entries()) await expect(page.locator('.cgm-person>strong').nth(index)).toHaveText(money(summary.totals[key + '_remaining_cents']));
+  const indicators = page.getByRole('region', { name: 'Indicadores do mês' });
+  await expect(indicators.locator('.cgo-indicator')).toHaveCount(5);
+  for (const key of ['month', 'one', 'two', 'shared']) {
+    const prefix = key === 'month' ? '' : key + '_';
+    await expect(indicators.locator('.cgo-' + key + ' .cgo-original')).toContainText(money(summary.totals[prefix + 'original_cents']));
+    if (key === 'month') {
+      await expect(indicators.locator('.cgo-month .cgo-remaining')).toHaveCount(0);
+    } else {
+      await expect(indicators.locator('.cgo-' + key + ' .cgo-remaining b')).toHaveText(money(summary.totals[prefix + 'remaining_cents']));
+    }
+  }
+  await expect(page.locator('.cg-person-card.cg-shared, .cgm-person')).toHaveCount(0);
   const institution = page.locator('.cg-invoice-card').filter({ hasText: bank.name });
   await expect(institution).toContainText('R$ 600,00');
   await expect(institution).toContainText('12/05');
-  await expect(page.locator('.cgm-person>strong').first()).toHaveText(money(summary.totals.one_remaining_cents));
-  await expect(page.locator('.cgm-person>strong').nth(1)).toHaveText(money(summary.totals.two_remaining_cents));
+  await expect(page.locator('.cgo-person')).toHaveCount(2);
+  await expect(page.locator('.cgo-person-one .cgo-due-row dd')).toHaveText(money(summary.totals.one_remaining_cents));
+  await expect(page.locator('.cgo-person-two .cgo-due-row dd')).toHaveText(money(summary.totals.two_remaining_cents));
   await page.screenshot({ path: 'output/controle-gasto/mobile-resumo-novo.png', fullPage: true });
   await noOverflow(page);
   await page.setViewportSize({ width: 320, height: 740 }); await noOverflow(page);
   await page.setViewportSize({ width: 768, height: 1024 }); await noOverflow(page);
   await page.screenshot({ path: 'output/controle-gasto/tablet-resumo.png', fullPage: true });
-  for (const label of ['Gastos', 'Instituições', 'Pagamentos', 'Projeção', 'Quitadas', 'Resumo']) {
-    await page.getByRole('tab', { name: label, exact: true }).click();
+  const expenseNav = page.getByRole('navigation', { name: 'Menu do Controle de Gastos' });
+  for (const label of ['Gastos', 'Instituições', 'Projeção', 'Resumo']) {
+    await expenseNav.getByRole('button', { name: label, exact: true }).click();
     await expect(page.getByText('Atualizando informações…')).not.toBeVisible(); await noOverflow(page);
   }
+  await expenseNav.getByRole('button', { name: 'Gastos', exact: true }).click();
+  await page.getByRole('button', { name: 'Quitadas', exact: true }).click();
+  await noOverflow(page);
+  await expenseNav.getByRole('button', { name: 'Projeção', exact: true }).click();
+  await page.getByRole('button', { name: 'Pagamentos', exact: true }).click();
+  await noOverflow(page);
+  await expenseNav.getByRole('button', { name: 'Resumo', exact: true }).click();
   await page.setViewportSize({ width: 393, height: 851 });
-  await page.locator('.cgm-person').first().click();
-  // Personal totals change; the complete monthly invoice intentionally includes both people.
+  // The complete monthly invoice intentionally includes both people.
   await expect(institution.locator('strong')).toHaveText('R$ 600,00');
   await page.setViewportSize({ width: 393, height: 1600 });
   await institution.scrollIntoViewIfNeeded();
@@ -102,8 +123,11 @@ test('mobile gastos: quatro ícones, resumo correto das partes, instituição, m
   await page.setViewportSize({ width: 393, height: 851 });
   await institution.click();
   await expect(page.getByLabel('Filtrar por responsável')).toHaveCount(0);
-  await page.locator('.cg-type-grid button').filter({ hasText: kind.name }).click();
-  await page.locator('.cg-debt-row').filter({ hasText: 'Mobile compra shared' }).click();
+  // A fatura do resumo já abre Gastos filtrado por instituição e tipo.
+  // Não existe mais a etapa intermediária da grade de tipos.
+  const sharedPurchase = page.locator('.cg-debt-row').filter({ hasText: 'Mobile compra shared' });
+  await expect(sharedPurchase).toBeVisible();
+  await sharedPurchase.click();
   await expect(page.locator('.cg-table-wrap tbody tr')).toHaveCount(2);
   await noOverflow(page);
   await page.screenshot({ path: 'output/controle-gasto/mobile-parcelas.png', fullPage: true });
@@ -111,7 +135,7 @@ test('mobile gastos: quatro ícones, resumo correto das partes, instituição, m
   await expect(page.getByRole('dialog', { name: 'Registrar pagamento ou abatimento' })).toBeVisible();
   await noOverflow(page);
   await page.getByRole('button', { name: 'Fechar formulário de gasto' }).click();
-  await nav.getByRole('button', { name: 'OS abertas', exact: true }).click();
+  await page.getByRole('button', { name: 'Voltar para ARL' }).click();
   await expect(page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' })).toBeVisible();
 });
 
@@ -124,7 +148,8 @@ test('mobile gastos: nova dívida escolhe cadastro manual ou foto IA com revisã
   const { bank, kind, stamp } = await setup(page);
   await page.goto('/expense-control');
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
-  await page.getByRole('button', { name: 'Nova dívida', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Menu do Controle de Gastos' })
+    .getByRole('button', { name: 'Adicionar dívida' }).click();
   await page.getByRole('button', { name: 'Cadastro manual' }).click();
   const manual = page.getByRole('dialog', { name: 'Cadastrar nova dívida' });
   await manual.getByLabel('Nome da dívida ou compra').fill('Manual mobile ' + stamp);
@@ -139,7 +164,8 @@ test('mobile gastos: nova dívida escolhe cadastro manual ou foto IA com revisã
   await page.route('**/api/expense-control/photo-ai', route => route.fulfill({ json: usage }));
   let reads = 0;
   await page.route('**/api/expense-control/photo-ai/read', route => { reads++; return route.fulfill({ json: { purchases: [{ name: 'Foto mobile ' + stamp, amount_cents: 34567, first_number: 2, installment_count: 5, purchased_on: '2026-09-12', warnings: [], duplicate: false, source_line: '' }], warnings: [], source_hash: 'a'.repeat(64), replayed: false, usage } }); });
-  await page.getByRole('button', { name: 'Nova dívida', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Menu do Controle de Gastos' })
+    .getByRole('button', { name: 'Adicionar dívida' }).click();
   await page.getByRole('button', { name: 'Cadastrar por foto' }).click();
   const photo = page.getByRole('dialog');
   await photo.getByLabel('Foto da fatura', { exact: true }).setInputFiles(path.resolve('tests/fixtures/expense-invoice.png'));

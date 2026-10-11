@@ -136,3 +136,70 @@
     box-shadow:inset 0 1px 0 #ffffff38,0 1px 0 #24354b20,0 3px 6px #24354b12!important;
   }
 }
+
+/* =====================================================================
+   Clean Premium — 09/10/2026 (somente aparência Clean, Web e Mobile)
+   Botões com hierarquia e relevo leve: primário com gradiente da cor escolhida,
+   secundário branco elevado com borda tingida, perigo, ativo e desativado.
+   Sem blur, sem animação contínua; tokens derivam da paleta configurada.
+   ===================================================================== */
+@media screen {
+  html:root[data-arl-appearance="clean"][data-arl-palette] {
+    --clean-edge:color-mix(in srgb,var(--clean-accent) 22%,#d6dee9);
+    --clean-edge-strong:color-mix(in srgb,var(--clean-accent) 45%,#c3cede);
+    --clean-raise:inset 0 1px 0 #ffffff,0 1px 2px #1d2a3c14,0 6px 14px -9px color-mix(in srgb,var(--clean-accent) 45%,#1d2a3c);
+    --clean-raise-hover:inset 0 1px 0 #ffffff,0 2px 4px #1d2a3c18,0 10px 20px -10px color-mix(in srgb,var(--clean-accent) 55%,#1d2a3c);
+    --clean-press:inset 0 2px 4px #1d2a3c1f,0 0 0 #0000;
+    --clean-primary-top:color-mix(in srgb,var(--clean-accent) 80%,#ffffff);
+    --clean-primary-bottom:color-mix(in srgb,var(--clean-accent) 84%,#000000);
+    --clean-panel-raise:inset 0 1px 0 #ffffffe6,0 1px 2px #1d2a3c0d,0 14px 30px -22px #1d2a3c66;
+  }
+  /* Secundário/neutro: branco elevado, borda levemente tingida, luz superior. */
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button,.button,.upload):not(.primary):not(.active):not([aria-selected="true"]):not([aria-pressed="true"]):not(:disabled):not(.order-whatsapp):not(.order-maps):not(.finance-open-order-icon):not(.order-label-open):not(.system-password-toggle):not(.cg-institution):not(.cgm-person):not(.arl-layout-option):not(.arl-settings-mobile-card):not(.danger):not(.cg-danger):not(.supplier-danger):not(.arl-order-delete):not(.arl-nav-reference-button) {
+    background:linear-gradient(180deg,#ffffff 0%,color-mix(in srgb,var(--clean-soft) 55%,#ffffff) 100%)!important; background-color:#ffffff!important;
+    border:1px solid var(--clean-edge)!important; box-shadow:var(--clean-raise)!important; color:var(--clean-text)!important;
+  }
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button,.button,.upload):not(.primary):not(.active):not(:disabled):not(.order-whatsapp):not(.order-maps):not(.arl-nav-reference-button):hover {
+    background:linear-gradient(180deg,#ffffff 0%,var(--clean-soft) 100%)!important; background-color:var(--clean-soft)!important; border-color:var(--clean-edge-strong)!important; box-shadow:var(--clean-raise-hover)!important;
+  }
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button,.button,.upload):not(:disabled):active { box-shadow:var(--clean-press)!important; }
+  /* Primário e selecionado: gradiente da própria cor, borda mais escura, brilho superior. */
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button.primary,a.primary,.new-order-shortcut,.cg-primary,.cg-create-action,.login-button,.sidebar-new-order,.mobile-new-order,.primary-shortcut):not(:disabled),
+  html:root[data-arl-appearance="clean"][data-arl-palette] body .arl-order-header-actions>button.primary:not(:disabled),
+  html:root[data-arl-appearance="clean"][data-arl-palette] body .arl-finalization>.actions>.primary {
+    background:linear-gradient(180deg,var(--clean-primary-top) 0%,var(--clean-accent) 52%,var(--clean-primary-bottom) 100%)!important; background-color:var(--clean-accent)!important;
+    color:var(--clean-on-accent)!important; border:1px solid var(--clean-primary-bottom)!important;
+    box-shadow:inset 0 1px 0 #ffffff59,0 1px 2px #1d2a3c26,0 8px 18px -10px var(--clean-accent)!important;
+  }
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button.primary,a.primary,.new-order-shortcut,.cg-primary,.cg-create-action,.login-button,.primary-shortcut):not(:disabled):hover {
+    background:linear-gradient(180deg,color-mix(in srgb,var(--clean-accent) 70%,#ffffff) 0%,var(--clean-accent) 60%,var(--clean-primary-bottom) 100%)!important; background-color:var(--clean-accent)!important;
+    box-shadow:inset 0 1px 0 #ffffff66,0 2px 4px #1d2a3c26,0 12px 22px -10px var(--clean-accent)!important;
+  }
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button.active,button[aria-selected="true"],button[aria-pressed="true"]):not(.primary):not(.arl-layout-option):not(.cgm-person):not(.arl-nav-reference-button) {
+    background:linear-gradient(180deg,#ffffff 0%,var(--clean-soft) 100%)!important; background-color:var(--clean-soft)!important; color:var(--clean-text)!important;
+    border:1px solid var(--clean-accent)!important; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--clean-accent) 35%,transparent),0 6px 14px -9px var(--clean-accent)!important;
+  }
+  /* Perigo: tom vermelho próprio em qualquer cor de acento. */
+  html:root[data-arl-appearance="clean"][data-arl-palette] body button:is(.danger,.cg-danger,.supplier-danger,.arl-order-delete):not(:disabled) {
+    background:linear-gradient(180deg,#fff7f8 0%,#fde7ea 100%)!important; background-color:#fde7ea!important; color:#a3192f!important; border:1px solid #efc4cc!important;
+    box-shadow:inset 0 1px 0 #fff,0 6px 14px -10px #a3192f!important;
+  }
+  /* Desativado: plano, sem relevo, sem confundir com ação disponível. */
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button,.button,.primary):disabled {
+    background:#eef1f5!important; background-image:none!important; color:#7c8798!important; border:1px dashed #cdd5e0!important; box-shadow:none!important; opacity:1!important; cursor:not-allowed;
+  }
+  /* Painéis: superfície translúcida discreta com luz superior (sem desfoque). */
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(.panel,.form-card,.detail-grid section,.arl-intake-card,.arl-order-sticky-header,.finance-cards article,.finance-total-cards article,.status-cards article,.dashboard-section,.clients-list-panel,.order-list,.post-sale-panel,.supplier-panel,.services-list-card,.services-create-card,.arl-layout-settings) {
+    box-shadow:var(--clean-panel-raise)!important; border:1px solid #ffffffd9!important;
+  }
+  /* Campos: borda tingida e foco visível na cor escolhida. */
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),select,textarea) {
+    border-color:var(--clean-edge)!important; box-shadow:inset 0 1px 2px #1d2a3c0d!important;
+  }
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(input,select,textarea):focus-visible { outline:2px solid var(--clean-accent)!important; outline-offset:1px!important; }
+  /* Tela inicial mobile de OS: preservada (o tema já não a redesenha; só não recebe o relevo novo). */
+  html:root[data-arl-appearance="clean"][data-arl-palette] body .arl-mobile-home :is(button,a) { box-shadow:none; }
+}
+@media screen and (prefers-reduced-motion:reduce) {
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button,.button) { transition:none!important; }
+}

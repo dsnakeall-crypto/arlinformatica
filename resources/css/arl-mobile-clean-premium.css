@@ -1,0 +1,306 @@
+/* ARL Mobile Clean Premium — 09/10/2026.
+   Escopo: telas internas mobile, menu compacto e Controle de Gastos.
+   Preservar a home de OS e toda a interface Web/PC geral. */
+
+/* No modo barra inferior, a antiga sidebar desktop nunca deve surgir. */
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>aside#arl-main-sidebar {
+  display:none!important;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>.arl-mobile-rail-overlay {
+  position:fixed;inset:0;z-index:1040;display:block;
+  width:100%;height:100%;margin:0;padding:0;border:0!important;border-radius:0!important;
+  background:rgba(28,34,51,.17)!important;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .36s ease,visibility .36s linear;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>.arl-mobile-rail-overlay.is-open {
+  opacity:1;visibility:visible;pointer-events:auto;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>.arl-mobile-rail-drawer {
+  position:fixed;
+  top:max(12px,env(safe-area-inset-top));bottom:max(12px,env(safe-area-inset-bottom));
+  left:max(9px,env(safe-area-inset-left));z-index:1050;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  box-sizing:border-box;width:67px;max-height:calc(100dvh - 24px);
+  margin:0;padding:12px 7px;
+  overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+  border:1px solid rgba(255,255,255,.93);
+  border-radius:25px;
+  background:linear-gradient(158deg,rgba(255,255,255,.96),rgba(248,250,254,.93))!important;
+  box-shadow:inset 0 1px 0 #fff,0 13px 34px rgba(35,49,76,.18);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  transform:translate3d(-88px,0,0) scale(.97);
+  transform-origin:left center;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:transform .42s cubic-bezier(.2,.82,.2,1),opacity .36s ease,visibility .42s linear;
+  scrollbar-width:none;
+}
+.layout-mobile .arl-mobile-rail-drawer::-webkit-scrollbar{display:none}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>.arl-mobile-rail-drawer.is-open{
+  transform:translate3d(0,0,0) scale(1);opacity:1;visibility:visible;pointer-events:auto;
+}
+.layout-mobile .arl-mobile-rail-drawer .arl-rail-brand{
+  font-weight:950;font-size:12px;letter-spacing:.11em;color:#c3123b;line-height:1;
+  padding:4px 0 7px;
+}
+.layout-mobile .arl-mobile-rail-drawer .arl-rail-group{
+  width:100%;display:flex;flex-direction:column;align-items:center;gap:5px;
+}
+.layout-mobile .arl-mobile-rail-drawer .arl-rail-separator {
+  flex:none;display:block;width:29px;height:1px;margin:6px auto;
+  background:linear-gradient(90deg,transparent,#d2d9e6,transparent);
+}
+.layout-mobile .arl-mobile-rail-drawer :is(.arl-rail-link,.arl-rail-close) {
+  position:relative;flex:0 0 auto;display:grid;place-items:center;
+  width:50px;min-width:50px;height:48px;min-height:48px;
+  padding:2px;border:0!important;border-radius:16px!important;
+  background:transparent!important;box-shadow:none!important;color:#344763!important;
+  cursor:pointer;
+}
+.layout-mobile .arl-mobile-rail-drawer :is(.arl-rail-disc,.arl-rail-close)>svg{
+  width:20px;height:20px;stroke-width:2.25;flex:none;
+}
+.layout-mobile .arl-mobile-rail-drawer .arl-rail-disc,
+.layout-mobile.arl-mobile-compact-mode>aside .nav-icon {
+  display:grid!important;place-items:center!important;flex:none;
+  box-sizing:border-box!important;
+  width:42px!important;height:42px!important;
+  border:1px solid #e1e5ed!important;border-radius:50%!important;
+  background:radial-gradient(circle at 35% 16%,#fff 10%,#fafcff 36%,#e4e9f2 100%)!important;
+  color:#415574!important;
+  box-shadow:inset 0 2px 2px #fff,inset 0 -3px 4px #afb6c733,0 4px 9px #24375819!important;
+}
+.layout-mobile .arl-mobile-rail-drawer .arl-rail-link.is-active .arl-rail-disc,
+.layout-mobile.arl-mobile-compact-mode>aside .nav-group button.active .nav-icon{
+  border-color:#f1c5d0!important;
+  background:radial-gradient(circle at 32% 15%,#fff,#fff0f5 38%,#f6dae5 100%)!important;
+  color:#c8133e!important;
+  box-shadow:inset 0 2px 2px #fff,0 4px 11px #af234128!important;
+}
+.layout-mobile .arl-mobile-rail-drawer .arl-rail-disc svg,
+.layout-mobile.arl-mobile-compact-mode>aside .nav-icon svg {
+  width:20px!important;height:20px!important;stroke-width:2.3;
+  color:inherit!important;filter:drop-shadow(0 1px 1px #27334830);
+}
+.layout-mobile .arl-mobile-rail-drawer .arl-rail-close{
+  border:1px solid #e1e5ed!important;border-radius:50%!important;
+  background:radial-gradient(circle at 30% 12%,#fff,#f1f4f9)!important;
+  box-shadow:inset 0 1px 1px #fff,0 3px 8px #24375819!important;
+  width:42px;min-width:42px;height:42px;min-height:42px;
+}
+.layout-mobile .arl-mobile-rail-drawer .arl-rail-link:is(:focus-visible,:hover),
+.layout-mobile.arl-mobile-compact-mode>aside nav button:is(:focus-visible,:hover){
+  outline:2px solid #c5cdda;outline-offset:0;
+}
+.layout-mobile .arl-mobile-rail-drawer .arl-rail-count{
+  position:absolute;top:0;right:0;min-width:16px;height:16px;
+  border-radius:999px;background:#c31941;color:#fff;
+  text-align:center;font:800 10px/16px Arial,sans-serif;
+}
+.layout-mobile .arl-mobile-rail-drawer .arl-rail-logout{margin-top:auto}
+.layout-mobile.arl-mobile-compact-mode>aside#arl-main-sidebar {
+  background:linear-gradient(150deg,rgba(255,255,255,.95),rgba(248,250,254,.92))!important;
+  border-right:1px solid #eef0f4!important;
+  box-shadow:inset -1px 0 #fff,4px 0 14px #24375813!important;
+}
+.layout-mobile.arl-mobile-compact-mode>aside .nav-group button,
+.layout-mobile.arl-mobile-compact-mode>aside .new-order-shortcut {
+  border:0!important;background:transparent!important;
+  border-radius:15px!important;box-shadow:none!important;
+}
+.layout-mobile.arl-mobile-compact-mode>aside .nav-icon{width:39px!important;height:39px!important}
+.layout-mobile.arl-mobile-compact-mode>aside .new-order-shortcut svg{
+  border-radius:50%;padding:8px;width:39px;height:39px;
+  background:radial-gradient(circle at 35% 17%,#ff879d,#f20c43 62%,#ae002d);
+  color:white;box-shadow:inset 0 2px 2px #fff5,0 5px 12px #ac00293a;
+}
+
+/* Cartões e controles internos: suavizar sem trocar estrutura nem distorcer a Home. */
+.layout-mobile:not(.arl-expense-workspace)>main:not([data-arl-dashboard-react])
+:is(.panel,.form-card,.clients-list-panel,.arl-client-card,.arl-mobile-order-card,
+ .order-list,.order-content,.order-card,.arl-order-detail,.arl-settings-tabs,
+ .arl-settings-readonly,.settings-form,.finance-total-cards article,.finance-cards article,
+ .supplier-panel,.supplier-detail-section,.products-catalog-page .panel,
+ .services-catalog-page .panel,.arl-layout-settings) {
+  border-radius:23px!important;
+  border:1px solid rgba(229,234,244,.83)!important;
+  background:rgba(255,255,255,.87)!important;
+  box-shadow:0 8px 23px rgba(39,55,86,.075),inset 0 1px 0 rgba(255,255,255,.96)!important;
+}
+.layout-mobile:not(.arl-expense-workspace)>main:not([data-arl-dashboard-react])
+:is(button,.button):not(.menu-toggle):not(.danger):not(.primary):not(.arl-mobile-order-card):not(.order-whatsapp):not(.order-maps){
+  border-radius:16px;
+}
+.layout-mobile:not(.arl-expense-workspace)>main:not([data-arl-dashboard-react])
+:is(input:not([type="checkbox"]):not([type="radio"]),textarea,select) {
+  border-radius:14px!important;
+  border-color:#dce4ef!important;
+}
+.layout-mobile:not(.arl-expense-workspace)>main:not([data-arl-dashboard-react])
+:is(.arl-settings-tabs,.finance-tabs,.order-tabs,.supplier-tabs)>button {
+  border-radius:15px!important;background:rgba(255,255,255,.88)!important;
+  box-shadow:0 3px 8px #2437580f!important;
+}
+
+/* Gastos não tem tema Original: superfícies clean locais em qualquer aparência global,
+   sem alterar o visual Original quando o usuário volta ao ARL Web/PC. */
+html body .shell.arl-expense-workspace>main {
+  background:linear-gradient(160deg,#f1f7fc 0%,#edf4fc 54%,#f7f0f6 100%)!important;
+}
+html body .cg-page.cg-clean-only {
+  color:#2d3850!important;
+  --cg-soft-surface:rgba(255,255,255,.89);
+  --cg-soft-edge:rgba(220,229,242,.86);
+  --cg-soft-shadow:0 7px 20px rgba(36,54,89,.085),inset 0 1px 0 #fff;
+}
+html body .cg-page.cg-clean-only :is(.cg-panel,.cgo-indicator,.cgo-person,
+ .cg-institution,.cg-invoice-card,.cg-person-card,.cg-paid-purchase,.cg-payment-bank,
+ .cg-projection-sections article,.cg-mobile-summary,.cgm-institution-card,
+ .cg-metrics article,.cg-purchase-choice,.cg-bank-list-row) {
+  border:1px solid var(--cg-soft-edge)!important;
+  border-radius:22px!important;
+  background:var(--cg-soft-surface)!important;
+  box-shadow:var(--cg-soft-shadow)!important;
+}
+html body .cg-page.cg-clean-only .cg-bank-list-row>.cg-institution{
+  border:0!important;box-shadow:none!important;background:transparent!important;
+}
+html body .cg-page.cg-clean-only :is(button,.cg-tabs button,.cg-create-action) {
+  border-radius:16px!important;
+}
+html body .cg-page.cg-clean-only :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea){
+  border-radius:14px!important;border:1px solid #dbe4f0!important;
+  background:rgba(255,255,255,.96)!important;
+}
+html body .cg-page.cg-clean-only .arl-expense-own-header button{
+  border:1px solid #e3e8f1!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.92)!important;color:#3a4a65!important;
+  box-shadow:0 4px 12px #24375812!important;
+}
+html body .cg-page.cg-clean-only .arl-expense-subnav button{
+  border-radius:999px!important;
+  background:rgba(245,248,255,.94)!important;
+  border:1px solid #dce7f8!important;
+  box-shadow:0 2px 6px #2437580a!important;
+  color:#39527e!important;
+}
+html body .cg-page.cg-clean-only .arl-expense-subnav button[aria-pressed="true"]{
+  background:#e0eafc!important;color:#154c9d!important;border-color:#a7bfea!important;
+}
+/* Menu inferior do Gastos repete a mesma família de botões redondos em relevo. */
+html body .layout-mobile .cg-page.cg-clean-only .arl-expense-bottom{
+  left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));
+  padding:8px 5px 7px;gap:1px;max-width:510px;margin:0 auto;
+  border:1px solid #e7e7ee!important;border-radius:25px!important;
+  background:linear-gradient(160deg,#ffffffee,#f7f7fbf5)!important;
+  box-shadow:0 11px 29px #28334d21,inset 0 2px 0 #fff!important;
+}
+html body .layout-mobile .cg-page.cg-clean-only .arl-expense-bottom button{
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  color:#394964!important;min-height:73px;padding:3px 0!important;
+  border-radius:17px!important;gap:6px;
+}
+html body .layout-mobile .cg-page.cg-clean-only .arl-expense-bottom button svg{
+  width:clamp(40px,11.4vw,55px)!important;height:clamp(40px,11.4vw,55px)!important;
+  padding:11px!important;border-radius:50%!important;
+  background:radial-gradient(circle at 35% 15%,#fff,#fafcff 37%,#e3eaf4)!important;
+  border:1px solid #e1e5ed!important;color:#445674!important;
+  box-shadow:inset 0 2px 2px #fff,0 5px 11px #26355221!important;
+}
+html body .layout-mobile .cg-page.cg-clean-only .arl-expense-bottom button[aria-current="page"] svg{
+  background:radial-gradient(circle at 34% 14%,#fff,#eef5ff 36%,#d8e5fc)!important;
+  border-color:#b8cbed!important;color:#265cc7!important;
+}
+html body .layout-mobile .cg-page.cg-clean-only .arl-expense-bottom button.arl-expense-add svg{
+  width:clamp(56px,15.4vw,73px)!important;height:clamp(56px,15.4vw,73px)!important;
+  padding:14px!important;color:#fff!important;border-color:#a70030!important;
+  background:radial-gradient(circle at 32% 8%,#ff8a9b,#f01d4d 56%,#ad002c 100%)!important;
+  box-shadow:inset 0 2px 2px #fff8,0 8px 18px #ad003043!important;
+}
+html body .layout-mobile .cg-page.cg-clean-only .arl-expense-bottom button.arl-expense-add{
+  transform:none!important;
+}
+@media(max-width:359px) {
+  .layout-mobile .arl-mobile-rail-drawer { width:64px; }
+  html body .layout-mobile .cg-page.cg-clean-only .arl-expense-bottom button {font-size:9px!important;}
+}
+@media(prefers-reduced-motion:reduce){
+  .layout-mobile .arl-mobile-rail-overlay,.layout-mobile .arl-mobile-rail-drawer {
+    transition:none!important;
+  }
+}
+
+/* Impedir que regras genéricas da aparência Clean transformem os botões
+   do trilho em retângulos ou o overlay em um fundo branco. */
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>.arl-mobile-rail-overlay {
+  background:rgba(28,34,51,.17)!important;border:0!important;
+  border-radius:0!important;box-shadow:none!important;
+}
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+.arl-mobile-rail-drawer :is(.arl-rail-link,.arl-rail-close),
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+.layout-mobile.arl-mobile-compact-mode>aside#arl-main-sidebar
+.nav-group button {
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;border-radius:16px!important;
+  color:#344763!important;
+}
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+.arl-mobile-rail-drawer .arl-rail-close {
+  border:1px solid #e1e5ed!important;border-radius:50%!important;
+  background:radial-gradient(circle at 30% 12%,#fff,#f1f4f9)!important;
+  box-shadow:inset 0 1px 1px #fff,0 3px 8px #24375819!important;
+}
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+.layout-mobile.arl-mobile-compact-mode>aside#arl-main-sidebar .nav-group button.active {
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;color:#bd143c!important;
+}
+
+/* Ajustes de especificidade: o antigo Clean tinha seletores com vários :not()
+   e recriava retângulos atrás dos discos. IDs limitam o reset só ao menu novo. */
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+#arl-mobile-rail-overlay.arl-mobile-rail-overlay {
+  background:rgba(28,34,51,.20)!important;background-image:none!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+}
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+#arl-mobile-clean-rail button.arl-rail-link:not(:disabled){
+  background:transparent!important;background-color:transparent!important;
+  background-image:none!important;border:0!important;
+  box-shadow:none!important;border-radius:16px!important;color:#344763!important;
+}
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+#arl-mobile-clean-rail button.arl-rail-close:not(:disabled){
+  background:radial-gradient(circle at 30% 12%,#fff,#f1f4f9)!important;
+  border:1px solid #e1e5ed!important;border-radius:50%!important;
+  box-shadow:inset 0 1px 1px #fff,0 3px 8px #24375819!important;
+}
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+.layout-mobile.arl-mobile-compact-mode #arl-main-sidebar .new-order-shortcut:not(:disabled) {
+  background:radial-gradient(circle at 33% 14%,#ff859d,#f2144b 57%,#a90028)!important;
+  color:#fff!important;border:1px solid #c7234a!important;border-radius:50%!important;
+  box-shadow:inset 0 2px 2px #fff7,0 5px 13px #ad002d42!important;
+}
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+.layout-mobile.arl-mobile-compact-mode #arl-main-sidebar .new-order-shortcut svg {
+  width:23px!important;height:23px!important;padding:0!important;border-radius:0!important;
+  color:#fff!important;background:transparent!important;box-shadow:none!important;
+}
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+.layout-mobile.arl-mobile-compact-mode #arl-main-sidebar .profile>button:not(:disabled){
+  display:grid!important;place-items:center!important;
+  width:42px!important;min-width:42px!important;height:42px!important;min-height:42px!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle at 35% 14%,#fff,#f0f3f9)!important;
+  border:1px solid #dce3ee!important;color:#455a77!important;
+  box-shadow:inset 0 2px 1px #fff,0 4px 9px #233a5c23!important;
+}
+html:root[data-arl-appearance="clean"][data-arl-palette] body
+.layout-mobile.arl-mobile-compact-mode #arl-main-sidebar .profile>button svg {
+  width:20px!important;height:20px!important;color:inherit!important;
+}

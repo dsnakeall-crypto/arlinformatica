@@ -1,0 +1,548 @@
+/* Controle de Gastos WEB — referência visual aprovada 10/10/2026.
+   Escopo isolado: SOMENTE .cg-expense-web-mirror no shell desktop.
+   Não altera mobile, ARL Web Original, API, dados ou regras financeiras.
+   GASTOS e INSTITUIÇÕES: cartões compactos, quatro por fileira no Web.
+   Pagamentos, Quitadas e Histórico: mantém estrutura e ações existentes. */
+@media screen {
+  html body .shell.layout-desktop > main[data-arl-expense-control-react="1"] {
+    background:
+      radial-gradient(ellipse 55% 65% at 0% 4%,rgba(199,226,252,.58),transparent 76%),
+      radial-gradient(ellipse 58% 55% at 100% 0%,rgba(251,216,230,.52),transparent 75%),
+      linear-gradient(145deg,#f4f9ff,#f8faff 55%,#f9f8fd)!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror {
+    container-type:inline-size;
+    --cg-ref-ink:#0c2450;
+    --cg-ref-blue:#1e58cd;
+    --cg-ref-border:#d7e4fa;
+    --cg-ref-muted:#6880a5;
+    color:var(--cg-ref-ink)!important;
+    background:transparent!important;
+    min-width:0!important;
+    padding:14px clamp(12px,1.7vw,24px) 30px!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror :is(.arl-page-header h1,.cg-section-heading h2,.cg-panel h2,.cg-panel h3) {
+    color:#0b2250!important;
+    letter-spacing:-.025em;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-eyebrow,.arl-page-header-eyebrow) {
+    color:#5c74a0!important;
+    font-weight:800!important;
+    letter-spacing:.1em!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-section-heading p,.cg-muted,.cg-panel small) {
+    color:var(--cg-ref-muted);
+  }
+  /* Cabeçalho, navegação e seleção AZUL iguais à referência. */
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-navigation {
+    margin:8px 0 15px!important;
+    padding:5px!important;
+    border-radius:19px!important;
+    border:1px solid #e1eafb!important;
+    background:linear-gradient(145deg,rgba(255,255,255,.85),rgba(248,251,255,.89))!important;
+    box-shadow:0 9px 25px #405e9c12,inset 0 1px 0 #fff!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs {
+    display:grid!important;
+    grid-template-columns:repeat(8,minmax(0,1fr))!important;
+    gap:6px!important;
+    padding:0!important;
+    border:0!important;
+    box-shadow:none!important;
+    background:transparent!important;
+    overflow-x:auto!important;
+    border-radius:15px!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs button {
+    min-width:0!important;
+    min-height:42px!important;
+    width:100%!important;
+    padding:8px 7px!important;
+    gap:7px!important;
+    border:1px solid #e7eefa!important;
+    border-radius:12px!important;
+    background:linear-gradient(165deg,#fff,#f7faff)!important;
+    color:#24406d!important;
+    font-size:11px!important;
+    font-weight:750!important;
+    box-shadow:0 2px 7px #2f528d0b,inset 0 1px 0 #fff!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs button svg {
+    width:17px!important;height:17px!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs button:is(.active,[aria-selected="true"]) {
+    background:linear-gradient(135deg,#82aeff 0%,#477ef1 50%,#215ad3 100%)!important;
+    color:#fff!important;
+    border-color:#76a6fc!important;
+    box-shadow:inset 0 1px 0 #ffffff66,0 6px 13px #306cdd48!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs button:is(.active,[aria-selected="true"]) :is(svg,span) {
+    color:#fff!important;
+  }
+  /* Mesma linguagem de cartões flutuantes, sem apagar dados. */
+  html body .shell.layout-desktop .cg-expense-web-mirror
+  :is(.cg-panel,.cg-filters,.cg-bank-list-row,.cg-institution,.cg-type-grid .cg-panel,.cg-projection-grid .cg-panel,.cg-person-card) {
+    border:1px solid var(--cg-ref-border)!important;
+    background:linear-gradient(146deg,rgba(255,255,255,.98),rgba(250,252,255,.96))!important;
+    border-radius:17px!important;
+    box-shadow:0 8px 20px -13px #31578f4b,inset 0 1px 0 #fff!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror
+  :is(.cg-filters,.cg-history-filters,.cg-projection-sections,.cg-view-bar) {
+    border-color:#dae6f9!important;
+    background:linear-gradient(135deg,#fafdff,#f1f7ff)!important;
+    border-radius:15px!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror
+  :is(.cg-filters input,.cg-filters select,.cg-history-filters input,.cg-history-filters select,.cg-page input:not([type=checkbox]),.cg-page select) {
+    border-color:#d6e2f5!important;
+    background:linear-gradient(150deg,#fff,#f9fbff)!important;
+    color:#173864!important;
+    border-radius:10px!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-page .cg-primary,
+  html body .shell.layout-desktop .cg-expense-web-mirror button.cg-primary,
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-create-action:last-child {
+    color:#fff!important;
+    border-color:#5f91f4!important;
+    background:linear-gradient(165deg,#80aeff,#477fee 55%,#275bce)!important;
+    box-shadow:inset 0 1px 0 #ffffff58,0 6px 15px -8px #2466cc9c!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-section-heading {
+    margin:8px 0 12px!important;
+    gap:12px!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-section-heading h2 {
+    font-size:19px!important;
+  }
+
+  /* PRINCIPAL: Gastos (botões-card) + Instituições (cards com ações)
+     EXATAMENTE quatro colunas em uma área Web com espaço suficiente.
+     Não se aplica às grids de Resumo, pagamentos ou mobile. */
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid {
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    align-items:stretch!important;
+    gap:12px!important;
+    width:100%!important;
+    min-width:0!important;
+    padding:0!important;
+    margin:0 0 16px!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid>.cg-institution {
+    box-sizing:border-box!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    text-align:left!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:12px!important;
+    margin:0!important;
+    gap:0!important;
+    border:1px solid #d9e6f9!important;
+    border-radius:16px!important;
+    background:linear-gradient(155deg,#ffffff,#f8fbff)!important;
+    box-shadow:0 7px 15px -10px #28528c59,inset 0 1px 0 #fff!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid>.cg-institution>.cg-eyebrow {
+    margin:0 0 6px!important;
+    font-size:9px!important;
+    letter-spacing:.08em!important;
+    color:#6680a7!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid .cg-card-art {
+    width:128px!important;
+    max-width:100%!important;
+    height:80px!important;
+    aspect-ratio:8/5!important;
+    min-height:0!important;
+    margin:0 0 9px!important;
+    border-radius:10px!important;
+    box-shadow:0 5px 12px -7px #193e76a3!important;
+    flex:0 0 auto!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid .cg-card-art :is(img,svg) {
+    max-width:100%!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid>.cg-institution h3 {
+    font-size:13px!important;
+    line-height:1.24!important;
+    min-height:0!important;
+    margin:0 0 4px!important;
+    font-weight:800!important;
+    overflow-wrap:anywhere!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid>.cg-institution>span:not(.cg-eyebrow) {
+    font-size:10.5px!important;
+    line-height:1.35!important;
+    min-height:0!important;
+    color:#6b80a2!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid .cg-institution-counts {
+    max-height:100px!important;
+    overflow-y:auto!important;
+    scrollbar-width:thin;
+    padding-top:6px!important;
+    margin-top:6px!important;
+    gap:4px!important;
+    border-top:1px solid #e2eafb!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid .cg-institution-counts :is(small,span,b) {
+    font-size:10px!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid>.cg-institution footer {
+    margin-top:auto!important;
+    padding:8px 0 0!important;
+    border-top:1px solid #e5edfa!important;
+    gap:5px!important;
+    font-size:10px!important;
+  }
+  /* Em Gastos, o próprio cartão é o botão; em Instituições, 3 ações reais. */
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid>button.cg-institution footer {
+    display:flex!important;
+    justify-content:space-between!important;
+    align-items:center!important;
+    color:#1b58c7!important;
+    min-height:25px!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid>article.cg-institution footer {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 34px 34px!important;
+    align-items:stretch!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid>article.cg-institution footer button {
+    min-width:0!important;
+    width:100%!important;
+    min-height:32px!important;
+    height:32px!important;
+    border-radius:10px!important;
+    font-size:10px!important;
+    padding:6px!important;
+    box-shadow:inset 0 1px 0 #fff,0 3px 9px #2d55901c!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid>article.cg-institution footer button svg {
+    width:15px!important;height:15px!important;
+  }
+  /* Demais menus: acabamento coerente com a imagem, sem trocar seus grids
+     ou ocultar os campos, tabelas, gráficos, históricos e pagamentos. */
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-type-grid {
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:12px!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-type-grid>.cg-panel {
+    min-height:100px!important;
+    padding:13px!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-projection-grid:not(.cg-projection-list) {
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:12px!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-projection-grid>.cg-panel {
+    border-radius:16px!important;
+    padding:13px!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-projection-grid>.cg-panel>strong {
+    font-size:23px!important;
+    color:#0c2b5b!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-debt-row,.cg-entry,.cg-log) {
+    border-color:#e4ecf9!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-debt-row:hover {
+    background:#f4f8ff!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-primary,.cg-tabs button,.cg-filters input,.cg-filters select):focus-visible {
+    outline:2px solid #2e67d4!important;
+    outline-offset:2px!important;
+  }
+}
+/* O contêiner observa a largura ÚTIL do módulo, não a resolução do monitor.
+   4 cards quando cabe, degradando para 3/2/1 em janela pequena. */
+@container (max-width:899px) {
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid,
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-type-grid,
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-projection-grid:not(.cg-projection-list) {
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@container (max-width:659px) {
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid,
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-type-grid,
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-projection-grid:not(.cg-projection-list) {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs {
+    grid-template-columns:repeat(4,minmax(105px,1fr))!important;
+  }
+}
+@container (max-width:419px) {
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid,
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-type-grid,
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-projection-grid:not(.cg-projection-list) {
+    grid-template-columns:1fr!important;
+  }
+}
+/* Fallback para browsers sem container query: 4 colunas em desktop,
+   sem invadir componentes mobile (escopo Web garantido acima). */
+@media screen and (max-width:1040px) {
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs {
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    overflow-x:auto!important;
+  }
+  html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs button {
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:105px!important;
+  }
+}
+
+/* Prioridade: a largura dos cartões não cresce com o monitor.
+   Quatro por fileira de ~260px, alinhados no começo da grade. */
+@media screen {
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid {
+    max-width:1100px!important;
+    justify-content:start!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-navigation .cg-tabs>button.active[aria-selected="true"] {
+    background:linear-gradient(135deg,#8ab4ff 0%,#477ef1 53%,#265cd1 100%)!important;
+    background-color:#477ef1!important;
+    border:1px solid #82aeff!important;
+    color:#fff!important;
+    box-shadow:inset 0 1px 0 #ffffff75,0 7px 16px -7px #2866d9a1!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-navigation .cg-tabs>button.active[aria-selected="true"] :is(svg,span) {
+    color:#fff!important;
+    stroke:currentColor!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror .arl-page-header button.cg-create-action:last-child:not(:disabled),
+  html:root[data-layout="desktop"][data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror button.cg-primary:not(:disabled) {
+    color:#fff!important;
+    border-color:#5d8df1!important;
+    background:linear-gradient(155deg,#86b3ff,#4c86f1 55%,#265fd3)!important;
+    box-shadow:inset 0 1px 0 #ffffff7a,0 7px 16px -8px #2865cda8!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror .arl-page-header button.cg-create-action:first-of-type:not(:disabled) {
+    color:#213e68!important;
+    border-color:#dae5f5!important;
+    background:linear-gradient(165deg,#fff,#f7faff)!important;
+  }
+  /* Resumo: limpar molduras internas indesejadas; acabamento visual
+     inspirado no banner e nos cards da referência, sem mudar dados. */
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators>.cgo-indicator,
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-people>.cgo-person {
+    border:1px solid #d7e6fd!important;
+    border-radius:17px!important;
+    background:linear-gradient(150deg,#fff,#fbfdff)!important;
+    box-shadow:0 8px 20px -13px #31578f59,inset 0 1px 0 #fff!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators>.cgo-month {
+    background:linear-gradient(112deg,#fff 0%,#f4f9ff 54%,#fef2f7 100%)!important;
+    border:1px solid #cddfff!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators>.cgo-indicator .cgo-card-content {
+    border:0!important;
+    outline:0!important;
+    box-shadow:none!important;
+    background:transparent!important;
+    border-radius:inherit!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-people>.cgo-person :is(header,dl,button) {
+    border-color:#e3ebf9!important;
+  }
+}
+
+/* Resumo: superfície única sem a "caixa dentro da caixa" herdada dos
+   botões globais Clean. Apenas o acabamento muda; o botão continua inteiro
+   clicável para exportar o PDF ou consultar o próximo pagamento. */
+@media screen {
+  html:root[data-layout="desktop"][data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators
+  >article.cgo-indicator>button.cgo-card-action:not(:disabled) {
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    color:#0c2858!important;
+    border:0!important;
+    border-radius:inherit!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    text-align:left!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators>.cgo-indicator {
+    padding:0!important;
+    overflow:hidden!important;
+    min-height:120px!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators>.cgo-month {
+    min-height:122px!important;
+    border-color:#c8dcfa!important;
+    position:relative!important;
+    isolation:isolate;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators>.cgo-month::after {
+    content:"";
+    position:absolute;
+    right:0;bottom:-55px;
+    width:44%;height:185px;
+    border-radius:60% 0 0 0;
+    background:
+      radial-gradient(ellipse at 85% 15%,rgba(251,187,212,.22),transparent 55%),
+      radial-gradient(ellipse at 30% 72%,rgba(122,164,241,.23),transparent 70%);
+    z-index:-1;
+    pointer-events:none;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators>.cgo-month .cgo-card-content {
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:flex-start!important;
+    gap:4px!important;
+    padding:18px 24px 18px 104px!important;
+    min-height:122px!important;
+    position:relative!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-month .cgo-card-heading {
+    display:flex!important;
+    align-items:center!important;
+    gap:0!important;
+    font-size:12px!important;
+    min-height:0!important;
+    line-height:1.4!important;
+    letter-spacing:.035em!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-month .cgo-card-heading .cgo-icon {
+    position:absolute!important;
+    left:22px!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+    width:64px!important;
+    height:64px!important;
+    border-radius:19px!important;
+    background:linear-gradient(145deg,#fff,#ffe9f2)!important;
+    box-shadow:inset 0 1px 0 #fff!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-month .cgo-card-content>.cgo-original {
+    font-size:34px!important;
+    margin:1px 0 0!important;
+    line-height:1.14!important;
+    letter-spacing:-.045em!important;
+    color:#0d2552!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators>.cgo-indicator:not(.cgo-month) .cgo-card-content {
+    padding:12px 14px!important;
+    gap:7px!important;
+    min-height:120px!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators>.cgo-indicator:not(.cgo-month) .cgo-original {
+    font-size:22px!important;
+    letter-spacing:-.035em!important;
+    margin:0!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-indicators>.cgo-indicator:not(.cgo-month) .cgo-card-heading .cgo-icon {
+    width:39px!important;height:39px!important;
+    background:linear-gradient(145deg,#f8fbff,#edf5ff)!important;
+    box-shadow:none!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-remaining {
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    margin:0!important;
+    padding:8px 0 0!important;
+    color:#657fa5!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-remaining span {
+    font-size:11px!important;
+    font-weight:600!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-remaining b {
+    font-size:13px!important;
+    color:#e3134a!important;
+    margin:0!important;
+  }
+  /* Responsáveis sem aro interior duplicado, mantendo linhas e informações. */
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-people>.cgo-person {
+    overflow:hidden!important;
+    padding:0!important;
+    border:1px solid #d4e4fc!important;
+    border-radius:18px!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-person header {
+    border:0!important;
+    border-bottom:1px solid #e4ecfa!important;
+    border-radius:0!important;
+    padding:12px 15px!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-person dl {
+    border:0!important;
+    border-radius:0!important;
+    padding:4px 15px 8px!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-person dl>div {
+    padding:8px 0!important;
+    min-height:0!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-person h3 {
+    font-size:18px!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cgo-person>button {
+    width:calc(100% - 28px)!important;
+    margin:0 14px 12px!important;
+    min-height:40px!important;
+    border:1px solid #c7dbfa!important;
+    border-radius:12px!important;
+    background:linear-gradient(145deg,#f2f7ff,#e8f1ff)!important;
+    color:#1453c3!important;
+  }
+}
+
+/* No Gestor Web, até as bordas dos botões globais Clean devem seguir
+   a paleta AZUL desta referência (o resto da ARL continua como estava). */
+@media screen {
+  html:root[data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror {
+    --clean-accent:#3976e8;
+    --clean-primary-top:#84afff;
+    --clean-primary-bottom:#255dce;
+    --clean-soft:#eaf3ff;
+    --clean-edge:#cfdff7;
+    --clean-edge-strong:#94b8ed;
+    --clean-text:#173d70;
+    --clean-on-accent:#fff;
+  }
+  html:root[data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .arl-page-header-actions >button.cg-create-action:last-of-type:not(:disabled) {
+    background:linear-gradient(155deg,#8bb6ff 0%,#4b82ee 55%,#245ccf 100%)!important;
+    background-color:#3976e8!important;
+    border:1px solid #689af1!important;
+    color:#fff!important;
+    box-shadow:inset 0 1px 0 #ffffff78,0 7px 16px -8px #2a65cda1!important;
+  }
+  html:root[data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .arl-page-header-actions >button.cg-create-action:not(:last-of-type):not(:disabled) {
+    background:linear-gradient(150deg,#fff,#f7faff)!important;
+    background-color:#fff!important;
+    border-color:#d5e3f8!important;
+    color:#233f70!important;
+    box-shadow:inset 0 1px 0 #fff,0 5px 13px #244c8e1a!important;
+  }
+}

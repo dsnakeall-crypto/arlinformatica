@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
-import { ArrowDown, ArrowUp, ClipboardList, LayoutDashboard, Plus, Wallet, X, Banknote, CreditCard, Landmark, RotateCcw, Clock3, BarChart3, CalendarDays, CircleDollarSign, ReceiptText, Eye } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ClipboardList, LayoutDashboard, Plus, Wallet, X, Banknote, CreditCard, Landmark, RotateCcw, Clock3, BarChart3, CalendarDays, CircleDollarSign, ReceiptText, Eye } from "lucide-react";
 import PageHeader from "./page-header";
 import { FinanceDate } from "./finance-date";
 import { api, Field, money, brazilianDate, movementTitle, expenseCategoryLabel, financeMethodLabel } from './app-shared';
@@ -179,7 +179,7 @@ export function DailyRevenueChart({ data }: any) {
   );
 }
 
-export function FinancePage({ role, openOrder }: any) {
+export function FinancePage({ role, openOrder, mobile = false }: any) {
   const [tab, setTab] = useState("overview"),
     [daily, setDaily] = useState<any>(),
     [month, setMonth] = useState<any>(),
@@ -237,6 +237,11 @@ export function FinancePage({ role, openOrder }: any) {
       .finally(() => { if (!controller.signal.aborted) setPreviousLoading(false); });
     return () => controller.abort();
   }, [tab, period, refresh]);
+  const changeMonth = (delta: number) => {
+    const [year, month] = period.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1 + delta, 1));
+    setPeriod(date.getUTCFullYear() + '-' + String(date.getUTCMonth() + 1).padStart(2, '0'));
+  };
   const canReport = role === "Master" || role === "Administrador";
   const tabs: [string, string, React.ComponentType<any>][] = [
     ["overview", "Visão Geral", LayoutDashboard],
@@ -333,15 +338,19 @@ export function FinancePage({ role, openOrder }: any) {
         icon={Wallet}
         actions={
           <>
-            <label className="finance-period">
+            {mobile ? <div className="finance-mobile-month" role="group" aria-label="Mês exibido">
+              <span className="finance-mobile-month-label">Mês exibido</span>
+              <div className="finance-mobile-month-controls">
+                <button type="button" aria-label="Mês anterior" onClick={() => changeMonth(-1)}><ChevronLeft aria-hidden="true" /></button>
+                <label className="finance-mobile-month-current"><CalendarDays aria-hidden="true" />
+                  <input aria-label="Mês exibido" type="month" value={period} onChange={(e) => setPeriod(e.target.value)} />
+                </label>
+                <button type="button" aria-label="Próximo mês" onClick={() => changeMonth(1)}><ChevronRight aria-hidden="true" /></button>
+              </div>
+            </div> : <label className="finance-period">
               <span>Mês exibido</span>
-              <input
-                aria-label="Mês exibido"
-                type="month"
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-              />
-            </label>
+              <input aria-label="Mês exibido" type="month" value={period} onChange={(e) => setPeriod(e.target.value)} />
+            </label>}
             {canReport && (
               <button
                 className="primary finance-action"

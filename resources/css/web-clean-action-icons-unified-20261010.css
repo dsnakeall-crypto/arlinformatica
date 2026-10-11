@@ -1,0 +1,98 @@
+/* ARL — padrão único de ícones de ação no WEB CLEAN (10/10/2026).
+   Referência: tela Clientes aprovada. Visual: pictograma 18px solto,
+   área clicável 32px, sem aro/borda/fundo circular/sombra.
+   Escopo EXCLUSIVO das listas de Painel, Ordens e Clientes.
+   NÃO altera Web Original, Mobile, Gestor de Gastos, status ou botões de tela.
+   Preserva os assets 3D compactos já aprovados (olho/lápis/lixeira). */
+@media screen {
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.dashboard-order-list,.orders-order-list) .order-actions
+  > :is(a.order-whatsapp,a.order-maps,button.order-view,button.order-edit,
+        button.order-reopen,button.arl-order-delete),
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  .clients-react-page .client-list .clients-row .clients-actions
+  > :is(a,button) {
+    box-sizing:border-box!important;
+    display:inline-flex!important;
+    width:32px!important;height:32px!important;
+    min-width:32px!important;min-height:32px!important;
+    max-width:32px!important;max-height:32px!important;
+    flex:0 0 32px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+    border-width:0!important;
+    border-radius:0!important;
+    background-color:transparent!important;
+    box-shadow:none!important;
+    text-shadow:none!important;
+    filter:none!important;
+    text-decoration:none!important;
+    vertical-align:middle!important;
+  }
+  /* Não remover background-image dos três desenhos 3D aprovados.
+     Apenas garantir que WhatsApp e Maps não ganhem ícones falsos por CSS. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.dashboard-order-list,.orders-order-list) .order-actions
+  > :is(a.order-whatsapp,a.order-maps,button.order-reopen),
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  .clients-react-page .client-list .clients-row .clients-actions
+  > :is(a,button[aria-label="Nova OS para este cliente"]) {
+    background-image:none!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.dashboard-order-list,.orders-order-list) .order-actions
+  > :is(a.order-whatsapp,a.order-maps,button.order-reopen) :is(img,svg),
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  .clients-react-page .client-list .clients-row .clients-actions
+  > :is(a,button[aria-label="Nova OS para este cliente"]) :is(img,svg) {
+    display:block!important;
+    width:18px!important;height:18px!important;
+    min-width:18px!important;min-height:18px!important;
+    max-width:18px!important;max-height:18px!important;
+    flex:0 0 18px!important;
+    object-fit:contain!important;
+  }
+  /* Reabrir como garantia já usa seta textual ↶ no CSS legado.
+     Torná-la do tamanho dos demais desenhos, sem bolinha laranja. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.dashboard-order-list,.orders-order-list)
+  .order-actions > button.order-reopen::before {
+    font-size:18px!important;
+    font-weight:750!important;
+    line-height:1!important;
+    color:#445c83!important;
+    background:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  /* Nenhuma borda no hover/active. Foco via teclado continua indicado
+     por outline apenas em :focus-visible, por acessibilidade. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.dashboard-order-list,.orders-order-list) .order-actions
+  > :is(a.order-whatsapp,a.order-maps,button.order-view,button.order-edit,
+        button.order-reopen,button.arl-order-delete):is(:hover,:active),
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  .clients-react-page .client-list .clients-row .clients-actions
+  > :is(a,button):is(:hover,:active) {
+    border:0!important;
+    border-radius:0!important;
+    background-color:transparent!important;
+    box-shadow:none!important;
+    filter:none!important;
+  }
+}

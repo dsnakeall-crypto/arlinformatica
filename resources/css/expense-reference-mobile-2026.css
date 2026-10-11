@@ -1,0 +1,659 @@
+/* 09/10/2026 — Controle de Gasto MOBILE: acabamento fiel às 6 imagens aprovadas.
+   Nunca aplicar estes seletores à Web/PC, à home de OS ou ao menu ARL.
+   As cifras, navegação, permissões e modelos de dados permanecem intactos. */
+html body .layout-mobile.arl-expense-workspace {
+  background:linear-gradient(115deg,#d1f1ff 0%,#d9f0ff 31%,#e3eaff 64%,#fce0f1 100%)!important;
+}
+html body .layout-mobile.arl-expense-workspace>main {
+  background:transparent!important;
+  padding:0 0 calc(142px + env(safe-area-inset-bottom))!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only {
+  box-sizing:border-box;
+  width:100%;max-width:680px;
+  min-width:0;
+  margin:0 auto!important;
+  padding:18px 14px 42px!important;
+  color:#0e2855!important;
+  background:transparent!important;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ref-navy:#0c2653;--ref-muted:#667fa9;--ref-red:#d9003e;
+  --ref-line:rgba(187,209,247,.83);
+  --ref-shadow:0 12px 24px rgba(58,92,157,.17),inset 0 1px 1px #fff;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-own-header {
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:12px!important;
+  padding:0!important;margin:0 0 23px!important;
+  background:none!important;border:0!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-own-header>button {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  width:auto;min-width:0;
+  min-height:48px!important;
+  padding:10px 14px!important;
+  border-radius:17px!important;
+  border:1px solid #b9d0fc!important;
+  background:linear-gradient(156deg,#fff 0%,#fafcff 80%,#edf5ff)!important;
+  box-shadow:0 7px 15px rgba(49,91,166,.22),inset 0 2px 1px #fff!important;
+  color:#10275b!important;font-size:12px!important;font-weight:850!important;
+  white-space:nowrap;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-own-header>button svg{
+  color:#183b7c!important;width:21px;height:21px;flex:none;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgm-header {
+  display:grid!important;gap:12px!important;
+  padding:0!important;margin:0 0 23px!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgm-header>div:first-child{padding:0 6px}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgm-header .cg-eyebrow{
+  display:block!important;
+  font-size:11px!important;letter-spacing:3.5px!important;
+  font-weight:800!important;color:#39567f!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgm-header h1 {
+  margin:7px 0 0!important;
+  font-size:clamp(26px,8.1vw,37px)!important;line-height:1.06!important;
+  letter-spacing:-1.3px!important;font-weight:900!important;
+  color:#061f4a!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgm-header-actions {
+  display:flex!important;justify-content:center!important;margin:3px 0 3px!important;
+  width:100%!important;padding:0!important;background:transparent!important;
+  border:0!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgm-header-actions .cg-month-compact{
+  display:flex!important;justify-content:center!important;gap:8px!important;
+  width:auto!important;max-width:100%;
+  border:0!important;background:transparent!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgm-header-actions .cg-month-compact>button:not(:disabled) {
+  display:flex;align-items:center;justify-content:center;
+  width:50px!important;height:52px!important;min-width:50px!important;min-height:52px!important;
+  padding:7px!important;
+  border:1px solid #b7cffd!important;border-radius:18px!important;
+  background:linear-gradient(155deg,#fff,#fdfdff 62%,#edf3fe)!important;
+  box-shadow:0 7px 13px rgba(48,90,162,.21),inset 0 1px 0 #fff!important;
+  color:#09285a!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgm-header-actions .cg-month-compact>.cg-month-trigger:not(:disabled){
+  width:auto!important;min-width:132px!important;padding:8px 11px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-month-trigger svg{color:#113c82!important}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-month-trigger strong{
+  font-size:18px!important;letter-spacing:-.45px;font-weight:900;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-navigation{display:none!important}
+
+/* Indicadores: o total mensal abre largura inteira; 4 menores formam 2x2.
+   Borda externa = pedestal claro da referência; cartão interno = folha branca. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-indicators{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px 10px!important;margin:3px 0 23px!important;
+  padding:0!important;background:none!important;border:0!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-indicators>.cgo-indicator{
+  position:relative;display:block!important;min-width:0;
+  margin:0!important;padding:9px!important;min-height:0!important;
+  grid-column:auto!important;
+  border:0!important;border-radius:25px!important;
+  background:linear-gradient(140deg,rgba(255,255,255,.96),rgba(255,255,255,.77))!important;
+  box-shadow:0 11px 19px rgba(53,92,157,.14),inset 0 2px 1px #fff!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-indicators>.cgo-month{
+  grid-column:1/-1!important;padding:13px!important;
+  border-radius:29px!important;
+  background:rgba(245,250,255,.62)!important;
+  border:1px solid rgba(255,255,255,.86)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-card-action {
+  width:100%;height:100%!important;min-height:130px!important;
+  display:block;padding:0!important;margin:0!important;
+  border:0!important;border-radius:19px!important;
+  background:linear-gradient(140deg,#fff,#fdfdff 62%,#f5f8ff)!important;
+  box-shadow:inset 0 0 0 1px rgba(179,205,246,.83),0 8px 14px rgba(52,92,160,.12)!important;
+  color:var(--ref-navy)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-month .cgo-card-action{
+  min-height:108px!important;
+  border-radius:23px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-card-content {
+  display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
+  gap:10px!important;width:100%;min-width:0;
+  height:100%;padding:17px 10px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-month .cgo-card-content{
+  display:grid;grid-template-columns:55px minmax(0,1fr);
+  grid-template-rows:auto auto;align-content:center;gap:4px 11px!important;
+  padding:16px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-card-heading {
+  display:flex!important;flex-direction:row;align-items:center;gap:7px!important;
+  width:100%;min-width:0;
+  font-size:11px!important;line-height:1.26!important;font-weight:900!important;
+  color:#254673!important;text-transform:uppercase;letter-spacing:.1px;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-month .cgo-card-heading{
+  grid-column:1/-1;display:grid!important;grid-template-columns:55px minmax(0,1fr);gap:11px!important;
+  font-size:13px!important;letter-spacing:1px;min-height:54px;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-month .cgo-card-content>.cgo-original{
+  grid-column:2;justify-self:start;margin-top:-31px!important;
+  font-size:clamp(26px,8vw,39px)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-card-heading .cgo-icon{
+  flex:none;display:grid;place-items:center;
+  width:40px!important;height:40px!important;
+  border:0!important;border-radius:50%!important;
+  background:linear-gradient(150deg,#fff,#fff3f7 85%)!important;
+  color:#dc0a43!important;
+  box-shadow:0 5px 9px rgba(32,65,128,.10),inset 0 1px 0 #fff!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-card-heading .cgo-icon .cg-person-portrait {
+  width:39px!important;height:39px!important;border-radius:50%!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-month .cgo-icon {
+  width:52px!important;height:52px!important;border-radius:18px!important;
+  background:linear-gradient(145deg,#fff,#ffe2ec)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-card-content .cgo-original{
+  font-size:clamp(19px,5.7vw,27px)!important;
+  line-height:1.08!important;letter-spacing:-.6px;
+  font-weight:900!important;color:#082657!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-remaining{
+  display:block!important;padding:9px 0 0!important;margin:2px 0 0!important;
+  width:100%;border:0!important;border-top:1px solid #d4e0f2!important;
+  border-radius:0!important;background:transparent!important;box-shadow:none!important;
+  color:#df1851!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-remaining span{
+  display:block;font-size:12px!important;font-weight:800!important;line-height:1.3!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-remaining b{
+  display:block;margin-top:4px;font-size:clamp(17px,5vw,24px)!important;
+  font-weight:900!important;color:#082657!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-date{
+  font-size:clamp(17px,5.2vw,24px)!important;font-weight:900;
+  color:#102e5e!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-next .cgo-card-heading {
+  align-items:center;gap:8px!important;
+}
+
+/* Resumo de cada pessoa — pilha de cartões de dupla moldura como na imagem. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-people{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:13px!important;margin:0 0 29px!important;
+  padding:0!important;background:transparent!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-people>.cgo-person{
+  display:flex;flex-direction:column;
+  margin:0!important;padding:11px!important;
+  border:0!important;border-radius:28px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.95),rgba(255,255,255,.76))!important;
+  box-shadow:0 10px 23px rgba(54,83,147,.16),inset 0 2px 0 #fff!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person header{
+  display:flex;gap:14px;padding:16px 14px!important;
+  border:1px solid var(--ref-line)!important;border-bottom:1px solid #d7e2f1!important;
+  border-radius:22px 22px 0 0!important;
+  background:linear-gradient(140deg,#fff,#fefeff)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person .cg-avatar {
+  width:52px;height:52px;flex:0 0 52px;
+  border-radius:50%!important;background:#e9f4ff!important;
+  box-shadow:0 4px 11px rgba(57,93,157,.11)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person .cg-avatar .cg-person-portrait{
+  width:51px;height:51px;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person header small{
+  color:#7388ae;font-size:10px!important;letter-spacing:1.8px;font-weight:800;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person h3 {
+  font-size:24px!important;letter-spacing:-.6px;color:#092556!important;margin-top:5px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person dl{
+  margin:0!important;padding:5px 15px 9px!important;
+  border:1px solid var(--ref-line)!important;border-top:0!important;border-bottom:0!important;
+  background:linear-gradient(150deg,#fff,#fcfdff)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person dl>div{
+  padding:13px 0!important;min-height:47px;
+  border-bottom:1px solid #dce6f4!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person dl>div:last-child{border:0!important}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person dt{
+  font-size:14px!important;color:#657fa6!important;letter-spacing:-.1px;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person dd{
+  font-size:16px!important;font-weight:900!important;color:#092758!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person dd.cgo-paid{color:#007646!important}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person dl .cgo-total-row dt{color:#0d2b5b!important;font-weight:850}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person dl .cgo-due-row{
+  display:flex!important;justify-content:space-between!important;align-items:center!important;
+  margin:3px -8px 8px!important;padding:14px 11px!important;
+  border:0!important;border-radius:15px!important;
+  background:linear-gradient(100deg,#fff0f4,#ffe9f1)!important;
+  box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person dl .cgo-due-row dt,
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person dl .cgo-due-row dd{
+  color:#dc0544!important;font-weight:900!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person>button{
+  width:100%!important;min-height:57px!important;padding:12px!important;
+  margin:0!important;justify-content:center!important;gap:12px!important;
+  border:1px solid #aac8ff!important;border-radius:17px 17px 21px 21px!important;
+  background:linear-gradient(135deg,#fff,#f9fcff 70%,#eaf3ff)!important;
+  box-shadow:0 7px 12px rgba(54,97,166,.17)!important;
+  color:#0d2b63!important;font-weight:900!important;font-size:15px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-person>button svg{width:21px;height:21px}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgm-partials{margin-top:10px}
+
+/* Faturas: título, vencimento e montante. Moldura macia + seta vermelha. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-monthly-invoices{
+  padding:0 1px!important;margin:15px 0 15px!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-section-heading {
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin:0 0 18px!important;padding:0 6px!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-section-heading .cg-eyebrow{
+  font-size:11px!important;letter-spacing:3px!important;font-weight:800!important;
+  color:#234b83!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-section-heading h2{
+  font-size:clamp(24px,7.3vw,33px)!important;letter-spacing:-.9px!important;
+  font-weight:950!important;line-height:1.1!important;
+  color:#061f4a!important;margin:9px 0!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-section-heading p{
+  font-size:14px!important;line-height:1.6!important;color:#6480a8!important;
+  margin:7px 0!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-grid{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:11px!important;margin:0!important;background:transparent!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-card{
+  display:grid!important;grid-template-columns:47px minmax(0,1fr) auto 13px!important;
+  grid-template-rows:auto!important;align-items:center!important;
+  gap:9px!important;margin:0!important;
+  width:100%;min-height:100px!important;
+  padding:13px 12px!important;
+  border:10px solid rgba(255,255,255,.78)!important;border-radius:27px!important;
+  background:linear-gradient(140deg,#fff,#fdfdff 75%,#f3f8ff)!important;
+  box-shadow:0 8px 18px rgba(58,98,174,.15),inset 0 0 0 1px #c3d9fc!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-symbol{
+  display:grid;place-items:center;width:44px;height:47px;
+  border-radius:15px;
+  background:linear-gradient(145deg,#fff8fa,#ffe5ee);
+  color:#e50041;flex:none;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-symbol svg{
+  width:26px;height:26px;stroke-width:2.6;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-description{
+  display:grid;gap:6px;min-width:0;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-description b{
+  font-size:12px!important;font-weight:900;color:#092758!important;line-height:1.24;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-description small{
+  display:flex;align-items:center;gap:5px;
+  font-size:10px!important;color:#526a96!important;
+  overflow-wrap:anywhere;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-description small svg{
+  width:16px;height:16px;color:#193f7d;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-card>strong{
+  font-size:clamp(12px,3.6vw,18px)!important;
+  font-weight:900!important;white-space:nowrap!important;
+  color:#081f4a!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-card>svg:last-child{
+  width:19px;height:19px;color:#e90045!important;
+}
+
+/* Subnavegação Pagamentos/Quitadas/Projeção/Histórico em grade 2 x 2. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-subnav{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:11px!important;
+  padding:0!important;margin:0 0 23px!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-subnav button{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  min-height:63px!important;max-width:100%;
+  padding:9px 7px!important;
+  border:1px solid #bdd3fe!important;border-radius:22px!important;
+  background:linear-gradient(145deg,#fff,#fbfcff)!important;
+  box-shadow:0 7px 13px rgba(48,83,157,.17),inset 0 1px 1px #fff!important;
+  color:#09265b!important;font-size:clamp(11px,3.2vw,15px)!important;
+  font-weight:850!important;line-height:1.2!important;
+  white-space:normal!important;text-align:center!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-subnav button[aria-pressed="true"]{
+  border:2px solid #4b8dff!important;
+  background:linear-gradient(160deg,#fff,#ebf5ff)!important;
+  box-shadow:0 6px 13px rgba(38,103,222,.25)!important;
+  color:#0841b9!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-subnav button svg{
+  flex:none;width:21px;height:21px;stroke-width:2.5;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-sections{display:none!important}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-view-toggle{
+  display:inline-flex!important;align-items:center;gap:7px!important;
+  margin:0 0 14px!important;padding:5px!important;
+  border:1px solid #bed6fc!important;border-radius:21px!important;
+  background:rgba(231,240,255,.36)!important;
+  box-shadow:0 4px 9px rgba(51,93,173,.08)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-view-toggle button{
+  min-height:46px!important;padding:9px 12px!important;
+  display:flex;align-items:center;gap:9px!important;
+  border:1px solid #bdd3fb!important;border-radius:17px!important;
+  background:linear-gradient(150deg,#fff,#fbfcff)!important;
+  box-shadow:0 5px 10px rgba(47,81,158,.14)!important;
+  color:#123271!important;font-size:13px!important;font-weight:850!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-view-toggle button[aria-pressed="true"]{
+  border:2px solid #347dff!important;color:#104ad0!important;
+  box-shadow:0 5px 13px rgba(26,99,214,.23)!important;
+}
+
+/* Projeção: cartão mensal com cifras e responsáveis em faixas brancas. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid {
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:14px!important;background:transparent!important;border:0!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid>.cg-panel {
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+  gap:7px 9px!important;align-items:start;
+  padding:20px 16px!important;margin:0!important;
+  border:0!important;border-radius:29px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(255,255,255,.82))!important;
+  box-shadow:0 12px 25px rgba(57,93,162,.14),inset 0 2px 0 #fff!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid>.cg-panel>.cg-eyebrow{
+  grid-column:1!important;grid-row:1!important;
+  font-size:12px!important;letter-spacing:2px!important;font-weight:850;
+  color:#153b77!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid>.cg-panel>strong{
+  grid-column:2!important;grid-row:1!important;margin:0!important;
+  font-size:clamp(19px,5.5vw,27px)!important;
+  line-height:1.15;text-align:right!important;color:#0a2454!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid>.cg-panel>p{
+  grid-column:1/-1!important;grid-row:2!important;
+  margin:0 0 6px!important;color:#6c82a9!important;font-size:13px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid>.cg-panel>dl{
+  grid-column:1/-1!important;grid-row:3!important;
+  display:grid!important;gap:7px!important;margin:6px 0 3px!important;padding:0!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid>.cg-panel dl>div {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px!important;min-height:55px;
+  padding:7px 9px!important;
+  border:1px solid #d6e4fb!important;border-radius:17px!important;
+  background:linear-gradient(145deg,#f9fcff,#fff)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid>.cg-panel dl dt{
+  display:flex;gap:7px;align-items:center;min-width:0;
+  font-size:13px!important;color:inherit;font-weight:700!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid>.cg-panel dl dd{
+  white-space:nowrap;font-size:14px!important;color:inherit;font-weight:900!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid>.cg-panel .cg-person-portrait{
+  width:33px!important;height:33px!important;flex:0 0 33px!important;border-radius:50%!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-projection-grid>.cg-panel>button{
+  grid-column:2!important;grid-row:4!important;
+  justify-self:end!important;align-self:end!important;
+  min-height:49px!important;padding:9px 16px!important;margin-top:8px!important;
+  border:1px solid #a9c8ff!important;border-radius:18px!important;
+  background:linear-gradient(145deg,#fff,#f8fbff)!important;
+  box-shadow:0 7px 13px rgba(49,84,163,.2)!important;
+  color:#0c2d6b!important;font-size:14px!important;font-weight:850!important;
+}
+
+/* Pagamentos: um cartão por instituição, aninhado em superfície branca. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-payment-institutions{
+  padding:0 1px 14px!important;margin:0!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-payment-bank-mobile{
+  display:block!important;padding:10px!important;margin:0 0 12px!important;
+  border:0!important;border-radius:26px!important;
+  background:rgba(255,255,255,.78)!important;
+  box-shadow:0 9px 19px rgba(56,87,163,.14)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-payment-bank-mobile .cg-payment-bank-heading{
+  display:flex!important;gap:14px!important;align-items:center!important;justify-content:space-between!important;
+  width:100%!important;min-height:87px!important;
+  padding:15px!important;border:1px solid #bed4ff!important;
+  border-radius:20px!important;background:linear-gradient(150deg,#fff,#fafcff)!important;
+  box-shadow:0 6px 12px rgba(44,83,163,.18)!important;color:#071f4b!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-payment-bank-mobile .cg-payment-bank-heading>div:nth-child(2){
+  display:grid!important;gap:6px!important;flex:1;min-width:0;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-payment-bank-mobile .cg-payment-bank-heading b{
+  font-size:19px!important;font-weight:900!important;color:#081e49!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-payment-bank-mobile .cg-payment-bank-heading small{
+  font-size:12px!important;color:#6580aa!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-payment-bank-mobile .cg-payment-bank-heading strong{
+  font-size:17px!important;font-weight:900!important;color:#102b5d!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-payment-bank-mobile .cg-payment-bank-heading>svg{
+  width:23px;height:23px;color:#061f50!important;
+}
+
+/* Instituições: dois cartões por linha, arte real cadastrada, 3 ações 3D. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:11px!important;margin:0 0 16px!important;padding:0!important;
+  border:0!important;background:transparent!important;box-shadow:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution{
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  width:100%;min-width:0;padding:11px!important;margin:0!important;
+  overflow:hidden!important;border:0!important;border-radius:27px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(255,255,255,.82))!important;
+  box-shadow:0 12px 22px rgba(59,83,147,.16),inset 0 2px 1px #fff!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution:before{display:none!important}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution>.cg-eyebrow{
+  display:flex!important;align-items:center;gap:8px;
+  font-size:9px!important;letter-spacing:1.5px!important;color:#152c62!important;
+  font-weight:900!important;margin-bottom:12px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution>.cg-eyebrow:before{
+  content:'';display:block;width:9px;height:9px;border-radius:50%;
+  background:linear-gradient(140deg,#89e892,#0c9e25);
+  box-shadow:inset 0 1px 0 #fff,0 0 0 2px #e4f8e7;flex:none;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution.inactive>.cg-eyebrow:before{background:#9ca6b7}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid .cg-card-art{
+  width:100%!important;max-width:100%!important;aspect-ratio:856/540;
+  height:auto!important;margin:0 0 12px!important;flex:none;
+  border-radius:14px!important;
+  box-shadow:0 6px 13px rgba(26,43,82,.25)!important;
+  overflow:hidden;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution h3{
+  font-size:clamp(14px,3.6vw,20px)!important;color:#082151!important;
+  font-weight:900!important;line-height:1.2!important;
+  margin:0 0 6px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution>span:not(.cg-eyebrow){
+  display:block;line-height:1.4;font-size:11px!important;color:#5875a5!important;
+  min-height:34px;overflow-wrap:anywhere;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution footer{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px!important;
+  margin-top:auto!important;padding:10px 0 0!important;border-top:1px solid #d7e2f1!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution footer>button{
+  display:grid!important;place-items:center!important;
+  width:100%!important;min-width:0!important;min-height:46px!important;height:46px!important;
+  padding:8px!important;border:1px solid #c0d9ff!important;border-radius:16px!important;
+  background:linear-gradient(155deg,#f8fdff,#d5f1ff)!important;
+  box-shadow:inset 0 2px 0 #fff,0 7px 12px #2f77b433!important;
+  color:#0070ca!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution footer>button:nth-child(2){
+  color:#6932e5!important;border-color:#d0c5ff!important;
+  background:linear-gradient(145deg,#fff,#e8e3ff)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution footer>button:nth-child(3){
+  color:#c60043!important;border-color:#f5cbd9!important;
+  background:linear-gradient(145deg,#fff,#ffe4ee)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-bank-grid>.cg-institution footer>button svg{
+  width:23px!important;height:23px!important;
+}
+
+/* Cadastro de classificação, uma caixa premium curta sem chip-grid extra. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-type-manager-mobile{
+  display:block!important;
+  margin:15px 0 0!important;padding:12px!important;
+  border:1px solid rgba(255,255,255,.9)!important;
+  border-radius:28px!important;background:rgba(255,255,255,.84)!important;
+  box-shadow:0 11px 22px rgba(54,84,151,.16)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-type-manager-mobile .cg-section-heading{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+  gap:9px!important;align-items:center!important;margin:0!important;padding:0!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-type-manager-mobile .cg-section-heading h2{
+  font-size:21px!important;letter-spacing:-.3px!important;margin:5px 0 0!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-type-manager-mobile .cg-section-heading>button{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  min-height:51px!important;padding:10px!important;
+  border:1px solid #69b0ff!important;border-radius:17px!important;
+  background:linear-gradient(160deg,#79c1ff,#2277f5 70%,#1750d0)!important;
+  box-shadow:0 7px 14px rgba(16,85,205,.24),inset 0 2px 1px #ffffff82!important;
+  color:white!important;font-size:12px!important;font-weight:850!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-type-manager-mobile .cg-type-chips{display:none!important}
+
+/* Barra inferior das referências: ícones/etiquetas em fundo branco elevado e + central ruby. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-bottom.arl-expense-matched{
+  left:max(11px,env(safe-area-inset-left))!important;
+  right:max(11px,env(safe-area-inset-right))!important;
+  bottom:calc(10px + env(safe-area-inset-bottom))!important;
+  width:calc(100% - 22px)!important;max-width:510px!important;
+  min-height:93px!important;
+  padding:10px 6px 9px!important;
+  border-radius:26px!important;
+  border:1px solid rgba(255,255,255,.98)!important;
+  background:linear-gradient(145deg,#fff,#fcfdff 80%,#f7f8ff)!important;
+  box-shadow:0 13px 26px rgba(53,75,146,.21),inset 0 2px 0 #fff!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-bottom.arl-expense-matched .arl-nav-caption{
+  color:#405475!important;font-weight:800!important;font-size:clamp(10px,2.75vw,12px)!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-bottom.arl-expense-matched .arl-nav-icon-disc{
+  background:radial-gradient(circle at 33% 17%,#fff 18%,#f9fbff 49%,#e5eefc 100%)!important;
+  border:1px solid #dce7f8!important;
+  box-shadow:inset 0 2px 2px #fff,0 7px 11px rgba(53,88,160,.18)!important;
+  color:#254776!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-bottom.arl-expense-matched>button[aria-current="page"] .arl-nav-icon-disc{
+  background:radial-gradient(circle at 33% 17%,#fff,#fff4f7 52%,#fbdde8)!important;color:#d0003d!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-bottom.arl-expense-matched>button.arl-expense-add .arl-nav-icon-disc{
+  background:radial-gradient(circle at 33% 13%,#ff889c,#f92759 35%,#e6003c 73%,#ad002b)!important;
+  border:1px solid #db1c51!important;
+  box-shadow:inset 0 3px 2px #ffffff90,0 11px 21px #c700444a!important;
+  color:#fff!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .arl-expense-bottom.arl-expense-matched>button.arl-expense-add .arl-nav-caption{color:#d40040!important}
+
+@media(max-width:359px){
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only{padding:13px 9px 42px!important}
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-card-content{padding:14px 8px!important}
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-indicators{gap:9px 7px!important}
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-card-heading{font-size:10px!important}
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-card{grid-template-columns:38px minmax(0,1fr) auto 12px!important;gap:6px!important;padding:10px 7px!important}
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-symbol{width:35px;height:40px}
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-symbol svg{width:19px;height:19px}
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-card>strong{font-size:11px!important}
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-description b{font-size:11px!important}
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-invoice-description small{font-size:9px!important}
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-type-manager-mobile .cg-section-heading>button{font-size:11px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile :is(button,.cg-institution){transition:none!important}
+}
+
+/* Refinamento pós-captura: título e valor do total mensal nunca se sobrepõem. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-month .cgo-card-content {
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+  align-items:stretch!important;gap:3px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-month .cgo-card-heading {
+  display:grid!important;grid-template-columns:55px minmax(0,1fr)!important;
+  align-items:center!important;min-height:54px!important;gap:11px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-month .cgo-card-content>.cgo-original {
+  display:block!important;grid-column:auto!important;
+  margin:0 0 0 66px!important;padding:0!important;
+  font-size:clamp(27px,7.5vw,36px)!important;line-height:1.16!important;
+  white-space:normal!important;
+}
+@media(max-width:359px) {
+ html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cgo-month .cgo-card-content>.cgo-original {
+   font-size:27px!important;
+ }
+}
+
+/* No catálogo de instituições, a referência começa nos cartões. Manter a ação
+   Cadastrar instituição acessível, mas sem o bloco grande de texto anterior. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-institution-register-heading {
+  display:flex!important;justify-content:flex-end!important;
+  align-items:center!important;margin:0 0 11px!important;
+  padding:0 3px!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-institution-register-heading>div{
+  display:none!important;
+}
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-institution-register-heading>button{
+  display:inline-flex!important;align-items:center;gap:6px;
+  min-height:44px!important;padding:9px 14px!important;
+  border:1px solid #b4cdff!important;border-radius:17px!important;
+  color:#c9003e!important;background:linear-gradient(140deg,#fff,#f0f5ff)!important;
+  font-size:12px!important;font-weight:850!important;
+  box-shadow:0 6px 13px #315fb128!important;
+}
+
+/* Faixa de tipos mantém o título legível em uma linha, mesmo a 390 px. */
+html body .layout-mobile.arl-expense-workspace .cg-page.cg-mobile .cg-type-manager-mobile .cg-section-heading h2{
+  font-size:clamp(15px,4.15vw,18px)!important;
+  line-height:1.15!important;
+  letter-spacing:-.5px!important;
+}

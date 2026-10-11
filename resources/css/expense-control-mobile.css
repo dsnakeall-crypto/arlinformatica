@@ -183,3 +183,27 @@ html[data-layout=mobile] .cg-popup-blue button { min-height:44px; }
 .cg-mobile .cg-history-filters>button { min-width:70px; }
 
 /* Mobile refinements from No Mobile.docx. */
+
+/* 09/10/2026 — miniapp no celular: parcelas legíveis, ações tocáveis e grade de instituições sem espaço morto.
+   Identidade azul preservada; somente organização e área de toque. */
+.arl-expense-independent.cg-mobile .cg-table-wrap tr { grid-template-columns:repeat(6,minmax(0,1fr)); align-items:center; gap:6px 8px; padding:10px 11px; }
+.arl-expense-independent.cg-mobile .cg-table-wrap td { min-width:0; overflow-wrap:anywhere; }
+.arl-expense-independent.cg-mobile .cg-table-wrap td:first-child { grid-column:1; grid-row:1; justify-content:flex-start; }
+.arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(2) { grid-column:2 / span 3; grid-row:1; }
+.arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(6) { grid-column:5 / span 2; grid-row:1; justify-self:end; }
+.arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(3) { grid-column:1 / span 2; grid-row:2; }
+.arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(4) { grid-column:3 / span 2; grid-row:2; }
+.arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(5) { grid-column:5 / span 2; grid-row:2; }
+.arl-expense-independent.cg-mobile .cg-table-wrap td:last-child { grid-column:1 / -1; grid-row:3; }
+.arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(2) b { font-size:15px; }
+.arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(n+3):nth-child(-n+5) { font-weight:750; font-variant-numeric:tabular-nums; }
+.arl-expense-independent.cg-mobile .cg-table-wrap .cg-status { white-space:nowrap; font-size:11px; padding:4px 9px; }
+.arl-expense-independent.cg-mobile .cg-table-wrap .cg-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.arl-expense-independent.cg-mobile .cg-table-wrap .cg-actions button { min-width:44px; min-height:44px; }
+.arl-expense-independent.cg-mobile :is(.cg-debt-header .cg-actions button,.cg-back,.cg-breadcrumb button,.cgm-institution-actions button,.arl-expense-subnav button,.cg-view-toggle button,.cg-projection-sections button) { min-height:44px; }
+.arl-expense-independent.cg-mobile .cg-debt-header .cg-actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr)); gap:8px; }
+.arl-expense-independent.cg-mobile .cg-bank-grid { grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr))!important; }
+.arl-expense-independent.cg-mobile .cg-bank-grid .cg-institution footer button { min-width:44px; min-height:44px; }
+.arl-expense-independent.cg-mobile .cg-type-actions button { min-height:44px; }
+.arl-expense-independent.cg-mobile .cg-debt-row { grid-template-columns:auto minmax(0,1fr) auto; }
+@media (max-width:360px){ .arl-expense-independent.cg-mobile .cg-table-wrap tr { grid-template-columns:repeat(4,minmax(0,1fr)); } .arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(2) { grid-column:2 / span 2; } .arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(6) { grid-column:4; } .arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(3) { grid-column:1 / -1; } .arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(4) { grid-column:1 / span 2; grid-row:3; } .arl-expense-independent.cg-mobile .cg-table-wrap td:nth-child(5) { grid-column:3 / span 2; grid-row:3; } .arl-expense-independent.cg-mobile .cg-table-wrap td:last-child { grid-row:4; } }

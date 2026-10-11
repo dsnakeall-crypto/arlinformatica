@@ -95,8 +95,15 @@ test('histórico do cliente exibe equipamento e somente descontos aplicados, com
 
   await page.getByRole('button', { name: 'Voltar para a OS' }).click();
   await expect(page.getByRole('heading', { name: `OS #${discountedOrder.number}`, exact: true })).toBeVisible();
-  await page.getByLabel('Layout neste dispositivo').selectOption('mobile');
-  const mobileDetail = page.locator('[data-mobile-read-only="1"]');
+  // A preferência agora é escolhida em Configurações, não no detalhe da OS.
+  // Simular a opção salva sem alterar a navegação funcional já homologada.
+  await page.evaluate(() => localStorage.setItem('arl-layout-mode', 'mobile'));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  // O Mobile atual tem detalhe próprio e oferece Histórico ao administrador.
+  // A antiga regra de detalhe somente-leitura foi substituída na reforma aprovada.
+  const mobileDetail = page.locator('[data-arl-order-detail-react="1"]');
   await expect(mobileDetail).toBeVisible();
-  await expect(mobileDetail.getByRole('button', { name: 'Histórico', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: `OS #${discountedOrder.number}`, exact: true })).toBeVisible();
+  await expect(mobileDetail.getByRole('button', { name: 'Histórico', exact: true })).toBeVisible();
 });

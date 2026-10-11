@@ -7,6 +7,17 @@ const nav = (page: Page, name: string) => {
   return (name === 'Nova OS' ? button.first() : button).click();
 };
 const clients = Array.from({ length: 65 }, (_, i) => ({ id: i + 100, name: `Cache Cliente ${String(i).padStart(2, '0')}`, document: '', phone: '35999990000', postal_code: '37160000', street: 'Rua Teste', number: '1', district: 'Centro', city: 'Campos Gerais', state: 'MG' }));
+function pagedClients(source: typeof clients, urlString: string) {
+  const url = new URL(urlString);
+  const q = (url.searchParams.get('q') || '').trim().toLocaleLowerCase('pt-BR');
+  const sort = url.searchParams.get('sort') || 'name';
+  const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+  const size = Math.min(100, Math.max(1, Number(url.searchParams.get('per_page') || 12)));
+  const filtered = source.filter(c => !q || [c.name, c.phone, c.document].some(value => value.toLocaleLowerCase('pt-BR').includes(q)));
+  filtered.sort((a,b) => sort === 'id' ? a.id-b.id : (a.name.localeCompare(b.name,'pt-BR') || a.id-b.id));
+  return { data: filtered.slice((page-1)*size,page*size), total: filtered.length,
+    current_page: page, last_page: Math.max(1,Math.ceil(filtered.length/size)), per_page:size };
+}
 function gate() { let release!: () => void; const promise = new Promise<void>(resolve => { release = resolve; }); return { promise, release }; }
 async function setup(page: Page) { await page.clock.setFixedTime(start); await login(page); }
 async function orderFixture(page: Page) {
@@ -23,46 +34,59 @@ function orderResult(order: any, url: URL, name = 'Cache OS') {
 
 test('Clientes volta imediatamente com pesquisa, ordenação, página e tamanho preservados', async ({ page }) => {
   await setup(page); let calls = 0;
-  await page.route('**/api/clients?all=1', route => { calls++; return route.fulfill({ json: { data: clients } }); });
+  await page.route('**/api/clients?*', route => { calls++; return route.fulfill({ json: pagedClients(clients, route.request().url()) }); });
   await nav(page, 'Clientes'); await expect(page.locator('.clients-row')).toHaveCount(12);
+  const searched=page.waitForResponse(resp=>new URL(resp.url()).pathname==='/api/clients' && new URL(resp.url()).searchParams.get('q')==='Cache' && resp.ok());
   await page.getByLabel('Buscar clientes').fill('Cache');
+  await searched;
   await page.getByLabel('Ordenar clientes').selectOption('id');
   await page.getByLabel('Clientes por página').selectOption('30');
+  const secondPageResponse=page.waitForResponse(resp=>new URL(resp.url()).pathname==='/api/clients' && new URL(resp.url()).searchParams.get('page')==='2' && resp.ok());
   await page.getByRole('button', { name: 'Próxima página', exact: true }).click();
+  await secondPageResponse;
+  await expect(page.getByText('Página 2 de 3', { exact: true })).toBeVisible();
+  await expect(page.locator('.clients-row')).toHaveCount(30);
+  await expect(page.locator('.clients-row').first()).toContainText('Cache Cliente 30');
+  await expect(page.getByText('Atualizando clientes…')).toHaveCount(0);
   const first = await page.locator('.clients-row').first().textContent();
+  const callsBeforeReturn=calls;
   await nav(page, 'Painel'); await nav(page, 'Clientes');
   await expect(page.locator('.clients-row').first()).toHaveText(first!);
   await expect(page.getByLabel('Buscar clientes')).toHaveValue('Cache');
   await expect(page.getByLabel('Ordenar clientes')).toHaveValue('id');
   await expect(page.getByLabel('Clientes por página')).toHaveValue('30');
-  await expect(page.getByText('Página 2 de 3', { exact: true })).toBeVisible(); expect(calls).toBe(1);
+  await expect(page.getByText('Página 2 de 3', { exact: true })).toBeVisible();
+  expect(calls).toBe(callsBeforeReturn);
   await page.screenshot({ path: test.info().outputPath('clientes-cache.png') });
 });
 
 test('Clientes mostra loading inicial e mantém linhas durante TTL expirado e falha de refresh', async ({ page }) => {
   await setup(page); let calls = 0; const initial = gate(), refresh = gate();
-  await page.route('**/api/clients?all=1', async route => {
-    calls++; if (calls === 1) { await initial.promise; await route.fulfill({ json: { data: clients } }); }
-    else if (calls === 2) { await refresh.promise; await route.fulfill({ status: 500, json: { message: 'Falha de atualização controlada' } }); }
-    else { await route.fulfill({ json: { data: clients.map(c => ({ ...c, name: `${c.name} atualizado` })) } }); }
+  await page.route('**/api/clients?*', async route => {
+    calls++; if (calls === 1) { await initial.promise; await route.fulfill({ json: pagedClients(clients, route.request().url()) }); }
+    else if (calls === 3) { await refresh.promise; await route.fulfill({ status: 500, json: { message: 'Falha de atualização controlada' } }); }
+    else { const rows = calls >= 4 ? clients.map(c => ({ ...c, name: `${c.name} atualizado` })) : clients;
+      await route.fulfill({ json: pagedClients(rows, route.request().url()) }); }
   });
   await nav(page, 'Clientes'); await expect(page.getByText('Carregando clientes…', { exact: true })).toBeVisible();
   initial.release(); await expect(page.locator('.clients-row')).toHaveCount(12);
-  await page.getByLabel('Buscar clientes').fill('Cache Cliente 01');
+  await page.getByLabel('Buscar clientes').fill('Cache Cliente 64');
+  await expect(page.locator('.clients-row')).toHaveCount(1);
+  const callsAfterSearch=calls;
   await nav(page, 'Painel'); await page.clock.setFixedTime(new Date(start.getTime() + 31_000)); await nav(page, 'Clientes');
-  await expect.poll(() => calls).toBe(2); await expect(page.locator('.clients-row')).toHaveCount(1);
+  await expect.poll(() => calls).toBe(callsAfterSearch+1); await expect(page.locator('.clients-row')).toHaveCount(1);
   await expect(page.getByText('Atualizando clientes…')).toBeVisible();
   await expect(page.getByText('Carregando clientes…', { exact: true })).toHaveCount(0);
   await page.screenshot({ path: test.info().outputPath('clientes-refresh.png') });
   refresh.release(); await expect(page.getByRole('alert')).toContainText('Falha de atualização controlada');
-  await expect(page.locator('.clients-row')).toHaveCount(1); await expect(page.getByLabel('Buscar clientes')).toHaveValue('Cache Cliente 01');
+  await expect(page.locator('.clients-row')).toHaveCount(1); await expect(page.getByLabel('Buscar clientes')).toHaveValue('Cache Cliente 64');
   await nav(page, 'Painel'); await nav(page, 'Clientes');
-  await expect(page.locator('.clients-row')).toContainText('Cache Cliente 01 atualizado'); expect(calls).toBe(3);
+  await expect(page.locator('.clients-row')).toContainText('Cache Cliente 64 atualizado'); expect(calls).toBe(callsAfterSearch+2);
 });
 
 test('Clientes confirma edição e exclusão, invalida e volta com resultado atualizado', async ({ page }) => {
   await setup(page); let data = [clients[0]], calls = 0;
-  await page.route('**/api/clients?all=1', route => { calls++; return route.fulfill({ json: { data } }); });
+  await page.route('**/api/clients?*', route => { calls++; return route.fulfill({ json: pagedClients(data, route.request().url()) }); });
   await page.route(`**/api/clients/${clients[0].id}`, route => {
     if (route.request().method() === 'PUT') { data = [{ ...data[0], ...route.request().postDataJSON() }]; return route.fulfill({ json: data[0] }); }
     if (route.request().method() === 'DELETE') { data = []; return route.fulfill({ status: 204 }); }
@@ -117,9 +141,9 @@ test('Ordens mantém linhas no refresh e rejeita busca antiga após nova respost
 
 test('Troca de identidade descarta lista e resposta pendente da geração anterior', async ({ page }) => {
   await setup(page); let calls = 0; const old = gate();
-  await page.route('**/api/clients?all=1', async route => {
+  await page.route('**/api/clients?*', async route => {
     calls++; const n = calls; if (n === 2) await old.promise;
-    await route.fulfill({ json: { data: [{ ...clients[0], name: n < 3 ? 'Privado usuário A' : 'Privado usuário B' }] } }).catch(() => {});
+    await route.fulfill({ json: pagedClients([{ ...clients[0], name: n < 3 ? 'Privado usuário A' : 'Privado usuário B' }], route.request().url()) }).catch(() => {});
   });
   await nav(page, 'Clientes'); await expect(page.locator('.clients-row')).toContainText('Privado usuário A');
   await nav(page, 'Painel'); await page.clock.setFixedTime(new Date(start.getTime() + 31_000)); await nav(page, 'Clientes'); await expect.poll(() => calls).toBe(2);
@@ -131,7 +155,7 @@ test('Troca de identidade descarta lista e resposta pendente da geração anteri
 
 test('Criar cliente invalida após sucesso, mas erro de validação preserva cache e formulário', async ({ page }) => {
   await setup(page); let data = [clients[0]], calls = 0, fail = true;
-  await page.route('**/api/clients?all=1', route => { calls++; return route.fulfill({ json: { data } }); });
+  await page.route('**/api/clients?*', route => { calls++; return route.fulfill({ json: pagedClients(data, route.request().url()) }); });
   await page.route('**/api/clients', route => {
     if (route.request().method() !== 'POST') return route.continue();
     if (fail) return route.fulfill({ status: 422, json: { message: 'Cadastro recusado', errors: { name: ['Nome rejeitado no teste'] } } });
@@ -177,7 +201,7 @@ test('Equipamentos auxiliares reutilizam consulta fresca, expiram em cinco minut
 
 test('Clientes que permaneceu aberta por minutos conserva apresentação ao sair e voltar', async ({ page }) => {
   await setup(page); let calls = 0; const refresh = gate();
-  await page.route('**/api/clients?all=1', async route => { calls++; if (calls > 1) await refresh.promise; await route.fulfill({ json: { data: clients } }); });
+  await page.route('**/api/clients?*', async route => { calls++; if (calls > 1) await refresh.promise; await route.fulfill({ json: pagedClients(clients, route.request().url()) }); });
   await nav(page, 'Clientes'); await expect(page.locator('.clients-row')).toHaveCount(12);
   const whileVisible = await page.evaluate(() => Date.now()); await page.clock.setFixedTime(new Date(whileVisible + 180_000));
   await nav(page, 'Painel'); await nav(page, 'Clientes');

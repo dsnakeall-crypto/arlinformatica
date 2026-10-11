@@ -1,0 +1,137 @@
+/* ARL Mobile V2: composição específica para celular, sem alterar a HOME de OS.
+   Não interfere no banco, nas permissões ou no controle financeiro. */
+
+/* Páginas internas usam toda a largura disponível, inclusive no menu lateral compacto. */
+.layout-mobile:not(.arl-expense-workspace)>main:not([data-arl-dashboard-react]){
+  min-width:0; max-width:100%; overflow-x:clip; box-sizing:border-box;
+  padding-inline:clamp(10px,3vw,18px)!important;
+}
+.layout-mobile:not(.arl-expense-workspace)>main:not([data-arl-dashboard-react]) :is(
+  .clients-react-page,.clients-history-page,.finance-page,.suppliers-page,.services-catalog-page,
+  .products-catalog-page,.arl-order-detail,.arl-settings-tabs,.arl-layout-settings,
+  .panel,.form-card,.arl-page-header,.order-list,.order-content,.arl-editor-group
+){min-width:0;max-width:100%;box-sizing:border-box}
+.layout-mobile:not(.arl-expense-workspace)>main:not([data-arl-dashboard-react]) :is(
+  .arl-page-header,.page-title,.clients-title
+){min-width:0;max-width:100%;gap:10px}
+.layout-mobile:not(.arl-expense-workspace)>main:not([data-arl-dashboard-react]) :is(
+  .arl-page-header-actions,.page-title .actions
+){max-width:100%;min-width:0;flex-wrap:wrap}
+.layout-mobile:not(.arl-expense-workspace)>main:not([data-arl-dashboard-react]) :is(
+  .arl-page-header-actions,.page-title .actions
+)>*{min-width:0;max-width:100%}
+
+/* Seções: cada opção pode ser selecionada diretamente, sem "arrastar para descobrir". */
+.layout-mobile :is(.arl-settings-tabs,.settings-system-tabs,.finance-tabs,.order-tabs,.supplier-tabs,.supplier-detail-tabs) {
+  display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important; width:100%!important; max-width:100%!important;
+  overflow:visible!important; box-sizing:border-box!important;
+  padding:9px!important; border:1px solid #e8e0e5!important; border-radius:16px!important;
+  background:rgba(255,255,255,.83)!important;
+}
+.layout-mobile :is(.arl-settings-tabs,.settings-system-tabs,.finance-tabs,.order-tabs,.supplier-tabs,.supplier-detail-tabs)>button {
+  display:flex!important; align-items:center!important; justify-content:flex-start!important;
+  gap:7px!important; width:100%!important; min-width:0!important; max-width:100%!important;
+  min-height:47px!important; margin:0!important; padding:10px!important;
+  font-size:12px!important; line-height:1.2!important; white-space:normal!important;
+  text-align:left!important; overflow-wrap:normal!important;
+  border:1px solid #e4dfe4!important; border-radius:12px!important;
+  background:#fff!important; color:#39333b!important;
+  box-shadow:inset 0 1px #fff,0 2px 6px #23172313!important;
+}
+.layout-mobile :is(.arl-settings-tabs,.settings-system-tabs,.finance-tabs,.order-tabs,.supplier-tabs,.supplier-detail-tabs)>button:is(
+  .active,[aria-selected="true"],[aria-pressed="true"]
+){color:#a0062a!important;background:linear-gradient(145deg,#fff9fa,#fceaf0)!important;
+  border-color:#d79ba9!important;box-shadow:inset 3px 0 #b4052e,0 4px 11px #7e143126!important}
+.layout-mobile :is(.arl-settings-tabs,.settings-system-tabs,.finance-tabs,.order-tabs,.supplier-tabs,.supplier-detail-tabs)>button svg {
+  flex:none; width:17px!important; height:17px!important;
+}
+.layout-mobile .arl-settings-tabs>button b{min-width:0}
+
+/* Configurações e formulários: área útil integral em vez de colunas desktop cortadas. */
+.layout-mobile .settings-form, .layout-mobile .arl-settings-readonly {width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.layout-mobile .settings-form :is(.form-grid,.settings-grid,.grid) {grid-template-columns:minmax(0,1fr)!important}
+.layout-mobile .settings-form :is(input,select,textarea){min-width:0;max-width:100%;box-sizing:border-box}
+.layout-mobile .arl-settings-readonly dl{grid-template-columns:minmax(0,1fr)!important}
+
+/* Clientes: campos e ações legíveis, sem fazer vazar a coluna do telefone. */
+.layout-mobile .clients-react-page,
+.layout-mobile .clients-list-panel,
+.layout-mobile .clients-toolbar,
+.layout-mobile .client-list {min-width:0;max-width:100%;box-sizing:border-box}
+.layout-mobile .clients-toolbar {display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:11px!important}
+.layout-mobile .clients-toolbar :is(.clients-search,.clients-pagination,.clients-page-size,.clients-sort){min-width:0;max-width:100%}
+.layout-mobile .clients-toolbar .clients-sort{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center}
+.layout-mobile .clients-toolbar .clients-sort select{width:100%;min-width:0}
+.layout-mobile .clients-list-panel .client-list article.clients-row{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:7px!important;padding:13px!important;max-width:100%;min-width:0;box-sizing:border-box
+}
+.layout-mobile .clients-row>:is(.clients-id,.clients-main,.clients-phone,.clients-address,.clients-actions){
+  grid-column:1!important;grid-row:auto!important;min-width:0!important;justify-self:stretch
+}
+.layout-mobile .clients-row>.clients-separator{display:none!important}
+.layout-mobile .clients-row .clients-main b {white-space:normal!important;overflow-wrap:anywhere}
+.layout-mobile .clients-row .clients-phone{white-space:normal!important;overflow-wrap:anywhere}
+.layout-mobile .clients-row .clients-address :is(span,small){white-space:normal!important;overflow-wrap:anywhere}
+.layout-mobile .clients-row .clients-actions{flex-wrap:wrap!important;justify-content:flex-start!important}
+.layout-mobile .clients-modal{padding:8px!important;box-sizing:border-box}
+.layout-mobile .clients-modal-card{width:100%!important;max-width:100%!important;max-height:calc(100dvh - 16px)!important}
+.layout-mobile .clients-modal-grid{grid-template-columns:minmax(0,1fr)!important}
+.layout-mobile .clients-modal-form{padding:19px 14px!important}
+.layout-mobile .clients-modal-form :is(input,select,textarea){min-width:0;max-width:100%;box-sizing:border-box;font-size:16px}
+.layout-mobile .clients-modal-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.layout-mobile .clients-modal-actions button{min-width:0;width:100%}
+.layout-mobile .clients-history-grid{grid-template-columns:minmax(0,1fr)!important}
+.layout-mobile .clients-history-grid .clients-history-order{min-width:0;box-sizing:border-box}
+
+/* OS, Financeiro e cadastros auxiliares: detalhes em coluna em vez de tabela espremida. */
+.layout-mobile [data-arl-order-detail-react="1"]{min-width:0;max-width:100%;overflow-x:clip}
+.layout-mobile [data-arl-order-detail-react="1"] :is(
+  .arl-od-grid,.arl-od-columns,.arl-od-detail-grid,.arl-od-section-grid,.arl-editor-grid,
+  .arl-budget-description-grid,.arl-od-lines,.arl-workflow-grid,.order-workflow-grid
+){grid-template-columns:minmax(0,1fr)!important;max-width:100%;min-width:0}
+.layout-mobile [data-arl-order-detail-react="1"] :is(
+  .arl-od-card,.arl-order-sticky-header,.arl-editor-group,.arl-od-field,.arl-od-summary,
+  .order-workflow,.arl-budget-card
+){min-width:0;max-width:100%;box-sizing:border-box}
+.layout-mobile [data-arl-order-detail-react="1"] :is(
+  input,select,textarea
+){min-width:0;max-width:100%;box-sizing:border-box}
+.layout-mobile [data-arl-order-detail-react="1"] :is(
+  .arl-od-actions,.arl-order-header-actions,.arl-budget-compact-actions
+){display:flex;flex-wrap:wrap;gap:8px;max-width:100%}
+.layout-mobile [data-arl-order-detail-react="1"] :is(
+  .arl-od-actions,.arl-order-header-actions,.arl-budget-compact-actions
+)>*{min-width:0;max-width:100%}
+.layout-mobile .finance-main-hero,
+.layout-mobile .finance-heroes,
+.layout-mobile .finance-total-cards,
+.layout-mobile .finance-cards,
+.layout-mobile .payment-method-grid{min-width:0;max-width:100%;box-sizing:border-box}
+.layout-mobile :is(.finance-heroes,.finance-total-cards,.finance-cards,.payment-method-grid){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.layout-mobile .finance-page :is(.finance-hero,.finance-panel,article){min-width:0;box-sizing:border-box}
+.layout-mobile .finance-page :is(strong,b,small){overflow-wrap:anywhere}
+.layout-mobile .finance-page :is(.finance-table-wrap,.table-wrap){max-width:100%;overflow-x:auto}
+.layout-mobile :is(.supplier-form,.services-modal,.modal-card){max-width:calc(100vw - 20px);box-sizing:border-box}
+
+/* Controle de Gastos continua o miniapp azul, com cartões intactos: somente contenção. */
+.layout-mobile.arl-expense-workspace>main{min-width:0!important;max-width:100%;box-sizing:border-box;overflow-x:clip}
+.layout-mobile.arl-expense-workspace :is(.arl-expense-independent,.cg-mobile,.cg-mobile-summary,.cg-panel,.cg-grid,.cg-projection-grid,.cg-bank-grid){
+  min-width:0;max-width:100%;box-sizing:border-box
+}
+.layout-mobile.arl-expense-workspace .arl-expense-own-header{min-width:0;flex-wrap:wrap}
+.layout-mobile.arl-expense-workspace .arl-expense-own-header>strong{min-width:0}
+.layout-mobile.arl-expense-workspace .arl-expense-own-header button{max-width:100%}
+.layout-mobile.arl-expense-workspace :is(.cg-mobile .cg-bank-grid,.cg-mobile .cg-projection-grid){grid-template-columns:minmax(0,1fr)!important}
+.layout-mobile.arl-expense-workspace :is(.cg-mobile .cg-header,.cgm-header-actions,.cg-section-heading){min-width:0;max-width:100%;flex-wrap:wrap}
+.layout-mobile.arl-expense-workspace :is(.cg-mobile input,.cg-mobile select,.cg-mobile textarea){max-width:100%;min-width:0;box-sizing:border-box}
+.layout-mobile.arl-expense-workspace :is(.cgm-person,.cgm-institution,.cgm-total,.cg-month-compact){min-width:0;max-width:100%}
+.layout-mobile.arl-expense-workspace .arl-expense-bottom{max-width:100%;box-sizing:border-box}
+.layout-mobile.arl-expense-workspace .arl-expense-bottom button{min-width:0;max-width:100%;line-height:1.15;overflow-wrap:normal}
+@media(max-width:390px){
+  .layout-mobile.arl-expense-workspace .cgm-people{grid-template-columns:minmax(0,1fr)!important}
+  .layout-mobile.arl-expense-workspace .arl-expense-own-header{display:grid;grid-template-columns:minmax(0,1fr) auto}
+  .layout-mobile.arl-expense-workspace .arl-expense-own-header button{padding:8px!important;font-size:11px!important}
+  .layout-mobile :is(.arl-settings-tabs,.settings-system-tabs,.finance-tabs,.order-tabs)>button{padding:9px 7px!important;font-size:11px!important}
+}

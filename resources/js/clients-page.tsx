@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { CACHE_POLICIES, sessionCache } from './session-memory-cache';
 import { completedRequest } from './cache-requests';
 import {
@@ -37,6 +37,7 @@ type Client = {
 type Errors = Record<string, string[]>;
 type Props = {
   quick?: boolean;
+  mobile?: boolean;
   onSelected?: (client: Client) => void;
   openOrder?: (id: number) => void;
   onNewOrderForClient?: (client: Client) => void;
@@ -150,11 +151,6 @@ const masks = {
       .slice(0, 8)
       .replace(/(\d{5})(\d)/, "$1-$2"),
 };
-const normalized = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("pt-BR");
 const money = (cents = 0) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
 
 function Field({
@@ -560,6 +556,7 @@ function ClientHistory({
 
 export default function ClientsPage({
   quick = false,
+  mobile = false,
   onSelected,
   openOrder,
   onNewOrderForClient,
@@ -567,12 +564,17 @@ export default function ClientsPage({
   initialClientId,
   onHistoryClose,
 }: Props) {
-  const [initial] = useState(() => ({
-    list: sessionCache.read<{ data: Client[] }>('clients', { all: 1 }),
-    view: !quick ? sessionCache.read<{ q: string; sort: 'name' | 'id'; page: number; perPage: number }>('clients-view')?.value : undefined,
-  }));
+  const mobileList = mobile && !quick;
+  const [initial] = useState(() => {
+    const view = !quick ? sessionCache.read<{ q: string; sort: 'name' | 'id'; page: number; perPage: number }>('clients-view')?.value : undefined;
+    const params = { q: view?.q?.trim() ?? '', sort: mobileList ? 'name' : (view?.sort ?? 'name'),
+      page: view?.page ?? 1, per_page: mobileList ? 10 : (view?.perPage ?? 12), name_only: mobileList ? 1 : 0 };
+    return { view, list: sessionCache.read<{ data: Client[]; total: number }>('clients', params) };
+  });
   const [items, setItems] = useState<Client[]>(initial.list?.value.data ?? []),
+    [total, setTotal] = useState(initial.list?.value.total ?? 0),
     [q, setQ] = useState(initial.view?.q ?? ""),
+    [query, setQuery] = useState(initial.view?.q ?? ""),
     [sort, setSort] = useState<"name" | "id">(initial.view?.sort ?? "name"),
     [page, setPage] = useState(initial.view?.page ?? 1),
     [perPage, setPerPage] = useState(initial.view?.perPage ?? 12),
@@ -582,91 +584,74 @@ export default function ClientsPage({
     [modal, setModal] = useState<Client | null | true>(quick ? true : null),
     [detail, setDetail] = useState<number | undefined>(initialClientId);
   const canManage = !quick && (role === "Master" || role === "Administrador");
+  const effectivePerPage = mobileList ? 10 : perPage;
   const activeRequest = useRef<AbortController | null>(null);
+  const priorSearchInput = useRef(q);
+  useEffect(() => {
+    // Não voltar artificialmente à página 1 ao reabrir Clientes.
+    // Só reiniciar a paginação depois de o usuário realmente pesquisar.
+    if (q === priorSearchInput.current) return;
+    priorSearchInput.current = q;
+    const timer = setTimeout(() => { setQuery(q); setPage(1); }, 150);
+    return () => clearTimeout(timer);
+  }, [q]);
   const load = (force = false) => {
     if (!sessionCache.ready) return;
     activeRequest.current?.abort();
-    const cached = sessionCache.read<{ data: Client[] }>('clients', { all: 1 });
-    if (cached) { setItems(cached.value.data); setHasData(true); }
+    // A API entrega apenas a página necessária. Nunca transferir o catálogo
+    // completo para mostrar 10–100 cartões; isso degrada com milhares de clientes.
+    const params = { q: query.trim(), sort: mobileList ? 'name' : sort,
+      page, per_page: effectivePerPage, name_only: mobileList ? 1 : 0 };
+    const cached = sessionCache.read<{ data: Client[]; total: number }>('clients', params);
+    if (cached) { setItems(cached.value.data); setTotal(cached.value.total); setHasData(true); }
     if (cached?.fresh && !force) { setLoading(false); return; }
     const controller = new AbortController(); activeRequest.current = controller;
-    const ticket = sessionCache.begin('clients', { all: 1 });
+    const ticket = sessionCache.begin('clients', params);
     setLoading(true);
     setError("");
-    api("/clients?all=1", { signal: controller.signal })
+    const path = '/clients?' + new URLSearchParams({
+      q: params.q, sort: params.sort, page: String(page), per_page: String(effectivePerPage),
+      ...(mobileList ? { name_only: '1' } : {}),
+    }).toString();
+    api(path, { signal: controller.signal })
       .then((x) => {
         if (controller.signal.aborted || !sessionCache.write(ticket, x, CACHE_POLICIES.clients)) return;
-        setItems(x.data || []); setHasData(true);
+        setItems(x.data || []); setTotal(Number(x.total) || 0); setHasData(true);
       })
       .catch((e) => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setError(e.message); })
       .finally(() => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setLoading(false); });
   };
   useEffect(() => {
+    const params = { q: query.trim(), sort: mobileList ? 'name' : sort,
+      page, per_page: effectivePerPage, name_only: mobileList ? 1 : 0 };
     void load();
     const unsubscribe = sessionCache.subscribe(event => {
-      if (event.type === 'revoke' && event.resources.includes('clients')) { activeRequest.current?.abort(); setItems([]); setHasData(false); setLoading(false); setError('Acesso aos clientes recusado.'); }
+      if (event.type === 'revoke' && event.resources.includes('clients')) { activeRequest.current?.abort(); setItems([]); setTotal(0); setHasData(false); setLoading(false); setError('Acesso aos clientes recusado.'); }
       else if (event.type === 'invalidate' && event.resources.includes('clients')) load(true);
       else if (event.type === 'session' && sessionCache.ready) load();
     });
     const scope = sessionCache.sessionKey;
     return () => {
-      if (sessionCache.sessionKey === scope) sessionCache.touch('clients', { all: 1 });
+      if (sessionCache.sessionKey === scope) sessionCache.touch('clients', params);
       activeRequest.current?.abort(); unsubscribe();
     };
-  }, []);
+  }, [query, sort, page, effectivePerPage, mobileList]);
   useEffect(() => {
     if (quick) return;
     const ticket = sessionCache.begin('clients-view');
     const save = () => { sessionCache.write(ticket, { q, sort, page, perPage }, CACHE_POLICIES.view); };
     save(); return save;
   }, [q, sort, page, perPage, quick]);
-  const filtered = useMemo(() => {
-    const raw = q.trim(),
-      needle = normalized(raw),
-      numericOnly = /^[\d\s().+/-]+$/.test(raw) && digits(raw).length > 0,
-      needleDigits = numericOnly ? digits(raw) : "";
-    const selected = !needle
-      ? items
-      : items.filter(
-          (c) =>
-            normalized(c.name).includes(needle) ||
-            normalized(c.nickname || "").includes(needle) ||
-            normalized(masks.phone(c.phone)).includes(needle) ||
-            normalized(masks.document(c.document)).includes(needle) ||
-            (needleDigits &&
-              [digits(c.phone), digits(c.document)].some((value) =>
-                value.includes(needleDigits),
-              )),
-        );
-    return [...selected].sort((a, b) =>
-      sort === "id"
-        ? a.id - b.id
-        : a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }) ||
-          a.id - b.id,
-    );
-  }, [items, q, sort]);
-  const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
-  const visibleItems = useMemo(
-    () => filtered.slice((page - 1) * perPage, page * perPage),
-    [filtered, page, perPage],
-  );
-  const previousFilters = useRef({ q, sort, perPage });
-  useEffect(() => {
-    if (q === previousFilters.current.q && sort === previousFilters.current.sort && perPage === previousFilters.current.perPage) return;
-    previousFilters.current = { q, sort, perPage };
-    setPage(1);
-  }, [q, sort, perPage]);
+  // A lista e a contagem já vêm paginadas e filtradas pelo servidor.
+  // Manter a mesma estrutura JSX e os mesmos controles aprovados.
+  const pageCount = Math.max(1, Math.ceil(total / effectivePerPage));
+  const visibleItems = items;
   useEffect(() => {
     if (hasData && page > pageCount) setPage(pageCount);
   }, [page, pageCount, hasData]);
   const onSaved = (saved: Client) => {
-    sessionCache.update<{ data: Client[] }>('clients', { all: 1 }, current => ({ ...current, data: current.data.some(c => c.id === saved.id) ? current.data.map(c => c.id === saved.id ? saved : c) : [...current.data, saved] }));
-    setItems((current) => {
-      const exists = current.some((c) => c.id === saved.id);
-      return exists
-        ? current.map((c) => (c.id === saved.id ? saved : c))
-        : [...current, saved];
-    });
+    // A API invalida o cache de Clientes após salvar. O efeito recarrega
+    // a página correta, sem forçar uma linha fora da ordenação/paginação.
     setModal(null);
     onSelected?.(saved);
   };
@@ -679,8 +664,10 @@ export default function ClientsPage({
       return;
     try {
       await api(`/clients/${c.id}`, { method: "DELETE" });
-      sessionCache.update<{ data: Client[] }>('clients', { all: 1 }, current => ({ ...current, data: current.data.filter(item => item.id !== c.id) }));
+      // O DELETE invalida as páginas do cache; refletir imediatamente a remoção
+      // enquanto a página atualizada chega do servidor.
       setItems((current) => current.filter((item) => item.id !== c.id));
+      setTotal((current) => Math.max(0, current - 1));
     } catch (e: any) {
       window.alert(e.message || "Não foi possível excluir o cliente.");
     }
@@ -695,13 +682,13 @@ export default function ClientsPage({
       />
     );
   return (
-    <section className="clients-react-page" data-arl-clients-react="1">
+    <section className={'clients-react-page' + (mobileList ? ' clients-mobile-simple' : '')} data-arl-clients-react="1">
       <PageHeader
         eyebrow="ARL INFORMÁTICA"
         title="Gestão de Clientes"
         description="Gerencie seus clientes com busca instantânea, histórico e cadastro rápido."
         icon={Users}
-        counter={`${filtered.length} ${filtered.length === 1 ? "cliente encontrado" : "clientes encontrados"}`}
+        counter={`${total} ${total === 1 ? "cliente encontrado" : "clientes encontrados"}`}
         actions={
           <button className="primary" onClick={() => setModal(true)}>
             <Plus />
@@ -716,7 +703,7 @@ export default function ClientsPage({
               <Search />
               Buscar clientes
             </h2>
-            <p>Pesquise por nome, apelido, telefone ou CPF/CNPJ</p>
+            <p>{mobileList ? 'Pesquise pelo nome do cliente.' : 'Pesquise por nome, apelido, telefone ou CPF/CNPJ'}</p>
           </div>
         </div>
         <div className="clients-toolbar">
@@ -725,7 +712,7 @@ export default function ClientsPage({
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Nome, apelido, telefone ou CPF/CNPJ…"
+              placeholder={mobileList ? 'Nome do cliente…' : 'Nome, apelido, telefone ou CPF/CNPJ…'}
               aria-label="Buscar clientes"
             />
           </label>
@@ -752,29 +739,29 @@ export default function ClientsPage({
               <ChevronRight />
             </button>
           </div>
-          <label className="clients-page-size">
+          {!mobileList && <label className="clients-page-size">
             Por página
             <select
               aria-label="Clientes por página"
               value={perPage}
-              onChange={(e) => setPerPage(Number(e.target.value))}
+              onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
             >
               <option value="12">12</option>
               <option value="30">30</option>
               <option value="100">100</option>
             </select>
-          </label>
-          <label className="clients-sort">
+          </label>}
+          {!mobileList && <label className="clients-sort">
             Ordenar
             <select
               aria-label="Ordenar clientes"
               value={sort}
-              onChange={(e) => setSort(e.target.value as "name" | "id")}
+              onChange={(e) => { setSort(e.target.value as "name" | "id"); setPage(1); }}
             >
               <option value="name">Alfabética</option>
               <option value="id">Por ID de cadastro</option>
             </select>
-          </label>
+          </label>}
         </div>
         {loading && hasData && <small role="status">Atualizando clientes…</small>}
         {error && hasData && <div role="alert" className="state error">{error}</div>}
@@ -782,7 +769,7 @@ export default function ClientsPage({
           <div className="state">Carregando clientes…</div>
         ) : error && !hasData ? (
           <div className="state error">{error}</div>
-        ) : !filtered.length ? (
+        ) : !visibleItems.length ? (
           <div className="state">Nenhum cliente encontrado.</div>
         ) : (
           <div className="client-list">
@@ -834,7 +821,7 @@ export default function ClientsPage({
                   >
                     <ActionIcon kind="maps" />
                   </a>
-                  {!quick && onNewOrderForClient && (
+                  {!mobileList && !quick && onNewOrderForClient && (
                     <button
                       aria-label="Nova OS para este cliente"
                       title="Nova OS para este cliente"
@@ -867,13 +854,13 @@ export default function ClientsPage({
                       >
                         <ActionIcon kind="editar" />
                       </button>
-                      <button
+                      {!mobileList && <button
                         aria-label={`Excluir cliente ${c.name}`}
                         title="Excluir cliente"
                         onClick={() => void remove(c)}
                       >
                         <ActionIcon kind="lixeira" />
-                      </button>
+                      </button>}
                     </>
                   )}
                 </div>

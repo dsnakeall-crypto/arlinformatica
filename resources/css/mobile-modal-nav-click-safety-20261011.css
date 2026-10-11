@@ -1,0 +1,8 @@
+/* Modal aberto no Mobile sempre recebe o clique.
+   A barra inferior mantém o layout aprovado quando não há diálogo;
+   durante um diálogo, ela nunca intercepta os botões da janela. */
+.shell.layout-mobile:has(.modal) > .arl-global-mobile-nav,
+.shell.layout-mobile:has(.modal) .arl-global-mobile-nav {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}

@@ -61,7 +61,7 @@ test('cabeçalho se adapta ao modo Mobile / Tablet sem overflow', async ({ page 
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport);
   }
 
-  await page.locator('.arl-global-mobile-nav').getByRole('button', { name: 'Nova OS', exact: true }).click();
+  await page.locator('.arl-global-mobile-nav').getByRole('button', { name: 'Abrir OS', exact: true }).click();
   await expect(page.getByTestId('page-header').getByRole('heading', { name: 'Abertura de Chamado / Nova OS', exact: true })).toBeVisible();
   for (const width of [390, 768]) {
     await page.setViewportSize({ width, height: 900 });

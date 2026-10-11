@@ -154,7 +154,7 @@ export function Orders({ open, role, initialTab, onCountersChanged }: any) {
               setPage(1);
             }}
           >
-            Aguardando PGTO <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.awaiting_payment ?? 0}</small>
+            <span className="order-awaiting-full">Aguardando PGTO</span><span className="order-awaiting-short">AGU. PGTO</span> <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.awaiting_payment ?? 0}</small>
           </button>
           <button
             className={tab === "finalized" ? "active" : ""}

@@ -509,7 +509,7 @@ class FinanceController extends Controller
 
     public function adjust(Request $request, int $transaction): JsonResponse
     {
-        abort_unless($request->user()->hasRole('Master', 'Administrador'), 403, 'Apenas Master ou Administrador pode corrigir o financeiro.');
+        abort_unless($request->user()->hasRole('Master', 'Administrador', 'Administrador Simples'), 403, 'Apenas Master ou Administrador pode corrigir o financeiro.');
         $data = $request->validate([
             'new_cents' => ['required', 'integer', 'min:0'],
             'reason' => ['required', 'string', 'min:3', 'max:1000'],
@@ -550,7 +550,7 @@ class FinanceController extends Controller
 
     public function issueReport(Request $request, CompanySettings $settings): JsonResponse
     {
-        abort_unless($request->user()->hasRole('Master', 'Administrador'), 403);
+        abort_unless($request->user()->hasRole('Master', 'Administrador', 'Administrador Simples'), 403);
         $month = $this->month($request)->getData(true);
         $snapshot = [
             'company' => $settings->snapshot(),

@@ -7,6 +7,8 @@ process.env.TZ = 'America/Sao_Paulo';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Registro histórico de diagnóstico: captura telas em caminho externo e não integra homologação.
+  testIgnore: /_mobile-audit-temp\.mobile\.spec\.ts/,
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,

@@ -1,6 +1,7 @@
 /.env
 /vendor/
 /node_modules/
+/.ddev/
 /public/build/
 /storage/*.key
 /storage/framework/cache/*

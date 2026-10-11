@@ -7,7 +7,7 @@ for (const width of [1366, 390]) test(`divisão por valores e popup manual em ${
   const stamp = Date.now();
   const bank = (await api(page, '/expense-control/catalogs/institutions', 'POST', { name: 'Valores ' + stamp, active: true, due_day: 10, color: '#123456' })).body;
   const type = (await api(page, '/expense-control/catalogs/types', 'POST', { name: 'Cartão valores ' + stamp, active: true })).body;
-  await page.getByRole('navigation', { name: width === 390 ? 'Navegação Mobile / Tablet' : 'Menu principal', exact: true }).getByRole('button', { name: 'Controle de Gasto', exact: true }).click();
+  await page.getByRole('navigation', { name: width === 390 ? 'Navegação Mobile / Tablet' : 'Menu principal', exact: true }).getByRole('button', { name: width === 390 ? 'Gestor de Gasto' : 'Controle de Gasto', exact: true }).click();
   await page.getByRole('button', { name: 'Nova dívida', exact: true }).click();
   if (width === 390) await page.getByRole('button', { name: 'Cadastro manual' }).click();
   const dialog = page.getByRole('dialog', { name: 'Cadastrar nova dívida', exact: true });

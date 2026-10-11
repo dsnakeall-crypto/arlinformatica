@@ -11,17 +11,17 @@ class NotificationController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        if ($request->user()->role && in_array($request->user()->role->name, ['Master', 'Administrador'], true)) {
+        if ($request->user()->role && in_array($request->user()->role->name, ['Master', 'Administrador', 'Administrador Simples'], true)) {
             app(SupplierPayables::class)->remind();
         }
         $query = DB::table('notifications')->where('user_id', $request->user()->id)->where('active', true);
         if ($request->user()->role?->name === 'Controle de Gasto') {
             $query->where('type', 'expense_control');
         }
-        if (! in_array($request->user()->role?->name, ['Master', 'Administrador'], true)) {
+        if (! in_array($request->user()->role?->name, ['Master', 'Administrador', 'Administrador Simples'], true)) {
             $query->where('type', '!=', 'supplier_due');
         }
-        if (! in_array($request->user()->role?->name, ['Master', 'Administrador', 'Controle de Gasto'], true)) {
+        if (! $request->user()->canUseExpenseControl()) {
             $query->where('type', '!=', 'expense_control');
         }
 

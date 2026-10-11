@@ -1,0 +1,104 @@
+/* ARL — APENAS botões que eram rosa/vermelhos no WEB CLEAN.
+ * NÃO alterar status, ícones de ações, WhatsApp/Maps, cards, campos,
+ * fundos, botões secundários, Web Original, Mobile ou Gestor de Gastos.
+ */
+@media screen {
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar :is(.new-order-shortcut,.nav-group button.active),
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(
+    button.primary:not(:disabled),
+    a.primary,
+    .order-tabs button.active,
+    .finance-tabs button.active,
+    .supplier-tabs button.active,
+    .arl-settings-tabs button.active,
+    .settings-system-tabs button.active,
+    .attendance button.chosen,
+    .arl-catalog-picker-column article > button:not(:disabled)
+  ) {
+    background:linear-gradient(180deg,#424247 0%,#202024 49%,#08080a 100%)!important;
+    border-color:#29292e!important;
+    color:#fff!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.21),0 8px 17px -9px rgba(0,0,0,.65)!important;
+    text-shadow:none!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar :is(.new-order-shortcut,.nav-group button.active):hover,
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(
+    button.primary:not(:disabled),
+    a.primary,
+    .order-tabs button.active,
+    .finance-tabs button.active,
+    .supplier-tabs button.active,
+    .arl-settings-tabs button.active,
+    .settings-system-tabs button.active,
+    .attendance button.chosen,
+    .arl-catalog-picker-column article > button:not(:disabled)
+  ):hover {
+    background:linear-gradient(180deg,#515157 0%,#29292e 49%,#111114 100%)!important;
+    color:#fff!important;
+  }
+  /* Somente o texto/ícone DENTRO desses botões, sem recolorir SVGs do sistema. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar :is(.new-order-shortcut,.nav-group button.active)
+  :is(svg,.nav-icon,.nav-label),
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(
+    button.primary:not(:disabled),
+    a.primary,
+    .order-tabs button.active,
+    .finance-tabs button.active,
+    .supplier-tabs button.active,
+    .arl-settings-tabs button.active,
+    .settings-system-tabs button.active,
+    .attendance button.chosen,
+    .arl-catalog-picker-column article > button:not(:disabled)
+  ) :is(svg,span,b,strong) {
+    color:#fff!important;
+    stroke:currentColor;
+  }
+}
+
+/* Abas que já eram rosa: impedir que o texto acinzentado dos estilos
+   carregados sob demanda se sobreponha ao branco dos botões ativos. */
+@media screen {
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.order-tabs,.finance-tabs,.supplier-tabs,.arl-settings-tabs,.settings-system-tabs)
+  button.active:not(:disabled),
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.order-tabs,.finance-tabs,.supplier-tabs,.arl-settings-tabs,.settings-system-tabs)
+  button[aria-selected="true"]:not(:disabled),
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.order-tabs,.finance-tabs,.supplier-tabs,.arl-settings-tabs,.settings-system-tabs)
+  button[aria-pressed="true"]:not(:disabled) {
+    color:#fff!important;
+  }
+}
+
+/* "Enviar foto" e uma acao visualmente em forma de botao rosa,
+   embora tecnicamente seja um label de upload. Apenas ela vira preta;
+   "Usar camera" e demais controles neutros ficam como estavam. */
+@media screen {
+ html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+ .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+ .arl-order-photo-tools > label {
+   background:linear-gradient(180deg,#424247 0%,#202024 49%,#08080a 100%)!important;
+   border-color:#29292e!important;
+   color:#fff!important;
+   box-shadow:inset 0 1px 0 rgba(255,255,255,.21),0 8px 17px -9px rgba(0,0,0,.65)!important;
+ }
+ html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+ .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+ .arl-order-photo-tools > label:hover {
+   background:linear-gradient(180deg,#515157 0%,#29292e 49%,#111114 100%)!important;
+   color:#fff!important;
+ }
+}

@@ -1,0 +1,209 @@
+/* Web Clean — Gestor de Gastos: barras flutuantes e faturas legíveis.
+   NOVO CSS APENAS NO DESKTOP. O mobile aprovado não é alterado.
+   A linha de fatura continua um único botão clicável (sem ícone vermelho/seta).
+   O valor exibido é o original de MonthlyInvoices, formatado em BRL, sem recalcular. */
+@media screen {
+  /* Remove os contornos/superfícies gerais que envolviam as abas. */
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-navigation {
+    display:block!important;
+    padding:0!important;
+    margin:8px 0 16px!important;
+    border:0!important;
+    outline:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-navigation .cg-tabs {
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+    outline:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    gap:8px!important;
+    overflow-x:auto!important;
+  }
+  /* Cada botão preserva sua própria borda, seu relevo e foco acessível. */
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-navigation .cg-tabs>button {
+    border:1px solid #dbe7f8!important;
+    border-radius:13px!important;
+    box-shadow:0 5px 13px -9px #3559906b,inset 0 1px 0 #fff!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-navigation .cg-tabs>button.active {
+    box-shadow:inset 0 1px 0 #ffffff78,0 7px 16px -8px #2866d9b5!important;
+  }
+  /* Remove o painel/contorno geral do Resumo: somente cartões individuais
+     têm borda e sombra. Inclui o agrupamento mensal e as linhas de faturas. */
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-mobile-summary {
+    display:grid!important;
+    background:transparent!important;
+    background-image:none!important;
+    border:0!important;
+    outline:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    padding:0!important;
+    overflow:visible!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  :is(.cgo-indicators,.cgo-people,.cg-monthly-invoices,.cg-invoice-grid) {
+    background:transparent!important;
+    background-image:none!important;
+    border:0!important;
+    outline:0!important;
+    box-shadow:none!important;
+  }
+
+  /* Faturas do mês: uma barrinha horizontal por dívida. */
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-monthly-invoices {
+    width:100%!important;
+    padding:0!important;
+    margin:10px 0 18px!important;
+    overflow:visible!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-monthly-invoices .cg-invoice-grid {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:9px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-monthly-invoices
+  .cg-invoice-grid>button.cg-invoice-card:not(:disabled) {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) max-content!important;
+    grid-template-rows:minmax(0,auto) minmax(0,auto)!important;
+    align-items:center!important;
+    justify-content:stretch!important;
+    column-gap:12px!important;
+    row-gap:6px!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:66px!important;
+    height:auto!important;
+    margin:0!important;
+    padding:12px 17px!important;
+    border:1px solid #cbdff9!important;
+    border-radius:14px!important;
+    background:linear-gradient(115deg,#f7fbff 0%,#edf5ff 100%)!important;
+    background-color:#f2f8ff!important;
+    box-shadow:0 4px 12px -8px #244d8599,inset 0 1px 0 #fff!important;
+    color:#0c2a58!important;
+    text-align:left!important;
+    overflow:visible!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"][data-arl-palette] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-monthly-invoices
+  .cg-invoice-grid>button.cg-invoice-card:not(:disabled):hover {
+    border-color:#a9c9f4!important;
+    background:linear-gradient(115deg,#f3f9ff 0%,#e5f0ff 100%)!important;
+    box-shadow:0 6px 15px -8px #244d8588,inset 0 1px 0 #fff!important;
+  }
+  /* A arte lateral vermelha e a seta direita não são necessárias no WEB. */
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-card>.cg-invoice-symbol,
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-card>svg:last-child {
+    display:none!important;
+  }
+  /* Os elementos da descrição participam diretamente da grade de 2 linhas:
+     1: Instituição — tipo
+     2: Vencimento à esquerda | Valor integral à direita. */
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-card>.cg-invoice-description {
+    display:contents!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-card>.cg-invoice-description>b {
+    grid-column:1/-1!important;
+    grid-row:1!important;
+    display:block!important;
+    margin:0!important;
+    min-width:0!important;
+    font-size:13px!important;
+    font-weight:750!important;
+    line-height:1.35!important;
+    letter-spacing:0!important;
+    color:#113665!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-card>.cg-invoice-description>small {
+    grid-column:1!important;
+    grid-row:2!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:7px!important;
+    margin:0!important;
+    min-width:0!important;
+    font-size:12px!important;
+    line-height:1.4!important;
+    font-weight:500!important;
+    color:#5b79aa!important;
+    white-space:normal!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-card>.cg-invoice-description>small svg {
+    display:inline-block!important;
+    width:15px!important;
+    height:15px!important;
+    color:#3d70b9!important;
+    flex:0 0 15px!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-card>strong {
+    grid-column:2!important;
+    grid-row:2!important;
+    align-self:center!important;
+    justify-self:end!important;
+    display:block!important;
+    max-width:100%!important;
+    width:auto!important;
+    margin:0!important;
+    padding:0!important;
+    min-width:max-content!important;
+    font-size:15px!important;
+    font-weight:850!important;
+    line-height:1.2!important;
+    letter-spacing:0!important;
+    white-space:nowrap!important;
+    color:#0b2b5b!important;
+    text-align:right!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-monthly-invoices
+  .cg-invoice-card:focus-visible {
+    outline:2px solid #3474e2!important;
+    outline-offset:2px!important;
+  }
+}
+/* Em um Web/PC estreito, mantém o valor à vista sem rolagem horizontal. */
+@container (max-width:460px) {
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-grid>button.cg-invoice-card {
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto auto auto!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-card>.cg-invoice-description>b {
+    grid-column:1!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-card>.cg-invoice-description>small {
+    grid-column:1!important;grid-row:2!important;
+  }
+  html body .shell.layout-desktop .cg-page.cg-expense-web-mirror
+  .cg-monthly-invoices .cg-invoice-card>strong {
+    grid-column:1!important;grid-row:3!important;
+    justify-self:start!important;
+  }
+}

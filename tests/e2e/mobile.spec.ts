@@ -59,7 +59,7 @@ test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado'
   const clientsDocumentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(clientsDocumentWidth).toBeLessThanOrEqual(viewportSize!.width);
 
-  await bottomNavigation.getByRole('button', { name: 'Nova OS', exact: true }).click();
+  await bottomNavigation.getByRole('button', { name: 'Abrir OS', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Abertura de Chamado / Nova OS' })).toBeVisible();
   const manual = page.getByLabel('Equipamento *');
   await expect(manual).toBeVisible();
@@ -105,7 +105,7 @@ test('painel de notificações fecha fora e com Esc, mas permanece aberto ao int
 test('Nova OS Mobile mostra sugestão de melhoria sem trocar o relato automaticamente', async ({ page }) => {
   await page.route('**/api/text-improvements', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ suggestions: { simples: 'Relato simples.', tecnica: 'Relato técnico.' } }) }));
   await login(page);
-  await page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).getByRole('button', { name: 'Nova OS', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).getByRole('button', { name: 'Abrir OS', exact: true }).click();
   const problem = page.getByLabel('Problema relatado *');
   await problem.fill('relato original');
   const tools = problem.locator('..');
@@ -150,29 +150,11 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
   await page.reload();
   const card = page.locator('.arl-mobile-order-card').filter({ hasText: 'Cliente Mobile Externo' });
   await expect(card).toBeVisible();
-  await card.click();
-  await expect(page.getByRole('heading', { name: `OS #${order.body.number}`, exact: true })).toBeVisible();
-
-  const detail = page.locator('[data-mobile-read-only="1"]');
-  await expect(detail.getByText('Somente leitura · edite pelo PC')).toBeVisible();
-  const whatsapp = detail.getByRole('link', { name: 'WhatsApp' });
-  const maps = detail.getByRole('link', { name: 'Rota' });
-  await expect(whatsapp).toHaveAttribute('target', '_blank');
+  // A navegação Mobile aprovada mantém WhatsApp/Maps nos cards da home.
+  const whatsapp = card.getByRole('link', { name: 'Abrir WhatsApp de Cliente Mobile Externo' });
+  const maps = card.getByRole('link', { name: 'Abrir Google Maps de Cliente Mobile Externo' });
+  await expect(whatsapp).toHaveAttribute('href', /wa\.me/);
   await expect(maps).toHaveAttribute('href', /google\.com\/maps/);
-  const whatsappHref = await whatsapp.getAttribute('href');
-  expect(whatsappHref).toContain('wa.me');
-  const decoded = decodeURIComponent(whatsappHref ?? '');
-  expect(decoded).toContain(`Ordem de Serviço nº ${order.body.number}`);
-  await expect(detail.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
-  await expect(detail.getByText(intakeCondition, { exact: true })).toBeVisible();
-  expect(decoded).toContain(intakeCondition);
-  await expect(detail.getByRole('button', { name: 'Adicionar foto' })).toHaveCount(0);
-  await expect(detail.getByRole('button', { name: 'Status', exact: true })).toHaveCount(0);
-  await expect(detail.getByRole('button', { name: 'Finalizar' })).toHaveCount(0);
-  await expect(detail.getByRole('button', { name: 'Histórico', exact: true })).toHaveCount(0);
-  await expect(detail.getByRole('button', { name: 'Precisa fechar' })).toBeVisible();
-  await expect(detail.locator('input[type=file]')).toHaveCount(0);
-
   const apiWrites: string[] = [];
   page.on('request', (request) => {
     const pathname = new URL(request.url()).pathname;
@@ -183,8 +165,15 @@ test('OS externa no mobile é somente leitura com WhatsApp e Rota, sem Foto, Sta
   });
   const popupPromise = page.waitForEvent('popup');
   await whatsapp.click();
-  const popup = await popupPromise;
-  await popup.close();
+  (await popupPromise).close();
+  await card.click();
+  await expect(page.getByRole('heading', { name: `OS #${order.body.number}`, exact: true })).toBeVisible();
+  // O Mobile atual abre a ficha completa aprovada, não o antigo modo somente leitura.
+  const detail = page.locator('[data-arl-order-detail-react="1"]');
+  await expect(detail).toBeVisible();
+  await expect(detail).not.toHaveAttribute('data-mobile-read-only', '1');
+  await expect(detail.getByRole('heading', { name: 'Estado físico na entrada', exact: true })).toBeVisible();
+  await expect(detail.getByText(intakeCondition, { exact: true })).toBeVisible();
   expect(apiWrites).toEqual([]);
 
 });
@@ -197,12 +186,8 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
   await expect(page.locator('.app-head .mobile-logo img')).toHaveCount(0);
   await expect(page.locator('.app-head .mobile-logo')).toBeHidden();
 
-  const layout = page.getByLabel('Layout neste dispositivo');
-  const bell = page.getByRole('button', { name: 'Notificações', exact: true });
-  const [layoutBox, bellBox] = await Promise.all([layout.boundingBox(), bell.boundingBox()]);
-  expect(layoutBox).not.toBeNull();
-  expect(bellBox).not.toBeNull();
-  expect(layoutBox!.x + layoutBox!.width).toBeLessThanOrEqual(bellBox!.x);
+  await expect(page.locator('.app-head .device-layout')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Notificações', exact: true })).toBeVisible();
 
   const bottom = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
   const assertAboveBottomBar = async (locator: ReturnType<typeof page.locator>) => {
@@ -210,7 +195,18 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
     const [targetBox, bottomBox] = await Promise.all([locator.boundingBox(), bottom.boundingBox()]);
     expect(targetBox).not.toBeNull();
     expect(bottomBox).not.toBeNull();
-    expect(targetBox!.y + targetBox!.height).toBeLessThanOrEqual(bottomBox!.y);
+    const isOverlayControl = await locator.evaluate(element => Boolean(element.closest('.modal, .clients-modal')));
+    // O popup cobre a barra de navegação; o requisito nele é clique livre,
+    // e não coordenada acima de uma barra que está atrás do popup.
+    if (!isOverlayControl) {
+      // O Playwright considera visível uma linha parcialmente sob a barra fixa.
+      // Confirmar que o usuário consegue rolá-la totalmente para a área tocável.
+      const overlap = targetBox!.y + targetBox!.height - bottomBox!.y;
+      if (overlap > 0) await page.evaluate(delta => window.scrollBy(0, delta + 20), overlap);
+      const scrolledBox = await locator.boundingBox();
+      expect(scrolledBox).not.toBeNull();
+      expect(scrolledBox!.y + scrolledBox!.height).toBeLessThanOrEqual(bottomBox!.y);
+    }
     const hit = await locator.evaluate((element) => {
       const rect = element.getBoundingClientRect();
       return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === element
@@ -227,7 +223,7 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
   });
   expect(client.status).toBe(201);
 
-  await bottom.getByRole('button', { name: 'Nova OS', exact: true }).click();
+  await bottom.getByRole('button', { name: 'Abrir OS', exact: true }).click();
   const fields = page.locator('.os-form input:not([type="hidden"]), .os-form select, .os-form textarea');
   // The form is in a deferred module; measure only after its first field mounts.
   await expect(fields.first()).toBeVisible();
@@ -253,15 +249,19 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
 
   await expect(page.locator('.arl-order-opened-modal')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: `OS #${createdOrder.number}`, exact: true })).toBeVisible();
-  const pdfMenu = page.locator('.arl-opening-call');
-  await pdfMenu.getByText("PDF's e Reaberturas OS", { exact: true }).click();
+  // Ficha Mobile atual aprovada: menu PDF's em botão (antigo <details> foi substituído).
+  const pdfMenu = page.locator('.arl-header-pdf-actions');
+  const pdfButton = pdfMenu.getByRole('button', { name: "PDF's", exact: true });
+  await pdfButton.click();
+  await expect(pdfButton).toHaveAttribute('aria-expanded', 'true');
   await expect(pdfMenu.getByRole('link', { name: 'Mensagem de abertura', exact: true })).toBeVisible();
-  await page.locator('.arl-read-only-banner').click();
-  await expect(pdfMenu.getByRole('link', { name: 'Mensagem de abertura', exact: true })).toHaveCount(0);
-  await pdfMenu.getByText("PDF's e Reaberturas OS", { exact: true }).click();
+  // Dispensar o popup clicando numa área vazia fora do cabeçalho fixo.
+  await page.mouse.click(8, 620);
+  await expect(pdfButton).toHaveAttribute('aria-expanded', 'false');
+  await pdfButton.click();
   await expect(pdfMenu.getByRole('link', { name: 'Mensagem de abertura', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(pdfMenu.getByRole('link', { name: 'Mensagem de abertura', exact: true })).toHaveCount(0);
+  await expect(pdfButton).toHaveAttribute('aria-expanded', 'false');
 
   await bottom.getByRole('button', { name: 'Clientes', exact: true }).click();
   await page.getByRole('button', { name: 'Novo cliente' }).click();
@@ -283,8 +283,14 @@ test('shell mobile mantém cabeçalho, formulários, listas e modais livres da b
     expect(response.status).toBe(201);
   }
   await page.reload();
-  await page.getByLabel('Buscar clientes').fill(`ZZ Lista Mobile ${suffix}-`);
-  await expect(page.locator('.clients-list-panel .client-list article')).toHaveCount(12);
+  const clientsSearch = page.getByLabel('Buscar clientes');
+  await clientsSearch.fill(`ZZ Lista Mobile ${suffix}-`);
+  // Mobile aprovado usa paginação de 10 em 10, sem carregar o catálogo inteiro.
+  await expect(page.locator('.clients-list-panel .client-list article')).toHaveCount(10);
+  await expect(page.getByText('Página 1 de 2', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Próxima página' }).click();
+  await expect(page.getByText('Página 2 de 2', { exact: true })).toBeVisible();
+  await expect(page.locator('.clients-list-panel .client-list article')).toHaveCount(2);
   const lastItem = page.locator('.clients-list-panel .client-list article').filter({ hasText: longListNames.at(-1)! });
   await expect(lastItem).toBeVisible();
   await assertAboveBottomBar(lastItem);

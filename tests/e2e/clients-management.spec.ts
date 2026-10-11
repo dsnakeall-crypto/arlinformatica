@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { api, login, uniqueDocument } from './helpers';
 
-test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa ícones oficiais com olho Lucide', async ({ page }) => {
+test('Gestão de Clientes pagina e pesquisa no servidor, ordena e preserva os ícones oficiais', async ({ page }) => {
   await login(page);
 
   const zulu = await api(page, '/clients', 'POST', {
@@ -50,28 +50,38 @@ test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa ícon
 
   await page.getByRole('button', { name: 'Clientes', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
-  await expect.poll(() => clientGets.filter(value => value.includes('all=1')).length).toBe(1);
+  await expect.poll(() => clientGets.filter(value => value.includes('per_page=12')).length).toBeGreaterThanOrEqual(1);
+  expect(clientGets.some(value => value.includes('all=1'))).toBe(false);
 
   const search = page.getByLabel('Buscar clientes');
+  const filteredRequest=page.waitForResponse(resp=>{
+    const url=new URL(resp.url());
+    return url.pathname==='/api/clients' && url.searchParams.get('q')==='Ordena E2E';
+  });
   await search.fill('Ordena E2E');
+  const filteredResponse=await filteredRequest;
+  const filteredJson=await filteredResponse.json();
+  console.log('FILTER_DEBUG',JSON.stringify({status:filteredResponse.status(),total:filteredJson.total,
+    rows:filteredJson.data?.map((client:{name:string})=>client.name),requests:clientGets}));
+  expect(filteredJson.total).toBe(2);
   const rows = page.locator('.client-list article');
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(0)).toContainText('Ordena E2E Alpha');
   await expect(rows.nth(1)).toContainText('Ordena E2E Zulu');
-  expect(clientGets).toEqual(['?all=1']);
+  expect(clientGets.some(value => value.includes('all=1'))).toBe(false);
 
   await page.getByLabel('Ordenar clientes').selectOption('id');
   await expect(rows.nth(0)).toContainText('Ordena E2E Zulu');
   await expect(rows.nth(0)).toContainText(`Cliente Nº ${zulu.body.id}`);
   await expect(rows.nth(1)).toContainText(`Cliente Nº ${alpha.body.id}`);
-  expect(clientGets).toEqual(['?all=1']);
+  expect(clientGets.some(value => value.includes('all=1'))).toBe(false);
 
   await search.fill('35988882222');
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText('Ordena E2E Alpha');
   await expect(rows.first()).toContainText('Rua Alpha, 12 · Jardim');
   await expect(rows.first()).toContainText('Campos Gerais - MG · CEP 37160-000');
-  expect(clientGets).toEqual(['?all=1']);
+  expect(clientGets.some(value => value.includes('all=1'))).toBe(false);
 
   const actionSources = await rows.first().locator('.clients-actions img').evaluateAll(images => images.map(image => image.getAttribute('src')));
   expect(actionSources).toEqual([
@@ -80,7 +90,13 @@ test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa ícon
     '/arl-assets/icons/icon-editar.png',
     '/arl-assets/icons/icon-lixeira.png',
   ]);
-  await expect(rows.first().getByRole('button', { name: 'Visualizar' }).locator('svg.lucide-eye')).toBeVisible();
+  const eye=rows.first().getByRole('button', { name: 'Visualizar' });
+  await expect(eye).toBeVisible();
+  if (await page.locator('html').getAttribute('data-arl-appearance') === 'clean') {
+    expect(await eye.evaluate(el=>getComputedStyle(el).backgroundImage)).toContain('icon-web-eye-compact-2x.png');
+  } else {
+    await expect(eye.locator('svg.lucide-eye')).toBeVisible();
+  }
 
   await search.fill('Pagina E2E');
   await expect(rows).toHaveCount(12);
@@ -97,5 +113,5 @@ test('Gestão de Clientes carrega uma vez, filtra localmente, ordena e usa ícon
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText('Pagina E2E 07');
   await expect(page.getByText('Página 1 de 1', { exact: true })).toBeVisible();
-  expect(clientGets).toEqual(['?all=1']);
+  expect(clientGets.some(value => value.includes('all=1'))).toBe(false);
 });

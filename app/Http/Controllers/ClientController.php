@@ -20,13 +20,23 @@ class ClientController extends Controller
         $q = Client::query();
         $search = preg_replace('/\s+/', ' ', trim((string) $r->query('q')));
         if ($search !== '') {
-            $terms = array_values(array_filter(explode(' ', $search)));
-            foreach ($terms as $term) {
-                $document = DocumentValidator::normalize($term);
-                $q->where(function ($query) use ($term, $document) {
-                    $query->where('name', 'like', "%{$term}%")
-                        ->orWhere('nickname', 'like', "%{$term}%")
-                        ->orWhere('phone', 'like', "%{$term}%");
+            if ($r->boolean('name_only')) {
+                $q->where('name', 'like', "%{$search}%");
+            } else {
+                // Apenas buscas numericas podem comparar fragmentos de telefone/CPF.
+                // "Ordena E2E" nao pode virar o numero "2" e trazer outros clientes.
+                $numericSearch = preg_match('/^[\d\s().+\/-]+$/u', $search) === 1;
+                $document = $numericSearch ? DocumentValidator::normalize($search) : '';
+                $phoneDigits = $numericSearch ? preg_replace('/\D+/', '', $search) : '';
+                // Manter a pesquisa de frase inteira da antiga tela de Clientes.
+                // Cruzar termos entre nome e CPF de outro campo gerava falsos positivos.
+                $q->where(function ($query) use ($search, $document, $phoneDigits) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('nickname', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                    if ($phoneDigits !== '') {
+                        $query->orWhere('phone', 'like', "%{$phoneDigits}%");
+                    }
                     if ($document !== '') {
                         $query->orWhere('document', 'like', "%{$document}%");
                     }
@@ -35,12 +45,18 @@ class ClientController extends Controller
 
             // Pesquisa progressiva: quem começa pelo texto digitado aparece primeiro,
             // sem esconder os demais resultados que contêm o termo.
-            $q->orderByRaw('CASE WHEN LOWER(name) LIKE ? THEN 0 ELSE 1 END', [mb_strtolower($search).'%']);
+            if ($r->query('sort') !== 'id') {
+                $q->orderByRaw('CASE WHEN LOWER(name) LIKE ? THEN 0 ELSE 1 END', [mb_strtolower($search).'%']);
+            }
         }
-        $q->orderBy('name')->orderBy('id');
+        if ($r->query('sort') === 'id') {
+            $q->orderBy('id');
+        } else {
+            $q->orderBy('name')->orderBy('id');
+        }
 
-        // A Gestão de Clientes carrega o catálogo inteiro uma única vez e filtra localmente.
-        // Os demais consumidores continuam usando a paginação existente por padrão.
+        // Compatibilidade com consumidores antigos: all=1 continua disponível.
+        // A Gestão de Clientes (Web e Mobile) usa paginação e pesquisa no servidor.
         if ($r->boolean('all')) {
             return response()->json(['data' => $q->get()]);
         }

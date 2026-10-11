@@ -56,7 +56,9 @@ test('Configurações organiza cartões e Sistema; clientes alinham colunas em r
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => localStorage.setItem('arl-layout-mode', 'mobile'));
   await page.reload();
-  await page.getByRole('tab', { name: 'Mensagens', exact: true }).click();
+  // 09/10/2026: no celular, Configurações abre por categorias em cartões, com retorno explícito.
+  await page.getByRole('navigation', { name: 'Categorias de Configurações' }).locator('[data-section="messages"]').click();
+  await expect(page.locator('.arl-settings-mobile-back')).toBeVisible();
   const mobile = await cards.evaluateAll(items => items.map(el => ({ x: el.getBoundingClientRect().x, y: el.getBoundingClientRect().y })));
   expect(mobile[0].x).toBe(mobile[1].x);
   expect(mobile[1].y).toBeGreaterThan(mobile[0].y);

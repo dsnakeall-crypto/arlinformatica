@@ -1,0 +1,170 @@
+/* ARL | Menu inferior referência 3D enviada pelo proprietário em 09/10/2026.
+   SOMENTE modo Mobile > barra inferior. Preserve menu compacto, desktop e home de OS. */
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five {
+  --nav-disc: clamp(42px, 11.7vw, 57px);
+  --nav-disc-feature: clamp(58px, 15.8vw, 78px);
+  position: fixed;
+  z-index: 140;
+  bottom: calc(9px + env(safe-area-inset-bottom));
+  left: max(8px, env(safe-area-inset-left));
+  right: max(8px, env(safe-area-inset-right));
+  width: calc(100% - 16px);
+  max-width: 510px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 8px 6px 9px;
+  gap: 1px;
+  align-items: end;
+  overflow: visible;
+  isolation: isolate;
+  border: 1px solid rgba(235, 227, 233, .96);
+  border-radius: 26px;
+  background: linear-gradient(172deg, rgba(255,255,255,.97), rgba(248,246,250,.97) 65%, rgba(237,234,240,.97));
+  box-shadow: 0 11px 32px rgba(39, 24, 34, .18), inset 0 2px 0 #fff, 0 1px 3px rgba(30,22,33,.1);
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  min-height: 73px;
+  width: 100%;
+  margin: 0;
+  padding: 3px 0 1px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  box-shadow: none;
+  color: #353841;
+  transform: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button:is(.active,[aria-current="page"]) {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five .arl-nav-icon-disc {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: var(--nav-disc);
+  height: var(--nav-disc);
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid rgba(223,226,232,.96);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 16%, #fff 15%, #fcfcff 35%, #e4e6ed 100%);
+  color: #435372;
+  box-shadow: 0 5px 11px rgba(39, 42, 64, .16), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(122,129,151,.19);
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five .arl-nav-icon-disc > svg {
+  display: block;
+  width: 51%;
+  height: 51%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 1px 1px rgba(30,39,62,.28));
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five .arl-nav-caption {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 22px;
+  padding: 0 1px;
+  color: #404049;
+  text-align: center;
+  font-size: clamp(9px, 2.55vw, 11.5px);
+  font-weight: 850;
+  line-height: 1.12;
+  letter-spacing: -.25px;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button:is(.active,[aria-current="page"]):not(.primary-shortcut) .arl-nav-icon-disc {
+  border-color: #f4d8df;
+  background: radial-gradient(circle at 35% 16%, #fff 8%, #fff3f6 39%, #f8dce6 100%);
+  color: #cf1740;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button:is(.active,[aria-current="page"]):not(.primary-shortcut) .arl-nav-caption {
+  color: #bd1037;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button.primary-shortcut {
+  transform: none;
+  background: transparent;
+  box-shadow: none;
+  color: #b80430;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button.primary-shortcut .arl-nav-icon-disc {
+  width: var(--nav-disc-feature);
+  height: var(--nav-disc-feature);
+  margin-top: calc((var(--nav-disc-feature) - var(--nav-disc)) * -1);
+  transform: translateY(-5px);
+  border: 1px solid rgba(178,4,38,.56);
+  background: radial-gradient(circle at 34% 11%, #ff8296 -15%, #ff375d 27%, #e5083b 68%, #a80028 100%);
+  color: #fff;
+  box-shadow: 0 9px 17px rgba(173,0,42,.3), 0 2px 4px rgba(139,0,24,.25), inset 0 2px 2px rgba(255,255,255,.6), inset 0 -5px 8px rgba(106,0,22,.3);
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button.primary-shortcut .arl-nav-icon-disc > svg {
+  width: 53%;
+  height: 53%;
+  stroke-width: 3.5;
+  color: #fff;
+  filter: drop-shadow(0 2px 1px rgba(91,0,18,.22));
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button.primary-shortcut .arl-nav-caption {
+  color: #b80430;
+  font-weight: 900;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button:focus-visible {
+  outline: 2px solid #c9002c;
+  outline-offset: 1px;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button:active .arl-nav-icon-disc {
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgba(39,42,64,.14), inset 0 2px 3px rgba(60,60,80,.14);
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button.primary-shortcut:active .arl-nav-icon-disc { transform: translateY(-3px); }
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) > main {
+  padding-bottom: calc(128px + env(safe-area-inset-bottom)) !important;
+}
+@media (max-width: 359px) {
+  .layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five {
+    --nav-disc: 40px;
+    --nav-disc-feature: 56px;
+    padding: 8px 3px 8px;
+    gap: 0;
+    border-radius: 23px;
+  }
+  .layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five .arl-nav-caption {
+    font-size: 9px;
+    letter-spacing: -.35px;
+  }
+}
+/* Clean Premium usa regras globais de botões com !important: somente na barra
+   inferior, impedir que elas apaguem os círculos 3D da referência. */
+html:root[data-arl-appearance="clean"][data-arl-palette] body .layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button:not(:disabled),
+html:root[data-arl-appearance="clean"][data-arl-palette] body .layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button.primary-shortcut:not(:disabled) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #404049 !important;
+}
+html:root[data-arl-appearance="clean"][data-arl-palette] body .layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button.primary-shortcut:not(:disabled) .arl-nav-caption {
+  color: #b80430 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .arl-global-mobile-nav.arl-mobile-five > button, .arl-global-mobile-nav.arl-mobile-five .arl-nav-icon-disc { transition: none !important; }
+}

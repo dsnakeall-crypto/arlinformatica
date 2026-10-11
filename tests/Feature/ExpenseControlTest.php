@@ -182,6 +182,7 @@ class ExpenseControlTest extends TestCase
     public function test_expense_notifications_are_private_transactional_and_idempotent_and_history_only_deletions(): void
     {
         $admin = $this->account('Administrador');
+        $admin->update(['expense_control_access' => true]);
         $expense = $this->account('Controle de Gasto');
         $employee = $this->account('Funcionário');
         $data = $this->payload(['name' => str_repeat('Compra ', 20)]);

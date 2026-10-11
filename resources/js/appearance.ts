@@ -1,5 +1,6 @@
 import '../css/clean-appearance.css';
 import { appearanceColors, appearanceKey, normalizeAppearance, type AppearancePreference } from './appearance-preference';
+import { layoutStorageKey, resolveLayoutMode } from './layout-preference';
 
 function readAppearance(): AppearancePreference {
   try { return normalizeAppearance(JSON.parse(localStorage.getItem(appearanceKey) || 'null')); }
@@ -11,7 +12,14 @@ let preference = readAppearance();
 function applyAppearance() {
   const root = document.documentElement;
   const color = appearanceColors[preference.color];
-  root.dataset.arlAppearance = preference.mode;
+  // O tema acompanha a preferência persistida, não a largura momentânea
+  // da janela (movimento entre monitores, minimizar e redimensionar).
+  let saved: string | null = null;
+  try { saved = localStorage.getItem(layoutStorageKey); } catch { /* Sem storage: usar primeiro acesso. */ }
+  const effectiveLayout = root.dataset.layout || resolveLayoutMode(
+    saved, navigator.userAgent, window.matchMedia('(max-width: 1024px)').matches,
+  );
+  root.dataset.arlAppearance = effectiveLayout === 'mobile' ? 'clean' : preference.mode;
   root.dataset.arlPalette = preference.color;
   root.style.setProperty('--clean-accent', color.accent);
   root.style.setProperty('--clean-soft', color.soft);
@@ -31,6 +39,7 @@ export function setAppearance(value: AppearancePreference): boolean {
 }
 
 applyAppearance();
+window.addEventListener('arl-layout-appearance-sync', applyAppearance);
 window.addEventListener('storage', event => {
   if (event.key !== appearanceKey && event.key !== null) return;
   preference = readAppearance();

@@ -29,7 +29,7 @@ export function Dashboard({ go, desk = false, role, mobileLayout = false, onCoun
     if (!cached) setLoading(true);
     void Promise.all([
       api('/orders/desk', { signal: controller.signal }),
-      api('/orders?tab=closed_week&per_page=100', { signal: controller.signal }),
+      api('/orders?tab=closed_week&per_page=100&panel_light=1', { signal: controller.signal }),
     ]).then(([open, closed]) => {
       const value = { items: orderListPresentation({ data: open }).data as Order[], closedItems: orderListPresentation(closed).data as Order[], completed: closed.total };
       if (controller.signal.aborted || !sessionCache.write(ticket, value, CACHE_POLICIES.orders)) return;
@@ -130,6 +130,7 @@ export function Dashboard({ go, desk = false, role, mobileLayout = false, onCoun
           }
         />
       )}
+      {!mobileLayout && <>
       <div className="dashboard-cards status-cards">
         <article>
           <span>
@@ -205,6 +206,8 @@ export function Dashboard({ go, desk = false, role, mobileLayout = false, onCoun
           </section>
         </>
       )}
+      </>}
+      {mobileLayout && loadError && <p role="alert">{loadError}</p>}
       <QuickEntry open={quick} onClose={() => setQuick(false)} />
       {interrupt && (
         <InterruptionModal

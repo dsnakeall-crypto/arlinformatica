@@ -1,0 +1,163 @@
+/* Reforma mobile ARL e miniapp de gastos. Regras novas isoladas por classes. */
+.arl-settings-readonly dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.arl-settings-readonly dl>div{padding:12px;background:#faf8fa;border-radius:12px}
+.arl-settings-readonly dt{color:#6d656b;font-size:12px;font-weight:700}
+.arl-settings-readonly dd{margin:5px 0 0;font-weight:650;overflow-wrap:anywhere}
+
+.layout-mobile:not(.arl-expense-workspace) .app-head .menu-toggle{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:9px;border-radius:12px}
+.layout-mobile .arl-global-mobile-nav.arl-mobile-five{display:grid;position:fixed;z-index:50;left:6px;right:6px;bottom:0;gap:4px;padding:7px 5px calc(8px + env(safe-area-inset-bottom));align-items:end;max-width:none}
+.layout-mobile .arl-global-mobile-nav.arl-mobile-five button{display:flex;flex-direction:column;gap:4px;justify-content:center;align-items:center;min-width:0;min-height:57px;padding:6px 2px;font-size:10px;line-height:1.1;font-weight:800;text-align:center}
+.layout-mobile .arl-global-mobile-nav.arl-mobile-five button svg{width:21px;height:21px}
+.layout-mobile .arl-global-mobile-nav.arl-mobile-five button span{display:block;max-width:100%;white-space:normal;overflow-wrap:break-word}
+.layout-mobile .arl-global-mobile-nav.arl-mobile-five button.primary-shortcut{transform:translateY(-8px);border-radius:18px;box-shadow:0 7px 17px rgba(154,3,35,.26)}
+.layout-mobile .arl-global-mobile-nav.arl-mobile-five button.primary-shortcut svg{width:27px;height:27px}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) main{padding-bottom:calc(93px + env(safe-area-inset-bottom))!important}
+
+.layout-mobile.arl-mobile-compact-mode:not(.arl-expense-workspace) aside{display:flex!important;transform:none!important;width:58px!important;left:0!important;right:auto!important;padding:9px 5px!important;overflow:hidden!important;z-index:90}
+.layout-mobile.arl-mobile-compact-mode:not(.arl-expense-workspace)>main{margin-left:58px!important;width:calc(100% - 58px)!important;padding-bottom:22px!important;min-width:0}
+.layout-mobile.arl-mobile-compact-mode aside .close,
+.layout-mobile.arl-mobile-compact-mode aside .sidebar-brand,
+.layout-mobile.arl-mobile-compact-mode aside .nav-group h2,
+.layout-mobile.arl-mobile-compact-mode aside .nav-label,
+.layout-mobile.arl-mobile-compact-mode aside .nav-badge,
+.layout-mobile.arl-mobile-compact-mode aside .profile>div,
+.layout-mobile.arl-mobile-compact-mode aside .sidebar-pin-toggle,
+.layout-mobile.arl-mobile-compact-mode aside .new-order-shortcut span{display:none!important}
+.layout-mobile.arl-mobile-compact-mode aside nav{width:100%;padding:0}
+.layout-mobile.arl-mobile-compact-mode aside .nav-group{padding:5px 0;margin:0}
+.layout-mobile.arl-mobile-compact-mode aside .nav-group button,
+.layout-mobile.arl-mobile-compact-mode aside .new-order-shortcut{width:45px!important;min-width:45px!important;min-height:43px!important;padding:8px!important;display:flex!important;justify-content:center!important;align-items:center!important}
+.layout-mobile.arl-mobile-compact-mode aside .nav-icon{display:inline-flex;align-items:center;justify-content:center}
+.layout-mobile.arl-mobile-compact-mode aside .nav-icon svg{width:21px;height:21px}
+.layout-mobile.arl-mobile-compact-mode aside .profile{padding:4px 0!important}
+.layout-mobile.arl-mobile-compact-mode aside .profile>button{width:44px;min-height:43px;justify-content:center;padding:7px}
+.layout-mobile.arl-mobile-compact-mode aside .profile>button span{display:none}
+.layout-mobile.arl-mobile-compact-mode .arl-global-mobile-nav{display:none!important}
+
+.shell.arl-expense-workspace>aside{display:none!important}
+.shell.arl-expense-workspace>main{margin-left:0!important;width:100%!important;max-width:none!important;padding:10px clamp(10px,2vw,25px) 24px!important;background:#f7f8fb!important}
+.shell.arl-expense-workspace .app-head{display:none!important}
+.arl-expense-independent{max-width:1440px;margin:0 auto}
+.arl-expense-own-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 4px 16px}
+.arl-expense-own-header button{min-height:42px;padding:9px 14px;border-radius:12px;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #e7e8ef;color:#343541;font-weight:800}
+.arl-expense-own-header button svg{width:18px;height:18px}
+.arl-expense-own-header strong{font-size:17px;color:#252736}
+.arl-expense-own-header button[aria-current=page]{border-color:#c00028;color:#b00024}
+.arl-expense-subnav{display:flex;justify-content:flex-start;gap:8px;margin:9px 0 15px}
+.arl-expense-subnav button{display:inline-flex;align-items:center;gap:6px;padding:10px;border:1px solid #d7e0fb;border-radius:12px;background:#eaf0ff;color:#2e4784;font-size:12px;font-weight:800}
+.arl-expense-subnav svg{width:15px;height:15px}
+.arl-expense-subnav button[aria-pressed=true]{background:#dce6ff;border-color:#9bb5f7}
+.layout-mobile.arl-expense-workspace>main{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+.layout-mobile .arl-expense-independent .cg-navigation{display:none!important}
+.arl-expense-independent.cg-mobile .arl-expense-bottom{position:fixed;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;align-items:end;bottom:0;left:5px;right:5px;z-index:140;background:#fdfdff;padding:7px 7px calc(9px + env(safe-area-inset-bottom));border:1px solid #e0e4f1;border-radius:18px 18px 0 0;box-shadow:0 -7px 26px rgba(16,32,73,.1)}
+.arl-expense-bottom button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:58px;min-width:0;padding:7px 2px;font-size:10px;font-weight:800;line-height:1.1;white-space:normal;text-align:center;color:#4f6088;background:#f3f6ff;border:1px solid #e1e6fa;border-radius:13px}
+.arl-expense-bottom button svg{width:23px;height:23px}
+.arl-expense-bottom button[aria-current=page]{background:#dce8ff;color:#204eae;border-color:#b5c9f9}
+.arl-expense-bottom button.arl-expense-add{background:linear-gradient(180deg,#e72b4b,#b10024);color:#fff;border-color:#b10024;transform:translateY(-8px);box-shadow:0 5px 12px rgba(163,16,39,.22)}
+.arl-expense-bottom button.arl-expense-add svg{width:27px;height:27px}
+@media(max-width:360px){.arl-expense-bottom button,.layout-mobile .arl-global-mobile-nav.arl-mobile-five button{font-size:9px;letter-spacing:-.2px}.arl-expense-own-header button{font-size:12px;padding:8px}}
+
+/* Ajustes 09/10: menu mobile arredondado e painel lateral translúcido.
+   Isolado do desktop, da home de OS e do layout lateral compacto. */
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>.arl-mobile-drawer-backdrop{
+  position:fixed;inset:0;z-index:1050;display:block;width:100%;height:100%;
+  border:0;border-radius:0;background:rgba(16,19,28,.46);
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>aside.open{
+  position:fixed;inset:0 auto 0 0;width:min(290px,86vw)!important;height:100dvh;
+  transform:translateX(0)!important;z-index:1051!important;
+  background:linear-gradient(155deg,rgba(36,39,52,.91),rgba(39,29,46,.86))!important;
+  border-right:1px solid rgba(255,255,255,.28);
+  border-radius:0 23px 23px 0;box-shadow:12px 0 32px rgba(12,17,31,.28);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  overflow-y:auto;overscroll-behavior:contain;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>aside .sidebar-pin-toggle{display:none!important}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>aside.open .nav-icon{
+  border-radius:50%;background:rgba(255,255,255,.13);width:37px;height:37px;
+  display:inline-flex;align-items:center;justify-content:center;flex:none;
+}
+.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)>aside.open nav button{
+  border-radius:14px;
+}
+.layout-mobile:not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five{
+  gap:2px;padding:5px 4px calc(8px + env(safe-area-inset-bottom));
+}
+.layout-mobile:not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five button{
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  border-radius:13px!important;padding:3px 1px!important;min-height:62px;
+  font-size:10px;gap:3px;
+}
+.layout-mobile:not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five button svg{
+  display:block;width:41px;height:41px;padding:10px;border-radius:50%;
+  color:#3c4c66;background:#ecf1f8;
+}
+.layout-mobile:not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five button:is(.active,[aria-current="page"]) svg{
+  color:#b2002c;background:#fce6ec;
+}
+.layout-mobile:not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five button.primary-shortcut{
+  transform:translateY(-3px);background:transparent!important;
+}
+.layout-mobile:not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five button.primary-shortcut svg{
+  width:44px;height:44px;padding:10px;border-radius:50%;
+  background:linear-gradient(155deg,#ed3153,#ae092b);color:#fff;
+  box-shadow:0 5px 13px rgba(154,3,35,.23);
+}
+.layout-mobile .arl-expense-independent.cg-mobile .arl-expense-bottom{
+  gap:2px;padding:5px 4px calc(8px + env(safe-area-inset-bottom));
+}
+.layout-mobile .arl-expense-independent.cg-mobile .arl-expense-bottom button{
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  border-radius:12px!important;padding:3px 1px!important;min-height:62px;
+  font-size:10px;gap:3px;transform:none;
+}
+.layout-mobile .arl-expense-independent.cg-mobile .arl-expense-bottom button svg{
+  width:42px;height:42px;padding:10px;flex:none;border-radius:50%;
+  color:#3b5286;background:#edf2fb;
+}
+.layout-mobile .arl-expense-independent.cg-mobile .arl-expense-bottom button[aria-current="page"] svg{
+  background:#dce8ff;color:#1755b6;
+}
+.layout-mobile .arl-expense-independent.cg-mobile .arl-expense-bottom button.arl-expense-add{
+  transform:translateY(-3px);
+}
+.layout-mobile .arl-expense-independent.cg-mobile .arl-expense-bottom button.arl-expense-add svg{
+  width:44px;height:44px;padding:10px;background:linear-gradient(145deg,#e72b4b,#b10024);
+  color:#fff;box-shadow:0 5px 13px rgba(163,16,39,.22);
+}
+/* Submenus pequenos e sempre visíveis: nenhuma seção some da navegação. */
+.cg-mobile .arl-expense-subnav{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;
+  margin:7px 0 13px;
+}
+.cg-mobile .arl-expense-subnav button{
+  min-width:0;min-height:44px;padding:8px 7px;border-radius:999px;
+  background:#f5f8ff;border:1px solid #dbe5f6;color:#3e5582;
+  font-size:10.5px;line-height:1.2;justify-content:center;text-align:center;
+}
+.cg-mobile .arl-expense-subnav button[aria-pressed="true"]{
+  background:#dce8ff;border-color:#8faee8;color:#17499d;
+  box-shadow:inset 0 0 0 1px #bdd1f5;
+}
+.cg-mobile .arl-expense-subnav svg{width:15px;height:15px;flex:none}
+.cg-mobile .cg-projection-sections{display:none!important}
+/* Clientes: busca e seletor de ordem menos volumosos no celular. */
+html[data-layout="mobile"] .layout-mobile .clients-list-panel{padding:11px 12px!important}
+html[data-layout="mobile"] .layout-mobile .clients-search-head{margin:0 0 7px!important;padding:0!important}
+html[data-layout="mobile"] .layout-mobile .clients-search-head h2{
+  margin:0!important;font-size:15px!important;line-height:1.25;
+}
+html[data-layout="mobile"] .layout-mobile .clients-search-head h2 svg{width:16px;height:16px}
+html[data-layout="mobile"] .layout-mobile .clients-search-head p{
+  margin:3px 0 0!important;font-size:11px!important;line-height:1.3;
+}
+html[data-layout="mobile"] .layout-mobile .clients-toolbar{
+  gap:7px!important;margin:0 0 10px!important;padding:0!important;
+}
+html[data-layout="mobile"] .layout-mobile .clients-toolbar :is(.clients-search,.clients-sort,.clients-page-size){
+  padding:4px 7px!important;margin:0!important;min-height:44px;max-height:52px;
+  border-radius:12px;
+}
+html[data-layout="mobile"] .layout-mobile .clients-toolbar :is(input,select){
+  min-height:36px!important;height:36px!important;font-size:16px!important;
+}

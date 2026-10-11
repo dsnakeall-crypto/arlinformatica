@@ -45,3 +45,19 @@ Para dúvidas pequenas, escolha uma solução conservadora e documente. Só inte
 ## Entrega
 
 Ao concluir, crie `CHECKLIST_FINAL.md` com requisitos `[OK]` ou `[PENDENTE]`, sem marcar `[OK]` em funcionalidade fictícia/mock.
+
+## Diretriz permanente: desempenho máximo, responsividade e estabilidade (10/10/2026)
+
+A fase de design do Web Original, Web Clean e Mobile está aprovada: **não alterar layout, cores, ícones, tamanhos, espaçamentos, textos ou fluxos aprovados** para otimizar velocidade, salvo correção de defeito comprovado e informada ao proprietário.
+
+**Objetivo prioritário:** resposta perceptível ao clique em até 100 ms quando tecnicamente possível; troca de páginas com dados já disponíveis idealmente em até 300 ms. Esses tempos são **metas**, não garantias: registrar medições reais de cenários frios/quentes, com PC/celular, latência de rede e servidor.
+
+1. Auditar profundamente frontend React (montagens/renderizações, estados, efeitos, fetches duplicados, carga de chunks, CSS, imagens, cache/invalidação, navegação intermediária, mensagens de loading); backend Laravel/PHP (tempos por rota, jobs, arquivos, queries, índices, N+1, OPcache) e MariaDB/MySQL (EXPLAIN, perfis de acesso).
+2. **Mensurar primeiro, corrigir a causa depois**. Registrar baseline por interação: clique → feedback, renderização, carregamento, resposta API, contagem de chamadas, consumo de memória, erros e comparação após cada alteração.
+3. Eliminar piscadas e telas intermediárias; adotar navegação direta e persistência de dados úteis. Nunca esconder erros, desabilitar validação, pular permissões ou servir cache obsoleto de saldos, pagamentos e dados sensíveis para forçar métricas.
+4. Otimizar todo o sistema, não só o Controle de Gastos: Painel, Clientes, OS, Serviços, Financeiro, Pós-venda, Configurações, Relatórios, Web e Mobile. Investigar também gargalos de rede/hospedagem e do ambiente WSL2/DDEV; diferenciar lentidão local de produção.
+5. Preservar 100% das regras financeiras, dados, documentos, fotos, histórico, autenticação e segurança. Testes destrutivos somente com SQLite/dados descartáveis e ambiente isolado; nunca enviar banco de desenvolvimento à KingHost.
+6. Cada mudança precisa de backup externo verificado, teste E2E funcional/performance, lint/typecheck/build e testes PHP/React aplicáveis. Marcar regressões e bloquear lançamento se a suíte crítica falhar ou ficar incompleta.
+7. Reunir análise, plano, mudanças, métricas e pendências em `docs/AUDITORIA_PERFORMANCE_RELEASE_20261010.md` (ou relatório sucessor) e `CHECKLIST_FINAL.md`. Quando for útil, preparar um briefing revisável para Codex/Claude; agentes não substituem confirmação por testes.
+8. **Antes de qualquer alteração no servidor oficial, no banco real, backups remotos, DNS ou implantação, explicar exatamente os passos, riscos, rollback e solicitar autorização expressa.** Não publicar, resetar git, limpar diretórios ou modificar produção automaticamente.
+9. Priorizar a experiência real do usuário: transições instantâneas quando há dados locais, feedback apropriado quando aguardar é necessário, zero flashes artificiais e redução de trabalho redundante. A meta é o melhor desempenho mensurável possível, não promessa impossível de ausência absoluta de latência.

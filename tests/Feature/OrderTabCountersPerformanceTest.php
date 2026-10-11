@@ -15,6 +15,43 @@ class OrderTabCountersPerformanceTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_dashboard_light_week_skips_unused_aggregates_without_changing_order_data(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $user = User::create([
+            'role_id' => DB::table('roles')->where('name', 'Master')->value('id'),
+            'name' => 'Master painel leve',
+            'login' => 'light-dashboard-test',
+            'password' => 'Senha#123',
+            'active' => true,
+        ]);
+        $this->actingAs($user);
+
+        DB::enableQueryLog();
+        try {
+            DB::flushQueryLog();
+            $normal = $this->getJson('/api/orders?tab=closed_week&per_page=100');
+            $normalQueries = count(DB::getQueryLog());
+
+            DB::flushQueryLog();
+            $light = $this->getJson('/api/orders?tab=closed_week&per_page=100&panel_light=1');
+            $lightQueries = count(DB::getQueryLog());
+        } finally {
+            DB::disableQueryLog();
+            DB::flushQueryLog();
+        }
+
+        $normal->assertOk();
+        $light->assertOk();
+        $this->assertSame($normal->json('data'), $light->json('data'));
+        $this->assertSame($normal->json('total'), $light->json('total'));
+        $this->assertArrayHasKey('summary', $normal->json());
+        $this->assertArrayHasKey('tab_counts', $normal->json());
+        $this->assertArrayNotHasKey('summary', $light->json());
+        $this->assertArrayNotHasKey('tab_counts', $light->json());
+        $this->assertGreaterThanOrEqual($lightQueries + 3, $normalQueries);
+    }
+
     public function test_empty_counters_are_zero_and_use_a_single_aggregate_query(): void
     {
         DB::enableQueryLog();

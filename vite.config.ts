@@ -6,6 +6,7 @@ export default defineConfig({
     // Resolve lazy dependencies to the same absolute URL as Laravel's stylesheet tags.
     base: './',
     plugins: [
+                react(),
         laravel({
             input: [
                 'resources/js/appearance.ts',
@@ -31,9 +32,12 @@ export default defineConfig({
             ],
             refresh: true,
         }),
-        react(),
     ],
     server: {
-        host: '0.0.0.0',
+        host: 'localhost',
+        port: 5173,
+        strictPort: true,
+        cors: true,
+        hmr: { host: 'localhost' },
     },
 });

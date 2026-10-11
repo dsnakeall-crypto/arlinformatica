@@ -31,6 +31,35 @@ class RememberCookieTest extends TestCase
         }
     }
 
+    public function test_stale_three_part_remember_cookie_is_discarded_without_a_server_error(): void
+    {
+        // Após importar um banco, o navegador pode enviar um cookie antigo
+        // estruturalmente válido, mas com usuário/token já inexistente.
+        $oldCookie = '99999999|'.Str::random(60).'|'.Str::random(64);
+
+        $this->withCookie($this->recallerName(), $oldCookie)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('Acesso restrito')
+            ->assertCookieExpired($this->recallerName());
+    }
+
+    public function test_remember_cookie_with_wrong_token_is_discarded(): void
+    {
+        $user = $this->user();
+        $oldCookie = implode('|', [
+            $user->getAuthIdentifier(),
+            Str::random(60),
+            auth()->guard('web')->hashPasswordForCookie($user->getAuthPassword()),
+        ]);
+
+        $this->withCookie($this->recallerName(), $oldCookie)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('Acesso restrito')
+            ->assertCookieExpired($this->recallerName());
+    }
+
     public function test_an_illegible_remember_cookie_is_discarded_without_a_server_error(): void
     {
         $this->withUnencryptedCookie($this->recallerName(), 'ilegível')

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, CreditCard, ReceiptText, TrendingUp } from 'lucide-react';
 import PersonPortrait from './expense-person-portrait';
 import OrderPopup from './order-popup';
 import { expenseControlApi as api } from './expense-control-api';
@@ -9,7 +9,7 @@ const money = (value = 0) => new Intl.NumberFormat('pt-BR', { style: 'currency',
 const date = (value: string) => value.slice(0, 10).split('-').reverse().join('/');
 
 export function MonthlyInvoices({ items = [], onOpen }: { items?: MonthlyInvoice[]; onOpen: (item: MonthlyInvoice) => void }) {
-  return <section className="cg-monthly-invoices" aria-label="Faturas do mês"><div className="cg-section-heading"><div><span className="cg-eyebrow">MÊS SELECIONADO</span><h2>Faturas do mês</h2><p>Valores de todos os responsáveis. Cartões agrupados; empréstimos e demais dívidas separados.</p></div></div><div className="cg-invoice-grid">{items.map(item => <button key={item.key} className="cg-invoice-card" onClick={() => onOpen(item)}><span className="cg-invoice-description"><b>{item.institution_name}</b><span>{item.type_name}{item.debt_id !== null && ' · ' + item.name}</span><small><CalendarDays /> Vencimento: {date(item.due_on)}</small>{item.notes && <small className="cg-purchase-note" title={item.notes}>{item.notes}</small>}</span><strong>{money(item.remaining_cents)}</strong><ChevronRight /></button>)}</div>{!items.length && <p className="cg-muted">Nenhuma fatura pendente neste mês.</p>}</section>;
+  return <section className="cg-monthly-invoices" aria-label="Faturas do mês"><div className="cg-section-heading"><div><span className="cg-eyebrow">MÊS SELECIONADO</span><h2>Faturas do mês</h2><p>Valores de todos os responsáveis. Cartões agrupados; empréstimos e demais dívidas separados.</p></div></div><div className="cg-invoice-grid">{items.map(item => <button key={item.key} className="cg-invoice-card" onClick={() => onOpen(item)}><span className="cg-invoice-symbol" aria-hidden="true">{/cart[aã]o|cr[eé]dito/i.test(item.type_name) ? <CreditCard /> : <ReceiptText />}</span><span className="cg-invoice-description"><b>{item.institution_name} - {item.type_name}</b><small><CalendarDays /> Vencimento: {date(item.due_on)}</small></span><strong>{money(item.remaining_cents)}</strong><ChevronRight /></button>)}</div>{!items.length && <p className="cg-muted">Nenhuma fatura pendente neste mês.</p>}</section>;
 }
 
 type Detail = { data: { purchase_notes?: string | null; id: number; name: string; institution_name: string; type_name: string; number: number; due_on: string; scope_cents: number }[]; one_cents: number; two_cents: number; shared_cents: number; total_cents: number; total: number; current_page: number; last_page: number };

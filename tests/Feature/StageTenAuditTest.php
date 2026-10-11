@@ -69,6 +69,7 @@ class StageTenAuditTest extends TestCase
         $context->assertExactJson([
             'id' => $user->id, 'name' => $user->name, 'login' => $user->login, 'role' => 'Funcionário',
             'sidebar_pinned' => false,
+            'can_expense_control' => false,
             'csrf_token' => $context->json('csrf_token'),
         ]);
         $detail = $this->getJson("/api/orders/{$order->id}")->assertOk()->json();

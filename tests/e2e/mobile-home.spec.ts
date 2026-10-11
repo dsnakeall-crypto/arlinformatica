@@ -36,7 +36,7 @@ async function createOpenOrder(page: Parameters<typeof api>[0]) {
   return { clientName };
 }
 
-test('mobile explícito prioriza OS abertas, mantém barra global e abre OS somente leitura', async ({ page }) => {
+test('mobile explícito prioriza OS abertas, mantém cinco atalhos e abre OS funcional', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => localStorage.setItem('arl-layout-mode', 'mobile'));
   await login(page);
@@ -57,16 +57,14 @@ test('mobile explícito prioriza OS abertas, mantém barra global e abre OS some
   await expect(card.getByRole('link', { name: `Abrir Google Maps de ${clientName}` })).toHaveAttribute('href', /google\.com\/maps/);
 
   await card.click();
-  await expect(page.getByText('Somente leitura · edite pelo PC')).toBeVisible();
-  await expect(page.locator('[data-mobile-read-only="1"]')).toBeVisible();
-  for (const forbidden of ['Fotos', 'Laudos técnicos', 'Orçamento', 'Pagamento', 'Finalização da OS']) {
-    await expect(page.getByRole('heading', { name: forbidden, exact: true })).toHaveCount(0);
-  }
+  // Fluxo Mobile aprovado em 09/10: OS abre na ficha funcional, não na antiga ficha somente leitura.
+  await expect(page.locator('[data-arl-order-detail-react="1"]')).toBeVisible();
+  await expect(page.locator('[data-mobile-read-only="1"]')).toHaveCount(0);
   const bottom = page.locator('.arl-global-mobile-nav');
-  await expect(bottom.getByRole('button')).toHaveCount(4);
-  await expect(bottom.getByRole('button', { name: 'Controle de Gasto', exact: true })).toBeVisible();
+  await expect(bottom.getByRole('button')).toHaveCount(5);
+  await expect(bottom.getByRole('button', { name: 'Gestor de Gasto', exact: true })).toBeVisible();
   await expect(bottom.getByRole('button', { name: 'Clientes' })).toBeVisible();
-  await expect(bottom.getByRole('button', { name: 'Nova OS' })).toBeVisible();
+  await expect(bottom.getByRole('button', { name: 'Abrir OS' })).toBeVisible();
 
   await bottom.getByRole('button', { name: 'Clientes' }).click();
   await expect(page.getByRole('heading', { name: /Clientes/ })).toBeVisible();
@@ -114,16 +112,15 @@ test('modo Mobile / Tablet ativa a mesma tela inicial mesmo em viewport largo', 
   await expect(page.locator('.arl-mobile-home').getByRole('heading', { name: 'OS abertas' })).toBeVisible();
 });
 
-test('modo Mobile / Tablet exibe os quatro destinos acessíveis por ícones', async ({ page }) => {
+test('modo Mobile / Tablet exibe os cinco destinos aprovados por ícones', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('arl-layout-mode', 'mobile'));
   await login(page);
-  await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Abrir menu' })).toBeVisible();
   const bottomBar = page.locator('.arl-global-mobile-nav');
-  await expect(bottomBar.getByRole('button')).toHaveCount(4);
-  for (const label of ['OS abertas', 'Nova OS', 'Clientes', 'Controle de Gasto']) {
+  await expect(bottomBar.getByRole('button')).toHaveCount(5);
+  for (const label of ['Painel', 'Clientes', 'Abrir OS', 'Financeiro', 'Gestor de Gasto']) {
     await expect(bottomBar.getByRole('button', { name: label, exact: true })).toBeVisible();
   }
-  await expect(bottomBar.getByRole('button')).toHaveText(['', '', '', '']);
 });
 
 test('Web / PC preserva navegação e detalhe completo em viewport estreito', async ({ page }) => {

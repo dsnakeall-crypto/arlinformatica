@@ -3116,23 +3116,19 @@ export default function OrderDetailPage({
           </div>
         </div>
         <div className="arl-intake-dates">
-          <span>
-            <b>Entrada</b> {formatOptionalDate(order.received_at)}
+          <span className="arl-intake-date-entry"><b>Entrada</b> {formatOptionalDate(order.received_at)}</span>
+          <i aria-hidden="true">|</i>
+          <span className="arl-intake-date-exit"><b>Saída</b>{" "}
+            {["completed", "interrupted"].includes(order.status) ? formatOptionalDate(order.completed_at) : "Em aberto"}
           </span>
           <i aria-hidden="true">|</i>
-          <span>
-            <b>Saída</b>{" "}
-            {["completed", "interrupted"].includes(order.status)
-              ? formatOptionalDate(order.completed_at)
-              : "Em aberto"}
-          </span>
-          <i aria-hidden="true">|</i>
-          <span>
-            <b>Atendimento</b>{" "}
+          <span className="arl-intake-date-attendance"><b>Atendimento</b>{" "}
             {order.attendance_type === "external" ? "Externo" : "Interno"}
           </span>
-          {canAdminister && order.has_system_password && <><i aria-hidden="true">|</i><button type="button" className="arl-system-password-view" aria-label="Ver senha do usuário" title="Ver senha do usuário" onClick={() => void openSystemPassword()}><Eye aria-hidden="true" /><span>Senha do usuário</span></button></>}
-          <i aria-hidden="true">|</i><button type="button" className="arl-system-password-view" onClick={() => setLabelOpen(true)}><Printer aria-hidden="true" /><span>Imprimir Etiqueta</span></button>
+          <div className="arl-intake-access-actions">
+            {canAdminister && order.has_system_password && <button type="button" className="arl-system-password-view" aria-label="Ver senha do usuário" title="Ver senha do usuário" onClick={() => void openSystemPassword()}><Eye aria-hidden="true" /><span>Senha do usuário</span></button>}
+            <button type="button" className="arl-system-password-view" onClick={() => setLabelOpen(true)}><Printer aria-hidden="true" /><span>Imprimir Etiqueta</span></button>
+          </div>
         </div>
         <div className="arl-intake-grid">
           <section className="arl-intake-field arl-intake-client-field">

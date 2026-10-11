@@ -14,7 +14,7 @@ class UserController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = User::query()->with('role:id,name')->select(['id', 'role_id', 'name', 'login', 'email', 'active', 'created_at'])->latest();
+        $query = User::query()->with('role:id,name')->select(['id', 'role_id', 'name', 'login', 'email', 'active', 'expense_control_access', 'created_at'])->latest();
         if ($search = trim((string) $request->query('q'))) {
             $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('login', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
         }
@@ -25,16 +25,17 @@ class UserController extends Controller
     public function store(Request $request, Audit $audit): JsonResponse
     {
         $data = $this->validated($request);
+        $data = $this->safeExpenseGrant($data);
         $user = User::create($data);
-        $audit->record($request, 'user.created', User::class, $user->id, null, $user->only(['name', 'login', 'email', 'role_id', 'active']));
+        $audit->record($request, 'user.created', User::class, $user->id, null, $user->only(['name', 'login', 'email', 'role_id', 'active', 'expense_control_access']));
 
         return response()->json($this->safe($user), 201);
     }
 
     public function update(Request $request, User $user, Audit $audit): JsonResponse
     {
-        $before = $user->only(['name', 'login', 'email', 'role_id', 'active']);
-        $data = $this->validated($request, $user, false);
+        $before = $user->only(['name', 'login', 'email', 'role_id', 'active', 'expense_control_access']);
+        $data = $this->safeExpenseGrant($this->validated($request, $user, false));
         $this->protectLastMaster($user, $data);
         $user->update($data);
         if (! $user->active) {
@@ -63,10 +64,23 @@ class UserController extends Controller
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users')->ignore($user?->id)],
             'role_id' => 'required|exists:roles,id',
             'active' => 'required|boolean',
+            'expense_control_access' => 'sometimes|boolean',
         ];
         $rules['password'] = $password ? $this->passwordRules() : 'prohibited';
 
         return $request->validate($rules);
+    }
+
+    private function safeExpenseGrant(array $data): array
+    {
+        $role = Role::findOrFail($data['role_id'])->name;
+        if (! in_array($role, ['Administrador', 'Administrador Simples'], true)) {
+            $data['expense_control_access'] = false;
+        } elseif (! array_key_exists('expense_control_access', $data)) {
+            $data['expense_control_access'] = false;
+        }
+
+        return $data;
     }
 
     private function passwordRules(): array
@@ -84,6 +98,6 @@ class UserController extends Controller
 
     private function safe(User $user): array
     {
-        return $user->load('role:id,name')->only(['id', 'name', 'login', 'email', 'active', 'created_at', 'role']);
+        return $user->load('role:id,name')->only(['id', 'name', 'login', 'email', 'active', 'created_at', 'role', 'expense_control_access']);
     }
 }

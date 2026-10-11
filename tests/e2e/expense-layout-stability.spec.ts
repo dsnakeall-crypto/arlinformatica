@@ -6,7 +6,7 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 108
     await page.setViewportSize(viewport);
     await login(page);
     await page.goto('/expense-control');
-    await expect(page.getByRole('heading', { name: 'Visão geral do casal', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Visão geral do mês', exact: true })).toBeVisible();
     await expect(page.getByText('Atualizando informações…', { exact: true })).not.toBeVisible();
     const snapshot = () => page.evaluate(() => {
       const main = document.querySelector('main')!;

@@ -17,7 +17,7 @@ class ServiceOrderMaintenanceController extends Controller
 {
     public function updateClosingReference(Request $request, ServiceOrder $order, Audit $audit): JsonResponse
     {
-        abort_unless($request->user()->hasRole('Master', 'Administrador'), 403);
+        abort_unless($request->user()->hasRole('Master', 'Administrador', 'Administrador Simples'), 403);
         abort_if($order->archived || in_array($order->status, ['completed', 'interrupted'], true), 409, 'Somente uma OS aberta pode ser marcada para fechamento.');
         $data = $request->validate(['amount_cents' => ['required', 'integer', 'min:1', 'max:999999999']]);
         $before = $order->only(['closing_reference_cents', 'closing_marked_by', 'closing_marked_at']);
@@ -34,7 +34,7 @@ class ServiceOrderMaintenanceController extends Controller
 
     public function clearClosingReference(Request $request, ServiceOrder $order, Audit $audit): JsonResponse
     {
-        abort_unless($request->user()->hasRole('Master', 'Administrador'), 403);
+        abort_unless($request->user()->hasRole('Master', 'Administrador', 'Administrador Simples'), 403);
         abort_if($order->archived || in_array($order->status, ['completed', 'interrupted'], true), 409, 'Somente uma OS aberta pode ser desmarcada.');
         abort_if($order->closing_reference_cents === null, 409, 'Esta OS não está marcada para fechamento.');
         $before = $order->only(['closing_reference_cents', 'closing_marked_by', 'closing_marked_at']);
@@ -384,7 +384,7 @@ class ServiceOrderMaintenanceController extends Controller
             ],
             'equipment_description' => $order->equipment_description,
             'equipment_details' => $order->equipment_details,
-            'has_system_password' => $order->system_password !== null,
+            'has_system_password' => $order->getRawOriginal('system_password') !== null,
             'attendance_type' => $order->attendance_type,
             'reported_problem' => $order->reported_problem,
             'final_report' => $order->final_report,

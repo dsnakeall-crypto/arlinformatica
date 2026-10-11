@@ -39,8 +39,23 @@ class DiscardInvalidRememberCookie
 
         $segments = explode('|', $value);
 
-        return count($segments) === 3 && collect($segments)->every(
+        if (count($segments) !== 3 || ! collect($segments)->every(
             fn (string $segment): bool => trim($segment) !== '',
-        );
+        )) {
+            return false;
+        }
+
+        // Mesmo com três partes, o cookie pode se referir a um usuário/token
+        // antigo após uma restauração local do banco. Nesse caso, o Laravel
+        // não deve tentar comparar o hash de uma senha nula.
+        $guard = $this->auth->guard('web');
+        $user = $guard->getProvider()->retrieveByToken($segments[0], $segments[1]);
+
+        if (! $user || ! is_string($password = $user->getAuthPassword())) {
+            return false;
+        }
+
+        return hash_equals($guard->hashPasswordForCookie($password), $segments[2])
+            || hash_equals($password, $segments[2]);
     }
 }

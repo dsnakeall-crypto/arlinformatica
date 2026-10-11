@@ -1,0 +1,183 @@
+/* Web Clean — acabamento final aprovado. Isolado do Web Original,
+   mobile e do módulo Controle de Gastos.
+   Os desenhos 3D são ARQUIVOS novos reduzidos com antialiasing 2x. */
+@media screen {
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group button.active {
+    background:linear-gradient(180deg,#71747b,#4b4f58 55%,#30343c)!important;
+    color:#fff!important;border-color:#686d76!important;
+    box-shadow:inset 0 1px 0 #ffffff42,0 6px 13px #29323d30!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar .nav-group button.active
+  :is(.nav-label,.nav-icon,svg) {color:#fff!important;stroke:currentColor!important;}
+
+  /* A mesma dimensão VISUAL dos pictogramas WhatsApp e Maps.
+     Não alterar a área clicável/posição, só a arte de dentro. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.dashboard-order-list .order-actions,.orders-order-list .order-actions)
+  > :is(a,button){
+    width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;
+    display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    padding:0!important;flex:0 0 32px!important;vertical-align:middle;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.dashboard-order-list .order-actions,.orders-order-list .order-actions)
+  > :is(a,button) :is(img,svg){
+    width:18px!important;height:18px!important;max-width:18px!important;max-height:18px!important;
+    object-fit:contain!important;flex:0 0 18px!important;
+  }
+  /* Mantém os 32 px de clique, mas SEM aro, borda, sombra ou fundo circular. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label="Visualizar"],button[aria-label="Editar"],
+      button[aria-label^="Excluir cliente"],.order-view,.order-edit,.arl-order-delete) {
+    border:0!important;border-radius:0!important;
+    background-color:transparent!important;
+    box-shadow:none!important;
+    background-repeat:no-repeat!important;
+    background-position:center!important;
+    background-size:18px 18px!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label="Visualizar"],.order-view){
+    background-image:url('/arl-assets/icons/icon-web-eye-compact-2x.png')!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label="Editar"],.order-edit){
+    background-image:url('/arl-assets/icons/icon-web-edit-compact-2x.png')!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label^="Excluir cliente"],.arl-order-delete){
+    background-image:url('/arl-assets/icons/icon-web-delete-compact-2x.png')!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label="Visualizar"],button[aria-label="Editar"],
+      button[aria-label^="Excluir cliente"],.order-view,.order-edit,.arl-order-delete)
+  :is(svg,img) {visibility:hidden!important;}
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  :is(.clients-actions,.orders-order-list .order-actions,.dashboard-order-list .order-actions)
+  > :is(button[aria-label="Visualizar"],button[aria-label="Editar"],
+      button[aria-label^="Excluir cliente"],.order-view,.order-edit,.arl-order-delete):focus-visible {
+    outline:2px solid #31589c!important;outline-offset:2px!important;
+  }
+  /* Prancheta do Cliente também sem aro: desenho já é SVG nítido. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  .clients-actions > button[aria-label*="prancheta" i]{
+    background:transparent!important;border:0!important;border-radius:0!important;
+    box-shadow:none!important;
+  }
+
+  /* Status preenchidos; mantém a semântica e o texto original. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  .shared-order-list .row-status.status-waiting_part {
+    background:linear-gradient(145deg,#ffdd9f,#ffcb73)!important;
+    border-color:#efad55!important;color:#895000!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  .shared-order-list .row-status.status-in_service {
+    background:linear-gradient(145deg,#c0edce,#9fdcb5)!important;
+    border-color:#72bf94!important;color:#076b3b!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  .shared-order-list .row-status.status-analysis {
+    background:linear-gradient(145deg,#cce6ff,#add1fa)!important;
+    border-color:#84b5ef!important;color:#1458a8!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  .shared-order-list .row-status.status-paid {
+    background:linear-gradient(145deg,#c0edce,#9fdcb5)!important;
+    border-color:#72bf94!important;color:#076b3b!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  .shared-order-list .row-status :is(select,.row-status-icon){
+    color:inherit!important;background:transparent!important;
+  }
+
+  /* Lista de OS e Painel: número vermelho, abertura verde,
+     cliente preto e relato apenas azul escuro SEM negrito forçado. */
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  .shared-order-list .arl-order-number b{color:#c4002e!important;}
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  .shared-order-list .arl-order-opened-at{color:#12824b!important;}
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  .shared-order-list .order-customer strong{color:#141b28!important;}
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop >main:not([data-arl-expense-control-react="1"])
+  .shared-order-list .order-client-report{
+    color:#1f3e6b!important;font-weight:400!important;
+  }
+}
+
+/* Clientes carrega CSS sob demanda com seletor mais específico.
+   Aplicar as mesmas artes compactas e SEM aro usadas em Painel/Ordens. */
+@media screen{
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  .clients-react-page .client-list .clients-row .clients-actions
+  > :is(button[aria-label="Visualizar"],button[aria-label="Editar"],button[aria-label^="Excluir cliente"]){
+    min-width:32px!important;min-height:32px!important;width:32px!important;height:32px!important;
+    padding:0!important;border:0!important;border-radius:0!important;
+    background-color:transparent!important;background-size:18px 18px!important;
+    background-position:center!important;background-repeat:no-repeat!important;
+    box-shadow:none!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  .clients-react-page .client-list .clients-row .clients-actions>button[aria-label="Visualizar"]{
+    background-image:url('/arl-assets/icons/icon-web-eye-compact-2x.png')!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  .clients-react-page .client-list .clients-row .clients-actions>button[aria-label="Editar"]{
+    background-image:url('/arl-assets/icons/icon-web-edit-compact-2x.png')!important;
+  }
+  html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+  .shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+  .clients-react-page .client-list .clients-row .clients-actions>button[aria-label^="Excluir cliente"]{
+    background-image:url('/arl-assets/icons/icon-web-delete-compact-2x.png')!important;
+  }
+}
+
+/* Prancheta/Nova OS na lista de Clientes: mesmo padrão sem aro do WhatsApp. */
+@media screen {
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.clients-react-page .client-list .clients-row .clients-actions>button[aria-label="Nova OS para este cliente"]{
+ width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;
+ padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;
+}
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.clients-react-page .client-list .clients-row .clients-actions>button[aria-label="Nova OS para este cliente"] svg{
+ width:18px!important;height:18px!important;color:#2d4266!important;
+}
+html:root[data-layout="desktop"][data-arl-appearance="clean"] body
+.shell.layout-desktop #arl-main-sidebar + main:not([data-arl-expense-control-react="1"])
+.clients-react-page .client-list .clients-row .clients-actions>button[aria-label="Nova OS para este cliente"]:focus-visible{
+ outline:2px solid #31589c!important;outline-offset:2px!important;
+}
+}

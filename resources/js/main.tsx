@@ -19,6 +19,20 @@ import { createRoot } from "react-dom/client";
 import { emptyClient, Errors, masks, digits, api, Field, status, money, Page, Client } from './app-shared';
 import { ClientsPage, ExpenseControlPage, OrderDetailPage, Dashboard, Orders, FinancePage, PostSalePage, ServicesCatalogPage, ProductsCatalogPage, SuppliersPage, SettingsPage, NewOrder, QuickEntry } from './lazy-pages';
 import { StorageAdmin } from './settings-page';
+import { SimpleSettingsPage, type LayoutSelection } from './layouts-settings';
+import { isHandheldDevice, layoutStorageKey, resolveLayoutMode } from './layout-preference';
+import '../css/arl-mobile-reform.css';
+import '../css/arl-mobile-screens.css';
+import '../css/arl-reference-bottom-nav.css';
+import '../css/arl-mobile-clean-premium.css';
+import '../css/arl-os-final-mobile.css';
+import '../css/arl-mobile-final-operations-2026.css';
+import '../css/web-clean-reference-20261010.css';
+import '../css/desktop-responsive-preference-20261010.css';
+import '../css/web-clean-black-pink-buttons-20261010.css';
+import '../css/web-clean-final-polish-20261010.css';
+import '../css/web-clean-action-icons-unified-20261010.css';
+import '../css/mobile-modal-nav-click-safety-20261011.css';
 
 function ClientForm({ onSaved, onCancel, client }: any) {
   const [data, setData] = useState<any>(client || emptyClient);
@@ -1896,21 +1910,32 @@ function AdminCatalogs({ role }: any) {
   );
 }
 
-function MobileBottomBar({ go, page, canExpenses }: any) {
-  return <nav className={"arl-global-mobile-nav arl-mobile-icon-nav" + (canExpenses ? " has-expenses" : "")} aria-label="Navegação Mobile / Tablet">
-    <button type="button" aria-label="OS abertas" title="OS abertas" className={page === "dashboard" ? "active" : ""} onClick={() => go("dashboard")}><ClipboardList /></button>
-    <button type="button" aria-label="Nova OS" title="Nova OS" className="primary-shortcut" onClick={() => go("new")}><Plus /></button>
-    <button type="button" aria-label="Clientes" title="Clientes" className={page === "clients" ? "active" : ""} onClick={() => go("clients")}><Users /></button>
-    {canExpenses && <button type="button" aria-label="Controle de Gasto" title="Controle de Gasto" className={page === "expense-control" ? "active" : ""} onClick={() => go("expense-control")}><Wallet /></button>}
+function MobileBottomBar({ go, page, canFinance, canExpenses }: { go: (page: Page) => void; page: Page; canFinance: boolean; canExpenses: boolean }) {
+  const destinations: { page: Page; title: string; Icon: typeof Wallet }[] = [
+    { page: 'dashboard', title: 'Painel', Icon: LayoutDashboard },
+    { page: 'clients', title: 'Clientes', Icon: Users },
+    { page: 'new', title: 'Abrir OS', Icon: Plus },
+    ...(canFinance ? [{ page: 'finance' as Page, title: 'Financeiro', Icon: Wallet }] : []),
+    ...(canExpenses ? [{ page: 'expense-control' as Page, title: 'Gestor de Gasto', Icon: CircleDollarSign }] : []),
+  ];
+  return <nav className="arl-global-mobile-nav arl-mobile-icon-nav arl-mobile-five" aria-label="Navegação Mobile / Tablet" style={{ gridTemplateColumns: `repeat(${destinations.length}, minmax(0, 1fr))` }}>
+    {destinations.map(({ page: destination, title, Icon }) => <button key={destination} type="button" aria-label={title} title={title}
+      className={'arl-nav-reference-button ' + (destination === 'new' ? 'primary-shortcut' : page === destination ? 'active' : '')}
+      aria-current={page === destination ? 'page' : undefined} onClick={() => go(destination)}>
+      <span className="arl-nav-icon-disc" aria-hidden="true"><Icon /></span>
+      <span className="arl-nav-caption">{title}</span>
+    </button>)}
   </nav>;
 }
 
 function App() {
   const [layout, setLayout] = useState<"desktop" | "mobile">(() => {
-    const saved = localStorage.getItem("arl-layout-mode");
-    if (saved === "desktop" || saved === "mobile") return saved;
-    return window.matchMedia("(max-width: 1024px)").matches ? "mobile" : "desktop";
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(layoutStorageKey); } catch { /* Use automatic first-load default. */ }
+    return resolveLayoutMode(saved, navigator.userAgent, window.matchMedia('(max-width: 1024px)').matches);
   });
+  // A preferência escolhida não é alterada quando a janela muda de tamanho
+  // nem quando é movida entre monitores. Somente uma escolha manual a altera.
   const [sidebarPinned, setSidebarPinned] = useState(false);
   const [navSummary, setNavSummary] = useState({
     open_orders: 0,
@@ -1918,7 +1943,8 @@ function App() {
   });
   useEffect(() => {
     document.documentElement.dataset.layout = layout;
-    localStorage.setItem("arl-layout-mode", layout);
+    try { localStorage.setItem(layoutStorageKey, layout); } catch { /* Layout remains active for this tab. */ }
+    window.dispatchEvent(new Event('arl-layout-appearance-sync'));
   }, [layout]);
   useEffect(() => {
     const enableNativeSpellcheck = (root: ParentNode) => {
@@ -2021,14 +2047,47 @@ function App() {
   const [newOrderClient, setNewOrderClient] = useState<Client>();
   const [openingFallback, setOpeningFallback] = useState<{ id: number; url: string }>();
   const [mobileMenu, setMobileMenu] = useState(false);
+  const mobileDrawerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelMobileDrawerClose = () => {
+    if (mobileDrawerTimer.current !== null) clearTimeout(mobileDrawerTimer.current);
+    mobileDrawerTimer.current = null;
+  };
+  const closeMobileDrawer = () => { cancelMobileDrawerClose(); setMobileMenu(false); };
+  const closeMobileDrawerOutside = () => {
+    cancelMobileDrawerClose();
+    mobileDrawerTimer.current = setTimeout(() => { mobileDrawerTimer.current = null; setMobileMenu(false); }, 2000);
+  };
+  useEffect(() => () => { if (mobileDrawerTimer.current !== null) clearTimeout(mobileDrawerTimer.current); }, []);
+  const [mobileNavMode, setMobileNavMode] = useState<'bottom' | 'compact'>('bottom');
+  useEffect(() => {
+    if (!me?.id) return;
+    try { setMobileNavMode(localStorage.getItem('arl-mobile-nav-' + me.id) === 'compact' ? 'compact' : 'bottom'); }
+    catch { setMobileNavMode('bottom'); }
+  }, [me?.id]);
+  const updateMobileNav = (next: 'bottom' | 'compact') => {
+    setMobileNavMode(next);
+    closeMobileDrawer();
+    if (me?.id) try { localStorage.setItem('arl-mobile-nav-' + me.id, next); } catch { /* Preferência local opcional. */ }
+  };
+  const selectedDeviceLayout: LayoutSelection = layout === 'desktop' ? 'desktop' : mobileNavMode;
+  const chooseDeviceLayout = (next: LayoutSelection) => {
+    if (next === 'desktop' && isHandheldDevice(navigator.userAgent)) return;
+    if (next === 'desktop') {
+      setLayout('desktop');
+    } else {
+      updateMobileNav(next);
+      setLayout('mobile');
+    }
+  };
   const [mobileQuickEntry, setMobileQuickEntry] = useState(false);
   const [mobileLogoutConfirm, setMobileLogoutConfirm] = useState(false);
   const [mobileLogoutBusy, setMobileLogoutBusy] = useState(false);
   const mobileLayout = layout === "mobile";
   useEffect(() => {
-    if (mobileLayout) setMobileMenu(false);
+    if (mobileLayout) closeMobileDrawer();
   }, [mobileLayout]);
-  const canAdminister = me?.role === "Master" || me?.role === "Administrador";
+  const canAdminister = ['Master', 'Administrador', 'Administrador Simples'].includes(me?.role);
+  const canExpenses = Boolean(me?.can_expense_control);
   const navigationRefresh = useRef<{ accountId?: number; last: number | null; sequence: number }>({ last: null, sequence: 0 });
   const loadNavigationSummary = (force = false) => {
     if (!me || me.role === "Controle de Gasto") return;
@@ -2075,7 +2134,7 @@ function App() {
     setClientHistoryOrigin(undefined);
     setPage(p);
     setDetail(id);
-    setMobileMenu(false);
+    closeMobileDrawer();
     history.replaceState(
       null,
       "",
@@ -2098,19 +2157,22 @@ function App() {
   const roleAllowed = (p: Page) =>
     expenseOnly ? p === "expense-control"
     : me?.role === "Usuário local" ? ["dashboard", "orders", "clients", "new"].includes(p)
-    : p === "expense-control" ? canAdminister
+    : p === "expense-control" ? canExpenses
     : p === "users"
       ? me?.role === "Master"
       : ["finance", "services", "products", "suppliers", "settings"].includes(p)
-        ? me?.role === "Master" || me?.role === "Administrador"
+        ? canAdminister
         : true;
   useEffect(() => {
-    if (me && !roleAllowed(page)) {
+    if (me && (!roleAllowed(page) || (mobileLayout && page === 'post-sale'))) {
       setPage(expenseOnly ? "expense-control" : "dashboard");
       setDetail(undefined);
       history.replaceState(null, "", expenseOnly ? "/expense-control" : "/");
     }
   }, [me, page, mobileLayout, detail]);
+  // Gestor de Gastos independente apenas no Mobile (ou no perfil dedicado,
+  // que não tem permissão para navegar na ARL). No Web, mantém shell e sidebar da ARL.
+  const expenseWorkspace = expenseOnly || (mobileLayout && page === 'expense-control');
   const groups = [
     {
       label: "Operação",
@@ -2145,9 +2207,54 @@ function App() {
   ] as const;
   return (
     <div
-      className={`shell layout-${layout}${!mobileLayout && !sidebarPinned ? " sidebar-collapsed" : ""}${sidebarPinned ? " sidebar-pinned" : ""}`}
+      className={`shell layout-${layout}${!mobileLayout && !sidebarPinned ? " sidebar-collapsed" : ""}${sidebarPinned ? " sidebar-pinned" : ""}${mobileLayout && mobileNavMode === 'compact' ? ' arl-mobile-compact-mode' : ''}${expenseWorkspace ? ' arl-expense-workspace' : ''}`}
     >
+      {mobileLayout && mobileNavMode === 'bottom' && !expenseWorkspace && (
+        <>
+          <button type="button"
+            id="arl-mobile-rail-overlay"
+            className={'arl-mobile-rail-overlay' + (mobileMenu ? ' is-open' : '')}
+            aria-label="Fechar menu lateral"
+            aria-hidden={!mobileMenu}
+            tabIndex={mobileMenu ? 0 : -1}
+            onClick={closeMobileDrawerOutside}
+          />
+          <nav id="arl-mobile-clean-rail" className={'arl-mobile-rail-drawer' + (mobileMenu ? ' is-open' : '')}
+            aria-label="Menu lateral compacto"
+            aria-hidden={!mobileMenu}
+            inert={!mobileMenu}
+            onPointerDown={cancelMobileDrawerClose}
+            onFocusCapture={cancelMobileDrawerClose}
+          >
+            <button type="button" className="arl-rail-close" aria-label="Fechar menu agora"
+              title="Fechar menu" onClick={closeMobileDrawer}><X aria-hidden="true" /></button>
+            <span className="arl-rail-brand" aria-hidden="true">ARL</span>
+            <span className="arl-rail-separator" aria-hidden="true" />
+            {groups.map(group => {
+              const links = group.items.filter(([, destination]) => roleAllowed(destination) && (!mobileLayout || destination !== 'post-sale'));
+              return links.length ? <div className="arl-rail-group" key={group.label}>
+                {links.map(([title, destination, Icon]) => {
+                  const selected = page === destination || (destination === 'settings' && page === 'users');
+                  const count = destination === 'orders' ? navSummary.open_orders :
+                    destination === 'post-sale' ? navSummary.available_post_sales : undefined;
+                  return <button key={destination} type="button"
+                    className={'arl-rail-link' + (selected ? ' is-active' : '')}
+                    aria-label={title} aria-current={selected ? 'page' : undefined}
+                    title={title} onClick={() => go(destination)}>
+                    <span className="arl-rail-disc"><Icon aria-hidden="true" /></span>
+                    {count !== undefined && count > 0 && <i className="arl-rail-count" aria-hidden="true">{count}</i>}
+                  </button>;
+                })}
+                <span className="arl-rail-separator" aria-hidden="true" />
+              </div> : null;
+            })}
+            <button type="button" className="arl-rail-link arl-rail-logout" aria-label="Sair" title="Sair"
+              onClick={() => void logout()}><span className="arl-rail-disc"><LogOut aria-hidden="true" /></span></button>
+          </nav>
+        </>
+      )}
       <aside
+        id="arl-main-sidebar"
         className={mobileMenu ? "open" : ""}
       >
         <button
@@ -2180,7 +2287,7 @@ function App() {
         </button>}
         <nav aria-label="Menu principal">
           {groups.map((group) => {
-            const items = group.items.filter(([, p]) => roleAllowed(p));
+            const items = group.items.filter(([, p]) => roleAllowed(p) && (!mobileLayout || p !== 'post-sale'));
             return items.length ? (
               <section className="nav-group" key={group.label}>
                 <h2>{group.label}</h2>
@@ -2260,8 +2367,8 @@ function App() {
           !detail && page === "post-sale" ? "1" : undefined
         }
       >
-        <header className="app-head">
-          {!mobileLayout && (
+        {!expenseWorkspace && <header className="app-head">
+          {(!mobileLayout || mobileNavMode === 'bottom') && (
             <button
               className="menu-toggle"
               aria-label="Abrir menu"
@@ -2299,24 +2406,11 @@ function App() {
               </button>
             </div>
           )}
-          <label className="device-layout">
-            Layout{" "}
-            <select
-              aria-label="Layout neste dispositivo"
-              value={layout}
-              onChange={(e) =>
-                setLayout(e.target.value as "desktop" | "mobile")
-              }
-            >
-              <option value="desktop">Web / PC</option>
-              <option value="mobile">Mobile / Tablet</option>
-            </select>
-          </label>
           <NotificationBell go={go} />
-        </header>
+        </header>}
         {detail && openingFallback?.id === detail && <div className="notice" role="status">A OS foi criada. O navegador não abriu o WhatsApp. <a href={openingFallback.url} target="_blank" rel="noreferrer" onClick={() => setOpeningFallback(undefined)}>Abrir mensagem de abertura no WhatsApp</a> <button type="button" onClick={() => setOpeningFallback(undefined)}>Dispensar</button></div>}
         {!me ? <p role="status">Carregando sessão…</p> : expenseOnly || page === "expense-control" ? (
-          <ExpenseControlPage mobile={mobileLayout} />
+          <ExpenseControlPage mobile={mobileLayout} onBack={expenseOnly ? undefined : () => go('dashboard')} />
         ) : detail ? (
           <OrderDetailPage
             onCountersChanged={countersChanged}
@@ -2324,17 +2418,14 @@ function App() {
             key={`${detail}-${orderAction || "view"}`}
             initialAction={orderAction}
             id={detail}
-            readOnly={mobileLayout}
+            // 09/10/2026: o celular usa o mesmo detalhe completo do PC (mesmas APIs/permissões), com apresentação própria via CSS.
+            readOnly={false}
             back={() => go("dashboard")}
-            onOpenClientHistory={
-              mobileLayout
-                ? undefined
-                : (clientId: number) => {
-                    setClientHistoryOrigin({ clientId, orderId: detail });
-                    setDetail(undefined);
-                    setPage("clients");
-                  }
-            }
+            onOpenClientHistory={(clientId: number) => {
+              setClientHistoryOrigin({ clientId, orderId: detail });
+              setDetail(undefined);
+              setPage("clients");
+            }}
           />
         ) : page === "dashboard" ? (
           <CacheBoundary><Dashboard go={go} role={me?.role} mobileLayout={mobileLayout} onCountersChanged={countersChanged} /></CacheBoundary>
@@ -2343,6 +2434,7 @@ function App() {
         ) : page === "clients" ? (
           <CacheBoundary><Clients
             role={me?.role}
+            mobile={mobileLayout}
             initialClientId={clientHistoryOrigin?.clientId}
             onHistoryClose={
               clientHistoryOrigin
@@ -2357,6 +2449,7 @@ function App() {
           /></CacheBoundary>
         ) : page === "finance" ? (
           <FinancePage
+            mobile={mobileLayout}
             role={me?.role}
             openOrder={(id: number) => go("orders", id)}
           />
@@ -2369,14 +2462,17 @@ function App() {
         ) : page === "suppliers" ? (
           <SuppliersPage />
         ) : page === "users" ? (
-          <SettingsPage role={me?.role} initialSection="users" />
+          <SettingsPage role={me?.role} initialSection="users" deviceLayout={{ selected: selectedDeviceLayout, onChange: chooseDeviceLayout }} />
         ) : page === "settings" ? (
-          <SettingsPage role={me?.role} />
+          me?.role === 'Administrador Simples'
+            ? <SimpleSettingsPage selected={selectedDeviceLayout} onChange={chooseDeviceLayout} />
+            : <SettingsPage role={me?.role} deviceLayout={{ selected: selectedDeviceLayout, onChange: chooseDeviceLayout }} />
         ) : (
           <NewOrder initialClient={newOrderClient} done={(id: number, fallback?: string) => { setOpeningFallback(fallback ? { id, url: fallback } : undefined); countersChanged(); go("orders", id); }} />
         )}
       </main>
-      {mobileLayout && !expenseOnly && <MobileBottomBar go={go} page={page} canExpenses={canAdminister} />}
+      {mobileLayout && !expenseWorkspace && mobileNavMode === 'bottom' &&
+        <MobileBottomBar go={go} page={page} canFinance={canAdminister} canExpenses={canExpenses} />}
       <QuickEntry
         open={mobileQuickEntry}
         onClose={() => setMobileQuickEntry(false)}

@@ -1,3 +1,155 @@
+# ARL Mobile — Clean exclusivo, menus, OS, Clientes e Financeiro — 09/10/2026
+
+- [OK] Tema Clean obrigatório no celular, sem opção Original, mudança de cores ou escolha Web/PC; escolher somente barra inferior ou lateral compacto em Configurações.
+- [OK] Ícone ativo do menu mobile vermelho sem aro roxo/cinza; + Nova OS e Home de OS abertas preservados.
+- [OK] Pós-venda/Reputação oculto no mobile e mantido no desktop; Gestor de Gastos aprovado permaneceu intocado.
+- [OK] OS lista: equipamento centrado, ícones Maps/Olho/Editar/Excluir sem moldura, WhatsApp preservado.
+- [OK] Clientes: busca apenas por nome, 10 por página em ordem alfabética, sem filtros, prancheta ou exclusão mobile; PC preservado.
+- [OK] Financeiro: controle de mês com setas/calendário sem sobreposição; Lançamentos identificados menores com mais espaço.
+- [OK] Backup externo anterior às alterações com 92 arquivos + histórico Git em `C:\Users\Allan\ARL-backups\mobile-only-clean-20261009-213027`.
+- [OK] Build/TypeScript, ESLint, 46 testes frontend e **7 testes E2E focados** na mesma execução com SQLite descartável.
+- [PENDENTE] Homologação com smartphone real, auditoria Claude/Codex e regressão ampla; produção KingHost não publicada.
+
+Relatório detalhado para revisão: `docs/MOBILE_ARL_CLEAN_FASE_FINAL_2026-10-09.md`.
+
+---
+
+# Reforma visual fiel às 6 referências mobile — 09/10/2026 (somente DDEV)
+
+- [OK] Backup pré-mudanças, bundle Git + 89 arquivos intocados em `C:\Users\Allan\ARL-backups\mobile-fiel-imagens-20261009-204810`.
+- [OK] Layout do Controle de Gastos mobile reformulado conforme as seis imagens enviadas: Resumo/indicadores, responsáveis, faturas, Pagamentos, Projeção e Instituições.
+- [OK] Fundo azul-rosa, superfícies brancas translúcidas, cartões em dupla moldura, sombras 3D, ícones nas faturas e barra de cinco botões com + rubi central.
+- [OK] Botões Quitadas/Pagamentos/Projeção futura/Histórico de gastos em grade 2x2 mobile; cartões de bancos em duas colunas e cadastrar tipo de dívida por popup.
+- [OK] OS mobile: número, data e nome do cliente curto ou comprido centralizados; equipamento/status/ações preservados.
+- [OK] Web/PC continua integrado à ARL com menu à esquerda; cálculos, permissões, APIs de pagamentos, banco e PDFs preservados.
+- [OK] Vite/TypeScript, lint, 46 testes frontend e 4 testes Playwright de navegação Web, layout Gastos e centralização OS com banco fictício (conferir relatório).
+- [PENDENTE] Aprovação visual em smartphone físico com dados reais; suíte completa de regressão e auditoria Claude/Codex não realizadas; publicação KingHost não autorizada.
+
+Relatório técnico e capturas: `docs/REFORMA_VISUAL_MOBILE_6_REFERENCIAS_2026-10-09.md`; `output/mobile-referencia-fiel-20261009/`.
+
+---
+
+# Restauração Web ARL + PDFs detalhados — 09/10/2026 (somente DDEV)
+
+- [OK] Controle de Gastos na Web/PC voltou a abrir no painel da direita mantendo a barra/menu ARL à esquerda, com cabeçalho e navegação do desktop; não abre miniapp separado.
+- [OK] Controle de Gastos no mobile continua independente com barra inferior própria. Conta dedicada Gestor de Gastos permanece restrita aos seus menus.
+- [OK] Home/página principal Web mantida sem reforma adicional nos cartões/tabela; duas capturas feitas para homologação visual.
+- [OK] PDFs mês/Allan/Carol/Casal agora detalham cada instituição, fatura, parcela, divisão de valores por responsável, pago e falta pagar; PDFs gerados somente no dispositivo.
+- [OK] Endpoint somente-leitura protegido pela autorização Gestor de Gastos; nenhum dado financeiro alterado.
+- [OK] TypeScript/build, ESLint, 46 testes frontend, 7 testes PHP/206 assertions e 6 testes E2E focados.
+- [PENDENTE] Aprovação pelo proprietário da fidelidade visual à imagem de referência enviada, verificação manual dos PDFs com dados reais; suíte E2E completa não executada.
+- [OK] Backups fora do projeto: `C:\Users\Allan\ARL-backups\pdf-detalhado-gastos-20261009-201756` e `C:\Users\Allan\ARL-backups\restaurar-web-integrado-20261009-202703`.
+
+Relatório detalhado para Claude/Codex: `docs/WEB_INTEGRADO_PDF_DETALHADO_2026-10-09.md`
+
+---
+
+# Pacote final: Controle de Gastos + OS mobile — 09/10/2026 (somente DDEV)
+
+- [OK] Backup pré-mudanças verificado em `C:\Users\Allan\ARL-backups\pacote-ui-final-20261009-193144` (histórico Git, 74 arquivos não commitados, .env privado).
+- [OK] Barra 3D do Controle de Gastos padronizada com a barra ARL: Resumo/Instituições/Adicionar/Projeção/Gastos.
+- [OK] Mês sem moldura externa; indicadores e faturas sem fundos duplicados; totais sem rótulos/contornos redundantes.
+- [OK] Popup de vencimentos, popup de tipos, histórico mais compacto, faturas resumidas e 4 PDFs localmente baixáveis com confirmação.
+- [OK] OS mobile: AGU. PGTO com número à frente, clientes centralizados, Entrada/Saída/Atendimento/Senha/Etiqueta reorganizados.
+- [OK] TypeScript/build, lint, 41 testes frontend; PHP financeiro 6 testes/172 verificações; 7 cenários E2E (incluindo OS com senha).
+- [PENDENTE] Avaliação visual com dados reais e celular físico; suíte E2E completa e publicação não executadas.
+
+Detalhes completos: `docs/PACOTE_FINAL_CONTROLE_GASTOS_OS_2026-10-09.md`
+
+---
+
+# Refinamento Mobile Clean + Trilho Flutuante — 09/10/2026 (somente DDEV)
+
+- [OK] Backup de todo o estado local, inclusive 71 arquivos modificados/não rastreados e histórico Git, em `C:\Users\Allan\ARL-backups\clean-rail-cards-20261009-185859`.
+- [OK] Botão de três traços no modo barra inferior agora abre trilho lateral flutuante branco, fino e com ícones redondos. A sidebar grande desktop não aparece neste modo.
+- [OK] Toque fora espera 2 segundos antes do recolhimento suave; interação com o trilho cancela a espera; X fecha imediatamente.
+- [OK] Lateral compacto fixo e trilho usam discos arredondados da mesma família visual, inclusive no Clean, sem retângulos brancos extras.
+- [OK] Controle de Gastos usa somente aparência Clean dentro do módulo; removido seletor Original de Ajustes do miniapp. Original da ARL Web/PC preservado.
+- [OK] Cartões, botões e inputs de telas internas mobile mais arredondados, bordas suaves, sombra e transparência leve; home mobile de OS preservada.
+- [OK] Build/TypeScript, lint e 41 testes frontend. 8 testes E2E focados passaram em conjunto e 1 teste complementar de Clean também passou (banco de teste descartável, sem MySQL do DDEV).
+- [PENDENTE] Aprovação visual no smartphone real e suíte de regressão completa; testes antigos com seletor da sidebar desktop precisam atualizar expectativas.
+
+Detalhes: `docs/REFINO_MOBILE_CLEAN_TRILHO_2026-10-09.md`
+
+---
+
+# Menu inferior 3D com círculos — referência visual 09/10/2026 (somente DDEV)
+
+- [OK] Backup completo anterior verificado: `C:\Users\Allan\ARL-backups\nav-3d-referencia-20261009-183606`, com histórico Git e 68 arquivos preservados.
+- [OK] Barra inferior do modo Mobile/Barra inferior com base branca flutuante, cinco ícones redondos em relevo, Abrir OS maior em vermelho, rótulos legíveis e visual responsivo.
+- [OK] Menu lateral compacto, desktop, home de OS e controle de gastos mantidos sem alteração de aparência.
+- [OK] Corrigida interação com aparência Clean, que antes sobrepunha fundos brancos aos cinco atalhos.
+- [OK] Vite/TypeScript, lint, 41 testes frontend e 2 cenários de navegador em larguras de 320 a 1024 px, incluindo Clean.
+- [PENDENTE] Avaliação no celular físico pelo proprietário; nenhuma publicação em produção.
+
+Detalhes e capturas: `docs/MENU_INFERIOR_3D_REFERENCIA_2026-10-09.md`
+
+---
+
+# Ajustes diretos ChatGPT — 09/10/2026 (somente local)
+
+- [OK] Backup completo do estado anterior verificado em `C:\Users\Allan\ARL-backups\ajustes-chatgpt-20261009-172258`. Sem commit nem publicação.
+- [OK] Corrigido o erro “The MAC is invalid” na abertura de OS importadas: verificar presença de senha cifrada sem decriptar; erro 409 controlado só para revelação de senha com chave incompatível, sem apagar dados.
+- [OK] DDEV com banco SQLite isolado: 5 testes do módulo de senha/OS, 73 verificações; TypeScript, Vite build, lint e 41 testes frontend aprovados.
+- [OK] Navegador Playwright com banco de testes descartável: 2 cenários do resumo financeiro e 3 de navegação/mobile aprovados.
+- [OK] Totais do Controle de Gastos ajustados visualmente; barra inferior redonda; drawer mobile translúcido; quatro submenus de projeção; filtro de Clientes compacto.
+- [PENDENTE] Homologar visualmente na interface DDEV com OS importadas e smartphone real; senha histórica com APP_KEY diferente não pode ser revelada sem chave original.
+- [PENDENTE] Não houve suíte E2E completa nem publicação; aguardando avaliação do proprietário.
+
+Detalhes: docs/AJUSTES_CHATGPT_MOBILE_MAC_2026-10-09.md
+
+---
+
+# Reforma Mobile + Clean Premium + Controle de Gastos — 09/10/2026 (somente local, sem publicação)
+
+- [OK] Backup verificado antes: C:\Users\Allan\ARL-backups\reforma-mobile-clean-gastos-20261009-1815 (histórico Git, patch das alterações não commitadas, cópia dos arquivos, LEIA-ME).
+- [OK] Controle de Gastos: 5 indicadores (original × falta pagar), cards só Allan/Carol com 5 linhas, sem card/seletor Casal; campos aditivos no /summary, centavos, crédito pelo dono da cota. Testes PHP e E2E PC/mobile do exemplo do proprietário aprovados.
+- [OK] Mobile: cabeçalhos compactos, abas em grade com rótulos visíveis, lista de Ordens em cartões, detalhe completo da OS no celular, Financeiro em cartões, toque ≥ 44 px, Configurações por categorias. Auditoria antes/depois sem overflow.
+- [OK] Home mobile de OS preservada (arquivos intocados; capturas antes/depois iguais).
+- [OK] Configurações > Layouts com 3 cartões, mini-prévia e selecionado.
+- [OK] Clean Premium (hierarquia de botões, relevo leve, sem blur), Original preservado; teste de contraste das sete cores aprovado.
+- [OK] PHP 336 testes/6.833 verificações; TypeScript, ESLint, 41 testes frontend, build.
+- [PENDENTE] Suíte E2E completa da versão nova interrompida em 169/189 (limite de cota); 35 falhas já existiam na versão original (seletor de layout movido e testes desatualizados).
+- [PENDENTE] Atualizar testes antigos que esperam OS somente leitura no celular e o seletor no cabeçalho.
+- [PENDENTE] Validação no DDEV com dados reais e em aparelhos reais. Sem commit, sem publicação.
+
+Detalhes: docs/REFORMA_MOBILE_CLEAN_GASTOS_EXECUCAO_2026-10-09.md
+
+---
+
+# Correção de cookie antigo de login após restauração — 09/10/2026 (somente DDEV)
+
+- [OK] Erro `SessionGuard.php:235 hash_equals(null,...)` reproduzido em log local, causado por cookie de lembrar login associado a usuário/token inexistente no banco DDEV.
+- [OK] Middleware `DiscardInvalidRememberCookie` agora verifica se token e hash pertencem a um usuário existente; cookies inválidos são descartados antes de serem usados pelo SessionGuard.
+- [OK] Cookie válido continua autenticando; login, logout e usuários não foram modificados.
+- [OK] Testes `RememberCookieTest` e `SessionSecurityTest`: 11 aprovados, 53 verificações; formatação PHP aprovada.
+- [OK] HTTPS local respondeu HTTP 200 após a correção. Sem alteração no banco ou na KingHost.
+- [PENDENTE] Confirmar no Chrome com o usuário; exigir novo login se o cookie antigo for descartado.
+
+---
+
+# Reforma mobile / gastos / Administrador Simples — 09/10/2026 (somente DDEV)
+
+- [OK] Backup do projeto realizado fora do repositório e exportação prévia do banco de testes.
+- [OK] Menu mobile inferior com Painel, Clientes, Abrir OS, Financeiro e Gestor de Gasto; opção alternativa de sidebar compacta, preferência por usuário/dispositivo.
+- [OK] Home mobile renderiza exclusivamente o painel próprio de OS, sem os cards/tabelas desktop.
+- [OK] Controle de Gastos com navegação visual própria e retorno à ARL; Quitadas dentro de Gastos, Pagamentos dentro de Projeção.
+- [OK] Resumo financeiro original e seus cálculos preservados.
+- [OK] Administrador Simples criado por migration aditiva no DDEV, sem converter contas reais; configurações somente leitura permitida e preferências do próprio dispositivo.
+- [OK] Autorização individual para Controle de Gastos no backend e notificações; Master mantém acesso, Usuário local não recebe.
+- [OK] Backup/restauração, usuários, credenciais e demais configurações administrativas sem acesso para Administrador Simples.
+- [OK] Contagem de clientes, OS e usuários existentes preservada após a migration.
+- [OK] TypeScript, lint, Pint, build React e cenários E2E novos de navegação e autorização realizados com êxito.
+- [OK] Suíte de navegadores: 3 E2E novos, 5 mobile gerais, 5 de Controle de Gastos mobile e 2 legados focados aprovados; dados de testes isolados do MySQL DDEV.
+- [PENDENTE] Reexecutar a suíte PHP completa após corrigir uma expectativa antiga do contrato /api/me: no primeiro ciclo, 327 de 328 testes passaram; o arquivo corrigido passou novamente isoladamente (3 testes/26 verificações).
+- [PENDENTE] Homologação visual pelo proprietário em iPhone/Android e telas desktop, revisão das ações sensíveis com o novo perfil.
+- [PENDENTE] CI remota, deploy da migration com backup remoto validado e publicação autorizada. Nenhum push/deploy executado.
+- [PENDENTE] Auditoria final de performance; a lentidão pré-existente no DDEV em /mnt/c ainda não foi otimizada.
+
+Consulte docs/REFORMA_MOBILE_PERMISSOES_2026_10_09.md para detalhes técnicos e rollback local.
+
+---
+
 ## Complemento Financeiro — 07/10/2026
 
 - [OK] Abertura com apenas o mês atual; diário, A Receber e comparação sob demanda.
@@ -848,3 +1000,92 @@ Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produç
 - [OK] Gastos filtra saldo pendente do mês antes da paginação e das contagens; Quitadas e quitação integral preservadas.
 - [OK] Filtro Mês após Responsável substitui Situação; testes focados, lint e TypeScript aprovados.
 - [PENDENTE] Build/publicação; CI não aguardada e novo backup dispensado expressamente pelo usuário nesta entrega.
+
+
+## Rodada Web Clean Premium — 10/10/2026
+- [OK] Novo estilo Web/PC Clean inspirado na referência fornecida: sidebar branca, cards elevados, botões rosa/vermelho, filtros, formulários e tabelas (camada CSS separada, sem alterar DOM/funcionalidades).
+- [OK] Web Original e mobile preservados por seletor de tema + testes de navegador (3 cenários passaram).
+- [OK] Lint, TypeScript, build React/Vite e 46 testes unitários aprovados em DDEV.
+- [OK] Backup local de código/patch/histórico antes de editar: `C:\Users\Allan\ARL-backups\web-clean-reference-20261009-231417`.
+- [PENDENTE] Homologação visual com OS reais, marca oficial e demais formulários/diálogos na tela do proprietário.
+- [PENDENTE] Auditoria isolada de problema preexistente do Gestor de Gastos na navegação Web/PC; módulo não alterado nesta rodada.
+- [OK] Nenhum commit, push, publicação, alteração no banco real ou deploy.
+
+## Persistência Web Original/Clean, ícones 3D e vermelho — 10/10/2026
+- [OK] Web/PC permite selecionar Original ou Clean em Configurações > Layouts; Original intacto.
+- [OK] Janela desktop pode mover, reduzir/minimizar, ampliar e recarregar sem mudar o layout escolhido; armazenamento local mantém a preferência.
+- [OK] Mobile permanece exclusivamente Clean; menu inferior ou lateral compacto.
+- [OK] Web Clean usa ícones 3D olho/lápis/lixeira da referência em Clientes e lista de Ordens; WhatsApp/Maps preservados.
+- [OK] Vermelho mais intenso aplicado somente aos destaques do Web Clean.
+- [OK] Lint, TypeScript, build e 50 testes unitários no DDEV; 3 novos testes E2E passaram, junto aos 3 de Web Clean já existentes.
+- [OK] Backup local externo em C:\Users\Allan\ARL-backups\layout-persist-icons-webclean-20261009-234010.
+- [PENDENTE] Conferência humana ao arrastar navegador entre dois monitores físicos e no celular real.
+- [OK] Não realizado deploy, Git reset/commit/push ou alteração no banco real.
+
+## Fechamento visual Web Clean + Controle de Gastos — 10/10/2026
+- [OK] Controle de Gastos Web agora reutiliza o componente de resumo do mobile e suas regras visuais aprovadas, em grade responsiva de computador e sem perder a sidebar/abas Web.
+- [OK] Mesmos dados/API e funções financeiras; nenhuma alteração no banco oficial ou em regras de lançamento.
+- [OK] Ícones 3D olho/lápis/lixeira reduzidos em novos assets 2x, sem aro; prancheta também sem aro, em Painel/Ordens/Clientes. WhatsApp e Maps preservados.
+- [OK] Status com fundos preenchidos, número OS vermelho, data/hora verde, relato azul escuro e sidebar ativa grafite no Web Clean.
+- [OK] Web Original e visual mobile fora do Gestor de Gastos preservados.
+- [OK] Lint/typecheck/build/50 testes unitários em DDEV, 14 testes E2E cobertos e aprovados (13 na rodada ampliada + 1 após correção da simulação de Android).
+- [OK] Screenshots: output/final-arl-web-20261010; relatório docs/RELATORIO_WEB_CLEAN_GASTOS_FINAL_20261010.md.
+- [OK] Backup: C:\Users\Allan\ARL-backups\expense-web-visual-final-20261010-004011.
+- [PENDENTE] Homologação humana e auditoria final antes da publicação; não publicar sem autorização.
+- [OK] Nenhum commit, push, reset Git, deploy, acesso de escrita ao banco real.
+
+## Controle de Gastos Web — print aprovado / cartões compactos (10/10/2026)
+- [OK] Identidade visual Web do módulo baseada no print: abas azuis, gradientes suaves, bordas claras, cartões e cabeçalhos modernos.
+- [OK] Gastos e Instituições com **4 cartões compactos por fileira** e tamanho máximo controlado. Grade responsiva para área menor.
+- [OK] Ações de cartões preservadas: abrir compras, editar, excluir; nenhum dado real modificado.
+- [OK] Resumo com acabamento do banner/indicadores/responsáveis mais limpo; modal PDF e links preservados.
+- [OK] Pagamentos, Quitadas, Projeção, Ajustes e Histórico mantêm estrutura/funcionalidades, mas compartilham acabamento do módulo.
+- [OK] Web Original da ARL e mobile não alterados nesta rodada; estilos isolados ao Gestor de Gastos Web.
+- [OK] DDEV lint, typecheck, build e 50/50 testes unitários.
+- [OK] Playwright: 4/4 cenários (Gastos/Instituições, responsividade, oito menus, mobile). Após refino final de Nova dívida, teste direcionado aprovado (1/1).
+- [OK] Backup: C:\Users\Allan\ARL-backups\expense-web-reference-compact-20261010-010205.
+- [OK] Capturas em output/expense-web-reference-compact-20261010 e relatório docs/CONTROLE_GASTOS_WEB_REFERENCIA_COMPACTO_20261010.md.
+- [PENDENTE] Homologação com dados locais reais e auditoria final antes de qualquer publicação.
+- [OK] Sem reset Git, commits, push, publicação ou alteração do banco oficial.
+
+## Prioridade máxima: desempenho e responsividade (10/10/2026)
+- [OK] Regra permanente em `AGENTS.md`: máximo desempenho mensurável, estabilidade, Web Original/Clean/Mobile congelados e nenhuma mudança oficial sem autorização.
+- [OK] Backup local anterior à regra/refatoração em `C:\Users\Allan\ARL-backups\performance-guidelines-20261010`; histórico Git preservado em bundle.
+- [OK] Medição baseline do filtro Ordenar do Controle de Gastos: antes havia 3 requisições, duas delas redundantes nesse cenário.
+- [OK] Cache apenas em memória do React com expiração curta de catálogo e atualização explícita do Resumo financeiro ao entrar na aba; nenhum dado financeiro gravado em cache persistente.
+- [OK] Novos testes de rede comprovam 1 requisição ao reordenar com dados prontos, e nova consulta financeira ao voltar ao Resumo.
+- [OK] Lint, TypeScript, build e 50 testes unitários; regressão E2E de 12/12 cenários.
+- [OK] Plano detalhado em `docs/PLANO_PERFORMANCE_MAXIMA_ARL_20261010.md`.
+- [PENDENTE] Benchmark PC/mobile de TODOS os módulos, análise SQL, otimização do ambiente DDEV/WSL, reexecução concluída da suíte PHP Feature e revisão independente.
+- [PENDENTE] Backup remoto restaurável de banco e uploads, aprovação da publicação pelo proprietário, rollout/smoke/rollback.
+- [OK] Nesta rodada: nenhum commit/push, deploy, edição do banco oficial nem mudança visual.
+
+## Continuação da auditoria após interrupção (11/10/2026)
+- [OK] Retomado ambiente remoto sem perda de alterações. Backup dos arquivos modificados nesta rodada.
+- [OK] Clientes: carga com 5.000 registros sintéticos, API paginada com transferência ~219x menor; regressão funcional aprovada.
+- [OK] Painel: consulta de OS da semana evita 3 agregações desnecessárias; PHP 3/3 com 30 verificações, E2E atualizado aprovado.
+- [OK] Web: 7/7 testes de Painel/Ordens/Clientes e 10/10 de cache e navegação paginada.
+- [OK] Backend: 313 testes feature aprovados no PHP Windows; 22 dependentes do GD indisponível no Windows foram cobertos por execução no DDEV com GD/Imagick: 31/31 aprovados.
+- [OK] Frontend: lint, typecheck, build e 50 testes unitários aprovados; lint e typecheck refeitos após ajustes Mobile.
+- [OK] Mobile: correção de sobreposição da barra no popup Entrada Rápida; POST 201 confirmado em teste; home 6/6; suite `mobile.spec.ts` 4/5 no primeiro run e 1/1 aprovado no cenário remanescente isolado. Testes legados modernizados para a ficha OS atual e paginação 10/10.
+- [OK] Gestor de Gastos: fluxo direto da fatura ao gasto, 2/2 testes E2E aprovados.
+- [OK] 10 menus principais: teste de navegação aprovado e nova medição local guardada.
+- [PENDENTE] Perfil de renderização React clique→feedback/long tasks, consulta SQL EXPLAIN com volumes expressivos, ampla suíte E2E regressiva e testes reais na hospedagem.
+- [PENDENTE] Plano de publicação + backup RESTAURÁVEL do MySQL/uploads de produção após autorização expressa; NÃO houve commit/push/deploy/migração do banco oficial.
+- [DETALHES] `docs/AUDITORIA_PERFORMANCE_PAINEL_CLIENTES_20261011.md`.
+
+---
+
+# Pré-publicação auditada — 11/10/2026 (sem publicar)
+
+- [OK] MySQL 8.0.46 local isolado: 120 mil registros fictícios; 48 migrations do Laravel aplicadas com êxito, 64 tabelas.
+- [OK] Auditorias npm/Composer, lint, types, build e 51 testes frontend.
+- [OK] Pacote candidato do worktree local com PHP vendor sem dev: output/releases/ARL_CANDIDATO_LOCAL_20261011.zip; SHA256 verificado e sem arquivos privados.
+- [PENDENTE] Regressão E2E Mobile completa: 18 passaram, 10 falharam, 3 não executados. Atualizar especificações antigas e investigar Controle de Gastos sem mexer em layout aprovado.
+- [OK] PHP suíte completa 343/343 e 6.918 assertions aprovados após fixar APP_ENV=testing e SQLite em memória no comando de teste. Log docs/PRE_PUBLICACAO_PHP_FINAL_APROVADO_20261011.log.
+- [PENDENTE] Conferência da versão real MySQL/MariaDB/PHP na KingHost e compatibilidade PHP Linux do vendor candidato.
+- [PENDENTE] Backup autenticado do banco e storage OFICIAIS, restauração testada em staging seguro e aprovação expressa para quaisquer operações remotas.
+- [PENDENTE] Reconciliar/commit versão local aprovada para release GitHub. Não publicar o último HEAD ignorando o working tree.
+- [PENDENTE] Publicação/rollback: aguardar autorização específica. Não executar migrate:fresh, key:generate ou rollback destrutivo no banco oficial.
+
+Relatório: docs/PRE_PUBLICACAO_RESULTADO_20261011.md.

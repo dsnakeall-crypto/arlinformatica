@@ -50,7 +50,7 @@ class ExpenseControlController extends Controller
             'types' => DB::table('cg_types')->whereNull('deleted_at')->orderBy('name')->get(),
             'my_person_id' => DB::table('cg_people')->where('user_id', $r->user()->id)->value('id'),
             'can_assign_users' => $r->user()->hasRole('Master', 'Administrador'),
-            'accounts' => $r->user()->hasRole('Master', 'Administrador') ? DB::table('users')->join('roles', 'roles.id', '=', 'users.role_id')->where('users.active', true)->whereIn('roles.name', ['Master', 'Administrador', 'Controle de Gasto'])->get(['users.id', 'users.name']) : [],
+            'accounts' => $r->user()->hasRole('Master', 'Administrador') ? DB::table('users')->join('roles', 'roles.id', '=', 'users.role_id')->where('users.active', true)->whereIn('roles.name', ['Master', 'Administrador', 'Administrador Simples', 'Controle de Gasto'])->get(['users.id', 'users.name']) : [],
         ])->header('Cache-Control', 'no-store, private');
     }
 
@@ -67,7 +67,7 @@ class ExpenseControlController extends Controller
                     abort_unless(($person['user_id'] ?? null) === $old->user_id, 403, 'Somente a administração vincula contas de acesso.');
                 }
                 if ($person['user_id'] ?? null) {
-                    abort_unless(DB::table('users')->join('roles', 'roles.id', '=', 'users.role_id')->where('users.id', $person['user_id'])->where('users.active', true)->whereIn('roles.name', ['Master', 'Administrador', 'Controle de Gasto'])->exists(), 422, 'Vincule uma conta com acesso ao módulo.');
+                    abort_unless(DB::table('users')->join('roles', 'roles.id', '=', 'users.role_id')->where('users.id', $person['user_id'])->where('users.active', true)->whereIn('roles.name', ['Master', 'Administrador', 'Administrador Simples', 'Controle de Gasto'])->exists(), 422, 'Vincule uma conta com acesso ao módulo.');
                 }
             }
             if ($assign) {
@@ -197,7 +197,10 @@ class ExpenseControlController extends Controller
         $month = $this->period($r);
         $this->control->ensureMonth($month);
         $items = $this->control->installments()->whereNull('d.cancelled_at')->where('i.month_on', $month->toDateString())->orderBy('i.due_on')->get()->map(fn ($i) => $this->control->figures($i));
-        $totals = ['original_cents' => 0, 'paid_cents' => 0, 'discount_cents' => 0, 'remaining_cents' => 0, 'one_original_cents' => 0, 'two_original_cents' => 0, 'one_remaining_cents' => 0, 'two_remaining_cents' => 0, 'shared_original_cents' => 0, 'shared_remaining_cents' => 0, 'one_paid_cents' => 0, 'two_paid_cents' => 0];
+        $totals = ['original_cents' => 0, 'paid_cents' => 0, 'discount_cents' => 0, 'remaining_cents' => 0, 'one_original_cents' => 0, 'two_original_cents' => 0, 'one_remaining_cents' => 0, 'two_remaining_cents' => 0, 'shared_original_cents' => 0, 'shared_remaining_cents' => 0, 'one_paid_cents' => 0, 'two_paid_cents' => 0,
+            // Additive fields (09/10/2026): original shares split by origin and credits by the share's owner, never by paid_by.
+            'one_personal_original_cents' => 0, 'two_personal_original_cents' => 0, 'one_shared_original_cents' => 0, 'two_shared_original_cents' => 0,
+            'one_credited_cents' => 0, 'two_credited_cents' => 0, 'credited_cents' => 0];
         foreach ($items as $i) {
             foreach (['paid_cents', 'discount_cents', 'remaining_cents'] as $key) {
                 $totals[$key] += (int) $i[$key];
@@ -207,12 +210,18 @@ class ExpenseControlController extends Controller
                 $totals[$p.'_original_cents'] += (int) $i['share_'.$p.'_cents'];
                 $totals[$p.'_remaining_cents'] += $i['remaining_'.$p.'_cents'];
                 $totals[$p.'_paid_cents'] += (int) $i['paid_'.$p.'_cents'];
+                $totals[$p.'_'.($i['responsibility'] === 'shared' ? 'shared' : 'personal').'_original_cents'] += (int) $i['share_'.$p.'_cents'];
+                $totals[$p.'_credited_cents'] += (int) $i['credit_'.$p];
+                $totals['credited_cents'] += (int) $i['credit_'.$p];
             }
             if ($i['responsibility'] === 'shared') {
                 $totals['shared_original_cents'] += (int) $i['amount_cents'];
                 $totals['shared_remaining_cents'] += $i['remaining_cents'];
             }
         }
+        $pendingDates = $items->filter(fn ($i) => $i['remaining_cents'] > 0)->pluck('due_on')->map(fn ($d) => substr((string) $d, 0, 10));
+        $totals['next_due_on'] = $pendingDates->filter(fn ($d) => $d >= today()->toDateString())->min();
+        $totals['oldest_overdue_on'] = $pendingDates->filter(fn ($d) => $d < today()->toDateString())->min();
         $householdIds = DB::table('cg_institutions')->whereNotNull('restricted_type_id')->pluck('id')->all();
         $sortInstitutions = fn ($rows) => $rows->sortBy(fn ($row) => in_array((int) $row['id'], $householdIds, true) ? 1 : 0)->values();
         $banks = $items->groupBy('institution_id')->map(fn ($rows) => ['id' => $rows->first()['institution_id'], 'name' => $rows->first()['institution_name'], 'original_cents' => $rows->sum('amount_cents'), 'remaining_cents' => $rows->sum('remaining_cents'), 'count' => $rows->count()])->values();
@@ -246,6 +255,45 @@ class ExpenseControlController extends Controller
         return response()->json(['month' => $month->format('Y-m'), 'monthly_invoices' => $invoices, 'totals' => $totals, 'views' => $views, 'institutions' => $sortInstitutions($banks), 'count' => $items->count(), 'next_due' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(), 'overdue' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
             'partial_installments' => $items->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['remaining_cents'] < $i['amount_cents'])->values(),
             'personal_next_due' => $personal->filter(fn ($i) => $i['due_on'] >= today()->toDateString())->take(5)->values(), 'personal_overdue' => $personal->filter(fn ($i) => $i['due_on'] < today()->toDateString())->take(5)->values()]);
+    }
+
+    /** Detailed, read-only monthly statement for client-side PDF exports.
+     * Reuse ExpenseControl::figures, the exact same cent allocation as /summary.
+     * Do not materialize months or mutate entries when exporting.
+     */
+    public function statementDetails(Request $r): JsonResponse
+    {
+        $month = $this->period($r);
+        $rows = $this->control->installments()
+            ->whereNull('d.cancelled_at')
+            ->where('i.month_on', $month->toDateString())
+            ->orderBy('bank.name')->orderBy('i.due_on')->orderBy('i.id')
+            ->get()->map(fn ($i) => $this->control->figures($i));
+
+        return response()->json([
+            'month' => $month->format('Y-m'),
+            'data' => $rows->map(fn (array $i) => [
+                'id' => (int) $i['id'],
+                'debt_id' => (int) $i['debt_id'],
+                'institution_id' => (int) $i['institution_id'],
+                'institution_name' => $i['institution_name'],
+                'type_name' => $i['type_name'],
+                'debt_name' => $i['name'],
+                'number' => (int) $i['number'],
+                'installment_count' => (int) $i['installment_count'],
+                'responsibility' => $i['responsibility'],
+                'due_on' => substr((string) $i['due_on'], 0, 10),
+                'original_cents' => (int) $i['amount_cents'],
+                'credit_cents' => (int) $i['credit_one'] + (int) $i['credit_two'],
+                'remaining_cents' => (int) $i['remaining_cents'],
+                'share_one_cents' => (int) $i['share_one_cents'],
+                'share_two_cents' => (int) $i['share_two_cents'],
+                'credit_one_cents' => (int) $i['credit_one'],
+                'credit_two_cents' => (int) $i['credit_two'],
+                'remaining_one_cents' => (int) $i['remaining_one_cents'],
+                'remaining_two_cents' => (int) $i['remaining_two_cents'],
+            ])->values(),
+        ])->header('Cache-Control', 'no-store, private');
     }
 
     public function debts(Request $r): JsonResponse
