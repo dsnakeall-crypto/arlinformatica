@@ -1,3 +1,13 @@
+# PR #59 — correção E2E da importação CSV Mobile — 11/10/2026
+
+- [OK] Teste E2E navega pelo card Sistema após reload Mobile e verifica acesso Master à importação; Administrador segue sem o formulário.
+- [OK] Backend mantém `role:Master`; teste PHP de importação e negação de acesso: 7 aprovados, 40 assertions em SQLite em memória.
+- [OK] Lint, typecheck, 51 testes frontend, build, Pint e `git diff --check` passaram.
+- [PENDENTE] Runner Playwright local encerrou apenas após interrupção, apesar dos 2 casos registrarem `ok`; validar saída limpa e suíte integral na CI Linux após commit/push da PR.
+- [PENDENTE] Comparação visual abrangente e métricas de performance frias/quentes do commit `86bfdec`; detalhes em `docs/AUDITORIA_PR59_SETTINGS_IMPORT_20261011.md`.
+
+---
+
 # ARL Mobile — Clean exclusivo, menus, OS, Clientes e Financeiro — 09/10/2026
 
 - [OK] Tema Clean obrigatório no celular, sem opção Original, mudança de cores ou escolha Web/PC; escolher somente barra inferior ou lateral compacto em Configurações.

@@ -20,6 +20,8 @@ test('Configurações importa CSV e mostra resumo, duplicidade e erros', async (
   await setDeviceLayout(page, 'mobile');
   await expect(page.getByRole('button', { name: 'Abrir menu', exact: true })).toBeVisible();
   await expect(page.locator('aside')).not.toHaveClass(/open/);
+  await page.getByRole('navigation', { name: 'Categorias de Configurações' })
+    .locator('[data-section="system"]').click();
   await expect(card.getByRole('button', { name: 'Importar clientes', exact: true })).toBeVisible();
   const bounds = await card.evaluate(element => ({ width: element.clientWidth, content: element.scrollWidth }));
   expect(bounds.content).toBeLessThanOrEqual(bounds.width + 1);
@@ -30,5 +32,10 @@ test('Administrador não vê a importação de clientes', async ({ page }) => {
   await login(page, 'e2e.admin');
   await page.locator('aside').getByRole('button', { name: 'Configurações', exact: true }).click();
   await expect(page.getByLabel('Nome fantasia')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Importar clientes por CSV' })).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await setDeviceLayout(page, 'mobile');
+  await page.getByRole('navigation', { name: 'Categorias de Configurações' })
+    .locator('[data-section="system"]').click();
   await expect(page.getByRole('heading', { name: 'Importar clientes por CSV' })).toHaveCount(0);
 });
