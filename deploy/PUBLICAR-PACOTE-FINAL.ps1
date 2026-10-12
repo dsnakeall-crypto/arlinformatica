@@ -5,7 +5,7 @@ $arlPackage=[IO.Path]::GetFullPath($arlReport.package)
 if((Get-FileHash -LiteralPath $arlPackage).Hash.ToLowerInvariant() -ne $arlReport.sha256){throw 'Pacote divergente.'}
 if($arlReport.release -notmatch '^[a-f0-9]{40}$' -or $arlReport.schema_changes -ne $false -or $arlReport.previous_release -ne '9a90223304d404de1dfb867cc109952ca0b99ca5'){throw 'Release/schema/base invalida.'}
 $arlPreviousPackage=Join-Path (Split-Path $PSScriptRoot -Parent) 'output/releases/ARL-OITO-MELHORIAS-9a90223304d4.zip'
-$arlPreviousAliases='C:UsersAllanOneDriveProgramacao APPApp Arl InformaticaBackupsARL-Oito-Aliases-e90-20261012-151916-2bb077bb.json'
+$arlPreviousAliases='C:/Users/Allan/OneDrive/Programacao APP/App Arl Informatica/Backups/ARL-Oito-Aliases-e90-20261012-151916-2bb077bb.json'
 $arlBaselineJson=& php (Join-Path $PSScriptRoot 'previous-release-baseline.php') $arlPreviousPackage $arlPreviousAliases
 if($LASTEXITCODE -ne 0){throw 'Artefatos existentes de rollback invalidos.'}
 $arlBaseline=$arlBaselineJson|ConvertFrom-Json
