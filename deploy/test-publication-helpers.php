@@ -21,6 +21,24 @@ $former = realpath($dir.'/former');
 $www = realpath($dir.'/www');
 $pointer = $dir.'/current';
 arlPointer($pointer, $old);
+$testToken = 'fixture-only-token';
+$testTokenFile = $dir.'/probe-token';
+file_put_contents($testTokenFile, $testToken);
+$testProbe = 'if(isset($_SERVER["HTTP_X_ARL_DEPLOY_PROBE"])){if(!hash_equals(trim((string)file_get_contents('.var_export($testTokenFile, true).')),(string)$_SERVER["HTTP_X_ARL_DEPLOY_PROBE"])){http_response_code(403);exit;}header("Content-Type: application/json");echo json_encode(["release"=>$arlRoot,"php"=>PHP_VERSION_ID]);exit;}'."\n";
+$testCron = '<?php if(empty($_SERVER["HTTP_X_CRON_AUTH"])){http_response_code(403);exit;} echo "CRON_EXECUTED";';
+$testInjected = arlCronProbe($testCron, $testProbe, $pointer);
+token_get_all($testInjected, TOKEN_PARSE);
+file_put_contents($dir.'/cron-probe.php', $testInjected);
+$wrapper = '<?php http_response_code(200); if($argv[1]!=="none"){$_SERVER["HTTP_X_ARL_DEPLOY_PROBE"]=$argv[1];} register_shutdown_function(function(){echo "|STATUS=".http_response_code();});require '.var_export($dir.'/cron-probe.php', true).';';
+file_put_contents($dir.'/probe-wrapper.php', $wrapper);
+foreach ([$testToken => 200, 'wrong-token' => 403, 'none' => 403] as $input => $expected) {
+    $response = shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($dir.'/probe-wrapper.php').' '.escapeshellarg($input));
+    arlCheck(is_string($response) && str_ends_with($response, '|STATUS='.$expected) && ! str_contains($response, 'CRON_EXECUTED'), 'CRON_PROBE_AUTH_FAILED');
+    if ($expected === 200) {
+        $json = json_decode(explode('|STATUS=', $response)[0], true, 512, JSON_THROW_ON_ERROR);
+        arlCheck($json['release'] === $old && $json['php'] >= 80200, 'CRON_PROBE_RESPONSE_FAILED');
+    }
+}
 $original = ['index.php' => "<?php\n".arlShared($pointer, [$former, $old], $old, 'e90f11fea20839e573df7a40d67489301dbcaad7', $old)."echo 'old';\n", 'cron-scheduler.php' => "<?php\n".arlShared($pointer, [$former, $old], $old, 'e90f11fea20839e573df7a40d67489301dbcaad7', $old)."http_response_code(403);\n", 'sw.js' => 'old-sw', 'manifest.json' => 'old-manifest'];
 foreach ($original as $name => $bytes) {
     arlCheck(file_put_contents($www.'/'.$name, $bytes) === strlen($bytes), 'FIXTURE_WRITE_FAILED');

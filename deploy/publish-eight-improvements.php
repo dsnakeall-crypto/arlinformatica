@@ -46,6 +46,13 @@ function arlStaticEquivalent(string $name, string $existing, string $candidate):
     return in_array($name, ['arl-assets/arl.svg', 'icons/arl.svg', 'arl-assets/expense-cards/catalog.json', 'manifest.webmanifest'], true)
         && str_replace("\r\n", "\n", $existing) === str_replace("\r\n", "\n", $candidate);
 }
+function arlCronProbe(string $source, string $probe, string $pointer): string
+{
+    arlCheck(str_starts_with($source, '<?php'), 'CRON_PHP_TAG_MISSING');
+    $standalone = str_replace('"release"=>$arlRoot', '"release"=>realpath('.var_export($pointer, true).')', $probe);
+
+    return substr_replace($source, "\n".$standalone, 5, 0);
+}
 function arlShared(string $pointer, array $roots, string $current, string $release, string $e90): string
 {
     $allowed = implode(',', array_map(fn ($value) => var_export($value, true), $roots));
@@ -219,6 +226,7 @@ try {
     arlCheck(file_put_contents($tokenFile, $token) === 64 && chmod($tokenFile, 0600), 'PROBE_TOKEN_FAILED');
     $probe = 'if(isset($_SERVER["HTTP_X_ARL_DEPLOY_PROBE"])){if(!hash_equals(trim((string)file_get_contents('.var_export($tokenFile, true).')),(string)$_SERVER["HTTP_X_ARL_DEPLOY_PROBE"])){http_response_code(403);exit;}header("Content-Type: application/json");echo json_encode(["release"=>$arlRoot,"php"=>PHP_VERSION_ID]);exit;}'."\n";
     $next = [];
+    $probes = [];
     $backup = ['release' => $release, 'old' => $old, 'new' => $new, 'lock' => $lockPath, 'aliases' => [], 'accepted' => []];
     foreach (['index.php', 'cron-scheduler.php', 'sw.js', 'build/manifest.json'] as $name) {
         $path = $www.'/'.$name;
@@ -227,9 +235,16 @@ try {
         $backup['aliases'][$name] = ['sha256' => hash('sha256', $aliases[$path]), 'data' => base64_encode($aliases[$path])];
         if (in_array($name, ['index.php', 'cron-scheduler.php'], true)) {
             arlCheck(substr_count($aliases[$path], $previousShared) === 1, 'LAUNCHER_SHAPE_CHANGED');
-            $next[$name] = str_replace($previousShared, $nextShared.$probe, $aliases[$path]);
+            $probes[$name] = $probe;
+            $next[$name] = str_replace($previousShared, $nextShared, $aliases[$path]);
+            if ($name === 'cron-scheduler.php') {
+                $probes[$name] = str_replace('"release"=>$arlRoot', '"release"=>realpath('.var_export($pointer, true).')', $probe);
+                $next[$name] = arlCronProbe($next[$name], $probe, $pointer);
+            } else {
+                $next[$name] = str_replace($nextShared, $nextShared.$probe, $next[$name]);
+            }
             token_get_all($next[$name], TOKEN_PARSE);
-            $final = str_replace($probe, '', $next[$name]);
+            $final = str_replace($probes[$name], '', $next[$name]);
         } else {
             $next[$name] = file_get_contents($new.'/public/'.$name);
             $final = $next[$name];
@@ -323,7 +338,7 @@ try {
         arlCheck($r['status'] === 200 && hash('sha256', $r['body']) === $static[$asset], 'ASSET_HTTP_HASH_FAILED');
     }
     foreach (['index.php', 'cron-scheduler.php'] as $name) {
-        arlAtomic($www.'/'.$name, str_replace($probe, '', $next[$name]));
+        arlAtomic($www.'/'.$name, str_replace($probes[$name], '', $next[$name]));
     }
     $home = arlHttp('');
     arlCheck($home['status'] === 200 && ($home['headers']['x-arl-release'] ?? '') === $release, 'FINAL_RELEASE_FAILED');
