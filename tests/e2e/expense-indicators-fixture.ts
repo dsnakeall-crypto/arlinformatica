@@ -47,7 +47,7 @@ export async function assertOwnerExample(page: Page, before: Record<string, numb
   await expect(indicators.locator('.cgo-indicator')).toHaveCount(5);
   const expectCard = async (key: string, original: number, remaining: number) => {
     const card = indicators.locator('.cgo-' + key);
-    await expect(card.locator('.cgo-original')).toContainText(brl(original));
+    await expect(card.locator('.cgo-original')).toContainText(brl(key === 'month' ? remaining : original));
     await expect(card.locator('.cgo-original .cgo-tag')).toHaveCount(0);
     if(key === 'month') await expect(card.locator('.cgo-remaining')).toHaveCount(0);
     else {
@@ -55,6 +55,10 @@ export async function assertOwnerExample(page: Page, before: Record<string, numb
       await expect(card.locator('.cgo-remaining span')).toHaveText('Falta pagar');
     }
   };
+  const statement = (await api(page, '/expense-control/summary?month=' + INDICATOR_MONTH)).body;
+  expect(statement.totals.original_cents).toBe(b('original_cents') + 190000);
+  expect(statement.totals.remaining_cents).toBe(b('remaining_cents') + 160000);
+  expect(statement.invoice_totals.total_cents).toBe(statement.totals.remaining_cents);
   await expectCard('month', b('original_cents') + 190000, b('remaining_cents') + 160000);
   await expectCard('one', b('one_original_cents') + 130000, b('one_remaining_cents') + 110000);
   await expectCard('two', b('two_original_cents') + 60000, b('two_remaining_cents') + 50000);

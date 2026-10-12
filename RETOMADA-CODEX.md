@@ -152,3 +152,9 @@ Checkpoint intermediário: 02e65e887560590119f91881b70843ffa58ef38e; o próximo 
 73 PHP/1135 SQLite; 61 PHP/869 MySQL; concorrência ledger passou sem overpayment; 57 unitários incluindo seis PDF; PDFs reais baixados, extraídos e renderizados sem defeitos; lint/types/build e Pint Linux234 aprovados. Posicionamento central desktop/mobile medido e aprovado. Não repetir análises antigas.
 Próximo passo: aguardar CI do commit final, preparar novo ZIP/manifesto e registrar seus hashes aqui. ZIP eec107c NÃO usar para publicar. Executor existente/rollback e90 preservados. NÃO abrir SSH ou publicar na KingHost; aguardar confirmação explícita após o proprietário revisar o resultado.
 Backup completo existente reutilizado e proteção incremental dos arquivos alterados verificada. Não executar novo backup completo/SQL ou mudar .env/uploads/original.
+
+
+## Ajuste de regressões legadas após CI 310831d
+CI 38265352728: backend SQLite/MySQL 395 testes e 7.356 assertions aprovados em cada driver, frontend aprovado; E2E 267 aprovados/4 falhas exclusivamente nas expectativas antigas de original mensal, texto monetário isolado e popup PDF antigo. Evidência CORRECOES_CI_310_E2E.json.
+Atualizadas somente três fixtures/testes: indicador mensal confere saldo pendente e também valida originais históricos pelo backend; fatura confere valor exato no elemento numérico e estado em aberto, preservando métricas de alinhamento/overflow/altura; teste mobile mantém os três PDFs legados e acrescenta download geral pelo novo popup mensal. Nove E2E direcionados aprovados em 1,2 minuto, lint aprovado. Nenhum runtime, regra financeira ou teste desabilitado. Fontes/ZIP anteriores preservados; aguardar a nova CI e o pacote vinculado à fonte seguinte.
+Parada obrigatória antes de SSH continua vigente.

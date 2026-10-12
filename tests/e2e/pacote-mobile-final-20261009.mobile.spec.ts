@@ -41,7 +41,17 @@ test('card resumo confirma PDF local, e próximo pagamento abre popup',async({pa
   await expect(top).toBeVisible();
   await expect(top.locator('.cgo-month .cgo-tag')).toHaveCount(0);
   const dialog=page.getByRole('dialog',{name:/Baixar resumo em PDF/i});
-  for(const scope of ['month','one','two','shared']) {
+  await top.locator('.cgo-month .cgo-card-action').click();
+  const monthDialog = page.getByRole('dialog', { name: 'Total a pagar no mês', exact: true });
+  await expect(monthDialog.locator('.cg-exclusive-totals > div')).toHaveCount(4);
+  const monthlyDownload = page.waitForEvent('download');
+  await monthDialog.getByRole('button', { name: 'PDF Total Fatura', exact: true }).click();
+  const monthlyFile = await monthlyDownload;
+  expect(monthlyFile.suggestedFilename()).toMatch(/^fatura-pendente-\d{4}-\d{2}-month\.pdf$/);
+  const monthlyPath = await monthlyFile.path();
+  expect(readFileSync(monthlyPath!).subarray(0, 4).toString()).toBe('%PDF');
+  await monthDialog.getByRole('button', { name: 'Fechar total do mês', exact: true }).click();
+  for(const scope of ['one','two','shared']) {
     await top.locator('.cgo-'+scope+' .cgo-card-action').click();
     await expect(dialog).toBeVisible();
     const pending=page.waitForEvent('download');

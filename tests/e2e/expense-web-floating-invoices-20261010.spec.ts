@@ -88,7 +88,8 @@ test('Faturas do mês WEB: valor BRL visível, data alinhada, 1 barra azul por f
   const invoice=box.locator('.cg-invoice-card').filter({hasText:'Instituição Fatura '+stamp}).filter({hasText:'Cartão de Crédito'});
   await expect(invoice).toBeVisible();
   await expect(invoice).toContainText('Cartão de Crédito');
-  await expect(invoice.locator(':scope > strong')).toHaveText('R$ 350,00');
+  await expect(invoice.locator(':scope > strong > b')).toHaveText('R$ 350,00');
+  await expect(invoice.locator('.cg-invoice-balance')).toContainText('Em aberto');
   await expect(invoice.locator('.cg-invoice-description small')).toContainText('Vencimento:');
   await expect(invoice.locator('.cg-invoice-symbol')).toBeHidden();
   await expect(invoice.locator(':scope > svg:last-child')).toBeHidden();

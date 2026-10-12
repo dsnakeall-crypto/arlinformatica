@@ -1,0 +1,86 @@
+[
+  {
+    "path": ".github",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/310831d46d50e0dce8c6ad7399f256abeaed739a/.github",
+    "start_line": 2,
+    "start_column": null,
+    "end_line": 2,
+    "end_column": null,
+    "annotation_level": "warning",
+    "title": "",
+    "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/",
+    "raw_details": ""
+  },
+  {
+    "path": ".github",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/310831d46d50e0dce8c6ad7399f256abeaed739a/.github",
+    "start_line": 83897,
+    "start_column": null,
+    "end_line": 83897,
+    "end_column": null,
+    "annotation_level": "failure",
+    "title": "",
+    "message": "Process completed with exit code 1.",
+    "raw_details": ""
+  },
+  {
+    "path": ".github",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/310831d46d50e0dce8c6ad7399f256abeaed739a/.github",
+    "start_line": 83891,
+    "start_column": null,
+    "end_line": 83891,
+    "end_column": null,
+    "annotation_level": "notice",
+    "title": "🎭 Playwright Run Summary",
+    "message": "  4 failed\n    [desktop-chromium] › tests/e2e/expense-indicators.spec.ts:5:1 › gastos web: cinco indicadores e cards Allan/Carol seguem o exemplo do proprietário \n    [desktop-chromium] › tests/e2e/expense-web-floating-invoices-20261010.spec.ts:39:1 › Faturas do mês WEB: valor BRL visível, data alinhada, 1 barra azul por fatura e sem símbolos vermelhos/seta \n    [mobile-chromium] › tests/e2e/expense-indicators-mobile.spec.ts:5:1 › gastos mobile: mesmos cinco indicadores e cards, sem cortar valores em 320–430 px \n    [mobile-chromium] › tests/e2e/pacote-mobile-final-20261009.mobile.spec.ts:36:1 › card resumo confirma PDF local, e próximo pagamento abre popup \n  267 passed (27.6m)",
+    "raw_details": ""
+  },
+  {
+    "path": "tests/e2e/pacote-mobile-final-20261009.mobile.spec.ts",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/310831d46d50e0dce8c6ad7399f256abeaed739a/tests/e2e/pacote-mobile-final-20261009.mobile.spec.ts",
+    "start_line": 46,
+    "start_column": 26,
+    "end_line": 46,
+    "end_column": 26,
+    "annotation_level": "failure",
+    "title": "[mobile-chromium] › tests/e2e/pacote-mobile-final-20261009.mobile.spec.ts:36:1 › card resumo confirma PDF local",
+    "message": "  4) [mobile-chromium] › tests/e2e/pacote-mobile-final-20261009.mobile.spec.ts:36:1 › card resumo confirma PDF local, e próximo pagamento abre popup \n    Error: expect(locator).toBeVisible() failed\n\n    Locator:  getByRole('dialog', { name: /Baixar resumo em PDF/i })\n    Expected: visible\n    Received: <element(s) not found>\n    Timeout:  5000ms\n\n    Call log:\n      - Expect \"toBeVisible\" with timeout 5000ms\n      - waiting for getByRole('dialog', { name: /Baixar resumo em PDF/i })\n\n\n      44 |   for(const scope of ['month','one','two','shared']) {\n      45 |     await top.locator('.cgo-'+scope+' .cgo-card-action').click();\n    > 46 |     await expect(dialog).toBeVisible();\n         |                          ^\n      47 |     const pending=page.waitForEvent('download');\n      48 |     await dialog.getByRole('button',{name:'Confirmar e baixar PDF'}).click();\n      49 |     const download=await pending;\n        at /home/runner/work/arlinformatica/arlinformatica/tests/e2e/pacote-mobile-final-20261009.mobile.spec.ts:46:26",
+    "raw_details": ""
+  },
+  {
+    "path": "tests/e2e/expense-indicators-fixture.ts",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/310831d46d50e0dce8c6ad7399f256abeaed739a/tests/e2e/expense-indicators-fixture.ts",
+    "start_line": 50,
+    "start_column": 49,
+    "end_line": 50,
+    "end_column": 49,
+    "annotation_level": "failure",
+    "title": "[mobile-chromium] › tests/e2e/expense-indicators-mobile.spec.ts:5:1 › gastos mobile: mesmos cinco indicadores e cards",
+    "message": "  3) [mobile-chromium] › tests/e2e/expense-indicators-mobile.spec.ts:5:1 › gastos mobile: mesmos cinco indicadores e cards, sem cortar valores em 320–430 px \n    Error: expect(locator).toContainText(expected) failed\n\n    Locator: getByRole('region', { name: 'Indicadores do mês' }).locator('.cgo-month').locator('.cgo-original')\n    Expected string: \"R$ 4.039,90\"\n    Received string: \"R$ 3.439,90\"\n    Timeout: 5000ms\n\n    Call log:\n      - Expect \"toContainText\" with timeout 5000ms\n      - waiting for getByRole('region', { name: 'Indicadores do mês' }).locator('.cgo-month').locator('.cgo-original')\n        9 × locator resolved to <strong class=\"cgo-original\">R$ 3.439,90</strong>\n          - unexpected value \"R$ 3.439,90\"\n\n\n       at expense-indicators-fixture.ts:50\n\n      48 |   const expectCard = async (key: string, original: number, remaining: number) => {\n      49 |     const card = indicators.locator('.cgo-' + key);\n    > 50 |     await expect(card.locator('.cgo-original')).toContainText(brl(original));\n         |                                                 ^\n      51 |     await expect(card.locator('.cgo-original .cgo-tag')).toHaveCount(0);\n      52 |     if(key === 'month') await expect(card.locator('.cgo-remaining')).toHaveCount(0);\n      53 |     else {\n        at expectCard (/home/runner/work/arlinformatica/arlinformatica/tests/e2e/expense-indicators-fixture.ts:50:49)\n        at assertOwnerExample (/home/runner/work/arlinformatica/arlinformatica/tests/e2e/expense-indicators-fixture.ts:58:9)\n        at /home/runner/work/arlinformatica/arlinformatica/tests/e2e/expense-indicators-mobile.spec.ts:11:5",
+    "raw_details": ""
+  },
+  {
+    "path": "tests/e2e/expense-web-floating-invoices-20261010.spec.ts",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/310831d46d50e0dce8c6ad7399f256abeaed739a/tests/e2e/expense-web-floating-invoices-20261010.spec.ts",
+    "start_line": 91,
+    "start_column": 52,
+    "end_line": 91,
+    "end_column": 52,
+    "annotation_level": "failure",
+    "title": "[desktop-chromium] › tests/e2e/expense-web-floating-invoices-20261010.spec.ts:39:1 › Faturas do mês WEB: valor BRL visível",
+    "message": "  2) [desktop-chromium] › tests/e2e/expense-web-floating-invoices-20261010.spec.ts:39:1 › Faturas do mês WEB: valor BRL visível, data alinhada, 1 barra azul por fatura e sem símbolos vermelhos/seta \n    Error: expect(locator).toHaveText(expected) failed\n\n    Locator: locator('.cg-page.cg-expense-web-mirror').locator('.cg-monthly-invoices').locator('.cg-invoice-card').filter({ hasText: 'Instituição Fatura 1791816899815' }).filter({ hasText: 'Cartão de Crédito' }).locator(':scope > strong')\n    Expected string: \"R$ 350,00\"\n    Received string: \"Em aberto — R$ 350,00 pendente\"\n    Timeout: 5000ms\n\n    Call log:\n      - Expect \"toHaveText\" with timeout 5000ms\n      - waiting for locator('.cg-page.cg-expense-web-mirror').locator('.cg-monthly-invoices').locator('.cg-invoice-card').filter({ hasText: 'Instituição Fatura 1791816899815' }).filter({ hasText: 'Cartão de Crédito' }).locator(':scope > strong')\n        9 × locator resolved to <strong class=\"cg-invoice-balance\">…</strong>\n          - unexpected value \"Em aberto — R$ 350,00 pendente\"\n\n\n      89 |   await expect(invoice).toBeVisible();\n      90 |   await expect(invoice).toContainText('Cartão de Crédito');\n    > 91 |   await expect(invoice.locator(':scope > strong')).toHaveText('R$ 350,00');\n         |                                                    ^\n      92 |   await expect(invoice.locator('.cg-invoice-description small')).toContainText('Vencimento:');\n      93 |   await expect(invoice.locator('.cg-invoice-symbol')).toBeHidden();\n      94 |   await expect(invoice.locator(':scope > svg:last-child')).toBeHidden();\n        at /home/runner/work/arlinformatica/arlinformatica/tests/e2e/expense-web-floating-invoices-20261010.spec.ts:91:52",
+    "raw_details": ""
+  },
+  {
+    "path": "tests/e2e/expense-indicators-fixture.ts",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/310831d46d50e0dce8c6ad7399f256abeaed739a/tests/e2e/expense-indicators-fixture.ts",
+    "start_line": 50,
+    "start_column": 49,
+    "end_line": 50,
+    "end_column": 49,
+    "annotation_level": "failure",
+    "title": "[desktop-chromium] › tests/e2e/expense-indicators.spec.ts:5:1 › gastos web: cinco indicadores e cards Allan/Carol seguem o exemplo do proprietário",
+    "message": "  1) [desktop-chromium] › tests/e2e/expense-indicators.spec.ts:5:1 › gastos web: cinco indicadores e cards Allan/Carol seguem o exemplo do proprietário \n    Error: expect(locator).toContainText(expected) failed\n\n    Locator: getByRole('region', { name: 'Indicadores do mês' }).locator('.cgo-month').locator('.cgo-original')\n    Expected string: \"R$ 2.050,00\"\n    Received string: \"R$ 1.750,00\"\n    Timeout: 5000ms\n\n    Call log:\n      - Expect \"toContainText\" with timeout 5000ms\n      - waiting for getByRole('region', { name: 'Indicadores do mês' }).locator('.cgo-month').locator('.cgo-original')\n        9 × locator resolved to <strong class=\"cgo-original\">R$ 1.750,00</strong>\n          - unexpected value \"R$ 1.750,00\"\n\n\n       at expense-indicators-fixture.ts:50\n\n      48 |   const expectCard = async (key: string, original: number, remaining: number) => {\n      49 |     const card = indicators.locator('.cgo-' + key);\n    > 50 |     await expect(card.locator('.cgo-original')).toContainText(brl(original));\n         |                                                 ^\n      51 |     await expect(card.locator('.cgo-original .cgo-tag')).toHaveCount(0);\n      52 |     if(key === 'month') await expect(card.locator('.cgo-remaining')).toHaveCount(0);\n      53 |     else {\n        at expectCard (/home/runner/work/arlinformatica/arlinformatica/tests/e2e/expense-indicators-fixture.ts:50:49)\n        at assertOwnerExample (/home/runner/work/arlinformatica/arlinformatica/tests/e2e/expense-indicators-fixture.ts:58:9)\n        at /home/runner/work/arlinformatica/arlinformatica/tests/e2e/expense-indicators.spec.ts:11:5",
+    "raw_details": ""
+  }
+]
