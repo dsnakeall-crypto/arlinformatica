@@ -78,3 +78,8 @@ Riscos restantes de hospedagem (permissões, extensão ZIP, quota, latência/OPc
 Rollback manual, só quando autorizado e usando relatório real da execução:
     pwsh -NoProfile -File deploy/PUBLICAR-OITO-MELHORIAS.ps1 -PacoteRelatorio output/releases/ARL-OITO-MELHORIAS-c9ded0e0458d.json -AutorizarPublicacao -Reverter -Resultado 'CAMINHO_DO_RELATORIO_REAL.json'
 Restaura somente ponteiro/aliases e90 por hashes; mantém banco, uploads e código anterior. Não fazer merge, restaurar SQL ou excluir arquivos. Smoke autenticado deverá verificar navegação/dados existentes após ativação, sem pagamentos fictícios.
+
+## Publicação autorizada pelo proprietário
+O proprietário respondeu "pode" ao pedido de push da branch e staging/ativação na KingHost. Autorização válida para esta missão, sem merge ou migrations. Primeiro push de 4867916 concluído.
+Antes de ativar, a conferência da mesma regra de CI (Pint completo) apontou formatação em testes e helpers de implantação. Corrigida apenas formatação; nenhum arquivo de runtime mudou semanticamente. Pint completo passou, 52 testes financeiros/721 assertions passaram e helpers Linux foram revalidados. Logs PUBLICACAO_PHP_STYLE_COMPLETO_CORRIGIDO, PUBLICACAO_PHP_REGRESSAO e PUBLICACAO_HELPERS_REVALIDADOS preservados. Um pacote atualizado será produzido para vincular a release ao novo checkpoint; c9ded0e permanece apenas candidato histórico, sem ativação.
+A CI remota completa também será conferida antes de ativar. Não pedir autorização novamente para as mesmas ações já autorizadas. Senha apenas no prompt nativo SSH.
