@@ -1129,3 +1129,14 @@ Relatório: .agents/OITO_MELHORIAS_RESULTADO_20261012.md. Não iniciar outra eta
 - [OK] Implementação, testes, preparação e documentação concluídos exclusivamente na cópia isolada. Nenhum SSH ou alteração oficial nesta missão.
 - [PENDENTE] Proprietário retornar e instruir abertura do SSH; preflight, backup de aliases, ativação e smoke autenticado. Parada obrigatória antes da conexão. Não publicar automaticamente.
 Este estado substitui as pendências históricas de confirmação/push/CI/pacote das oito melhorias acima. Etapas de produção permanecem pendentes.
+
+## Correções finais 12/10/2026 — fonte 9a90223304d4
+[OK] Saldo pendente mensal e históricos originais preservados.
+[OK] Faturas quitadas visíveis; quatro categorias exclusivas e PDFs consistentes.
+[OK] Pagamento efetivo com autorização/CSRF/UUID/transação; outra parte preservada; concorrência isolada aprovada.
+[OK] Cifrões centrais entre texto e valor, desktop/mobile medidos.
+[OK] CI completa: 395 PHP/7356 assertions por driver, 57 unitários, 271 E2E; lint/TypeScript/build/Pint aprovados.
+[OK] Novo ZIP/manifesto 9a90223304d4 verificado; original e produção preservados; nenhuma migration.
+[OK] Regra de checkpoint/parada a 8% documentada; retomada somente com 100% disponível e novo comando humano.
+[PENDENTE] Revisão/confirmação expressa do proprietário antes de abrir SSH.
+[PENDENTE] Preflight/backup de aliases/ativação/smoke oficial autorizados, sem banco/migration; rollback e90.
