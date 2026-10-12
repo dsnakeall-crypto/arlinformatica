@@ -1147,3 +1147,8 @@ Este estado substitui as pendências históricas de confirmação/push/CI/pacote
 [OK] Banco/env/storage/uploads preservados; backup existente reutilizado, sem novo backup após dispensa.
 [OK] Rollback e90 disponível pelo relatório real 152150-ca5aa0cb.
 As pendências históricas de SSH/ativação/smoke acima estão resolvidas por este resultado real.
+
+## Novo pacote final — 6d0588e — NÃO PUBLICADO
+[OK] Checkpoint/push e evidências financeiras/visuais direcionadas preservados.
+[PENDENTE] CI38300164183 completa, revisão/compactação restante e novo pacote com rollback9a.
+[PENDENTE] Nova autorização expressa para ativação. Trabalho parado preventivamente por limite de uso; retomada somente após renovação100% e comando humano.
