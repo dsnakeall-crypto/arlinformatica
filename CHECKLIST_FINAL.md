@@ -1140,3 +1140,10 @@ Este estado substitui as pendências históricas de confirmação/push/CI/pacote
 [OK] Regra de checkpoint/parada a 8% documentada; retomada somente com 100% disponível e novo comando humano.
 [PENDENTE] Revisão/confirmação expressa do proprietário antes de abrir SSH.
 [PENDENTE] Preflight/backup de aliases/ativação/smoke oficial autorizados, sem banco/migration; rollback e90.
+
+## Publicação oficial final
+[OK] Proprietário autorizou publicação; release 9a90223 publicada e confirmada por HTTPS.
+[OK] Smoke autenticado de leitura: popup mensal, fatura quitada e download PDF; nenhum pagamento de teste.
+[OK] Banco/env/storage/uploads preservados; backup existente reutilizado, sem novo backup após dispensa.
+[OK] Rollback e90 disponível pelo relatório real 152150-ca5aa0cb.
+As pendências históricas de SSH/ativação/smoke acima estão resolvidas por este resultado real.

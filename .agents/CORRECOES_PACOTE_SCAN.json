@@ -4,5 +4,5 @@
   "root_private_directories": "ABSENT",
   "databases_env_logs": "ABSENT",
   "vendor_namespaces": "PRODUCTION_CODE_ALLOWED",
-  "activation": "NOT_EXECUTED"
+  "activation": "PUBLISHED"
 }

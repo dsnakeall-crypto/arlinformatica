@@ -1,0 +1,27 @@
+[
+  {
+    "path": "",
+    "status": 200,
+    "release": "9a90223304d404de1dfb867cc109952ca0b99ca5"
+  },
+  {
+    "path": "login",
+    "status": 200,
+    "release": "9a90223304d404de1dfb867cc109952ca0b99ca5"
+  },
+  {
+    "path": "api/me",
+    "status": 401,
+    "release": "9a90223304d404de1dfb867cc109952ca0b99ca5"
+  },
+  {
+    "path": "api/expense-control/configuration",
+    "status": 401,
+    "release": "9a90223304d404de1dfb867cc109952ca0b99ca5"
+  },
+  {
+    "path": "cron-scheduler.php",
+    "status": 403,
+    "release": null
+  }
+]
