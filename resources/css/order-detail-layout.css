@@ -238,7 +238,7 @@ main:has([data-arl-order-detail-react="1"]) .device-layout>.arl-layout-label{dis
 .arl-editor-refined label{font-size:12px;font-weight:600;color:#35303c}
 .arl-editor-refined textarea,.arl-editor-refined input[type=text]{background:#fff!important;border:1px solid #dfdce3!important;border-radius:12px!important;padding:12px 14px!important;font-size:13px!important;line-height:1.6;box-shadow:0 2px 5px #29172603;transition:border-color .15s,box-shadow .15s}
 .arl-editor-refined textarea{min-height:94px}
-.arl-editor-refined textarea:focus,.arl-editor-refined input:focus{outline:0;border-color:#c50830!important;box-shadow:0 0 0 3px #c5083010}
+.arl-editor-refined textarea:not([aria-invalid="true"]):focus,.arl-editor-refined input:not([aria-invalid="true"]):focus{outline:0;border-color:var(--arl-input-focus, #79899c)!important;box-shadow:0 0 0 2px rgb(121 137 156 / 14%)}
 .arl-editor-refined .arl-system-password-field{padding-top:18px;border-top:1px dashed #e3dfe5;align-items:center;gap:14px}
 .arl-editor-refined .arl-system-password-absent{display:flex!important;flex-direction:row!important;align-items:center;gap:8px;white-space:nowrap;padding:10px;border-radius:10px;background:#f3f1f5}
 .arl-editor-refined .arl-system-password-absent input{width:17px;height:17px;accent-color:#c50830}
@@ -256,7 +256,7 @@ main:has([data-arl-order-detail-react="1"]) .device-layout>.arl-layout-label{dis
 [data-arl-order-detail-react="1"] .budget-form .field>span{font-size:12px;font-weight:650;color:#433b47}
 [data-arl-order-detail-react="1"] .budget-form textarea,[data-arl-order-detail-react="1"] .budget-form .field input{border:1px solid #ded9e1!important;border-radius:12px!important;background:#fcfbfc!important;padding:12px 14px!important;font-size:13px!important;line-height:1.5;min-height:44px;box-shadow:inset 0 1px 3px #24142503}
 [data-arl-order-detail-react="1"] .budget-form textarea{min-height:100px;resize:vertical}
-[data-arl-order-detail-react="1"] .budget-form textarea:focus,[data-arl-order-detail-react="1"] .budget-form .field input:focus{outline:0;border-color:#bf0030!important;box-shadow:0 0 0 3px #bf003010}
+[data-arl-order-detail-react="1"] .budget-form textarea:not([aria-invalid="true"]):focus,[data-arl-order-detail-react="1"] .budget-form .field input:not([aria-invalid="true"]):focus{outline:0;border-color:var(--arl-input-focus, #79899c)!important;box-shadow:0 0 0 2px rgb(121 137 156 / 14%)}
 .arl-budget-validity{max-width:200px}
 .arl-budget-items-heading{margin:2px 0 14px}
 [data-arl-order-detail-react="1"] .arl-budget-items-heading h2{margin:0 0 4px;font-size:15px}

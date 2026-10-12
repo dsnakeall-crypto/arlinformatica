@@ -61,7 +61,7 @@ export async function monthlyInvoiceFlow(page: Page, mobile: boolean) {
   await page.screenshot({ path: root + '/popup.png', fullPage: true });
   for (const [label, name] of [['Allan', 'one'], ['Carol', 'two'], ['Casal', 'shared'], ['Total Fatura', 'month']]) {
     const download = page.waitForEvent('download'); await popup.getByRole('button', { name: 'PDF ' + label, exact: true }).click();
-    const file = await download; expect(file.suggestedFilename()).toBe('fatura-pendente-' + month + '-' + name + '.pdf'); await file.saveAs(root + '/' + name + '.pdf');
+    const file = await download; expect(file.suggestedFilename()).toBe((name === 'month' ? 'fatura-pendente-' : 'controle-gastos-detalhado-') + month + '-' + name + '.pdf'); await file.saveAs(root + '/' + name + '.pdf');
   }
   const preview = await api(page, '/expense-control/debts/' + one.debt.id + '/invoice-payment?' + new URLSearchParams({ scope: 'one', target: 'one', action: 'month', month }));
   expect(preview.status).toBe(200);
@@ -77,14 +77,14 @@ export async function monthlyInvoiceFlow(page: Page, mobile: boolean) {
     const payment = page.getByRole('dialog', { name: 'Pagamento rápido de ' + (part || category), exact: true });
     const scope = category === 'Casal' ? 'shared' : category === 'Allan' ? 'one' : 'two';
     const target = (part || category) === 'Carol' ? 'two' : 'one';
-    const listed = await api(page, '/expense-control/invoice-balances?' + new URLSearchParams({ scope, target, month }));
-    expect(listed.status).toBe(200); expect(listed.body.debts.every((debt: any) => debt.responsibility === scope)).toBe(true);
-    await expect(payment.locator('.cg-person-debt-choice')).toHaveCount(listed.body.debts.length);
+    const listed = await api(page, (scope === 'shared' ? '/expense-control/invoice-balances?' : '/expense-control/person-balances?') + new URLSearchParams({ ...(scope === 'shared' ? { scope } : {}), target, month }));
+    expect(listed.status).toBe(200); expect(listed.body.debts.every((debt: any) => scope === 'shared' ? debt.responsibility === 'shared' : debt.responsibility === scope || debt.responsibility === 'shared')).toBe(true);
+    await expect(payment.locator('.cg-person-debt-choice')).toHaveCount(listed.body.debts.filter((debt: any) => debt.month_remaining_cents > 0).length);
     await expect(payment.locator('.cg-person-debt-choice').filter({ hasText: debtName + ' ' + stamp })).toHaveCount(1);
     await payment.getByRole('button', { name: new RegExp(debtName) }).click();
-    await payment.getByRole('button', { name: mode === 'month' ? 'Pagar fatura do mês' : mode === 'partial' ? 'Abater valor personalizado' : 'Quitar saldo total', exact: true }).click();
+    await payment.getByRole('button', { name: mode === 'month' ? 'Quitar a fatura do mês' : mode === 'partial' ? 'Pagar parte da fatura do mês' : 'Quitar a dívida inteira', exact: true }).click();
     if (amount) await payment.getByLabel('Valor a pagar (R$)', { exact: true }).fill(amount);
-    await payment.getByRole('button', { name: 'Conferir distribuição', exact: true }).click();
+    await payment.getByRole('button', { name: 'Conferir pagamento', exact: true }).click();
     await expect(payment.getByRole('button', { name: 'Confirmar pagamento', exact: true })).toBeVisible();
     await payment.getByRole('button', { name: 'Confirmar pagamento', exact: true }).click();
     await expect(payment).not.toBeVisible(); await expect(popup.locator('.cg-exclusive-totals dd')).toHaveCount(4);
@@ -94,7 +94,7 @@ export async function monthlyInvoiceFlow(page: Page, mobile: boolean) {
   await pay('Casal', 'Familiar', 'partial', '10,01', 'Allan');
   let detail = (await api(page, '/expense-control/debts/' + shared.debt.id)).body;
   expect(detail.installments[0].remaining_one_cents).toBe(6000); expect(detail.installments[0].remaining_two_cents).toBe(3000);
-  await pay('Casal', 'Familiar', 'total', undefined, 'Allan');
+  await pay('Casal', 'Familiar', 'month', undefined, 'Allan');
   detail = (await api(page, '/expense-control/debts/' + shared.debt.id)).body;
   expect(detail.installments[0].remaining_one_cents).toBe(0); expect(detail.installments[0].remaining_two_cents).toBe(3000);
   await expect(amounts.nth(2)).toHaveText('R$ 30,00');

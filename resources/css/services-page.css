@@ -107,11 +107,11 @@
 .services-field select {
   padding: 10px 12px;
 }
-.services-field input:focus,
-.services-field select:focus,
+.services-field input:not([aria-invalid="true"]):focus,
+.services-field select:not([aria-invalid="true"]):focus,
 .services-search:focus-within {
-  border-color: #cf0828;
-  box-shadow: 0 0 0 3px rgba(207, 8, 40, 0.09);
+  border-color:var(--arl-input-focus, #79899c);
+  box-shadow:0 0 0 2px rgb(121 137 156 / 14%);
 }
 .services-money-input {
   display: grid;

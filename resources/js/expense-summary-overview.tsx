@@ -21,17 +21,17 @@ export function SummaryIndicators({ totals, people, portraits, onExport, onNext,
 }) {
   const [one, two] = personNames(people);
   const due = date(totals.next_due_on);
-  const card = (key: SummaryScope, label: string, original: number, remaining: number, icon: ReactNode) =>
+  const card = (key: SummaryScope, label: string, _original: number, remaining: number, icon: ReactNode) =>
     <article className={'cgo-indicator cgo-' + key + (onExport ? ' cgo-clickable' : '')} key={key}>
       {onExport ? <button className="cgo-card-action" type="button" onClick={() => key === 'month' && onMonth ? onMonth() : onExport(key)} aria-label={key === 'month' && onMonth ? 'Ver total a pagar no mês' : 'Ver opção de baixar PDF de ' + label}>
         <span className="cgo-card-content">
           <span className="cgo-card-heading"><span className="cgo-icon" aria-hidden="true">{icon}</span><span>{label}</span></span>
-          <strong className="cgo-original">{money(original)}</strong>
+          <strong className="cgo-original">{money(remaining)}</strong>
           {key !== 'month' && <span className="cgo-remaining cgo-original-second"><span>Falta pagar</span><b>{money(remaining)}</b></span>}
         </span>
       </button> : <>
         <header><span className="cgo-icon" aria-hidden="true">{icon}</span><small>{label}</small></header>
-        <strong className="cgo-original">{money(original)}</strong>
+        <strong className="cgo-original">{money(remaining)}</strong>
         {key !== 'month' && <p className="cgo-remaining cgo-original-second"><span>Falta pagar</span><b>{money(remaining)}</b></p>}
       </>}
     </article>;

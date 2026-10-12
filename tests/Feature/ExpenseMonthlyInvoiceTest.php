@@ -126,7 +126,7 @@ class ExpenseMonthlyInvoiceTest extends TestCase
         $this->postJson($url, $payload)->assertCreated();
         $this->postJson($url, $payload)->assertCreated()->assertJsonPath('replayed', true);
         $this->assertDatabaseCount('cg_entries', 1);
-        $plan = $this->plan($debt, 'shared', 'one', ['action' => 'total']);
+        $plan = $this->plan($debt, 'shared', 'one', ['action' => 'month']);
         $this->postJson($url, $this->confirm($plan, 'shared'))->assertCreated();
         $this->getJson('/api/expense-control/summary?month=2026-10')->assertJsonPath('invoice_totals.shared_one_cents', 0)->assertJsonPath('invoice_totals.shared_two_cents', 3000)->assertJsonPath('invoice_totals.shared_cents', 3000);
     }

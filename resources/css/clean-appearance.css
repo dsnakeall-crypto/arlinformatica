@@ -54,7 +54,7 @@
     background:var(--clean-soft)!important; color:var(--clean-text)!important; border-color:var(--clean-accent)!important;
   }
   html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button.primary,a.primary,button.active,button[aria-selected="true"],.sidebar-new-order):hover { background:var(--clean-accent)!important; }
-  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button,a,input,select,textarea):focus-visible { outline:2px solid var(--clean-text)!important; outline-offset:3px!important; }
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(button,a):focus-visible { outline:2px solid var(--clean-text)!important; outline-offset:3px!important; }
   html:root[data-arl-appearance="clean"][data-arl-palette] body :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),select,textarea) {
     background:#fff!important; color:var(--clean-text)!important; border-color:#cbd5e2!important;
     box-shadow:none!important; border-radius:8px!important;
@@ -196,7 +196,7 @@
   html:root[data-arl-appearance="clean"][data-arl-palette] body :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),select,textarea) {
     border-color:var(--clean-edge)!important; box-shadow:inset 0 1px 2px #1d2a3c0d!important;
   }
-  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(input,select,textarea):focus-visible { outline:2px solid var(--clean-accent)!important; outline-offset:1px!important; }
+  html:root[data-arl-appearance="clean"][data-arl-palette] body :is(input,select,textarea):focus-visible { outline:2px solid var(--arl-input-focus, #79899c)!important; outline-offset:1px!important; }
   /* Tela inicial mobile de OS: preservada (o tema já não a redesenha; só não recebe o relevo novo). */
   html:root[data-arl-appearance="clean"][data-arl-palette] body .arl-mobile-home :is(button,a) { box-shadow:none; }
 }

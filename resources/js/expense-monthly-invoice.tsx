@@ -24,7 +24,14 @@ export default function ExpenseMonthlyInvoice({ month, config, onClose, onPay }:
   const download = async (scope: InvoiceScope | 'month') => {
     if (!result || busy) return;
     setBusy(true); setError('');
-    try { const { downloadMonthlyInvoice } = await import('./expense-statement-pdf'); await downloadMonthlyInvoice(scope, result, config); }
+    try {
+      const pdf = await import('./expense-statement-pdf');
+      if (scope === 'month') await pdf.downloadMonthlyInvoice(scope, result, config);
+      else {
+        const [summary, details] = await Promise.all([api<import('./expense-control-page').Summary>('/summary?month='+month), api<import('./expense-statement-data').StatementResponse>('/statement-details?month='+month)]);
+        await pdf.downloadExpenseStatement(scope, summary, config, month, details);
+      }
+    }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível gerar o PDF.'); }
     finally { setBusy(false); }
   };

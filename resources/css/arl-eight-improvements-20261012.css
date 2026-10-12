@@ -1,4 +1,5 @@
 /* Oito melhorias aprovadas: escopo visual restrito aos pontos solicitados. */
+:root { --arl-input-focus: #79899c; }
 html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-eight-improvements .cg-bank-grid {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, max(170px, calc((100% - 40px) / 5))), 1fr)) !important;
   align-items: stretch !important;
@@ -40,7 +41,7 @@ html body .shell.layout-mobile .cg-page.cg-clean-only.cg-eight-improvements .cg-
 html body .shell.layout-mobile .cg-page.cg-clean-only.cg-eight-improvements .cg-table-wrap td[data-label$=" · falta"] { text-align: center; padding-inline: 6px; }
 html body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five,
 html body .shell.layout-mobile .cg-page.cg-clean-only.cg-eight-improvements .arl-expense-bottom.arl-expense-matched {
-  bottom: env(safe-area-inset-bottom, 0px) !important;
+  bottom: 0 !important; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important;
 }
 html body .arl-3d-popup:has(.cg-person-payment-form) {
   width: min(560px, calc(100vw - 24px)) !important;
@@ -62,19 +63,6 @@ html body .arl-3d-popup:has(.cg-person-payment-form) {
 .cg-person-payment-confirmation .cg-institution-allocation { max-height: 180px; overflow-y: auto; }
 .cg-person-payment-form label { display: flex; flex-direction: column; gap: 4px; }
 .cg-person-payment-form input, .cg-person-payment-form select { min-height: 40px; }
-html body .shell input:not([aria-invalid="true"]):focus,
-html body .shell select:not([aria-invalid="true"]):focus,
-html body .shell textarea:not([aria-invalid="true"]):focus {
-  border-color: #79899c !important; box-shadow: 0 0 0 2px rgb(121 137 156 / 14%) !important;
-}
-html body .shell input:focus-visible, html body .shell select:focus-visible,
-html body .shell textarea:focus-visible, html body .shell button:focus-visible {
-  outline: 2px solid #69798c; outline-offset: 2px;
-}
-html body .shell .row-status:focus-within,
-html body .shell select[aria-label^="Status da OS"]:focus {
-  border-color: #79899c !important; box-shadow: 0 0 0 2px rgb(121 137 156 / 14%) !important;
-}
 html:root[data-layout="mobile"][data-arl-appearance][data-arl-palette] body .shell.layout-mobile .arl-new-order .attendance > button[aria-pressed="true"] {
   background: #b91c1c !important; border-color: #b91c1c !important; color: #fff !important;
 }
@@ -120,3 +108,50 @@ html body .cg-exclusive-totals dd > span,
 html body .shell:is(.layout-mobile, .layout-desktop) .cg-page.cg-eight-improvements .cgo-person dl .cgo-due-row.has-quick-pay dd > span { grid-column: 2; text-align: right; }
 html body .cg-exclusive-totals dd > button,
 html body .shell:is(.layout-mobile, .layout-desktop) .cg-page.cg-eight-improvements .cgo-person dl .cgo-due-row.has-quick-pay dd > button { grid-column: 1; grid-row: 1; justify-self: center; margin: 0 !important; }
+
+/* Pacote final: popup próprio de pagamento, com corpo rolável e ações fixas. */
+html:root[data-arl-appearance] body .arl-3d-popup.cg-quick-payment-popup {
+  width: min(540px, calc(100vw - 24px)) !important;
+  height: min(660px, calc(var(--cg-visible-height, 100dvh) - 24px - env(safe-area-inset-bottom, 0px))) !important;
+  max-height: calc(var(--cg-visible-height, 100dvh) - 24px - env(safe-area-inset-bottom, 0px)) !important;
+  display: grid !important; grid-template-rows: auto minmax(0, 1fr); overflow: hidden !important;
+  background: #fff !important; border-radius: 20px !important;
+}
+.cg-quick-payment-popup .arl-3d-header { padding: 12px !important; gap: 10px; background: #fff; }
+.cg-quick-payment-popup .arl-3d-heading h2 { font-size: 18px !important; }
+.cg-quick-payment-popup .arl-3d-heading p { font-size: 12px; }
+.cg-quick-payment-popup .cg-person-payment-form { height: 100%; }
+.cg-quick-payment-popup .cg-person-payment-body { flex: 1 1 auto; overscroll-behavior: contain; padding: 12px !important; gap: 8px; }
+.cg-quick-payment-popup .cg-dialog-footer { margin: 0 !important; padding: 10px !important; background: #fff; border-top: 1px solid #d6dce3; display: flex; gap: 8px; }
+.cg-quick-payment-popup .cg-dialog-footer button { flex: 1; min-height: 44px; white-space: normal; }
+.cg-quick-payment-popup .cg-person-debt-choice { border-radius: 10px; }
+.cg-quick-payment-popup button:not(.arl-3d-close) { border-radius: 10px !important; }
+.cg-quick-payment-popup .cg-person-debt-choice span { min-width: 0; overflow-wrap: anywhere; }
+.cg-quick-payment-popup .cg-person-debt-choice strong { flex-shrink: 0; }
+.cg-quick-payment-popup .cg-payment-modes { display: grid; grid-template-columns: 1fr; }
+.cg-quick-payment-popup .cg-payment-modes button { flex: none; min-height: 44px; padding: 8px; white-space: normal; }
+.cg-quick-payment-popup .cg-total-consent { display: flex; flex-direction: row; align-items: flex-start; font-size: 12px; }
+.cg-quick-payment-popup .cg-total-consent input { width: 20px; min-height: 20px; flex-shrink: 0; }
+html:root[data-arl-appearance] body .cg-person-quick-pay,
+html:root[data-arl-appearance] body .cg-month-invoice-popup .cg-person-quick-pay {
+  color: #198446 !important; border: 1px solid #a8cdb6 !important; border-radius: 50% !important;
+  background: #f5fbf7 !important; box-shadow: none !important;
+}
+html:root[data-arl-appearance] body .cg-person-quick-pay svg { color: inherit !important; stroke: currentColor !important; }
+html body .shell .arl-expense-own-header .cg-return-arl { color: #b91c1c !important; }
+.cg-return-confirm { width: min(460px, calc(100vw - 24px)) !important; height: auto !important; }
+.cg-return-actions { display: flex; justify-content: center; gap: 10px; }
+html body .cg-eight-improvements .cg-debt-header { padding: 12px !important; }
+html body .cg-eight-improvements .cg-debt-heading { gap: 8px; }
+html body .cg-eight-improvements .cg-debt-heading .cg-actions { display: flex !important; flex-wrap: wrap; gap: 6px; }
+html body .cg-eight-improvements .cg-debt-heading .cg-actions button { width: auto !important; flex: 1 1 130px; padding: 7px 9px; min-height: 36px; font-size: 12px; }
+html body .cg-eight-improvements .cg-debt-identity h2 { margin: 4px 0; font-size: 18px; }
+html body .cg-eight-improvements .cg-detail-totals { margin-top: 8px; padding: 8px; gap: 8px; }
+html body .cg-eight-improvements .cg-section-heading h2 { font-size: 18px; }
+html body .cg-eight-improvements .cg-debt-card { padding: 10px !important; margin-bottom: 8px; }
+@media (max-width: 700px) {
+  html body .shell.layout-mobile .arl-expense-bottom.arl-expense-matched,
+  html body .shell.layout-mobile .arl-global-mobile-nav.arl-mobile-five { bottom: 0 !important; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important; }
+  .cg-quick-payment-popup .arl-3d-heading-icon { display: none; }
+  .cg-quick-payment-popup .cg-person-payment-identity { padding: 7px; }
+}

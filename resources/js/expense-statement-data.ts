@@ -7,6 +7,7 @@ export type StatementInstallment = {
   due_on: string; original_cents: number; credit_cents: number; remaining_cents: number;
   share_one_cents: number; share_two_cents: number; credit_one_cents: number; credit_two_cents: number;
   remaining_one_cents: number; remaining_two_cents: number;
+  paid_cents?: number; paid_one_cents?: number; paid_two_cents?: number;
 };
 export type StatementResponse = {month: string; data: StatementInstallment[]};
 export type ScopedStatementRow = StatementInstallment & {

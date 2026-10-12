@@ -227,7 +227,7 @@
     box-shadow:0 23px 55px #26344a33!important;border-radius:22px!important;
   }
   html:root[data-layout="desktop"][data-arl-appearance="clean"] body
-  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"]) :is(a,button,input,select,textarea):focus-visible {
+  .shell.layout-desktop > main:not([data-arl-expense-control-react="1"]) :is(a,button):focus-visible {
     outline:2px solid #df2455!important;outline-offset:2px!important;
   }
 }

@@ -35,7 +35,7 @@
 .cg-photo-general select { width:100%; }
 .cg-photo .cg-photo-row-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
 .cg-photo select { background:linear-gradient(145deg,#f3f7ff,#e5efff); border-color:#b8cce7; color:#213f6b; }
-.cg-photo select:focus { outline:2px solid #d5113a; outline-offset:1px; border-color:#c9002c; background:#fff0f4; }
+.cg-photo select:not([aria-invalid="true"]):focus { outline:2px solid var(--arl-input-focus, #79899c); outline-offset:1px; border-color:var(--arl-input-focus, #79899c); background:#fff0f4; }
 .cg-photo .cg-photo-reader-options button { background:linear-gradient(145deg,#f2f7ff,#dce9fc); border-color:#bdcfea; color:#244675; }
 .cg-photo .cg-photo-reader-options button[aria-pressed=true] { background:linear-gradient(120deg,#e21c46,#b4002b); border-color:#b4002b; color:#fff; }
 .cg-photo .cg-photo-reader-options button[aria-pressed=true] small { color:#ffe5ed; }

@@ -11,13 +11,15 @@ const num = (totals: Record<string,number>, key:string) => Number(totals[key]||0
 /** Generates a detailed, reconciled statement solely in the browser.
  * The read-only endpoint returns the same per-share cents as ExpenseControl::figures.
  */
-export async function downloadExpenseStatement(scope: SummaryScope, summary: Summary, config: Configuration, month: string, details: StatementResponse): Promise<void> {
+export async function createExpenseStatementPdf(scope: SummaryScope, summary: Summary, config: Configuration, month: string, details: StatementResponse) {
   if (details.month !== month || !Array.isArray(details.data)) throw new Error('Os detalhes do relatório não correspondem ao mês selecionado.');
   const totals = summary.totals;
   const result = projectStatement(scope,details.data);
   const prefix = scope === 'month' ? '' : scope === 'shared' ? 'shared_' : scope + '_';
   const original = num(totals,prefix+'original_cents');
   const remaining = num(totals,prefix+'remaining_cents');
+  const scopedPaid = (row: ScopedStatementRow) => scope === 'one' ? row.paid_one_cents ?? row.credit_one_cents : scope === 'two' ? row.paid_two_cents ?? row.credit_two_cents : row.paid_cents ?? row.credit_cents;
+  const paid = result.institutions.flatMap(i => i.invoices.flatMap(v => v.rows)).reduce((sum, row) => sum + scopedPaid(row), 0);
   if (original !== result.original_cents || remaining !== result.remaining_cents
       || result.credit_cents !== result.original_cents-result.remaining_cents) {
     throw new Error('Os valores detalhados não conferem com o resumo. Atualize a página e tente novamente; nenhum PDF foi gerado.');
@@ -51,10 +53,11 @@ export async function downloadExpenseStatement(scope: SummaryScope, summary: Sum
     y+=description.length*5+6;
     doc.setFillColor(...theme.soft);doc.roundedRect(L,y,R-L,27,4,4,'F');
     font(8,false,theme.secondary);
-    doc.text('TOTAL ORIGINAL',L+6,y+8);doc.text('PAGO / ABATIDO',L+65,y+8);doc.text('FALTA PAGAR',L+125,y+8);
+    doc.text('TOTAL ORIGINAL',L+6,y+8);doc.text('PAGO',L+65,y+8);doc.text('FALTA PAGAR',L+125,y+8);
     font(12,true);
-    doc.text(money(original),L+6,y+19);doc.text(money(result.credit_cents),L+65,y+19);doc.text(money(remaining),L+125,y+19);
+    doc.text(money(original),L+6,y+19);doc.text(money(paid),L+65,y+19);doc.text(money(remaining),L+125,y+19);
     y+=37;
+    if (result.credit_cents > paid) { font(8,false,theme.secondary); doc.text('Abatimentos sem pagamento: '+money(result.credit_cents-paid),L,y); y+=8; }
     if(scope==='one'||scope==='two'){
       const personal=num(totals,scope+'_personal_original_cents');
       const shared=num(totals,scope+'_shared_original_cents');
@@ -80,7 +83,7 @@ export async function downloadExpenseStatement(scope: SummaryScope, summary: Sum
     const part=row.scope_label;
     const title=clean(row.debt_name+'  •  '+part);
     const desc=paragraph(title,91,8.4);
-    const height=Math.max(15,desc.length*4.1+7)+(scope==='shared'?5:0);
+    const height=Math.max(15,desc.length*4.1+7)+(scope==='shared'?18:row.responsibility==='shared'?7:0)+8;
     reserve(height);
     doc.setDrawColor(229,235,243);doc.line(L+4,y-3,R-4,y-3);
     font(8.5,false);doc.text(desc,L+5,y+2);
@@ -88,14 +91,20 @@ export async function downloadExpenseStatement(scope: SummaryScope, summary: Sum
     doc.text(clean('Parcela '+row.number+'/'+Math.max(row.installment_count,row.number)+' · vence '+formatDate(row.due_on)),
       L+5,y+desc.length*4.1+3);
     font(8,true);doc.text(money(row.scope_original_cents),L+118,y+3,{align:'right'});
-    doc.text(money(row.scope_credit_cents),L+148,y+3,{align:'right'});
+    doc.text(money(scopedPaid(row)),L+148,y+3,{align:'right'});
     doc.text(money(row.scope_remaining_cents),R-4,y+3,{align:'right'});
     y+=Math.max(15,desc.length*4.1+7);
     if(scope==='shared'){
-      font(7.5,false,theme.secondary);
-      doc.text(clean(one+': '+money(row.share_one_cents)+'  |  '+two+': '+money(row.share_two_cents)),L+5,y);
-      y+=5;
+      for (const key of ['one','two'] as const) {
+        font(7.5,false,theme.secondary);doc.text('Parte de '+(key==='one'?one:two),L+5,y);
+        doc.text(money(row[key==='one'?'share_one_cents':'share_two_cents']),L+118,y,{align:'right'});
+        doc.text(money(row[key==='one'?'paid_one_cents':'paid_two_cents'] ?? row[key==='one'?'credit_one_cents':'credit_two_cents']),L+148,y,{align:'right'});
+        doc.text(money(row[key==='one'?'remaining_one_cents':'remaining_two_cents']),R-4,y,{align:'right'});y+=7;
+      }
+    } else if(row.responsibility==='shared') {
+      font(7.5,false,theme.secondary);doc.text('Parcela mensal total do casal: '+money(row.original_cents),L+5,y);y+=7;
     }
+    if (row.scope_credit_cents > scopedPaid(row)) { font(7.5,false,theme.secondary);doc.text('Abatimento sem pagamento: '+money(row.scope_credit_cents-scopedPaid(row)),L+5,y);y+=6; }
   };
   const invoice=(i:StatementInvoice) => {
     const labelLines=paragraph(i.label,111,9.5,true);
@@ -116,7 +125,7 @@ export async function downloadExpenseStatement(scope: SummaryScope, summary: Sum
     font(8.5,true);
     doc.text('Subtotal da fatura',L+5,y+5);
     doc.text(money(i.original_cents),L+118,y+5,{align:'right'});
-    doc.text(money(i.credit_cents),L+148,y+5,{align:'right'});
+    doc.text(money(i.rows.reduce((sum,row)=>sum+scopedPaid(row),0)),L+148,y+5,{align:'right'});
     doc.text(money(i.remaining_cents),R-4,y+5,{align:'right'});y+=14;
   };
   for(const institution of result.institutions){
@@ -128,7 +137,7 @@ export async function downloadExpenseStatement(scope: SummaryScope, summary: Sum
     for(const inv of institution.invoices)invoice(inv);
     subline('TOTAL DA INSTITUIÇÃO', money(institution.original_cents));
     reserve(7);font(8,false,theme.secondary);
-    doc.text('Pago / abatido: '+money(institution.credit_cents)+'   |   Falta pagar: '+money(institution.remaining_cents),L+5,y);y+=13;
+    doc.text('Pago: '+money(institution.invoices.flatMap(i=>i.rows).reduce((sum,row)=>sum+scopedPaid(row),0))+'   |   Falta pagar: '+money(institution.remaining_cents),L+5,y);y+=13;
   }
   const pages=doc.getNumberOfPages();
   for(let page=1;page<=pages;page++){
@@ -138,6 +147,11 @@ export async function downloadExpenseStatement(scope: SummaryScope, summary: Sum
     doc.text('Emitido no dispositivo. Sem armazenamento de PDF no servidor.',L,288);
     doc.text('Página '+page+' de '+pages,R,288,{align:'right'});
   }
+  return doc;
+}
+
+export async function downloadExpenseStatement(scope: SummaryScope, summary: Summary, config: Configuration, month: string, details: StatementResponse): Promise<void> {
+  const doc = await createExpenseStatementPdf(scope, summary, config, month, details);
   doc.save('controle-gastos-detalhado-'+month.replace(/[^0-9-]/g,'')+'-'+scope+'.pdf');
 }
 

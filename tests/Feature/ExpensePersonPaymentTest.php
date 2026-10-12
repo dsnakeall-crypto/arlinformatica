@@ -56,7 +56,8 @@ class ExpensePersonPaymentTest extends TestCase
         $id = $debt['debt']['id'];
         $plan = $this->preview($id);
         $this->assertSame(7001, $plan['total_cents']);
-        $this->assertSame(14002, $plan['remaining_cents']);
+        $this->assertSame(0, $plan['remaining_cents']);
+        $this->assertSame(14002, $plan['debt_remaining_cents']);
         $this->postJson('/api/expense-control/debts/'.$id.'/person-payment', $this->confirmation($plan))->assertCreated();
         $detail = $this->getJson('/api/expense-control/debts/'.$id)->assertOk();
         $detail->assertJsonPath('installments.0.remaining_one_cents', 0)->assertJsonPath('installments.0.remaining_two_cents', 3000)
@@ -77,39 +78,38 @@ class ExpensePersonPaymentTest extends TestCase
         $this->getJson('/api/expense-control/debts/'.$one['debt']['id'])->assertJsonPath('installments.0.remaining_one_cents', 10001);
     }
 
-    public function test_partial_value_is_distributed_once_by_complete_due_date_and_keeps_a_partial_balance(): void
-    {
-        $debt = $this->debt(['responsibility' => 'one', 'amount_cents' => 10000]);
-        $id = $debt['debt']['id'];
-        // Installment ids intentionally have a different order than actual due dates.
-        DB::table('cg_installments')->where('id', $debt['installments'][0]['id'])->update(['due_on' => '2027-01-01']);
-        $plan = $this->preview($id, ['action' => 'partial', 'amount_cents' => 15000]);
-        $this->assertSame($debt['installments'][1]['id'], $plan['allocations'][0]['id']);
-        $this->postJson('/api/expense-control/debts/'.$id.'/person-payment', $this->confirmation($plan))->assertCreated();
-        $this->assertSame(15000, (int) DB::table('cg_entries')->sum('amount_cents'));
-        $this->assertDatabaseHas('cg_entries', ['installment_id' => $debt['installments'][1]['id'], 'amount_cents' => 10000]);
-        $this->assertDatabaseHas('cg_entries', ['installment_id' => $debt['installments'][2]['id'], 'amount_cents' => 5000]);
-        $this->assertDatabaseMissing('cg_entries', ['installment_id' => $debt['installments'][0]['id']]);
-        $this->getJson('/api/expense-control/debts/'.$id)->assertJsonPath('installments.2.remaining_one_cents', 5000);
-    }
-
-    public function test_full_settlement_preserves_prior_credits_and_the_other_person_even_with_another_payer(): void
+    public function test_partial_value_is_month_bound_and_cannot_touch_future_or_other_person(): void
     {
         $debt = $this->debt();
         $id = $debt['debt']['id'];
-        $prior = ['request_key' => (string) Str::uuid(), 'installment_ids' => [$debt['installments'][0]['id']], 'target' => 'one', 'kind' => 'payment', 'paid_by' => 1, 'amount_cents' => 1001, 'occurred_on' => '2026-10-15'];
-        $this->postJson('/api/expense-control/operations', $prior)->assertCreated();
-        $plan = $this->preview($id, ['action' => 'total']);
-        $this->assertSame(20002, $plan['total_cents']);
-        $this->postJson('/api/expense-control/debts/'.$id.'/person-payment', $this->confirmation($plan, ['paid_by' => 2]))->assertCreated();
-        $detail = $this->getJson('/api/expense-control/debts/'.$id)->assertOk();
-        foreach ($detail->json('installments') as $item) {
-            $this->assertSame(0, $item['remaining_one_cents']);
-            $this->assertSame(3000, $item['remaining_two_cents']);
+        $this->getJson('/api/expense-control/debts/'.$id.'/person-payment?target=one&action=partial&month=2026-10&amount_cents=8000')->assertUnprocessable();
+        $plan = $this->preview($id, ['action' => 'partial', 'amount_cents' => 2000]);
+        $data = $this->confirmation($plan);
+        $this->postJson('/api/expense-control/debts/'.$id.'/person-payment', $data)->assertCreated();
+        $this->postJson('/api/expense-control/debts/'.$id.'/person-payment', $data)->assertCreated()->assertJsonPath('replayed', true);
+        $this->getJson('/api/expense-control/debts/'.$id)->assertJsonPath('installments.0.remaining_one_cents', 5001)->assertJsonPath('installments.0.remaining_two_cents', 3000)->assertJsonPath('installments.1.remaining_one_cents', 7001);
+        $this->assertDatabaseCount('cg_entries', 1);
+        foreach (['person-payment', 'invoice-payment'] as $route) {
+            $query = ['target' => 'one', 'action' => 'total', 'month' => '2026-10', ...($route === 'invoice-payment' ? ['scope' => 'shared'] : [])];
+            $this->getJson('/api/expense-control/debts/'.$id.'/'.$route.'?'.http_build_query($query))->assertUnprocessable();
+            $this->postJson('/api/expense-control/debts/'.$id.'/'.$route, [...$data, ...$query, 'request_key' => (string) Str::uuid()])->assertUnprocessable();
         }
-        $this->assertSame(21003, (int) DB::table('cg_entries')->sum('amount_cents'));
-        $this->assertSame(4, DB::table('cg_entries')->count());
-        $this->assertSame(3, DB::table('cg_entries')->where('kind', 'advance')->where('paid_by', 2)->count());
+        $this->assertDatabaseCount('cg_entries', 1);
+    }
+
+    public function test_individual_total_settlement_includes_future_preserving_prior_payment(): void
+    {
+        $debt = $this->debt(['responsibility' => 'one']);
+        $id = $debt['debt']['id'];
+        $prior = $this->preview($id, ['action' => 'partial', 'amount_cents' => 1001]);
+        $this->postJson('/api/expense-control/debts/'.$id.'/person-payment', $this->confirmation($prior))->assertCreated();
+        $plan = $this->preview($id, ['action' => 'total']);
+        $this->assertSame(29002, $plan['total_cents']);
+        $this->postJson('/api/expense-control/debts/'.$id.'/person-payment', $this->confirmation($plan))->assertCreated();
+        $this->getJson('/api/expense-control/debts/'.$id)->assertJsonPath('installments.0.remaining_one_cents', 0)->assertJsonPath('installments.1.remaining_one_cents', 0)->assertJsonPath('installments.2.remaining_one_cents', 0);
+        $this->assertSame(30003, (int) DB::table('cg_entries')->sum('amount_cents'));
+        $this->assertSame(0, (int) DB::table('cg_entries')->sum('credit_two_cents'));
+        $this->assertDatabaseCount('cg_entries', 4);
     }
 
     public function test_repeated_request_replays_and_a_stale_preview_cannot_charge_again(): void
@@ -164,13 +164,13 @@ class ExpensePersonPaymentTest extends TestCase
 
     public function test_failure_in_existing_audit_rolls_back_all_entries_and_operation(): void
     {
-        $id = $this->debt()['debt']['id'];
+        $id = $this->debt(['responsibility' => 'one'])['debt']['id'];
         $plan = $this->preview($id, ['action' => 'total']);
         $this->mock(Audit::class)->shouldReceive('record')->once()->andThrow(new \RuntimeException('Fixture failure'));
         $this->postJson('/api/expense-control/debts/'.$id.'/person-payment', $this->confirmation($plan))->assertStatus(500);
         $this->assertSame(0, DB::table('cg_entries')->count());
         $this->assertSame(0, DB::table('cg_operations')->count());
-        $this->assertSame(21003, $this->preview($id, ['action' => 'total'])['total_cents']);
+        $this->assertSame(30003, $this->preview($id, ['action' => 'total'])['total_cents']);
     }
 
     public function test_aggregate_settlement_supports_valid_installments_above_the_single_installment_ceiling(): void

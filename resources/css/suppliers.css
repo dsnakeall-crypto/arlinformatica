@@ -1066,11 +1066,11 @@
     inset 0 1px 2px white,
     0 2px 5px #24395418;
 }
-.arl-3d-popup .supplier-registration input:focus,
-.arl-3d-popup .supplier-registration textarea:focus,
-.arl-3d-popup .supplier-registration select:focus {
-  border-color: #d00038 !important;
-  outline: 2px solid #e6426524;
+.arl-3d-popup .supplier-registration input:not([aria-invalid="true"]):focus,
+.arl-3d-popup .supplier-registration textarea:not([aria-invalid="true"]):focus,
+.arl-3d-popup .supplier-registration select:not([aria-invalid="true"]):focus {
+  border-color:var(--arl-input-focus, #79899c)!important;
+  outline:2px solid var(--arl-input-focus, #79899c);
   outline-offset: 2px;
 }
 .supplier-registration .supplier-document-check {

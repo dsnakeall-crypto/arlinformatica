@@ -45,9 +45,9 @@ export async function assertOwnerExample(page: Page, before: Record<string, numb
   const b = (key: string) => Number(before[key] || 0);
   const indicators = page.getByRole('region', { name: 'Indicadores do mês' });
   await expect(indicators.locator('.cgo-indicator')).toHaveCount(5);
-  const expectCard = async (key: string, original: number, remaining: number) => {
+  const expectCard = async (key: string, _original: number, remaining: number) => {
     const card = indicators.locator('.cgo-' + key);
-    await expect(card.locator('.cgo-original')).toContainText(brl(key === 'month' ? remaining : original));
+    await expect(card.locator('.cgo-original')).toContainText(brl(remaining));
     await expect(card.locator('.cgo-original .cgo-tag')).toHaveCount(0);
     if(key === 'month') await expect(card.locator('.cgo-remaining')).toHaveCount(0);
     else {

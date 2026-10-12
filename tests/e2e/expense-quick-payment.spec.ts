@@ -20,7 +20,7 @@ test('pagamento rápido: duplo clique e resposta perdida não duplicam o pagamen
   await page.getByRole('button', { name: 'Pagamento rápido de Allan', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Pagamento rápido de Allan' });
   await dialog.getByRole('button').filter({ hasText: name }).click();
-  await dialog.getByRole('button', { name: 'Conferir distribuição', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Conferir pagamento', exact: true }).click();
   const writes: any[] = [];
   let replayed = false;
   await page.route('**/api/expense-control/debts/' + id + '/person-payment', async route => {

@@ -337,6 +337,7 @@ class ExpenseControl
         abort_unless($debt, 404);
         abort_if($debt->cancelled_at, 422, 'A dívida está cancelada.');
         $this->assertInvoiceScope($debt, $data);
+        abort_if($debt->responsibility === 'shared' && $data['action'] === 'total', 422, 'Pagamento rápido do casal permite somente a parte do mês selecionado.');
         $field = $data['target'] === 'one' ? 'remaining_one_cents' : 'remaining_two_cents';
         // Read only real installments. Never invent future recurring months to calculate a balance.
         $allItems = $this->installments()->where('d.id', $debt->id)->orderBy('i.due_on')->orderBy('i.id')->get()
@@ -350,7 +351,7 @@ class ExpenseControl
             $allItems = $allItems->concat($virtual)->sortBy(fn ($i) => [$i['due_on'], $i['number']])->values();
         }
         $items = $allItems;
-        if ($data['action'] === 'month') {
+        if ($data['action'] !== 'total') {
             $month = $this->month($data['month']);
             $start = $month->toDateString();
             $end = $month->endOfMonth()->toDateString();
@@ -373,7 +374,7 @@ class ExpenseControl
 
         return ['debt_id' => (int) $debt->id, 'name' => $debt->name, 'target' => $data['target'], 'action' => $data['action'],
             'recurrence' => $debt->recurrence, 'balance_cents' => $balance, 'total_cents' => $amount,
-            'remaining_cents' => (int) $allItems->sum($field) - $amount, 'allocations' => $allocations,
+            'remaining_cents' => $balance - $amount, 'debt_remaining_cents' => (int) $allItems->sum($field) - $amount, 'allocations' => $allocations,
             'preview_hash' => hash('sha256', json_encode([$debt->id, $data['target'], $data['action'], $data['month'], $amount,
                 $data['scope'] ?? null, $allItems->map(fn ($i) => [isset($data['scope']) || $debt->recurrence === 'monthly' ? $i['number'] : $i['id'], $i['due_on'], $i[$field]])->all()]))];
     }
