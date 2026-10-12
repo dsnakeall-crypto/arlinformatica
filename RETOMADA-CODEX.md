@@ -87,3 +87,12 @@ Concorrência só no MySQL descartável já confirmado, porta 33458/datadir ARL-
 ## Retomada manual
 Às 03:55, enviar nesta mesma conversa: "Retome as oito melhorias a partir de RETOMADA-CODEX.md na cópia isolada, continue do checkpoint e priorize testes financeiros. Não publique sem minha confirmação."
 Estado de agendamento será registrado abaixo após a resposta do agendador oficial do Codex.
+
+## Checkpoint de parada e agendamento confirmado
+Hash do checkpoint que preservou todo o código e logs de parada: 8e75eb7ec506825bf5902595977038c978cd9fa7.
+Um commit documental posterior inclui este registro; para o hash final exato, executar git log -1 --format=%H ou consultar CHECKPOINT-OITO-MELHORIAS.txt no backup externo.
+Automação oficial do Codex criada e conferida: retomar-arl-s-03-55, kind=heartbeat, status=ACTIVE, conversa 01a12ba5-3e28-7fc3-9cf5-494fc7a98e50.
+Regra pontual: RRULE:FREQ=DAILY;COUNT=1;BYHOUR=3;BYMINUTE=55;BYSECOND=0.
+Fuso do Windows conferido: E. South America Standard Time, UTC-03:00; data local 12/10/2026 às 02:16. A próxima ocorrência solicitada é 12/10/2026 às 03:55 de Brasília.
+Agendamento registrado pelo aplicativo e arquivo automation.toml conferido; execução depende de o Codex/computador estarem ativos e com uso disponível. Não existe agendador externo improvisado. Se o aplicativo não disparar, usar a mensagem de retomada manual acima.
+Nenhuma implementação, auditoria ou teste novo foi iniciado depois da ordem de parar. Operações anteriores de build/Playwright/PHPUnit terminaram antes da parada. Desenvolvimento permanece parado até o horário autorizado.
