@@ -117,12 +117,12 @@ class ExpenseControlTest extends TestCase
         $item['reviewed'] = true;
         $data = ['request_key' => (string) Str::uuid(), 'source_hash' => str_repeat('c', 64), 'start_month' => '2026-10', 'due_day' => 10, 'items' => [$item]];
         $id = $this->postJson('/api/expense-control/photo-imports', $data)->assertCreated()->json('debt_ids.0');
-        $this->getJson('/api/expense-control/summary?month=2027-02')->assertOk();
+        $this->getJson('/api/expense-control/summary?month=2027-02')->assertOk()->assertJsonPath('totals.remaining_cents', 10001);
         $this->assertDatabaseHas('cg_debts', ['id' => $id, 'recurrence' => 'monthly', 'ended_on' => null, 'notes' => 'Armazenamento da família']);
-        $this->assertSame(5, DB::table('cg_installments')->where('debt_id', $id)->count());
+        $this->assertSame(1, DB::table('cg_installments')->where('debt_id', $id)->count(), 'Consulta projeta recorrência sem gravar parcelas');
         $this->postJson('/api/expense-control/debts/'.$id.'/end-recurring', ['end_month' => '2026-12'])->assertOk();
         $this->getJson('/api/expense-control/summary?month=2027-06')->assertOk();
-        $this->assertSame(3, DB::table('cg_installments')->where('debt_id', $id)->count());
+        $this->assertSame(1, DB::table('cg_installments')->where('debt_id', $id)->count());
     }
 
     public function test_invalid_exact_split_rolls_back_without_creating_debt(): void
@@ -608,13 +608,13 @@ class ExpenseControlTest extends TestCase
     public function test_monthly_expenses_fill_intervening_months_without_gaps_or_duplicates(): void
     {
         $detail = $this->createDebt(['recurrence' => 'monthly', 'start_month' => '2026-07', 'amount_cents' => 1000]);
-        $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk();
-        $this->assertDatabaseCount('cg_installments', 4);
+        $this->getJson('/api/expense-control/summary?month=2026-10')->assertOk()->assertJsonPath('totals.remaining_cents', 1000);
+        $this->assertDatabaseCount('cg_installments', 1);
         $this->postJson('/api/expense-control/debts/'.$detail['debt']['id'].'/end-recurring', ['end_month' => '2026-11'])->assertOk();
         $this->getJson('/api/expense-control/summary?month=2027-02')->assertOk()->assertJsonPath('count', 0);
-        $this->assertDatabaseCount('cg_installments', 5);
+        $this->assertDatabaseCount('cg_installments', 1);
         $this->getJson('/api/expense-control/summary?month=2027-02')->assertOk();
-        $this->assertDatabaseCount('cg_installments', 5);
+        $this->assertDatabaseCount('cg_installments', 1);
     }
 
     public function test_cancel_preserves_payments_and_removes_active_and_projected_balances(): void

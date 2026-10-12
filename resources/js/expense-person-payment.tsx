@@ -15,8 +15,8 @@ const today = () => new Date().toLocaleDateString('sv-SE');
 const date = (value: string) => value.slice(0, 10).split('-').reverse().join('/');
 const actions: Record<Action, string> = { month: 'Pagar fatura do mês', partial: 'Abater valor personalizado', total: 'Quitar saldo total' };
 
-export default function ExpensePersonPayment({ target, month, config, busy, saveError, onClose, onSave }: {
-  target: Target; month: string; config: Configuration; busy: boolean; saveError: string;
+export default function ExpensePersonPayment({ target, scope, month, config, busy, saveError, onClose, onSave }: {
+  target: Target; scope?: 'one' | 'two' | 'shared'; month: string; config: Configuration; busy: boolean; saveError: string;
   onClose: () => void; onSave: (id: number, data: unknown) => Promise<boolean>;
 }) {
   const [debts, setDebts] = useState<Debt[]>([]);
@@ -36,22 +36,22 @@ export default function ExpensePersonPayment({ target, month, config, busy, save
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError('');
-    void api<{ debts: Debt[] }>('/person-balances?' + new URLSearchParams({ target, month }), 'GET', undefined, controller.signal)
+    void api<{ debts: Debt[] }>((scope ? '/invoice-balances?' : '/person-balances?') + new URLSearchParams({ target, month, ...(scope ? { scope } : {}) }), 'GET', undefined, controller.signal)
       .then(result => { if (!controller.signal.aborted) setDebts(result.debts); })
       .catch(cause => { if (!controller.signal.aborted) setError(cause.message); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => { controller.abort(); previewRequest.current?.abort(); };
-  }, [target, month, reload]);
+  }, [target, scope, month, reload]);
   const invalidate = () => { previewRequest.current?.abort(); setLoading(false); setPlan(undefined); setError(''); requestKey.current = expenseRequestId(); };
   const choose = (debt: Debt) => { invalidate(); setSelected(debt); setAction(debt.month_remaining_cents > 0 ? 'month' : 'partial'); setValue('0,00'); };
   const preview = async () => {
     if (!selected || loading || busy) return;
     const controller = new AbortController(); previewRequest.current = controller;
     setLoading(true); setError(''); setPlan(undefined);
-    const query = new URLSearchParams({ target, month, action });
+    const query = new URLSearchParams({ target, month, action, ...(scope ? { scope } : {}) });
     if (action === 'partial') query.set('amount_cents', String(centsFromMoneyInput(value)));
     try {
-      const result = await api<Plan>('/debts/' + selected.id + '/person-payment?' + query, 'GET', undefined, controller.signal);
+      const result = await api<Plan>('/debts/' + selected.id + (scope ? '/invoice-payment?' : '/person-payment?') + query, 'GET', undefined, controller.signal);
       if (!controller.signal.aborted) { setPlan(result); requestKey.current = expenseRequestId(); }
     } catch (cause: any) { if (!controller.signal.aborted) setError(cause.message); }
     finally { if (!controller.signal.aborted) setLoading(false); }
@@ -61,7 +61,7 @@ export default function ExpensePersonPayment({ target, month, config, busy, save
     if (!plan || !selected || busy || submitting.current) return;
     submitting.current = true;
     try {
-      const saved = await onSave(selected.id, { target, month, action, request_key: requestKey.current, preview_hash: plan.preview_hash,
+      const saved = await onSave(selected.id, { target, month, action, ...(scope ? { scope } : {}), request_key: requestKey.current, preview_hash: plan.preview_hash,
         amount_cents: plan.total_cents, paid_by: Number(paidBy), occurred_on: occurred });
       if (saved) onClose();
     } finally { submitting.current = false; }

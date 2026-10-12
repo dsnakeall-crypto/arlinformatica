@@ -87,3 +87,24 @@ html:root[data-layout="mobile"][data-arl-appearance][data-arl-palette] body .she
 }
 html body .shell.layout-mobile .cg-page.cg-clean-only.cg-eight-improvements .cg-table-wrap tr:has(.cg-installment-name):has(td:nth-child(5)[hidden]) td:nth-child(4),
 html body .shell.layout-mobile .cg-page.cg-clean-only.cg-eight-improvements .cg-table-wrap tr:has(.cg-installment-name):has(td:nth-child(4)[hidden]) td:nth-child(5) { grid-column: 2 / -1; text-align: center; }
+
+/* Correções finais: apenas o novo resumo mensal e suas ações. */
+.cg-month-invoice-popup { display: flex; flex-direction: column; gap: 12px; }
+.cg-exclusive-totals { margin: 0; }
+.cg-exclusive-totals > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; }
+.cg-exclusive-totals dt { display: flex; align-items: center; font-weight: 600; }
+.cg-exclusive-totals dd { margin: 0; white-space: nowrap; font-weight: 700; }
+html body .cg-month-invoice-popup .cg-person-quick-pay { width: 44px; height: 44px; min-height: 44px; margin-right: 6px; }
+.cg-exclusive-totals [data-category="month"] { border-top: 1px solid #d6dce3; }
+.cg-month-invoice-pdfs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.cg-month-invoice-pdfs button, .cg-invoice-part-choice button { min-height: 44px; }
+.cg-invoice-part-choice { display: flex; flex-direction: column; gap: 10px; }
+html body .arl-3d-popup:has(.cg-month-invoice-popup) { width: min(560px, calc(100vw - 24px)) !important; height: auto !important; max-height: calc(100dvh - 24px) !important; }
+
+html body .cg-month-invoice-popup button.cg-person-quick-pay:is(#cg-month-pay-one, #cg-month-pay-two, #cg-month-pay-shared) {
+  color: #198446 !important; background: transparent !important; border: 0 !important; box-shadow: none !important;
+}
+html body .cg-month-invoice-popup button.cg-person-quick-pay:is(#cg-month-pay-one, #cg-month-pay-two, #cg-month-pay-shared) svg { color: inherit !important; stroke: currentColor !important; }
+html body .cg-monthly-invoices .cg-invoice-card > .cg-invoice-balance { white-space: normal !important; text-align: right; }
+html body .cg-monthly-invoices .cg-invoice-card > .cg-invoice-balance small { display: block; font-size: 10px !important; font-weight: 500; max-width: 100px; line-height: 1.3; }
+html body .cg-monthly-invoices .cg-invoice-card > .cg-invoice-balance b { white-space: nowrap; }

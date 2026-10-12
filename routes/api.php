@@ -36,6 +36,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::prefix('expense-control')->middleware('expense.access')->group(function () {
+        Route::get('/monthly-statement', [ExpenseControlController::class, 'monthlyStatement']);
+        Route::get('/invoice-balances', [ExpenseControlController::class, 'invoiceBalances']);
+        Route::get('/debts/{id}/invoice-payment', [ExpenseControlController::class, 'invoicePayment'])->whereNumber('id');
+        Route::post('/debts/{id}/invoice-payment', [ExpenseControlController::class, 'invoicePayment'])->whereNumber('id');
         Route::get('/person-balances', [ExpenseControlController::class, 'personBalances']);
         Route::get('/debts/{id}/person-payment', [ExpenseControlController::class, 'personPayment'])->whereNumber('id');
         Route::post('/debts/{id}/person-payment', [ExpenseControlController::class, 'personPayment'])->whereNumber('id');

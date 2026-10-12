@@ -1,9 +1,5 @@
 <?php
 
-// Run explicitly against a dedicated, migrated local MySQL database; never included in SQLite suites.
-require dirname(__DIR__, 2).'/vendor/autoload.php';
-$app = require dirname(__DIR__, 2).'/bootstrap/app.php';
-$app->make(Kernel::class)->bootstrap();
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ExpenseControl;
@@ -12,6 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
+
+// Run explicitly against a dedicated, migrated local MySQL database; never included in SQLite suites.
+require dirname(__DIR__, 2).'/vendor/autoload.php';
+$app = require dirname(__DIR__, 2).'/bootstrap/app.php';
+$app->make(Kernel::class)->bootstrap();
 
 if (DB::connection()->getDriverName() !== 'mysql' || ! preg_match('/(?:^|_)test(?:_|$)/i', DB::connection()->getDatabaseName()) || config('database.connections.mysql.host') !== '127.0.0.1') {
     throw new RuntimeException('Explicit isolated local MySQL test required.');

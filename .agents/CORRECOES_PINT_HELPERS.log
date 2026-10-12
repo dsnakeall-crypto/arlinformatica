@@ -1,0 +1,7 @@
+
+  ✓✓
+
+  ──────────────────────────────────────────────────────────────────── Laravel
+    FIXED   .................................... 2 files, 2 style issues fixed
+  ✓ tests/support/expense-payment-concurrency.php line_ending, unary_operator…
+  ✓ tests/support/expense-payment-worker.php class_definition, line_ending, u…

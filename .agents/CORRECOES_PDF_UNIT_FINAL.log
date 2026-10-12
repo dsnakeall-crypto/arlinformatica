@@ -1,0 +1,14 @@
+✔ PDF exclusivo one inclui somente a categoria pendente (49.3339ms)
+✔ PDF exclusivo two inclui somente a categoria pendente (1.4833ms)
+✔ PDF exclusivo shared inclui somente a categoria pendente (1.6719ms)
+✔ PDF geral inclui três seções coloridas e Total Fatura uma vez, sem duplicar casal (2.5427ms)
+✔ PDF zerado identifica mês correto e não inventa dívidas (1.3293ms)
+✔ PDF bloqueia divergência entre detalhes e somas financeiras (0.4153ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 339.405

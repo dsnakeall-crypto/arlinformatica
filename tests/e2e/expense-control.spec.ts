@@ -141,7 +141,7 @@ test('controle: resumo com cinco indicadores e projeção oferece lista e cards'
   const indicators = page.getByRole('region', { name: 'Indicadores do mês' });
   for (const key of ['month', 'one', 'two', 'shared']) {
     const prefix = key === 'month' ? '' : key + '_';
-    await expect(indicators.locator('.cgo-' + key + ' .cgo-original')).toContainText(money(data.totals[prefix + 'original_cents']));
+    await expect(indicators.locator('.cgo-' + key + ' .cgo-original')).toContainText(money(data.totals[key === 'month' ? 'remaining_cents' : prefix + 'original_cents']));
     if (key === 'month') {
       await expect(indicators.locator('.cgo-month .cgo-remaining')).toHaveCount(0);
     } else {

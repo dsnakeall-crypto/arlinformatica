@@ -140,3 +140,58 @@ export async function downloadExpenseStatement(scope: SummaryScope, summary: Sum
   }
   doc.save('controle-gastos-detalhado-'+month.replace(/[^0-9-]/g,'')+'-'+scope+'.pdf');
 }
+
+
+/** Pending-only monthly invoices. Business totals come exclusively from the backend. */
+export async function createMonthlyInvoicePdf(scope: import('./expense-monthly-invoice').InvoiceScope | 'month', statement: import('./expense-monthly-invoice').MonthlyStatement, config: Configuration) {
+  const { month, totals, data } = statement;
+  if (!/^\d{4}-\d{2}$/.test(month) || !Array.isArray(data)) throw new Error('Relatório mensal inválido.');
+  for (const value of Object.values(totals)) if (!Number.isSafeInteger(value) || value < 0) throw new Error('Saldo inválido no relatório.');
+  const scopes = ['one', 'two', 'shared'] as const;
+  for (const key of scopes) {
+    const expected = totals[key === 'one' ? 'one_cents' : key === 'two' ? 'two_cents' : 'shared_cents'];
+    const rows = data.filter(row => row.responsibility === key);
+    if (rows.some(row => !Number.isSafeInteger(row.remaining_cents) || row.remaining_cents <= 0 || row.remaining_cents !== row.remaining_one_cents + row.remaining_two_cents)
+      || rows.reduce((sum, row) => sum + row.remaining_cents, 0) !== expected) throw new Error('Detalhes e totais do mês não conferem. Atualize o resumo.');
+  }
+  if (totals.total_cents !== totals.one_cents + totals.two_cents + totals.shared_cents
+    || totals.shared_cents !== totals.shared_one_cents + totals.shared_two_cents) throw new Error('Categorias da fatura não conferem.');
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+  const labels = { one: config.people.find(p => p.id === 1)?.name || 'Allan', two: config.people.find(p => p.id === 2)?.name || 'Carol', shared: 'Casal' };
+  const colors = { one: [30, 83, 165], two: [26, 126, 69], shared: [185, 28, 28] } as const;
+  let y = 20;
+  const reserve = (height: number) => { if (y + height > 273) { doc.addPage(); y = 20; } };
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.text('ARL | Fatura do mês', 16, y); y += 9;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.text('Mês: ' + month.split('-').reverse().join('/'), 16, y); y += 7;
+  doc.setFontSize(9); doc.text('Somente saldos pendentes. Valores em reais.', 16, y); y += 12;
+  for (const key of scope === 'month' ? scopes : [scope]) {
+    const rows = data.filter(row => row.responsibility === key);
+    reserve(24); doc.setTextColor(colors[key][0], colors[key][1], colors[key][2]); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+    doc.text(labels[key] + (key === 'shared' ? ' - compartilhadas' : ' - individual'), 16, y); y += 9;
+    doc.setTextColor(35, 48, 65); doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+    if (!rows.length) { doc.text('Nenhum saldo pendente neste mês.', 16, y); y += 9; }
+    for (const row of rows) {
+      const title = doc.splitTextToSize(clean(row.debt_name), 133) as string[];
+      const origin = doc.splitTextToSize(clean(row.institution_name + ' / ' + row.type_name), 170) as string[];
+      const height = 12 + title.length * 4.5 + origin.length * 4.5 + (key === 'shared' ? 6 : 0);
+      reserve(height); doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text(title, 16, y);
+      doc.text(money(row.remaining_cents), 194, y, { align: 'right' }); y += title.length * 4.5 + 1;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(origin, 16, y); y += origin.length * 4.5;
+      doc.text('Vencimento: ' + formatDate(row.due_on), 16, y); y += 6;
+      if (key === 'shared') { doc.text(labels.one + ': ' + money(row.remaining_one_cents) + ' | ' + labels.two + ': ' + money(row.remaining_two_cents), 16, y); y += 6; }
+      y += 4;
+    }
+    reserve(12); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.text('Total ' + labels[key] + ': ' + money(totals[key === 'one' ? 'one_cents' : key === 'two' ? 'two_cents' : 'shared_cents']), 16, y); y += 14;
+  }
+  if (scope === 'month') { reserve(15); doc.setFontSize(13); doc.text('TOTAL FATURA: ' + money(totals.total_cents), 16, y); }
+  const pages = doc.getNumberOfPages();
+  for (let i = 1; i <= pages; i++) { doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(90, 109, 132); doc.text('Gerado no dispositivo | Página ' + i + '/' + pages, 16, 288); }
+  return doc;
+}
+
+export async function downloadMonthlyInvoice(scope: import('./expense-monthly-invoice').InvoiceScope | 'month', statement: import('./expense-monthly-invoice').MonthlyStatement, config: Configuration): Promise<void> {
+  const doc = await createMonthlyInvoicePdf(scope, statement, config);
+  doc.save('fatura-pendente-' + statement.month + '-' + scope + '.pdf');
+}

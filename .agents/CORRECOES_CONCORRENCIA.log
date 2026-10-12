@@ -1,0 +1,19 @@
+PHP Fatal error:  Uncaught ReflectionException: Class "Kernel" does not exist in C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Container\Container.php:1122
+Stack trace:
+#0 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Container\Container.php(1122): ReflectionClass->__construct()
+#1 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Container\Container.php(933): Illuminate\Container\Container->build()
+#2 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Foundation\Application.php(1078): Illuminate\Container\Container->resolve()
+#3 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Container\Container.php(864): Illuminate\Foundation\Application->resolve()
+#4 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Foundation\Application.php(1058): Illuminate\Container\Container->make()
+#5 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\tests\support\expense-payment-concurrency.php(6): Illuminate\Foundation\Application->make()
+#6 {main}
+
+Next Illuminate\Contracts\Container\BindingResolutionException: Target class [Kernel] does not exist. in C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Container\Container.php:1124
+Stack trace:
+#0 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Container\Container.php(933): Illuminate\Container\Container->build()
+#1 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Foundation\Application.php(1078): Illuminate\Container\Container->resolve()
+#2 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Container\Container.php(864): Illuminate\Foundation\Application->resolve()
+#3 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Foundation\Application.php(1058): Illuminate\Container\Container->make()
+#4 C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\tests\support\expense-payment-concurrency.php(6): Illuminate\Foundation\Application->make()
+#5 {main}
+  thrown in C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\vendor\laravel\framework\src\Illuminate\Container\Container.php on line 1124

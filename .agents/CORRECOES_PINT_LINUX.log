@@ -1,0 +1,10 @@
+
+  ✓✓✓✓✓
+
+  ──────────────────────────────────────────────────────────────────── Laravel
+    FIXED   .................................... 5 files, 5 style issues fixed
+  ✓ app/Http/Controllers/ExpenseControlController.php line_ending, unary_oper…
+  ✓ app/Services/ExpenseControl.php fully_qualified_strict_types, line_ending…
+  ✓ routes/api.php                                                 line_ending
+  ✓ tests/Feature/ExpenseControlTest.php                           line_ending
+  ✓ tests/Feature/ExpenseMonthlyInvoiceTest.php  class_attributes_separation,…

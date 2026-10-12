@@ -5,6 +5,7 @@ namespace App\Services;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -71,6 +72,41 @@ class ExpenseControl
 
         return ['debt_id' => $debt->id, 'number' => $number, 'month_on' => $month->toDateString(), 'due_on' => $month->day(min((int) $debt->due_day, $month->daysInMonth))->toDateString(),
             'amount_cents' => $debt->amount_cents, 'share_one_cents' => $one, 'share_two_cents' => $two, 'created_at' => now(), 'updated_at' => now()];
+    }
+
+    /** Read-only recurring projection using the existing generator and cent allocation. */
+    public function monthItems(CarbonImmutable $month): Collection
+    {
+        $items = $this->installments()->whereNull('d.cancelled_at')->where('i.month_on', $month->toDateString())->get()->map(fn ($i) => $this->figures($i));
+        $existing = $items->pluck('debt_id')->all();
+        $recurring = DB::table('cg_debts as d')->join('cg_institutions as bank', 'bank.id', '=', 'd.institution_id')->join('cg_types as type', 'type.id', '=', 'd.type_id')
+            ->where('d.recurrence', 'monthly')->whereNull('d.cancelled_at')->where('d.start_on', '<=', $month->toDateString())
+            ->where(fn ($q) => $q->whereNull('d.ended_on')->orWhere('d.ended_on', '>=', $month->toDateString()))->whereNotIn('d.id', $existing)
+            ->select('d.*', 'bank.name as institution_name', 'type.name as type_name')->get();
+        foreach ($recurring as $debt) {
+            $number = (int) $debt->first_number + (int) CarbonImmutable::parse($debt->start_on)->diffInMonths($month);
+            $row = [...(array) $debt, ...$this->generate($debt, $month, $number), 'id' => -(int) $debt->id,
+                'purchase_notes' => $debt->notes, 'credit_one' => 0, 'credit_two' => 0, 'paid_cents' => 0, 'discount_cents' => 0, 'paid_one_cents' => 0, 'paid_two_cents' => 0];
+            $items->push($this->figures((object) $row));
+        }
+
+        return $items->sortBy(fn ($i) => [$i['due_on'], $i['id']])->values();
+    }
+
+    public function invoiceTotals(Collection $items): array
+    {
+        $one = (int) $items->where('responsibility', 'one')->sum('remaining_cents');
+        $two = (int) $items->where('responsibility', 'two')->sum('remaining_cents');
+        $shared = (int) $items->where('responsibility', 'shared')->sum('remaining_cents');
+
+        return ['one_cents' => $one, 'two_cents' => $two, 'shared_cents' => $shared, 'total_cents' => $one + $two + $shared, 'shared_one_cents' => (int) $items->where('responsibility', 'shared')->sum('remaining_one_cents'), 'shared_two_cents' => (int) $items->where('responsibility', 'shared')->sum('remaining_two_cents')];
+    }
+
+    public function assertInvoiceScope(object $debt, array $data): void
+    {
+        if (isset($data['scope'])) {
+            abort_unless($debt->responsibility === $data['scope'] && ($data['scope'] === 'shared' || $data['target'] === $data['scope']), 422, 'A dívida não pertence à categoria e parte selecionadas.');
+        }
     }
 
     public function ensureMonth(CarbonImmutable $month): void
@@ -300,10 +336,19 @@ class ExpenseControl
         $debt = DB::table('cg_debts')->find($data['debt_id']);
         abort_unless($debt, 404);
         abort_if($debt->cancelled_at, 422, 'A dívida está cancelada.');
+        $this->assertInvoiceScope($debt, $data);
         $field = $data['target'] === 'one' ? 'remaining_one_cents' : 'remaining_two_cents';
         // Read only real installments. Never invent future recurring months to calculate a balance.
         $allItems = $this->installments()->where('d.id', $debt->id)->orderBy('i.due_on')->orderBy('i.id')->get()
             ->map(fn ($i) => $this->figures($i))->filter(fn ($i) => $i[$field] > 0)->values();
+        if ($debt->recurrence === 'monthly') {
+            $virtual = $this->monthItems($this->month($data['month']))->where('debt_id', $debt->id)->filter(fn ($i) => $i['id'] < 0 && $i[$field] > 0);
+            $month = $this->month($data['month']);
+            if (! isset($data['scope']) && $allItems->contains(fn ($i) => $i['due_on'] >= $month->toDateString() && $i['due_on'] <= $month->endOfMonth()->toDateString())) {
+                $virtual = collect();
+            }
+            $allItems = $allItems->concat($virtual)->sortBy(fn ($i) => [$i['due_on'], $i['number']])->values();
+        }
         $items = $allItems;
         if ($data['action'] === 'month') {
             $month = $this->month($data['month']);
@@ -330,7 +375,7 @@ class ExpenseControl
             'recurrence' => $debt->recurrence, 'balance_cents' => $balance, 'total_cents' => $amount,
             'remaining_cents' => (int) $allItems->sum($field) - $amount, 'allocations' => $allocations,
             'preview_hash' => hash('sha256', json_encode([$debt->id, $data['target'], $data['action'], $data['month'], $amount,
-                $allItems->map(fn ($i) => [$i['id'], $i['due_on'], $i[$field]])->all()]))];
+                $data['scope'] ?? null, $allItems->map(fn ($i) => [isset($data['scope']) || $debt->recurrence === 'monthly' ? $i['number'] : $i['id'], $i['due_on'], $i[$field]])->all()]))];
     }
 
     public function record(Request $request, array $data, Audit $audit): array
@@ -353,6 +398,15 @@ class ExpenseControl
                 $plan = $this->personDebtPlan($data);
                 abort_unless(hash_equals($plan['preview_hash'], $data['preview_hash']), 409, 'O saldo mudou. Confira novamente antes de confirmar.');
                 abort_unless((int) $data['amount_cents'] === $plan['total_cents'], 409, 'O valor mudou. Confira novamente antes de confirmar.');
+                if (collect($plan['allocations'])->contains(fn ($i) => $i['id'] < 0)) {
+                    // Materialize only the confirmed recurring month, inside the existing payment transaction.
+                    $debt = DB::table('cg_debts')->find($data['debt_id']);
+                    $month = $this->month($data['month']);
+                    $number = (int) $debt->first_number + (int) CarbonImmutable::parse($debt->start_on)->diffInMonths($month);
+                    DB::table('cg_installments')->insertOrIgnore($this->generate($debt, $month, $number));
+                    $plan = $this->personDebtPlan($data);
+                    abort_unless(hash_equals($plan['preview_hash'], $data['preview_hash']), 409, 'O saldo mudou. Confira novamente.');
+                }
                 $amounts = array_column($plan['allocations'], 'amount_cents', 'id');
                 $ids = array_keys($amounts);
             } else {

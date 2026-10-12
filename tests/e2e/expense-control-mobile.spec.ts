@@ -28,8 +28,8 @@ test('mobile gastos: conta vinculada abre saldo pessoal e mantém escolha de out
       const summary = (await api(page, '/expense-control/summary?month=' + month)).body;
       // 09/10/2026: o resumo não tem mais seletor de visão; os 5 indicadores e os 2 cards são iguais para qualquer vínculo.
       const indicators = page.getByRole('region', { name: 'Indicadores do mês' });
-      await expect(indicators.locator('.cgo-month .cgo-original')).toContainText(money(summary.totals.original_cents));
-      // Total geral aprovado mostra só o valor original; saldo fica nos cartões de responsável.
+      await expect(indicators.locator('.cgo-month .cgo-original')).toContainText(money(summary.totals.remaining_cents));
+      // Indicador mensal mostra saldo pendente; os outros cartões preservam valores originais.
       await expect(indicators.locator('.cgo-month .cgo-remaining')).toHaveCount(0);
       await expect(page.locator('.cgo-person')).toHaveCount(2);
       await expect(page.locator('.cgo-person h3').nth(id - 1)).toHaveText(people[id - 1].name);
@@ -83,7 +83,7 @@ test('mobile gastos: cinco ícones, resumo correto das partes, instituição, m�
   await expect(indicators.locator('.cgo-indicator')).toHaveCount(5);
   for (const key of ['month', 'one', 'two', 'shared']) {
     const prefix = key === 'month' ? '' : key + '_';
-    await expect(indicators.locator('.cgo-' + key + ' .cgo-original')).toContainText(money(summary.totals[prefix + 'original_cents']));
+    await expect(indicators.locator('.cgo-' + key + ' .cgo-original')).toContainText(money(summary.totals[key === 'month' ? 'remaining_cents' : prefix + 'original_cents']));
     if (key === 'month') {
       await expect(indicators.locator('.cgo-month .cgo-remaining')).toHaveCount(0);
     } else {
@@ -116,7 +116,7 @@ test('mobile gastos: cinco ícones, resumo correto das partes, instituição, m�
   await expenseNav.getByRole('button', { name: 'Resumo', exact: true }).click();
   await page.setViewportSize({ width: 393, height: 851 });
   // The complete monthly invoice intentionally includes both people.
-  await expect(institution.locator('strong')).toHaveText('R$ 600,00');
+  await expect(institution.locator('strong > b')).toHaveText('R$ 600,00');
   await page.setViewportSize({ width: 393, height: 1600 });
   await institution.scrollIntoViewIfNeeded();
   await institution.screenshot({ path: 'output/controle-gasto/mobile-instituicao-compacta.png' });

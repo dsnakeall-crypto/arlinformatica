@@ -1,8 +1,5 @@
 <?php
 
-require dirname(__DIR__, 2).'/vendor/autoload.php';
-$app = require dirname(__DIR__, 2).'/bootstrap/app.php';
-$app->make(Kernel::class)->bootstrap();
 use App\Models\User;
 use App\Services\Audit;
 use App\Services\ExpenseControl;
@@ -11,6 +8,10 @@ use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+
+require dirname(__DIR__, 2).'/vendor/autoload.php';
+$app = require dirname(__DIR__, 2).'/bootstrap/app.php';
+$app->make(Kernel::class)->bootstrap();
 
 if (DB::connection()->getDriverName() !== 'mysql' || ! preg_match('/(?:^|_)test(?:_|$)/i', DB::connection()->getDatabaseName())) {
     throw new RuntimeException('Worker exige MySQL de teste.');

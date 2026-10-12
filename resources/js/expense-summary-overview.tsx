@@ -15,15 +15,15 @@ export function personNames(people: Person[]) {
   return [people.find(p => p.id === 1)?.name || 'Responsável 1', people.find(p => p.id === 2)?.name || 'Responsável 2'] as const;
 }
 
-export function SummaryIndicators({ totals, people, portraits, onExport, onNext }: {
+export function SummaryIndicators({ totals, people, portraits, onExport, onNext, onMonth }: {
   totals: Totals; people: Person[]; nextDue?: NextDue; portraits: ReactNode[];
-  onExport?: (scope: SummaryScope) => void; onNext?: () => void;
+  onExport?: (scope: SummaryScope) => void; onNext?: () => void; onMonth?: () => void;
 }) {
   const [one, two] = personNames(people);
   const due = date(totals.next_due_on);
   const card = (key: SummaryScope, label: string, original: number, remaining: number, icon: ReactNode) =>
     <article className={'cgo-indicator cgo-' + key + (onExport ? ' cgo-clickable' : '')} key={key}>
-      {onExport ? <button className="cgo-card-action" type="button" onClick={() => onExport(key)} aria-label={'Ver opção de baixar PDF de ' + label}>
+      {onExport ? <button className="cgo-card-action" type="button" onClick={() => key === 'month' && onMonth ? onMonth() : onExport(key)} aria-label={key === 'month' && onMonth ? 'Ver total a pagar no mês' : 'Ver opção de baixar PDF de ' + label}>
         <span className="cgo-card-content">
           <span className="cgo-card-heading"><span className="cgo-icon" aria-hidden="true">{icon}</span><span>{label}</span></span>
           <strong className="cgo-original">{money(original)}</strong>
@@ -36,7 +36,7 @@ export function SummaryIndicators({ totals, people, portraits, onExport, onNext 
       </>}
     </article>;
   return <section className="cgo-indicators" aria-label="Indicadores do mês">
-    {card('month', 'Total a pagar no mês', cents(totals, 'original_cents'), cents(totals, 'remaining_cents'), <Wallet />)}
+    {card('month', 'Total a pagar no mês', cents(totals, 'remaining_cents'), cents(totals, 'remaining_cents'), <Wallet />)}
     {card('one', 'Total ' + one, cents(totals, 'one_original_cents'), cents(totals, 'one_remaining_cents'), portraits[0])}
     {card('two', 'Total ' + two, cents(totals, 'two_original_cents'), cents(totals, 'two_remaining_cents'), portraits[1])}
     {card('shared', 'Total Casal', cents(totals, 'shared_original_cents'), cents(totals, 'shared_remaining_cents'), portraits[2] || <Users />)}
