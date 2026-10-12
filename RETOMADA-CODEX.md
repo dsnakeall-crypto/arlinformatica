@@ -96,3 +96,14 @@ Regra pontual: RRULE:FREQ=DAILY;COUNT=1;BYHOUR=3;BYMINUTE=55;BYSECOND=0.
 Fuso do Windows conferido: E. South America Standard Time, UTC-03:00; data local 12/10/2026 às 02:16. A próxima ocorrência solicitada é 12/10/2026 às 03:55 de Brasília.
 Agendamento registrado pelo aplicativo e arquivo automation.toml conferido; execução depende de o Codex/computador estarem ativos e com uso disponível. Não existe agendador externo improvisado. Se o aplicativo não disparar, usar a mensagem de retomada manual acima.
 Nenhuma implementação, auditoria ou teste novo foi iniciado depois da ordem de parar. Operações anteriores de build/Playwright/PHPUnit terminaram antes da parada. Desenvolvimento permanece parado até o horário autorizado.
+
+## Retomada efetivada em 12/10/2026 às 03:55
+Automação retomar-arl-s-03-55 disparou e foi pausada oficialmente (sem nova sessão).
+- Atendimento mobile corrigido: regra geral do tema Clean para aria-pressed tinha maior prioridade; aumentada especificidade somente dos dois botões. Teste de seleção após blur e rodapé passou.
+- OS externa criada pela UI, reaberta e editada: attendance_type preservado; teste passou após a fixture respeitar a confirmação Sem senha exigida pelo editor existente.
+- Pagamentos rápidos desktop/mobile passaram novamente; retentativa após resposta perdida e duplo clique passaram, mesmo UUID e uma única operação.
+- Nova prova de concorrência isolando notificações encontrou dependência de bloqueios incidentais: dois pagamentos de 5000 podiam creditar 10000 sobre parte de 7000. A leitura de cg_operations na função record agora usa lockForUpdate antes de aguardar a dívida; evita snapshot antigo. Três rodadas ledger-only, uma com notificações e uma de replay aprovadas. Log REPRISE_MYSQL_LEDGER_BASELINE registra a falha reproduzida antes; REPRISE_MYSQL_ledger/normal/replay registram correção. Não houve alteração no cálculo das partes ou no mecanismo de lançamentos.
+- PHPUnit financeiro após essa correção: 63 testes, 978 assertions aprovados em SQLite.
+- Teste com 8 tipos: a regra antiga de overflow tinha mesma especificidade e era carregada depois. Corrigida prioridade apenas do cartão de Gastos. Totais incluem compras somente futuras (1000 reais na fixture). Validação final visual em execução; não declarar concluída antes do resultado.
+- Falhas intermediárias de fixtures preservadas em logs: percent_one obrigatório faltante, navegação mobile sem pesquisa (fluxo real usa instituição/tipo) e seleção de dívida por substring pegando outra dívida. Corrigidas fixtures para dados e fluxos reais; nenhum teste desabilitado.
+- Próximos passos: confirmar saldos/parcelas pessoais desktop/mobile, validar foco e estados de erro/status, revisão de segurança e regressões após correção financeira, lint/types/unit/build, relatório/checklist e preparação de pacote. Nenhuma publicação/push autorizada.

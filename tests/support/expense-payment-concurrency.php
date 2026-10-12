@@ -23,12 +23,13 @@ $plan = $service->personDebtPlan($planData);
 $dir = storage_path('framework/testing/concurrency-'.Str::uuid()); mkdir($dir,0777,true);
 $workers=[];
 $replay = ($argv[1] ?? '') === 'replay';
+$ledgerOnly = ($argv[1] ?? '') === 'ledger';
 $sharedKey = (string) Str::uuid();
 if ($replay) { $users = [$users[0], $users[0]]; }
 DB::beginTransaction(); DB::table('cg_debts')->where('id',$id)->lockForUpdate()->first();
 try {
     foreach ($users as $n=>$user) {
-        $payload=['user_id'=>$user->id,'payment'=>[...$planData,'request_key'=>$replay ? $sharedKey : (string)Str::uuid(),'preview_hash'=>$plan['preview_hash'],'kind'=>'payment','paid_by'=>1,'occurred_on'=>'2026-10-12']];
+        $payload=['user_id'=>$user->id,'ledger_only'=>$ledgerOnly,'payment'=>[...$planData,'request_key'=>$replay ? $sharedKey : (string)Str::uuid(),'preview_hash'=>$plan['preview_hash'],'kind'=>'payment','paid_by'=>1,'occurred_on'=>'2026-10-12']];
         $path=$dir.'/worker-'.$n.'.json';file_put_contents($path,json_encode($payload));
         $worker=new Process([PHP_BINARY,__DIR__.'/expense-payment-worker.php',$path],dirname(__DIR__,2)); $worker->setTimeout(20);$worker->start();$workers[]=$worker;
     }

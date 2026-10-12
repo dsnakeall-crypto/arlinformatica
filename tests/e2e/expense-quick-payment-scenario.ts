@@ -36,6 +36,7 @@ export function quickPaymentScenario(mobile = false) {
       if (input) await dialog.getByLabel('Valor a pagar (R$)').fill(input);
       await dialog.getByRole('button', { name: 'Conferir distribuição', exact: true }).click();
       await expect(dialog.getByRole('region', { name: 'Confira antes de pagar' }).locator(':scope > strong')).toContainText(total);
+      await expect(dialog.getByText('Ficará pendente nesta parte:', { exact: false })).toContainText((outstanding / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
       await dialog.getByRole('button', { name: 'Confirmar pagamento', exact: true }).click();
       await expect(dialog).not.toBeVisible();
       const detail = await api(page, '/expense-control/debts/' + id);

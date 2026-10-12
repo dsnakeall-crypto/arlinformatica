@@ -7,6 +7,12 @@ if (DB::connection()->getDriverName() !== 'mysql' || !preg_match('/(?:^|_)test(?
     throw new RuntimeException('Worker exige MySQL de teste.');
 }
 $fixture = json_decode(file_get_contents($argv[1]), true, 512, JSON_THROW_ON_ERROR);
+// Ledger-only mode removes incidental notification FK locks to validate payment serialization itself.
+if ($fixture['ledger_only'] ?? false) {
+    $app->instance(App\Services\ExpenseNotifications::class, new class extends App\Services\ExpenseNotifications {
+        public function operation(Illuminate\Http\Request $request, int $id): void {}
+    });
+}
 $request = Illuminate\Http\Request::create('/fixture', 'POST');
 $user = App\Models\User::findOrFail($fixture['user_id']);
 $request->setUserResolver(fn () => $user);

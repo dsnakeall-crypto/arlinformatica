@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login } from './helpers';
+import { api, login, selectNewOrderClient, uniqueDocument } from './helpers';
 
 test('mobile: atendimento selecionado persiste após blur e navegação respeita o rodapé', async ({ page }) => {
   await login(page);
@@ -11,7 +11,7 @@ test('mobile: atendimento selecionado persiste após blur e navegação respeita
   await expect(external).toHaveAttribute('aria-pressed', 'true');
   await expect(bench).toHaveAttribute('aria-pressed', 'false');
   await page.locator('main').click({ position: { x: 5, y: 5 } });
-  expect(await external.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(185, 28, 28)');
+  await expect.poll(() => external.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(185, 28, 28)');
   await bench.click();
   await expect(bench).toHaveAttribute('aria-pressed', 'true');
   await expect(external).toHaveAttribute('aria-pressed', 'false');
@@ -21,4 +21,32 @@ test('mobile: atendimento selecionado persiste após blur e navegação respeita
   expect(rect!.y + rect!.height).toBeCloseTo(page.viewportSize()!.height, 0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   await page.screenshot({ path: 'output/oito-melhorias/atendimento-mobile.png', fullPage: true });
+});
+
+test('mobile: atendimento externo é gravado e preservado ao reabrir e editar a OS', async ({ page }) => {
+  await login(page);
+  const stamp = Date.now();
+  const client = await api(page, '/clients', 'POST', { name: 'Atendimento mobile ' + stamp, document: uniqueDocument(stamp), phone: '34999998888', postal_code: '38400000', street: 'Rua fixture', number: '10', district: 'Centro', city: 'Uberlândia', state: 'MG' });
+  expect(client.status).toBe(201);
+  await page.goto('/new');
+  await selectNewOrderClient(page, client.body.id);
+  await page.getByLabel('Equipamento *').fill('Notebook fixture');
+  await page.getByRole('button', { name: 'ATENDIMENTO EXTERNO', exact: true }).click();
+  await page.getByLabel('Problema relatado *').fill('Fixture atendimento externo');
+  await page.getByLabel('Sem senha').check();
+  const response = page.waitForResponse(r => new URL(r.url()).pathname === '/api/orders' && r.request().method() === 'POST');
+  await page.getByRole('button', { name: 'Criar ordem de serviço', exact: true }).click();
+  const saved = await response; expect(saved.status()).toBe(201); const order = await saved.json();
+  expect((await api(page, '/orders/' + order.id)).body.attendance_type).toBe('external');
+  await page.reload();
+  const root = page.locator('[data-arl-order-detail-react="1"]');
+  await expect(root.getByText('Atendimento Externo', { exact: true })).toBeVisible();
+  await root.getByRole('button', { name: 'Editar', exact: true }).click();
+  const editor = page.locator('.arl-3d-editor');
+  await expect(editor.getByLabel('Atendimento')).toHaveValue('external');
+  await editor.getByLabel('Problema relatado').fill('Fixture atendimento preservado');
+  await editor.getByLabel('Sem senha').check();
+  await editor.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(editor).toBeHidden();
+  expect((await api(page, '/orders/' + order.id)).body.attendance_type).toBe('external');
 });

@@ -338,7 +338,8 @@ class ExpenseControl
         return DB::transaction(function () use ($request, $data, $audit) {
             DB::table('users')->where('id', $request->user()->id)->lockForUpdate()->first();
             $hash = hash('sha256', json_encode($data));
-            $old = DB::table('cg_operations')->where('request_key', $data['request_key'])->first();
+            // A locking read must not establish a stale snapshot before waiting on debt locks.
+            $old = DB::table('cg_operations')->where('request_key', $data['request_key'])->lockForUpdate()->first();
             if ($old) {
                 abort_unless($old->created_by === $request->user()->id && hash_equals($old->payload_hash, $hash), 409, 'Esta solicitação já foi utilizada com outros dados.');
 

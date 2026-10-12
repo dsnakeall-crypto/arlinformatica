@@ -1,0 +1,8 @@
+START
+READY
+{"status":201,"result":{"id":21,"replayed":true}}
+START
+READY
+{"status":201,"result":{"id":21,"replayed":false}}
+statuses=[201,201] credit_one=5000
+PASS: overlapping same request replays, only one payment, no duplicate.
