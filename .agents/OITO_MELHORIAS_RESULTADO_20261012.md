@@ -57,3 +57,24 @@ Preparação local/ativação em deploy/prepare-eight-improvements-package.py, P
 Pacote será produzido após o checkpoint de código final, com SHA256, CRC e hashes individuais verificados, vendor de produção reaproveitado da base e90 validada, assets Vite/OCR locais; sem .env, storage, uploads, bancos, node_modules, Git, testes, logs ou credenciais. A identificação exata será registrada no manifesto output/releases/ARL-OITO-MELHORIAS-<hash>.json.
 Não houve ativação. Faltam confirmação expressa do proprietário, publicação do código local no GitHub se autorizada, execução do preflight/ativação remotos e smoke autenticado real, sem criar pagamentos fictícios. Não prometer CI GitHub verde sem executar a CI remota; esta validação é local.
 Rollback deve voltar ao e90 preservado, restaurando quatro aliases e ponteiro, sem restaurar SQL ou apagar dados. O executor anterior e90, cujo rollback retorna à release 970, NÃO deve ser usado para esta nova release.
+
+## Pacote final verificado
+Fonte do pacote: c9ded0e0458d25091156eb0bd084ad20a05fa7b4, branch codex/oito-melhorias-20261012.
+Pacote: output/releases/ARL-OITO-MELHORIAS-c9ded0e0458d.zip — 37.683.480 bytes, 7.856 arquivos.
+SHA256: f5d6f455aeb4a4754f85acf921514eb04c24aab1c1681dc8a9d7ddd80bfee117.
+CRC e hashes individuais aprovados. Varredura independente sem .env, banco/dump, storage/uploads, Git, node_modules, diretórios de testes/docs/deploy ou logs. Vendor de produção sem dependências de desenvolvimento reaproveitado do pacote e90 com SHA previamente validado.
+Executor -ValidarLocal aprovado; chamada sem autorização recusada antes de SSH. Nenhuma conexão à KingHost foi feita. Log: .agents/FINAL_EXECUTOR_LOCAL.log.
+
+Comandos exclusivamente para a cópia isolada:
+    pwsh -NoProfile -File deploy/PUBLICAR-OITO-MELHORIAS.ps1 -PacoteRelatorio output/releases/ARL-OITO-MELHORIAS-c9ded0e0458d.json -ValidarLocal
+
+SOMENTE APÓS CONFIRMAÇÃO EXPRESSA de envio do código e ativação:
+    git push origin codex/oito-melhorias-20261012
+    pwsh -NoProfile -File deploy/PUBLICAR-OITO-MELHORIAS.ps1 -PacoteRelatorio output/releases/ARL-OITO-MELHORIAS-c9ded0e0458d.json -AutorizarPublicacao
+
+A ação autorizada criará diretório privado exclusivo, enviará/verificará pacote, preservará .env/storage, conferirá migrations iguais, salvará quatro aliases atuais no OneDrive e validará seu backup antes de alterações; acrescentará somente assets sem colisão, ampliará a allowlist dos launchers mantendo e90 ativo até FPM confirmar, trocará manifest/ponteiro sob lock e executará smoke não autenticado. Sem executar cron, migration ou escrita de dados financeiros. Senha somente no prompt SSH nativo.
+Riscos restantes de hospedagem (permissões, extensão ZIP, quota, latência/OPcache ou mudança remota após e90) são gates que bloqueiam a execução; não foram testados em produção. Pode haver indisponibilidade breve durante o lock/troca; falha após alteração tenta recuperar ponteiro e aliases e90. Perda da sessão também exige conferir o relatório e o estado real antes de repetir; não reexecutar a publicação cegamente sobre staging existente.
+
+Rollback manual, só quando autorizado e usando relatório real da execução:
+    pwsh -NoProfile -File deploy/PUBLICAR-OITO-MELHORIAS.ps1 -PacoteRelatorio output/releases/ARL-OITO-MELHORIAS-c9ded0e0458d.json -AutorizarPublicacao -Reverter -Resultado 'CAMINHO_DO_RELATORIO_REAL.json'
+Restaura somente ponteiro/aliases e90 por hashes; mantém banco, uploads e código anterior. Não fazer merge, restaurar SQL ou excluir arquivos. Smoke autenticado deverá verificar navegação/dados existentes após ativação, sem pagamentos fictícios.

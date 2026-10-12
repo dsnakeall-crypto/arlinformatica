@@ -112,3 +112,6 @@ Automação retomar-arl-s-03-55 disparou e foi pausada oficialmente (sem nova se
 As oito melhorias passaram na validação local; detalhes em .agents/OITO_MELHORIAS_RESULTADO_20261012.md.
 Resultados finais: 64 PHP SQLite/987 assertions; 52 PHP MySQL/721 assertions; 28 Playwright; 51 unitários; lint/types/build. Concorrência ledger-only e replay aprovados após lockForUpdate do lookup de operação. Nenhuma migration.
 A automação está PAUSED. Nenhum push/KingHost/produção. Próximo passo após a preparação do pacote: proprietário revisar e dar confirmação expressa para qualquer push/ativação. Usar executor novo; rollback e90, não executor antigo com rollback 970. Não repetir análises/testes aprovados sem nova mudança ou preocupação concreta.
+
+Pacote pronto para revisão: output/releases/ARL-OITO-MELHORIAS-c9ded0e0458d.zip e manifesto .json. Fonte c9ded0e0458d25091156eb0bd084ad20a05fa7b4; SHA256 f5d6f455aeb4a4754f85acf921514eb04c24aab1c1681dc8a9d7ddd80bfee117.
+Executor novo e comandos em .agents/OITO_MELHORIAS_RESULTADO_20261012.md. Local validation/guard de autorização aprovados; sem SSH. Trabalho de implementação/validação encerrado: aguardar confirmação expressa do proprietário para push e ativação. Não iniciar publicação automaticamente.

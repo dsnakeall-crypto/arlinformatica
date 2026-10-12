@@ -1110,3 +1110,7 @@ Relatório: docs/PRE_PUBLICACAO_RESULTADO_20261011.md.
 - [PENDENTE] Manifesto do pacote final, preflight remoto, confirmação de push/ativação e smoke autenticado de produção.
 - [PENDENTE] CI remota GitHub: nenhum push executado; não afirmar aprovação remota a partir dos testes locais.
 Relatório: .agents/OITO_MELHORIAS_RESULTADO_20261012.md. Não iniciar outra etapa ou publicar automaticamente.
+
+- [OK] Pacote c9ded0e0458d: CRC/hashes individuais/SHA e varredura independente aprovados; 37.683.480 bytes, 7.856 arquivos; sem env/bancos/storage/uploads/testes/logs/deploy/node_modules.
+- [OK] Executor local validado e autorização ausente bloqueada antes de SSH.
+- [PENDENTE] Confirmação expressa para push/KingHost; preflight remoto, CI GitHub e smoke autenticado. Nenhuma dessas etapas foi executada.
