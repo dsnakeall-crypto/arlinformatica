@@ -12,3 +12,9 @@ Validações atuais: 73 PHP/1135 assertions SQLite; 61 PHP/869 assertions MySQL 
 Backup completo existente reutilizado. Proteção incremental de 13 arquivos antes da edição em Backups/oito-melhorias-base-20261012-012927/correcoes-finais-arquivos, hashes comparados; dois helpers adicionados à proteção incremental. Nenhum novo backup completo ou dump SQL.
 
 Pendente: nova instrução do proprietário (cifrão entre texto e valor) em pop-up e cartões inferiores; validar posicionamento/clicks, commit final/push autorizado, CI completa verde e novo pacote/manifesto. Não abrir SSH nem publicar; rollback oficial continua e90. Não usar ZIP eec107c para estas correções.
+
+
+## Ajuste final dos cifrões solicitado pelo proprietário
+A instrução mais recente substitui o pedido anterior de cifrão antes do título: no pop-up e nos cartões inferiores, o botão agora ocupa a coluna central entre texto e valor. Alteração somente de marcação/CSS; handlers, valores, filtros, pagamento e PDF preservados.
+Dois E2E desktop/mobile aprovados (54,6s), incluindo centro geométrico com tolerância de 1px, cifrões verdes novos com área 44px, três operações financeiras, partes preservadas, cinco PDFs baixados por cenário e mês quitado. Três regressões de pagamento rápido passaram após mudança de marcação; 57 unitários, lint/types/build aprovados. Captura revisada: output/correcoes-finais/mobile/popup.png.
+Próxima etapa: enviar o commit final da mesma branch ao GitHub, aguardar CI completa verde e gerar/validar pacote de fonte correspondente. Nenhum SSH ou publicação. Candidatos eec107c e anteriores não servem para estas correções.

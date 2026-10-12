@@ -108,3 +108,15 @@ html body .cg-month-invoice-popup button.cg-person-quick-pay:is(#cg-month-pay-on
 html body .cg-monthly-invoices .cg-invoice-card > .cg-invoice-balance { white-space: normal !important; text-align: right; }
 html body .cg-monthly-invoices .cg-invoice-card > .cg-invoice-balance small { display: block; font-size: 10px !important; font-weight: 500; max-width: 100px; line-height: 1.3; }
 html body .cg-monthly-invoices .cg-invoice-card > .cg-invoice-balance b { white-space: nowrap; }
+
+/* Solicitação do proprietário: cifrões no centro, entre título e valor. */
+html body .cg-exclusive-totals > div,
+html body .shell:is(.layout-mobile, .layout-desktop) .cg-page.cg-eight-improvements .cgo-person dl .cgo-due-row.has-quick-pay { display: grid !important; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: center; gap: 0 !important; }
+html body .cg-exclusive-totals dt,
+html body .shell:is(.layout-mobile, .layout-desktop) .cg-page.cg-eight-improvements .cgo-person dl .cgo-due-row.has-quick-pay dt { grid-column: 1; min-width: 0; }
+html body .cg-exclusive-totals dd,
+html body .shell:is(.layout-mobile, .layout-desktop) .cg-page.cg-eight-improvements .cgo-person dl .cgo-due-row.has-quick-pay dd { grid-column: 2 / 4; display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; min-width: 0; }
+html body .cg-exclusive-totals dd > span,
+html body .shell:is(.layout-mobile, .layout-desktop) .cg-page.cg-eight-improvements .cgo-person dl .cgo-due-row.has-quick-pay dd > span { grid-column: 2; text-align: right; }
+html body .cg-exclusive-totals dd > button,
+html body .shell:is(.layout-mobile, .layout-desktop) .cg-page.cg-eight-improvements .cgo-person dl .cgo-due-row.has-quick-pay dd > button { grid-column: 1; grid-row: 1; justify-self: center; margin: 0 !important; }

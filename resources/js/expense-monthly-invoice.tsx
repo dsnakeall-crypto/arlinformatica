@@ -33,8 +33,8 @@ export default function ExpenseMonthlyInvoice({ month, config, onClose, onPay }:
       {error && <p role="alert">{error}</p>}
       {!result && !error && <p role="status">Conferindo fatura…</p>}
       {result && <><dl className="cg-exclusive-totals">{(['one', 'two', 'shared', 'month'] as const).map(scope => <div key={scope} data-category={scope}>
-        <dt>{scope !== 'month' && <button type="button" className="cg-person-quick-pay" id={'cg-month-pay-' + scope} disabled={busy} aria-label={'Pagar ' + labels[scope]} onClick={() => onPay(scope, result.totals)}><DollarSign aria-hidden="true" /></button>}{labels[scope]}</dt>
-        <dd>{money(result.totals[scope === 'month' ? 'total_cents' : scope === 'one' ? 'one_cents' : scope === 'two' ? 'two_cents' : 'shared_cents'])}</dd>
+        <dt>{labels[scope]}</dt>
+        <dd>{scope !== 'month' && <button type="button" className="cg-person-quick-pay" id={'cg-month-pay-' + scope} disabled={busy} aria-label={'Pagar ' + labels[scope]} onClick={() => onPay(scope, result.totals)}><DollarSign aria-hidden="true" /></button>}<span>{money(result.totals[scope === 'month' ? 'total_cents' : scope === 'one' ? 'one_cents' : scope === 'two' ? 'two_cents' : 'shared_cents'])}</span></dd>
       </div>)}</dl><div className="cg-month-invoice-pdfs" aria-label="PDFs da fatura">{(['one', 'two', 'shared', 'month'] as const).map(scope => <button type="button" key={scope} disabled={busy} onClick={() => void download(scope)}>PDF {scope === 'month' ? 'Total Fatura' : scope === 'shared' ? 'Casal' : config.people.find(p => p.id === (scope === 'one' ? 1 : 2))?.name || (scope === 'one' ? 'Allan' : 'Carol')}</button>)}</div></>}
       <button type="button" disabled={busy} onClick={onClose}>Fechar</button>
     </div>

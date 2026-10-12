@@ -48,6 +48,14 @@ export async function monthlyInvoiceFlow(page: Page, mobile: boolean) {
     await expect(button).toHaveCSS('color', 'rgb(25, 132, 70)');
     const bounds = await button.boundingBox(); expect(bounds?.width).toBeGreaterThanOrEqual(44); expect(bounds?.height).toBeGreaterThanOrEqual(44);
   }
+  for (const row of await popup.locator('.cg-exclusive-totals > div:not([data-category="month"])').all()) {
+    const rowBox = await row.boundingBox(); const buttonBox = await row.locator('button').boundingBox();
+    expect(Math.abs((buttonBox!.x + buttonBox!.width / 2) - (rowBox!.x + rowBox!.width / 2))).toBeLessThanOrEqual(1);
+  }
+  for (const row of await page.locator('.cgo-due-row.has-quick-pay').all()) {
+    const rowBox = await row.boundingBox(); const buttonBox = await row.locator('button').boundingBox();
+    expect(Math.abs((buttonBox!.x + buttonBox!.width / 2) - (rowBox!.x + rowBox!.width / 2))).toBeLessThanOrEqual(1);
+  }
   if (mobile) for (const title of await page.locator('.cg-invoice-description').all()) expect((await title.boundingBox())?.width).toBeGreaterThan(80);
   const root = 'output/correcoes-finais/' + (mobile ? 'mobile' : 'desktop'); mkdirSync(root, { recursive: true });
   await page.screenshot({ path: root + '/popup.png', fullPage: true });

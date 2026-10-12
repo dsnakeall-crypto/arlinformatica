@@ -1,0 +1,2009 @@
+[2m[WebServer] [22m
+[2m[WebServer] [22m   INFO  Preparing database.
+[2m[WebServer] [22m
+[2m[WebServer] [22m  Creating migration table [2m[WebServer] [22m...............................................................................[2m[WebServer] [22m 7.45ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m
+[2m[WebServer] [22m   INFO  Running migrations.
+[2m[WebServer] [22m
+[2m[WebServer] [22m  0001_01_01_000000_create_framework_tables [2m[WebServer] [22m.............................................................[2m[WebServer] [22m 31.58ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_01_01_000000_create_arl_schema [2m[WebServer] [22m..................................................................[2m[WebServer] [22m 182.09ms DONE
+[2m[WebServer] [22m  2026_09_01_000000_stage_three_documents [2m[WebServer] [22m...............................................................[2m[WebServer] [22m 62.36ms DONE
+[2m[WebServer] [22m  2026_09_01_010000_stage_four_finalization_reports [2m[WebServer] [22m.....................................................[2m[WebServer] [22m 65.06ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_01_020000_stage_five_finance [2m[WebServer] [22m..................................................................[2m[WebServer] [22m 13.85ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_01_030000_stage_six_relationship [2m[WebServer] [22m..............................................................[2m[WebServer] [22m 45.92ms DONE
+[2m[WebServer] [22m  2026_09_01_040000_stage_seven_admin [2m[WebServer] [22m....................................................................[2m[WebServer] [22m 8.12ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_02_000000_stage_eight_infrastructure [2m[WebServer] [22m...........................................................[2m[WebServer] [22m 9.03ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_04_000000_allow_partial_payments [2m[WebServer] [22m...............................................................[2m[WebServer] [22m 5.50ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_05_010000_add_reopen_tracking_to_service_orders [2m[WebServer] [22m...............................................[2m[WebServer] [22m 46.00ms DONE
+[2m[WebServer] [22m  2026_09_05_090000_expand_new_order_catalogs [2m[WebServer] [22m...........................................................[2m[WebServer] [22m 92.70ms DONE
+[2m[WebServer] [22m  2026_09_05_120000_replace_checklist_with_fixed_presets [2m[WebServer] [22m...............................................[2m[WebServer] [22m 239.76ms DONE
+[2m[WebServer] [22m  2026_09_05_140000_add_final_report_to_service_orders [2m[WebServer] [22m...................................................[2m[WebServer] [22m 2.90ms DONE
+[2m[WebServer] [22m  2026_09_05_150000_add_soft_deletes_to_service_orders [2m[WebServer] [22m...................................................[2m[WebServer] [22m 3.12ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_05_160000_add_manual_equipment_description [2m[WebServer] [22m.....................................................[2m[WebServer] [22m 6.24ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_06_170000_normalize_service_order_statuses [2m[WebServer] [22m.....................................................[2m[WebServer] [22m 0.03ms DONE
+[2m[WebServer] [22m  2026_09_06_190000_create_final_share_tokens_table [2m[WebServer] [22m.....................................................[2m[WebServer] [22m 10.30ms DONE
+[2m[WebServer] [22m  2026_09_08_000000_add_lgpd_to_term_template [2m[WebServer] [22m............................................................[2m[WebServer] [22m 0.31ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_09_000000_create_financial_expenses_table [2m[WebServer] [22m......................................................[2m[WebServer] [22m 6.05ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_10_000000_add_soft_deletes_to_budgets [2m[WebServer] [22m..........................................................[2m[WebServer] [22m 5.79ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_11_000000_add_reason_to_status_history [2m[WebServer] [22m.........................................................[2m[WebServer] [22m 3.83ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_11_010000_ensure_operational_roles [2m[WebServer] [22m.............................................................[2m[WebServer] [22m 6.85ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_11_020000_create_service_order_refunds_table [2m[WebServer] [22m..................................................[2m[WebServer] [22m 11.21ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_12_000000_add_intake_condition_to_service_orders [2m[WebServer] [22m...............................................[2m[WebServer] [22m 3.41ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_13_010000_add_equipment_details_to_service_orders [2m[WebServer] [22m..............................................[2m[WebServer] [22m 3.40ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_13_020000_add_interruption_work_done_to_service_orders [2m[WebServer] [22m.........................................[2m[WebServer] [22m 3.23ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_13_030000_add_sidebar_pinned_to_users [2m[WebServer] [22m..........................................................[2m[WebServer] [22m 3.34ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_13_040000_enforce_sidebar_pinned_boolean [2m[WebServer] [22m......................................................[2m[WebServer] [22m 18.95ms DONE
+[2m[WebServer] [22m  2026_09_19_000000_add_category_to_financial_expenses_table [2m[WebServer] [22m.............................................[2m[WebServer] [22m 6.16ms DONE
+[2m[WebServer] [22m  2026_09_19_000000_add_stock_quantity_to_service_catalog [2m[WebServer] [22m................................................[2m[WebServer] [22m 2.97ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_19_010000_create_stock_movements [2m[WebServer] [22m..............................................................[2m[WebServer] [22m 19.56ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_20_000000_make_secondary_client_address_fields_nullable [2m[WebServer] [22m.......................................[2m[WebServer] [22m 24.03ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_21_090000_secure_final_share_tokens [2m[WebServer] [22m...........................................................[2m[WebServer] [22m 39.23ms DONE
+[2m[WebServer] [22m  2026_09_23_000000_add_closing_reference_to_service_orders [2m[WebServer] [22m.............................................[2m[WebServer] [22m 42.93ms DONE
+[2m[WebServer] [22m  2026_09_24_000000_add_nickname_to_clients_table [2m[WebServer] [22m........................................................[2m[WebServer] [22m 3.29ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_24_010000_add_free_price_to_service_catalog_table [2m[WebServer] [22m..............................................[2m[WebServer] [22m 3.23ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_09_29_000000_add_system_password_to_service_orders [2m[WebServer] [22m................................................[2m[WebServer] [22m 3.00ms DONE
+[2m[WebServer] [22m  2026_10_02_020000_create_budget_share_tokens_table [2m[WebServer] [22m.....................................................[2m[WebServer] [22m 8.01ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_10_02_100000_create_supplier_purchases [2m[WebServer] [22m...........................................................[2m[WebServer] [22m 42.79ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_10_02_120000_add_supplier_payables_and_invoices [2m[WebServer] [22m..................................................[2m[WebServer] [22m 26.87ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_10_03_000000_create_expense_control [2m[WebServer] [22m..............................................................[2m[WebServer] [22m 48.99ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_10_03_010000_add_expense_institution_artwork [2m[WebServer] [22m......................................................[2m[WebServer] [22m 6.48ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_10_03_020000_create_expense_photo_imports [2m[WebServer] [22m.........................................................[2m[WebServer] [22m 7.67ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_10_03_030000_create_expense_photo_reads [2m[WebServer] [22m..........................................................[2m[WebServer] [22m 11.25ms DONE
+[2m[WebServer] [22m  2026_10_03_040000_add_household_institution_type [2m[WebServer] [22m......................................................[2m[WebServer] [22m 19.94ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_10_03_070000_extend_supplier_workspace [2m[WebServer] [22m...........................................................[2m[WebServer] [22m 38.24ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_10_03_170000_add_deleted_at_to_expense_catalogs [2m[WebServer] [22m...................................................[2m[WebServer] [22m 6.57ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m  2026_10_09_105900_add_simple_admin_expense_access [2m[WebServer] [22m......................................................[2m[WebServer] [22m 6.96ms[2m[WebServer] [22m DONE
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m   INFO  Seeding database.
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m   INFO  Seeding database.
+[2m[WebServer] [22m
+[WebServer] [Mon Oct 12 15:40:54 2026] PHP 8.4.25 Development Server (http://127.0.0.1:8032) started
+[WebServer] [Mon Oct 12 15:40:54 2026] 127.0.0.1:55365 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:40:54 2026] 127.0.0.1:55365 [GET] URI: /up
+[WebServer] [Mon Oct 12 15:40:55 2026] 127.0.0.1:55365 Closing
+
+Running 5 tests using 1 worker
+
+(node:222000) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:222000) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55366 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:40:56 2026] 127.0.0.1:55366 [GET] URI: /
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55366 Closing
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55367 Accepted
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55367 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55368 Accepted
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55369 Accepted
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55368 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55369 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55367 Closing
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55368 Closing
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55369 Closing
+[WebServer] [Mon Oct 12 15:40:56 2026] 127.0.0.1:55370 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:40:56 2026] 127.0.0.1:55370 [POST] URI: /login
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55370 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55371 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:40:57 2026] 127.0.0.1:55371 [GET] URI: /
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55371 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55372 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55373 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55372 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55374 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55375 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55376 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55372 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55377 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55373 [200]: GET /build/assets/brand2026-access-CjT1IdEb.css
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55378 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55374 [200]: GET /build/assets/new-order-search-BMjHuotZ.css
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55375 [200]: GET /build/assets/main-B4keWwWw.css
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55376 [200]: GET /build/assets/mobile-home-m593wBba.css
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55377 [200]: GET /build/assets/brand2026-z0o0XJzq.css
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55378 [200]: GET /build/assets/action-buttons-sfvCbFBd.css
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55373 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55374 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55376 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55377 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55379 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55375 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55378 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55380 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55381 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55382 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55383 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55379 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55380 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55381 [200]: GET /build/assets/brand2026-CzEiG9xo.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55384 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55382 [200]: GET /build/assets/react-ownership-D_a0zXwh.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55383 [200]: GET /build/assets/brand2026-access-Cr2PXfD6.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55384 [200]: GET /build/assets/client-search-Dv4aqmlb.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55379 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55385 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55380 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55381 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55386 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55382 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55383 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55385 [200]: GET /build/assets/order-maintenance-D7dRZ3wR.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55384 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55387 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55385 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55388 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55389 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55386 [200]: GET /build/assets/order-workflow-uW1kun86.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55390 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55387 [200]: GET /build/assets/new-order-search-C_TkjTEB.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55391 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55388 [200]: GET /build/assets/opening-whatsapp-Dbb-R6Jj.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55389 [200]: GET /build/assets/completion-polish-BpL8sqy0.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55390 [200]: GET /build/assets/createLucideIcon-0rr9TlA-.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55391 [200]: GET /build/assets/eye-KmUKPu9F.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55386 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55392 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55387 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55393 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55392 [200]: GET /build/assets/record-management-CHv9Eoe3.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55388 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55389 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55394 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55390 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55391 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55392 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55395 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55396 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55393 [200]: GET /build/assets/ui-final-polish-D1DH92Bq.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55394 [200]: GET /build/assets/ui-regression-guard-BJfvsJTK.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55397 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55398 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55395 [200]: GET /build/assets/main-C6PKGS3H.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55393 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55396 [200]: GET /build/assets/mobile-home-BFKIcNr8.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55397 [200]: GET /build/assets/order-reopened-DP_XlAb7.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55394 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55399 Accepted
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55398 [200]: GET /build/assets/page-isolation-xi0G7lYe.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55399 [200]: GET /build/assets/official-icons-ubo4fiHD.js
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55395 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55396 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55397 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55398 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55399 Closing
+[WebServer] [Mon Oct 12 15:40:57 2026] 127.0.0.1:55401 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:40:57 2026] 127.0.0.1:55401 [GET] URI: /api/settings/logo/menu
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55401 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55403 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55404 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:40:58 2026] 127.0.0.1:55403 [GET] URI: /api/notifications
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55403 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55405 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:40:58 2026] 127.0.0.1:55404 [GET] URI: /api/me
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55404 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55405 [200]: GET /arl-assets/arl.svg
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55405 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55406 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55407 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55408 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55409 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55406 [200]: GET /build/assets/dashboard-page-DZThyHJv.js
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55410 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55407 [200]: GET /build/assets/order-list-components-DpeDTdaX.js
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55408 [200]: GET /build/assets/rotate-ccw-NB04MDbD.js
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55411 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55409 [200]: GET /build/assets/pencil-EQ0FD68u.js
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55410 [200]: GET /build/assets/trash-2-C5aHL4IU.js
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55411 [200]: GET /build/assets/search-8Mi2h4VH.js
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55406 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55412 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55407 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55408 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55413 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55409 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55410 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55411 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55414 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55412 [200]: GET /build/assets/wrench-DvOhkZXY.js
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55412 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55413 [200]: GET /build/assets/circle-check-DBOU6X3V.js
+[2m[WebServer] [22m[Mon Oct 12 14:40:58 2026] 127.0.0.1:55414 [GET] URI: /api/navigation-summary
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55414 Closing
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55415 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55416 Accepted
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55415 [200]: GET /sw.js
+[WebServer] [Mon Oct 12 15:40:58 2026] 127.0.0.1:55413 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:40:58 2026] 127.0.0.1:55416 [POST] URI: /api/expense-control/catalogs/institutions
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55416 Closing
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55438 Accepted
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55439 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:40:59 2026] 127.0.0.1:55438 [GET] URI: /api/orders/desk
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55438 Closing
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55415 Closing
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55440 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:40:59 2026] 127.0.0.1:55439 [GET] URI: /api/orders
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55439 Closing
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55441 Accepted
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55440 [200]: GET /manifest.webmanifest
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55442 Accepted
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55441 [200]: GET /arl-assets/icons/icon-192.png
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55443 Accepted
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55442 [200]: GET /arl-assets/icons/icon-512.png
+[2m[WebServer] [22m[Mon Oct 12 14:40:59 2026] 127.0.0.1:55443 [POST] URI: /api/expense-control/catalogs/types
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55443 Closing
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55440 Closing
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55444 Accepted
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55441 Closing
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55444 [200]: GET /arl-assets/icons/icon-maskable-512.png
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55442 Closing
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55444 Closing
+[WebServer] [Mon Oct 12 15:40:59 2026] 127.0.0.1:55445 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:40:59 2026] 127.0.0.1:55445 [POST] URI: /api/expense-control/catalogs/types
+[WebServer] [Mon Oct 12 15:41:00 2026] 127.0.0.1:55445 Closing
+[WebServer] [Mon Oct 12 15:41:00 2026] 127.0.0.1:55446 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:00 2026] 127.0.0.1:55446 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:00 2026] 127.0.0.1:55446 Closing
+[WebServer] [Mon Oct 12 15:41:00 2026] 127.0.0.1:55447 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:00 2026] 127.0.0.1:55447 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:00 2026] 127.0.0.1:55447 Closing
+[WebServer] [Mon Oct 12 15:41:00 2026] 127.0.0.1:55448 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:00 2026] 127.0.0.1:55448 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:00 2026] 127.0.0.1:55448 Closing
+[WebServer] [Mon Oct 12 15:41:00 2026] 127.0.0.1:55449 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:00 2026] 127.0.0.1:55449 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55449 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55450 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:01 2026] 127.0.0.1:55450 [POST] URI: /api/expense-control/operations
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55450 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55451 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:01 2026] 127.0.0.1:55451 [GET] URI: /expense-control
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55451 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55452 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55452 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55453 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55454 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55453 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55455 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55454 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55452 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55456 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55457 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55453 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55458 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55454 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55455 [200]: GET /build/assets/brand2026-access-CjT1IdEb.css
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55455 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55456 [200]: GET /build/assets/new-order-search-BMjHuotZ.css
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55457 [200]: GET /build/assets/main-B4keWwWw.css
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55459 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55460 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55456 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55457 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55458 [200]: GET /build/assets/mobile-home-m593wBba.css
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55461 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55458 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55462 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55459 [200]: GET /build/assets/brand2026-z0o0XJzq.css
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55460 [200]: GET /build/assets/action-buttons-sfvCbFBd.css
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55461 [200]: GET /build/assets/brand2026-CzEiG9xo.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55463 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55462 [200]: GET /build/assets/react-ownership-D_a0zXwh.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55464 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55463 [200]: GET /build/assets/brand2026-access-Cr2PXfD6.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55459 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55465 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55464 [200]: GET /build/assets/client-search-Dv4aqmlb.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55460 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55461 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55466 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55465 [200]: GET /build/assets/order-maintenance-D7dRZ3wR.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55462 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55467 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55466 [200]: GET /build/assets/order-workflow-uW1kun86.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55463 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55468 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55467 [200]: GET /build/assets/new-order-search-C_TkjTEB.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55464 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55469 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55468 [200]: GET /build/assets/opening-whatsapp-Dbb-R6Jj.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55465 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55470 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55466 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55471 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55469 [200]: GET /build/assets/completion-polish-BpL8sqy0.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55467 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55472 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55468 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55470 [200]: GET /build/assets/createLucideIcon-0rr9TlA-.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55471 [200]: GET /build/assets/eye-KmUKPu9F.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55469 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55473 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55474 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55470 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55471 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55475 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55472 [200]: GET /build/assets/record-management-CHv9Eoe3.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55472 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55476 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55473 [200]: GET /build/assets/ui-final-polish-D1DH92Bq.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55474 [200]: GET /build/assets/ui-regression-guard-BJfvsJTK.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55475 [200]: GET /build/assets/main-C6PKGS3H.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55477 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55476 [200]: GET /build/assets/mobile-home-BFKIcNr8.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55478 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55477 [200]: GET /build/assets/order-reopened-DP_XlAb7.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55473 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55479 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55478 [200]: GET /build/assets/page-isolation-xi0G7lYe.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55474 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55475 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55479 [200]: GET /build/assets/official-icons-ubo4fiHD.js
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55476 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55477 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55478 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55479 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55480 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:01 2026] 127.0.0.1:55480 [GET] URI: /api/settings/logo/menu
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55480 Closing
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55481 Accepted
+[WebServer] [Mon Oct 12 15:41:01 2026] 127.0.0.1:55482 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:01 2026] 127.0.0.1:55481 [GET] URI: /api/notifications
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55481 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55483 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:02 2026] 127.0.0.1:55482 [GET] URI: /api/me
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55482 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55483 [200]: GET /arl-assets/arl.svg
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55483 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55489 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55490 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55491 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55489 [200]: GET /build/assets/expense-control-page-BTN1fNXP.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55492 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55493 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55494 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55489 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55490 [200]: GET /build/assets/order-popup-wl62ohKB.css
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55495 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55491 [200]: GET /build/assets/order-popup-aDvZgPF3.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55492 [200]: GET /build/assets/trending-up-D3hJoMv6.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55493 [200]: GET /build/assets/chevron-right-B3J_LGmc.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55494 [200]: GET /build/assets/finance-date-UmYM321Y.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55495 [200]: GET /build/assets/expense-control-page-BIgIAAwN.css
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55490 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55491 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55492 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55493 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55494 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55496 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55495 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55497 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55498 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55499 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55500 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55496 [200]: GET /build/assets/receipt-text-C_WTHr40.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55497 [200]: GET /build/assets/calendar-days-CrMA2p04.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55498 [200]: GET /build/assets/money-input-CtDije2G.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55499 [200]: GET /build/assets/arrow-left-BT4EXKUx.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55500 [200]: GET /build/assets/camera-B1yqq5mj.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55501 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55501 [200]: GET /build/assets/history-RMXz_-lU.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55496 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55502 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55497 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55498 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55499 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55500 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55503 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55501 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55504 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55505 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55502 [200]: GET /build/assets/search-8Mi2h4VH.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55503 [200]: GET /build/assets/pencil-EQ0FD68u.js
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55504 [200]: GET /build/assets/trash-2-C5aHL4IU.js
+[2m[WebServer] [22m[Mon Oct 12 14:41:02 2026] 127.0.0.1:55505 [GET] URI: /api/navigation-summary
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55505 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55502 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55503 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55504 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55506 Accepted
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55507 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:02 2026] 127.0.0.1:55506 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55506 Closing
+[WebServer] [Mon Oct 12 15:41:02 2026] 127.0.0.1:55508 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:02 2026] 127.0.0.1:55507 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:03 2026] 127.0.0.1:55507 Closing
+[WebServer] [Mon Oct 12 15:41:03 2026] 127.0.0.1:55509 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:03 2026] 127.0.0.1:55508 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:03 2026] 127.0.0.1:55508 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:03 2026] 127.0.0.1:55509 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:03 2026] 127.0.0.1:55509 Closing
+[WebServer] [Mon Oct 12 15:41:03 2026] 127.0.0.1:55531 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:03 2026] 127.0.0.1:55531 [GET] URI: /api/expense-control/monthly-statement
+[WebServer] [Mon Oct 12 15:41:04 2026] 127.0.0.1:55531 Closing
+[WebServer] [Mon Oct 12 15:41:04 2026] 127.0.0.1:55532 Accepted
+[WebServer] [Mon Oct 12 15:41:04 2026] 127.0.0.1:55532 [200]: GET /sw.js
+[WebServer] [Mon Oct 12 15:41:04 2026] 127.0.0.1:55532 Closing
+  x  1 [desktop-chromium] › tests\e2e\expense-monthly-final.spec.ts:3:1 › fatura final desktop: categorias, PDFs, CSRF, partes e mês quitado (8.1s)
+(node:183316) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:183316) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56878 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:06 2026] 127.0.0.1:56878 [GET] URI: /
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56878 Closing
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56879 Accepted
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56880 Accepted
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56881 Accepted
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56879 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56880 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56881 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56879 Closing
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56880 Closing
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56881 Closing
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56882 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:06 2026] 127.0.0.1:56882 [POST] URI: /login
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56882 Closing
+[WebServer] [Mon Oct 12 15:41:06 2026] 127.0.0.1:56884 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:06 2026] 127.0.0.1:56884 [GET] URI: /
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56884 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56885 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56885 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56886 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56887 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56888 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56885 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56889 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56890 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56886 [200]: GET /build/assets/brand2026-access-CjT1IdEb.css
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56887 [200]: GET /build/assets/new-order-search-BMjHuotZ.css
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56888 [200]: GET /build/assets/main-B4keWwWw.css
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56891 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56889 [200]: GET /build/assets/mobile-home-m593wBba.css
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56890 [200]: GET /build/assets/brand2026-z0o0XJzq.css
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56891 [200]: GET /build/assets/action-buttons-sfvCbFBd.css
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56886 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56892 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56887 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56893 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56892 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56888 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56889 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56890 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56894 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56891 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56892 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56895 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56893 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56896 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56897 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56893 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56898 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56894 [200]: GET /build/assets/brand2026-CzEiG9xo.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56899 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56895 [200]: GET /build/assets/react-ownership-D_a0zXwh.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56896 [200]: GET /build/assets/brand2026-access-Cr2PXfD6.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56897 [200]: GET /build/assets/client-search-Dv4aqmlb.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56898 [200]: GET /build/assets/order-maintenance-D7dRZ3wR.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56899 [200]: GET /build/assets/order-workflow-uW1kun86.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56894 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56895 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56900 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56896 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56897 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56898 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56899 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56901 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56902 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56903 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56904 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56905 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56900 [200]: GET /build/assets/new-order-search-C_TkjTEB.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56901 [200]: GET /build/assets/opening-whatsapp-Dbb-R6Jj.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56902 [200]: GET /build/assets/completion-polish-BpL8sqy0.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56903 [200]: GET /build/assets/createLucideIcon-0rr9TlA-.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56904 [200]: GET /build/assets/eye-KmUKPu9F.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56905 [200]: GET /build/assets/record-management-CHv9Eoe3.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56900 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56907 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56901 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56902 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56904 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56903 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56905 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56908 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56909 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56910 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56907 [200]: GET /build/assets/ui-final-polish-D1DH92Bq.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56911 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56908 [200]: GET /build/assets/ui-regression-guard-BJfvsJTK.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56912 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56909 [200]: GET /build/assets/main-C6PKGS3H.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56907 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56913 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56910 [200]: GET /build/assets/mobile-home-BFKIcNr8.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56911 [200]: GET /build/assets/order-reopened-DP_XlAb7.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56912 [200]: GET /build/assets/page-isolation-xi0G7lYe.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56913 [200]: GET /build/assets/official-icons-ubo4fiHD.js
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56908 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56909 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56910 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56911 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56912 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56913 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56914 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:07 2026] 127.0.0.1:56914 [GET] URI: /api/settings/logo/menu
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56914 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56916 Accepted
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56917 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:07 2026] 127.0.0.1:56916 [GET] URI: /api/notifications
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56916 Closing
+[WebServer] [Mon Oct 12 15:41:07 2026] 127.0.0.1:56918 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:07 2026] 127.0.0.1:56917 [GET] URI: /api/me
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56917 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56918 [200]: GET /arl-assets/arl.svg
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56918 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56919 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56920 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56921 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56922 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56919 [200]: GET /build/assets/dashboard-page-DZThyHJv.js
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56923 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56924 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56919 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56920 [200]: GET /build/assets/order-list-components-DpeDTdaX.js
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56921 [200]: GET /build/assets/rotate-ccw-NB04MDbD.js
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56922 [200]: GET /build/assets/pencil-EQ0FD68u.js
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56923 [200]: GET /build/assets/trash-2-C5aHL4IU.js
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56924 [200]: GET /build/assets/search-8Mi2h4VH.js
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56925 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56925 [200]: GET /build/assets/wrench-DvOhkZXY.js
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56920 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56926 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56921 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56922 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56923 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56924 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56927 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56925 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56926 [200]: GET /build/assets/circle-check-DBOU6X3V.js
+[2m[WebServer] [22m[Mon Oct 12 14:41:08 2026] 127.0.0.1:56927 [GET] URI: /api/navigation-summary
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56927 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56928 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56929 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56928 [200]: GET /sw.js
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56926 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:08 2026] 127.0.0.1:56929 [POST] URI: /api/expense-control/catalogs/institutions
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56929 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56930 Accepted
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56931 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:08 2026] 127.0.0.1:56930 [GET] URI: /api/orders/desk
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56930 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56928 Closing
+[WebServer] [Mon Oct 12 15:41:08 2026] 127.0.0.1:56932 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:08 2026] 127.0.0.1:56931 [GET] URI: /api/orders
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56931 Closing
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56933 Accepted
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56932 [200]: GET /manifest.webmanifest
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56934 Accepted
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56933 [200]: GET /arl-assets/icons/icon-192.png
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56935 Accepted
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56934 [200]: GET /arl-assets/icons/icon-512.png
+[2m[WebServer] [22m[Mon Oct 12 14:41:09 2026] 127.0.0.1:56935 [POST] URI: /api/expense-control/catalogs/types
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56935 Closing
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56932 Closing
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:53888 Accepted
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56933 Closing
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:53888 [200]: GET /arl-assets/icons/icon-maskable-512.png
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:56934 Closing
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:53888 Closing
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:53889 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:09 2026] 127.0.0.1:53889 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:53889 Closing
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:53890 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:09 2026] 127.0.0.1:53890 [GET] URI: /api/expense-control/debts/5/person-payment
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:53890 Closing
+[WebServer] [Mon Oct 12 15:41:09 2026] 127.0.0.1:53891 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:09 2026] 127.0.0.1:53891 [POST] URI: /api/expense-control/debts/5/person-payment
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53891 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53892 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:10 2026] 127.0.0.1:53892 [GET] URI: /api/expense-control/debts/5
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53892 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53893 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:10 2026] 127.0.0.1:53893 [GET] URI: /expense-control
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53893 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53894 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53894 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53895 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53896 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53895 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53897 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53894 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53898 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53899 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53895 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53896 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53896 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53897 [200]: GET /build/assets/brand2026-access-CjT1IdEb.css
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53897 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53900 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53901 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53898 [200]: GET /build/assets/new-order-search-BMjHuotZ.css
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53902 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53899 [200]: GET /build/assets/main-B4keWwWw.css
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53900 [200]: GET /build/assets/mobile-home-m593wBba.css
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53901 [200]: GET /build/assets/brand2026-z0o0XJzq.css
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53903 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53902 [200]: GET /build/assets/action-buttons-sfvCbFBd.css
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53903 [200]: GET /build/assets/brand2026-CzEiG9xo.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53898 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53904 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53900 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53901 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53905 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53904 [200]: GET /build/assets/react-ownership-D_a0zXwh.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53899 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53902 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53906 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53903 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53904 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53907 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53908 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53909 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53905 [200]: GET /build/assets/brand2026-access-Cr2PXfD6.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53910 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53906 [200]: GET /build/assets/client-search-Dv4aqmlb.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53907 [200]: GET /build/assets/order-maintenance-D7dRZ3wR.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53908 [200]: GET /build/assets/order-workflow-uW1kun86.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53909 [200]: GET /build/assets/new-order-search-C_TkjTEB.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53910 [200]: GET /build/assets/opening-whatsapp-Dbb-R6Jj.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53905 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53906 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53907 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53908 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53909 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53910 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53911 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53912 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53913 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53914 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53915 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53916 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53911 [200]: GET /build/assets/completion-polish-BpL8sqy0.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53912 [200]: GET /build/assets/createLucideIcon-0rr9TlA-.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53913 [200]: GET /build/assets/eye-KmUKPu9F.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53914 [200]: GET /build/assets/record-management-CHv9Eoe3.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53915 [200]: GET /build/assets/ui-final-polish-D1DH92Bq.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53916 [200]: GET /build/assets/ui-regression-guard-BJfvsJTK.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53911 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53913 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53914 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53915 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53916 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53912 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53917 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53918 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53919 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53920 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53921 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53917 [200]: GET /build/assets/main-C6PKGS3H.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53918 [200]: GET /build/assets/mobile-home-BFKIcNr8.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53919 [200]: GET /build/assets/order-reopened-DP_XlAb7.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53920 [200]: GET /build/assets/page-isolation-xi0G7lYe.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53921 [200]: GET /build/assets/official-icons-ubo4fiHD.js
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53917 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53918 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53919 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53920 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53921 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53922 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:10 2026] 127.0.0.1:53922 [GET] URI: /api/settings/logo/menu
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53922 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53923 Accepted
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53924 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:10 2026] 127.0.0.1:53923 [GET] URI: /api/notifications
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53923 Closing
+[WebServer] [Mon Oct 12 15:41:10 2026] 127.0.0.1:53925 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:10 2026] 127.0.0.1:53924 [GET] URI: /api/me
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53924 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53925 [200]: GET /arl-assets/arl.svg
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53925 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53926 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53927 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53928 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53926 [200]: GET /build/assets/expense-control-page-BTN1fNXP.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53929 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53930 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53931 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53926 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53927 [200]: GET /build/assets/order-popup-wl62ohKB.css
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53928 [200]: GET /build/assets/order-popup-aDvZgPF3.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53929 [200]: GET /build/assets/trending-up-D3hJoMv6.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53930 [200]: GET /build/assets/chevron-right-B3J_LGmc.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53931 [200]: GET /build/assets/finance-date-UmYM321Y.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53932 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53932 [200]: GET /build/assets/expense-control-page-BIgIAAwN.css
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53927 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53933 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53928 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53929 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53930 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53931 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53934 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53932 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53935 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53936 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53937 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53933 [200]: GET /build/assets/receipt-text-C_WTHr40.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53934 [200]: GET /build/assets/calendar-days-CrMA2p04.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53935 [200]: GET /build/assets/money-input-CtDije2G.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53936 [200]: GET /build/assets/arrow-left-BT4EXKUx.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53937 [200]: GET /build/assets/camera-B1yqq5mj.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53938 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53938 [200]: GET /build/assets/history-RMXz_-lU.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53933 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53939 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53934 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53935 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53936 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53937 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53938 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53940 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53941 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53942 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53939 [200]: GET /build/assets/search-8Mi2h4VH.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53940 [200]: GET /build/assets/pencil-EQ0FD68u.js
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53941 [200]: GET /build/assets/trash-2-C5aHL4IU.js
+[2m[WebServer] [22m[Mon Oct 12 14:41:11 2026] 127.0.0.1:53942 [GET] URI: /api/navigation-summary
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53942 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53939 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53940 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53941 Closing
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53943 Accepted
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53944 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:11 2026] 127.0.0.1:53943 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:11 2026] 127.0.0.1:53943 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:11 2026] 127.0.0.1:53944 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:12 2026] 127.0.0.1:53944 Closing
+[WebServer] [Mon Oct 12 15:41:12 2026] 127.0.0.1:53945 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:12 2026] 127.0.0.1:53945 [GET] URI: /api/expense-control/person-balances
+[WebServer] [Mon Oct 12 15:41:12 2026] 127.0.0.1:53945 Closing
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53946 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:13 2026] 127.0.0.1:53946 [GET] URI: /api/expense-control/debts/5/person-payment
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53946 Closing
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53947 Accepted
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53947 [200]: GET /sw.js
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53947 Closing
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53948 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:13 2026] 127.0.0.1:53948 [POST] URI: /api/expense-control/debts/5/person-payment
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53948 Closing
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53950 Accepted
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53951 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:13 2026] 127.0.0.1:53950 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53950 Closing
+[WebServer] [Mon Oct 12 15:41:13 2026] 127.0.0.1:53972 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:13 2026] 127.0.0.1:53951 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:14 2026] 127.0.0.1:53951 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:14 2026] 127.0.0.1:53972 [GET] URI: /api/expense-control/debts/5
+[WebServer] [Mon Oct 12 15:41:14 2026] 127.0.0.1:53972 Closing
+[WebServer] [Mon Oct 12 15:41:14 2026] 127.0.0.1:53973 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:14 2026] 127.0.0.1:53973 [GET] URI: /api/expense-control/person-balances
+[WebServer] [Mon Oct 12 15:41:14 2026] 127.0.0.1:53973 Closing
+[WebServer] [Mon Oct 12 15:41:14 2026] 127.0.0.1:53974 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:14 2026] 127.0.0.1:53974 [GET] URI: /api/expense-control/debts/5/person-payment
+[WebServer] [Mon Oct 12 15:41:15 2026] 127.0.0.1:53974 Closing
+[WebServer] [Mon Oct 12 15:41:15 2026] 127.0.0.1:53976 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:15 2026] 127.0.0.1:53976 [POST] URI: /api/expense-control/debts/5/person-payment
+[WebServer] [Mon Oct 12 15:41:15 2026] 127.0.0.1:53976 Closing
+[WebServer] [Mon Oct 12 15:41:15 2026] 127.0.0.1:53977 Accepted
+[WebServer] [Mon Oct 12 15:41:15 2026] 127.0.0.1:53978 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:15 2026] 127.0.0.1:53977 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:15 2026] 127.0.0.1:53977 Closing
+[WebServer] [Mon Oct 12 15:41:15 2026] 127.0.0.1:53979 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:15 2026] 127.0.0.1:53978 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:16 2026] 127.0.0.1:53978 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:16 2026] 127.0.0.1:53979 [GET] URI: /api/expense-control/debts/5
+[WebServer] [Mon Oct 12 15:41:16 2026] 127.0.0.1:53979 Closing
+[WebServer] [Mon Oct 12 15:41:16 2026] 127.0.0.1:53980 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:16 2026] 127.0.0.1:53980 [GET] URI: /api/expense-control/person-balances
+[WebServer] [Mon Oct 12 15:41:16 2026] 127.0.0.1:53980 Closing
+[WebServer] [Mon Oct 12 15:41:16 2026] 127.0.0.1:53982 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:16 2026] 127.0.0.1:53982 [GET] URI: /api/expense-control/debts/5/person-payment
+[WebServer] [Mon Oct 12 15:41:16 2026] 127.0.0.1:53982 Closing
+[WebServer] [Mon Oct 12 15:41:17 2026] 127.0.0.1:53983 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:17 2026] 127.0.0.1:53983 [POST] URI: /api/expense-control/debts/5/person-payment
+[WebServer] [Mon Oct 12 15:41:17 2026] 127.0.0.1:53983 Closing
+[WebServer] [Mon Oct 12 15:41:17 2026] 127.0.0.1:53984 Accepted
+[WebServer] [Mon Oct 12 15:41:17 2026] 127.0.0.1:53985 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:17 2026] 127.0.0.1:53984 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:17 2026] 127.0.0.1:53984 Closing
+[WebServer] [Mon Oct 12 15:41:17 2026] 127.0.0.1:53986 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:17 2026] 127.0.0.1:53985 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:17 2026] 127.0.0.1:53985 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:17 2026] 127.0.0.1:53986 [GET] URI: /api/expense-control/debts/5
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53986 Closing
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53987 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:18 2026] 127.0.0.1:53987 [GET] URI: /api/expense-control/debts/5
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53987 Closing
+  ok 2 [desktop-chromium] › tests\e2e\expense-quick-payment-scenario.ts:4:3 › pagamento rápido: mês, valor parcial, saldo total, CSRF e preservação da outra parte (12.3s)
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53988 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:18 2026] 127.0.0.1:53988 [GET] URI: /
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53988 Closing
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53989 Accepted
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53989 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53990 Accepted
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53991 Accepted
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53990 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53991 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53989 Closing
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53990 Closing
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53991 Closing
+[WebServer] [Mon Oct 12 15:41:18 2026] 127.0.0.1:53992 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:18 2026] 127.0.0.1:53992 [POST] URI: /login
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:53992 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54014 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:19 2026] 127.0.0.1:54014 [GET] URI: /
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54014 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54015 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54016 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54017 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54018 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54019 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54015 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54020 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54015 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54016 [200]: GET /build/assets/brand2026-access-CjT1IdEb.css
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54017 [200]: GET /build/assets/new-order-search-BMjHuotZ.css
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54016 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54018 [200]: GET /build/assets/main-B4keWwWw.css
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54019 [200]: GET /build/assets/mobile-home-m593wBba.css
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54020 [200]: GET /build/assets/brand2026-z0o0XJzq.css
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54017 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54021 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54022 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54018 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54019 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54023 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54020 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54021 [200]: GET /build/assets/action-buttons-sfvCbFBd.css
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54024 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54022 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54023 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54025 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54024 [200]: GET /build/assets/brand2026-CzEiG9xo.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54026 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54025 [200]: GET /build/assets/react-ownership-D_a0zXwh.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54021 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54027 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54026 [200]: GET /build/assets/brand2026-access-Cr2PXfD6.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54022 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54023 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54028 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54027 [200]: GET /build/assets/client-search-Dv4aqmlb.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54024 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54029 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54028 [200]: GET /build/assets/order-maintenance-D7dRZ3wR.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54025 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54030 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54029 [200]: GET /build/assets/order-workflow-uW1kun86.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54026 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54031 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54030 [200]: GET /build/assets/new-order-search-C_TkjTEB.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54027 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54032 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54031 [200]: GET /build/assets/opening-whatsapp-Dbb-R6Jj.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54028 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54034 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54032 [200]: GET /build/assets/completion-polish-BpL8sqy0.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54029 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54035 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54034 [200]: GET /build/assets/createLucideIcon-0rr9TlA-.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54030 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54036 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54035 [200]: GET /build/assets/eye-KmUKPu9F.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54031 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54037 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54036 [200]: GET /build/assets/record-management-CHv9Eoe3.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54032 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54038 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54037 [200]: GET /build/assets/ui-final-polish-D1DH92Bq.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54039 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54038 [200]: GET /build/assets/ui-regression-guard-BJfvsJTK.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54034 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54035 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54040 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54039 [200]: GET /build/assets/main-C6PKGS3H.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54036 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54041 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54037 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54042 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54040 [200]: GET /build/assets/mobile-home-BFKIcNr8.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54041 [200]: GET /build/assets/order-reopened-DP_XlAb7.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54038 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54043 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54042 [200]: GET /build/assets/page-isolation-xi0G7lYe.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54039 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54043 [200]: GET /build/assets/official-icons-ubo4fiHD.js
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54040 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54041 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54042 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54043 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54044 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:19 2026] 127.0.0.1:54044 [GET] URI: /api/settings/logo/menu
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54044 Closing
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54046 Accepted
+[WebServer] [Mon Oct 12 15:41:19 2026] 127.0.0.1:54047 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:19 2026] 127.0.0.1:54046 [GET] URI: /api/notifications
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54046 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54048 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:20 2026] 127.0.0.1:54047 [GET] URI: /api/me
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54047 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54048 [200]: GET /arl-assets/arl.svg
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54048 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54049 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54050 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54051 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54052 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54049 [200]: GET /build/assets/dashboard-page-DZThyHJv.js
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54053 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54054 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54049 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54050 [200]: GET /build/assets/order-list-components-DpeDTdaX.js
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54051 [200]: GET /build/assets/rotate-ccw-NB04MDbD.js
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54052 [200]: GET /build/assets/pencil-EQ0FD68u.js
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54053 [200]: GET /build/assets/trash-2-C5aHL4IU.js
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54054 [200]: GET /build/assets/search-8Mi2h4VH.js
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54055 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54055 [200]: GET /build/assets/wrench-DvOhkZXY.js
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54050 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54056 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54051 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54052 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54053 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54054 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54055 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54057 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54058 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54056 [200]: GET /build/assets/circle-check-DBOU6X3V.js
+[2m[WebServer] [22m[Mon Oct 12 14:41:20 2026] 127.0.0.1:54057 [GET] URI: /api/navigation-summary
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54057 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54058 [200]: GET /sw.js
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54059 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:20 2026] 127.0.0.1:54059 [POST] URI: /api/expense-control/catalogs/institutions
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54059 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54056 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54060 Accepted
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54058 Closing
+[WebServer] [Mon Oct 12 15:41:20 2026] 127.0.0.1:54061 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:20 2026] 127.0.0.1:54060 [GET] URI: /api/orders/desk
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54060 Closing
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54062 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:21 2026] 127.0.0.1:54061 [GET] URI: /api/orders
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54061 Closing
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54063 Accepted
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54062 [200]: GET /manifest.webmanifest
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54064 Accepted
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54063 [200]: GET /arl-assets/icons/icon-192.png
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54065 Accepted
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54064 [200]: GET /arl-assets/icons/icon-512.png
+[2m[WebServer] [22m[Mon Oct 12 14:41:21 2026] 127.0.0.1:54065 [POST] URI: /api/expense-control/catalogs/types
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54065 Closing
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54062 Closing
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54066 Accepted
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54063 Closing
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54066 [200]: GET /arl-assets/icons/icon-maskable-512.png
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54064 Closing
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54066 Closing
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54067 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:21 2026] 127.0.0.1:54067 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54067 Closing
+[WebServer] [Mon Oct 12 15:41:21 2026] 127.0.0.1:54068 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:21 2026] 127.0.0.1:54068 [GET] URI: /expense-control
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54068 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54069 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54069 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54070 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54071 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54070 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54072 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54071 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54069 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54073 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54074 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54070 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54075 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54071 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54072 [200]: GET /build/assets/brand2026-access-CjT1IdEb.css
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54072 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54073 [200]: GET /build/assets/new-order-search-BMjHuotZ.css
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54073 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54076 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54077 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54074 [200]: GET /build/assets/main-B4keWwWw.css
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54075 [200]: GET /build/assets/mobile-home-m593wBba.css
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54078 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54079 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54074 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54075 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54076 [200]: GET /build/assets/brand2026-z0o0XJzq.css
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54077 [200]: GET /build/assets/action-buttons-sfvCbFBd.css
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54080 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54078 [200]: GET /build/assets/brand2026-CzEiG9xo.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54079 [200]: GET /build/assets/react-ownership-D_a0zXwh.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54081 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54080 [200]: GET /build/assets/brand2026-access-Cr2PXfD6.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54081 [200]: GET /build/assets/client-search-Dv4aqmlb.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54076 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54077 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54082 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54078 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54079 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54083 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54080 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54081 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54084 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54085 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54082 [200]: GET /build/assets/order-maintenance-D7dRZ3wR.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54086 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54083 [200]: GET /build/assets/order-workflow-uW1kun86.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54087 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54084 [200]: GET /build/assets/new-order-search-C_TkjTEB.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54085 [200]: GET /build/assets/opening-whatsapp-Dbb-R6Jj.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54086 [200]: GET /build/assets/completion-polish-BpL8sqy0.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54087 [200]: GET /build/assets/createLucideIcon-0rr9TlA-.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54082 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54088 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54083 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54088 [200]: GET /build/assets/eye-KmUKPu9F.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54084 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54089 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54085 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54086 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54090 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54087 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54088 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54091 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54092 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54089 [200]: GET /build/assets/record-management-CHv9Eoe3.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54093 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54089 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54094 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54090 [200]: GET /build/assets/ui-final-polish-D1DH92Bq.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54091 [200]: GET /build/assets/ui-regression-guard-BJfvsJTK.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54092 [200]: GET /build/assets/main-C6PKGS3H.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54093 [200]: GET /build/assets/mobile-home-BFKIcNr8.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54095 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54094 [200]: GET /build/assets/order-reopened-DP_XlAb7.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54095 [200]: GET /build/assets/page-isolation-xi0G7lYe.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54090 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54096 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54091 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54092 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54093 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54094 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54095 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54096 [200]: GET /build/assets/official-icons-ubo4fiHD.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54096 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54097 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:22 2026] 127.0.0.1:54097 [GET] URI: /api/settings/logo/menu
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54097 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54098 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54099 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:22 2026] 127.0.0.1:54098 [GET] URI: /api/notifications
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54098 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54100 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:22 2026] 127.0.0.1:54099 [GET] URI: /api/me
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54099 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54100 [200]: GET /arl-assets/arl.svg
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54100 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54101 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54102 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54103 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54101 [200]: GET /build/assets/expense-control-page-BTN1fNXP.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54104 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54105 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54106 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54101 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54102 [200]: GET /build/assets/order-popup-wl62ohKB.css
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54107 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54103 [200]: GET /build/assets/order-popup-aDvZgPF3.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54104 [200]: GET /build/assets/trending-up-D3hJoMv6.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54105 [200]: GET /build/assets/chevron-right-B3J_LGmc.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54106 [200]: GET /build/assets/finance-date-UmYM321Y.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54107 [200]: GET /build/assets/expense-control-page-BIgIAAwN.css
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54102 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54103 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54104 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54105 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54106 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54108 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54107 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54109 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54110 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54111 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54112 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54108 [200]: GET /build/assets/receipt-text-C_WTHr40.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54109 [200]: GET /build/assets/calendar-days-CrMA2p04.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54110 [200]: GET /build/assets/money-input-CtDije2G.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54111 [200]: GET /build/assets/arrow-left-BT4EXKUx.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54112 [200]: GET /build/assets/camera-B1yqq5mj.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54113 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54113 [200]: GET /build/assets/history-RMXz_-lU.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54108 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54109 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54110 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54111 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54112 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54113 Closing
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54114 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54115 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54116 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54117 Accepted
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54114 [200]: GET /build/assets/search-8Mi2h4VH.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54115 [200]: GET /build/assets/pencil-EQ0FD68u.js
+[WebServer] [Mon Oct 12 15:41:22 2026] 127.0.0.1:54116 [200]: GET /build/assets/trash-2-C5aHL4IU.js
+[2m[WebServer] [22m[Mon Oct 12 14:41:22 2026] 127.0.0.1:54117 [GET] URI: /api/navigation-summary
+[WebServer] [Mon Oct 12 15:41:23 2026] 127.0.0.1:54117 Closing
+[WebServer] [Mon Oct 12 15:41:23 2026] 127.0.0.1:54114 Closing
+[WebServer] [Mon Oct 12 15:41:23 2026] 127.0.0.1:54115 Closing
+[WebServer] [Mon Oct 12 15:41:23 2026] 127.0.0.1:54116 Closing
+[WebServer] [Mon Oct 12 15:41:23 2026] 127.0.0.1:54118 Accepted
+[WebServer] [Mon Oct 12 15:41:23 2026] 127.0.0.1:54119 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:23 2026] 127.0.0.1:54118 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:23 2026] 127.0.0.1:54118 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:23 2026] 127.0.0.1:54119 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:23 2026] 127.0.0.1:54119 Closing
+[WebServer] [Mon Oct 12 15:41:24 2026] 127.0.0.1:54141 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:24 2026] 127.0.0.1:54141 [GET] URI: /api/expense-control/person-balances
+[WebServer] [Mon Oct 12 15:41:24 2026] 127.0.0.1:54141 Closing
+[WebServer] [Mon Oct 12 15:41:24 2026] 127.0.0.1:54142 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:24 2026] 127.0.0.1:54142 [GET] URI: /api/expense-control/debts/6/person-payment
+[WebServer] [Mon Oct 12 15:41:24 2026] 127.0.0.1:54142 Closing
+[WebServer] [Mon Oct 12 15:41:24 2026] 127.0.0.1:54143 Accepted
+[WebServer] [Mon Oct 12 15:41:24 2026] 127.0.0.1:54143 [200]: GET /sw.js
+[WebServer] [Mon Oct 12 15:41:24 2026] 127.0.0.1:54143 Closing
+[WebServer] [Mon Oct 12 15:41:24 2026] 127.0.0.1:54144 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:24 2026] 127.0.0.1:54144 [POST] URI: /api/expense-control/debts/6/person-payment
+[WebServer] [Mon Oct 12 15:41:25 2026] 127.0.0.1:54144 Closing
+[WebServer] [Mon Oct 12 15:41:25 2026] 127.0.0.1:54145 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:25 2026] 127.0.0.1:54145 [POST] URI: /api/expense-control/debts/6/person-payment
+[WebServer] [Mon Oct 12 15:41:25 2026] 127.0.0.1:54145 Closing
+[WebServer] [Mon Oct 12 15:41:25 2026] 127.0.0.1:54146 Accepted
+[WebServer] [Mon Oct 12 15:41:25 2026] 127.0.0.1:54147 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:25 2026] 127.0.0.1:54146 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:25 2026] 127.0.0.1:54146 Closing
+[WebServer] [Mon Oct 12 15:41:25 2026] 127.0.0.1:54148 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:25 2026] 127.0.0.1:54147 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:25 2026] 127.0.0.1:54147 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:25 2026] 127.0.0.1:54148 [GET] URI: /api/expense-control/debts/6
+[WebServer] [Mon Oct 12 15:41:26 2026] 127.0.0.1:54148 Closing
+  ok 3 [desktop-chromium] › tests\e2e\expense-quick-payment.spec.ts:5:1 › pagamento rápido: duplo clique e resposta perdida não duplicam o pagamento na retentativa (7.9s)
+(node:17228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:17228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Mon Oct 12 15:41:27 2026] 127.0.0.1:56714 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:27 2026] 127.0.0.1:56714 [GET] URI: /
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56714 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56715 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56716 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56717 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56715 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56716 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56717 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56715 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56716 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56717 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56718 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:28 2026] 127.0.0.1:56718 [POST] URI: /login
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56718 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56719 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:28 2026] 127.0.0.1:56719 [GET] URI: /
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56719 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56741 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56742 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56741 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56743 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56741 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56744 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56745 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56746 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56742 [200]: GET /build/assets/brand2026-access-CjT1IdEb.css
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56742 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56747 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56743 [200]: GET /build/assets/new-order-search-BMjHuotZ.css
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56744 [200]: GET /build/assets/mobile-home-m593wBba.css
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56745 [200]: GET /build/assets/main-B4keWwWw.css
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56746 [200]: GET /build/assets/brand2026-z0o0XJzq.css
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56748 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56747 [200]: GET /build/assets/action-buttons-sfvCbFBd.css
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56748 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56743 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56749 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56744 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56746 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56750 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56745 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56747 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56749 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56748 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56751 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56749 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56752 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56753 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56750 [200]: GET /build/assets/brand2026-CzEiG9xo.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56754 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56751 [200]: GET /build/assets/react-ownership-D_a0zXwh.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56755 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56752 [200]: GET /build/assets/brand2026-access-Cr2PXfD6.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56753 [200]: GET /build/assets/client-search-Dv4aqmlb.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56754 [200]: GET /build/assets/order-maintenance-D7dRZ3wR.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56755 [200]: GET /build/assets/order-workflow-uW1kun86.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56750 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56751 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56752 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56753 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56754 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56755 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56756 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56757 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56758 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56759 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56760 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56761 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56756 [200]: GET /build/assets/new-order-search-C_TkjTEB.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56757 [200]: GET /build/assets/opening-whatsapp-Dbb-R6Jj.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56758 [200]: GET /build/assets/completion-polish-BpL8sqy0.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56759 [200]: GET /build/assets/createLucideIcon-0rr9TlA-.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56760 [200]: GET /build/assets/eye-KmUKPu9F.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56761 [200]: GET /build/assets/record-management-CHv9Eoe3.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56756 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56763 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56757 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56758 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56760 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56759 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56761 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56764 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56765 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56766 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56763 [200]: GET /build/assets/ui-final-polish-D1DH92Bq.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56767 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56764 [200]: GET /build/assets/ui-regression-guard-BJfvsJTK.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56768 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56765 [200]: GET /build/assets/main-C6PKGS3H.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56763 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56769 Accepted
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56766 [200]: GET /build/assets/mobile-home-BFKIcNr8.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56767 [200]: GET /build/assets/order-reopened-DP_XlAb7.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56768 [200]: GET /build/assets/page-isolation-xi0G7lYe.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56769 [200]: GET /build/assets/official-icons-ubo4fiHD.js
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56764 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56765 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56766 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56767 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56768 Closing
+[WebServer] [Mon Oct 12 15:41:28 2026] 127.0.0.1:56769 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56770 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:29 2026] 127.0.0.1:56770 [GET] URI: /api/settings/logo/menu
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56770 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56772 Accepted
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56773 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:29 2026] 127.0.0.1:56772 [GET] URI: /api/notifications
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56772 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56774 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:29 2026] 127.0.0.1:56773 [GET] URI: /api/me
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56773 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56775 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:29 2026] 127.0.0.1:56774 [GET] URI: /api/orders/desk
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56774 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56778 Accepted
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56775 [200]: GET /arl-assets/arl.svg
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56779 Accepted
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56778 [200]: GET /build/assets/dashboard-page-DZThyHJv.js
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56780 Accepted
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56779 [200]: GET /build/assets/order-list-components-DpeDTdaX.js
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56781 Accepted
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56780 [200]: GET /build/assets/rotate-ccw-NB04MDbD.js
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56775 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56782 Accepted
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56781 [200]: GET /build/assets/pencil-EQ0FD68u.js
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56778 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56783 Accepted
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56782 [200]: GET /build/assets/trash-2-C5aHL4IU.js
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56779 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56784 Accepted
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56783 [200]: GET /build/assets/search-8Mi2h4VH.js
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56780 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56785 Accepted
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56784 [200]: GET /build/assets/wrench-DvOhkZXY.js
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56781 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56786 Accepted
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56785 [200]: GET /build/assets/circle-check-DBOU6X3V.js
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56782 Closing
+[WebServer] [Mon Oct 12 15:41:29 2026] 127.0.0.1:56787 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:29 2026] 127.0.0.1:56786 [GET] URI: /api/navigation-summary
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56786 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56783 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56788 Accepted
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56787 [200]: GET /sw.js
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56784 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:30 2026] 127.0.0.1:56788 [POST] URI: /api/expense-control/catalogs/institutions
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56788 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56785 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56787 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56789 Accepted
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56790 Accepted
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56792 Accepted
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56789 [200]: GET /manifest.webmanifest
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56790 [200]: GET /arl-assets/icons/icon-192.png
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56792 [200]: GET /arl-assets/icons/icon-512.png
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56789 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56790 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56792 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56793 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:30 2026] 127.0.0.1:56793 [POST] URI: /api/expense-control/catalogs/types
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56793 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56794 Accepted
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56794 [200]: GET /arl-assets/icons/icon-maskable-512.png
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56794 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56796 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:30 2026] 127.0.0.1:56796 [POST] URI: /api/expense-control/catalogs/types
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56796 Closing
+[WebServer] [Mon Oct 12 15:41:30 2026] 127.0.0.1:56797 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:30 2026] 127.0.0.1:56797 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:31 2026] 127.0.0.1:56797 Closing
+[WebServer] [Mon Oct 12 15:41:31 2026] 127.0.0.1:56798 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:31 2026] 127.0.0.1:56798 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:31 2026] 127.0.0.1:56798 Closing
+[WebServer] [Mon Oct 12 15:41:31 2026] 127.0.0.1:56799 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:31 2026] 127.0.0.1:56799 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:31 2026] 127.0.0.1:56799 Closing
+[WebServer] [Mon Oct 12 15:41:31 2026] 127.0.0.1:56801 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:31 2026] 127.0.0.1:56801 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56801 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56802 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:32 2026] 127.0.0.1:56802 [POST] URI: /api/expense-control/operations
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56802 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56803 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:32 2026] 127.0.0.1:56803 [GET] URI: /expense-control
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56803 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56804 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56804 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56805 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56806 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56805 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56807 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56804 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56808 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56809 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56805 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56806 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56810 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56806 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56807 [200]: GET /build/assets/brand2026-access-CjT1IdEb.css
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56811 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56808 [200]: GET /build/assets/new-order-search-BMjHuotZ.css
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56809 [200]: GET /build/assets/main-B4keWwWw.css
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56812 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56810 [200]: GET /build/assets/mobile-home-m593wBba.css
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56811 [200]: GET /build/assets/brand2026-z0o0XJzq.css
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56812 [200]: GET /build/assets/action-buttons-sfvCbFBd.css
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56807 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56813 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56808 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56814 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56813 [200]: GET /build/assets/brand2026-CzEiG9xo.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56809 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56810 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56811 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56812 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56813 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56815 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56816 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56817 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56814 [200]: GET /build/assets/react-ownership-D_a0zXwh.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56818 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56814 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56819 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56820 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56815 [200]: GET /build/assets/brand2026-access-Cr2PXfD6.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56816 [200]: GET /build/assets/client-search-Dv4aqmlb.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56817 [200]: GET /build/assets/order-maintenance-D7dRZ3wR.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56818 [200]: GET /build/assets/order-workflow-uW1kun86.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56819 [200]: GET /build/assets/new-order-search-C_TkjTEB.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56820 [200]: GET /build/assets/opening-whatsapp-Dbb-R6Jj.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56815 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56816 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56817 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56818 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56821 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56819 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56820 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56822 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56823 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56824 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56825 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56826 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56821 [200]: GET /build/assets/completion-polish-BpL8sqy0.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56822 [200]: GET /build/assets/createLucideIcon-0rr9TlA-.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56823 [200]: GET /build/assets/eye-KmUKPu9F.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56824 [200]: GET /build/assets/record-management-CHv9Eoe3.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56825 [200]: GET /build/assets/ui-final-polish-D1DH92Bq.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56826 [200]: GET /build/assets/ui-regression-guard-BJfvsJTK.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56821 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56823 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56824 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56825 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56826 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56822 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56827 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56828 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56829 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56830 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56831 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56827 [200]: GET /build/assets/main-C6PKGS3H.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56828 [200]: GET /build/assets/mobile-home-BFKIcNr8.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56829 [200]: GET /build/assets/order-reopened-DP_XlAb7.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56830 [200]: GET /build/assets/page-isolation-xi0G7lYe.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56831 [200]: GET /build/assets/official-icons-ubo4fiHD.js
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56827 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56828 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56829 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56830 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56831 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56832 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:32 2026] 127.0.0.1:56832 [GET] URI: /api/settings/logo/menu
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56832 Closing
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56833 Accepted
+[WebServer] [Mon Oct 12 15:41:32 2026] 127.0.0.1:56834 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:32 2026] 127.0.0.1:56833 [GET] URI: /api/me
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56833 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56834 [200]: GET /arl-assets/arl.svg
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56834 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56835 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56836 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56837 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56838 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56835 [200]: GET /build/assets/expense-control-page-BTN1fNXP.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56839 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56840 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56835 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56836 [200]: GET /build/assets/order-popup-wl62ohKB.css
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56841 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56837 [200]: GET /build/assets/order-popup-aDvZgPF3.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56838 [200]: GET /build/assets/trending-up-D3hJoMv6.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56839 [200]: GET /build/assets/chevron-right-B3J_LGmc.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56840 [200]: GET /build/assets/finance-date-UmYM321Y.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56841 [200]: GET /build/assets/expense-control-page-BIgIAAwN.css
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56836 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56837 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56838 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56839 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56840 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56842 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56841 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56843 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56844 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56845 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56846 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56842 [200]: GET /build/assets/receipt-text-C_WTHr40.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56843 [200]: GET /build/assets/calendar-days-CrMA2p04.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56844 [200]: GET /build/assets/money-input-CtDije2G.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56845 [200]: GET /build/assets/arrow-left-BT4EXKUx.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56846 [200]: GET /build/assets/camera-B1yqq5mj.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56847 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56847 [200]: GET /build/assets/history-RMXz_-lU.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56842 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56848 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56843 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56844 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56845 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56846 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56847 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56849 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56850 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56851 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56848 [200]: GET /build/assets/search-8Mi2h4VH.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56849 [200]: GET /build/assets/pencil-EQ0FD68u.js
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56850 [200]: GET /build/assets/trash-2-C5aHL4IU.js
+[2m[WebServer] [22m[Mon Oct 12 14:41:33 2026] 127.0.0.1:56851 [GET] URI: /api/navigation-summary
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56851 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56848 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56849 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56850 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56852 Accepted
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56853 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:33 2026] 127.0.0.1:56852 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56852 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56854 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:33 2026] 127.0.0.1:56853 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56853 Closing
+[WebServer] [Mon Oct 12 15:41:33 2026] 127.0.0.1:56855 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:33 2026] 127.0.0.1:56854 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:34 2026] 127.0.0.1:56854 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:34 2026] 127.0.0.1:56855 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:34 2026] 127.0.0.1:56855 Closing
+[WebServer] [Mon Oct 12 15:41:34 2026] 127.0.0.1:56878 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:34 2026] 127.0.0.1:56878 [GET] URI: /api/expense-control/monthly-statement
+[WebServer] [Mon Oct 12 15:41:34 2026] 127.0.0.1:56878 Closing
+[WebServer] [Mon Oct 12 15:41:35 2026] 127.0.0.1:56879 Accepted
+[WebServer] [Mon Oct 12 15:41:35 2026] 127.0.0.1:56879 [200]: GET /sw.js
+[WebServer] [Mon Oct 12 15:41:35 2026] 127.0.0.1:56879 Closing
+  x  4 [mobile-chromium] › tests\e2e\expense-monthly-final.mobile.spec.ts:3:1 › fatura final mobile: categorias, PDFs, CSRF, partes e mês quitado (7.8s)
+(node:28408) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28408) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56880 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:37 2026] 127.0.0.1:56880 [GET] URI: /
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56880 Closing
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56881 Accepted
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56882 Accepted
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56884 Accepted
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56881 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56882 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56884 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56881 Closing
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56882 Closing
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56884 Closing
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56885 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:37 2026] 127.0.0.1:56885 [POST] URI: /login
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56885 Closing
+[WebServer] [Mon Oct 12 15:41:37 2026] 127.0.0.1:56888 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:37 2026] 127.0.0.1:56888 [GET] URI: /
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56888 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56890 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56890 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56891 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56892 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56893 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56890 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56894 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56895 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56891 [200]: GET /build/assets/brand2026-access-CjT1IdEb.css
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56892 [200]: GET /build/assets/new-order-search-BMjHuotZ.css
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56893 [200]: GET /build/assets/main-B4keWwWw.css
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56894 [200]: GET /build/assets/mobile-home-m593wBba.css
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56896 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56895 [200]: GET /build/assets/brand2026-z0o0XJzq.css
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56896 [200]: GET /build/assets/action-buttons-sfvCbFBd.css
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56891 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56897 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56892 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56894 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56898 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56897 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56893 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56895 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56899 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56896 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56897 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56901 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56902 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56898 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56903 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56904 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56898 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56899 [200]: GET /build/assets/brand2026-CzEiG9xo.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56901 [200]: GET /build/assets/react-ownership-D_a0zXwh.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56905 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56902 [200]: GET /build/assets/brand2026-access-Cr2PXfD6.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56899 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56903 [200]: GET /build/assets/client-search-Dv4aqmlb.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56904 [200]: GET /build/assets/order-maintenance-D7dRZ3wR.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56901 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56909 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56905 [200]: GET /build/assets/order-workflow-uW1kun86.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56910 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56909 [200]: GET /build/assets/new-order-search-C_TkjTEB.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56902 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56911 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56910 [200]: GET /build/assets/opening-whatsapp-Dbb-R6Jj.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56903 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56904 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56912 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56911 [200]: GET /build/assets/completion-polish-BpL8sqy0.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56905 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56913 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56909 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56916 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56910 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56912 [200]: GET /build/assets/createLucideIcon-0rr9TlA-.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56911 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56917 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56913 [200]: GET /build/assets/eye-KmUKPu9F.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56918 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56912 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56913 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56916 [200]: GET /build/assets/record-management-CHv9Eoe3.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56919 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56917 [200]: GET /build/assets/ui-final-polish-D1DH92Bq.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56922 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56918 [200]: GET /build/assets/ui-regression-guard-BJfvsJTK.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56923 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56919 [200]: GET /build/assets/main-C6PKGS3H.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56916 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56924 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56922 [200]: GET /build/assets/mobile-home-BFKIcNr8.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56923 [200]: GET /build/assets/order-reopened-DP_XlAb7.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56917 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56925 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56924 [200]: GET /build/assets/page-isolation-xi0G7lYe.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56918 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56925 [200]: GET /build/assets/official-icons-ubo4fiHD.js
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56919 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56922 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56923 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56924 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56925 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56929 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:38 2026] 127.0.0.1:56929 [GET] URI: /api/settings/logo/menu
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56929 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56931 Accepted
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56933 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:38 2026] 127.0.0.1:56931 [GET] URI: /api/notifications
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56931 Closing
+[WebServer] [Mon Oct 12 15:41:38 2026] 127.0.0.1:56935 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:38 2026] 127.0.0.1:56933 [GET] URI: /api/me
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56933 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56936 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:39 2026] 127.0.0.1:56935 [GET] URI: /api/orders/desk
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56935 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56958 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56936 [200]: GET /arl-assets/arl.svg
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56959 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56958 [200]: GET /build/assets/dashboard-page-DZThyHJv.js
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56960 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56959 [200]: GET /build/assets/order-list-components-DpeDTdaX.js
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56961 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56960 [200]: GET /build/assets/rotate-ccw-NB04MDbD.js
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56936 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56962 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56961 [200]: GET /build/assets/pencil-EQ0FD68u.js
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56958 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56963 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56962 [200]: GET /build/assets/trash-2-C5aHL4IU.js
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56959 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56964 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56963 [200]: GET /build/assets/search-8Mi2h4VH.js
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56960 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56965 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56964 [200]: GET /build/assets/wrench-DvOhkZXY.js
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56961 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56966 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56965 [200]: GET /build/assets/circle-check-DBOU6X3V.js
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56962 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56967 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:39 2026] 127.0.0.1:56966 [GET] URI: /api/navigation-summary
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56966 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56963 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56968 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56967 [200]: GET /sw.js
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56964 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:39 2026] 127.0.0.1:56968 [POST] URI: /api/expense-control/catalogs/institutions
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56968 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56965 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56967 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56969 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56970 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56971 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56969 [200]: GET /manifest.webmanifest
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56970 [200]: GET /arl-assets/icons/icon-192.png
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56971 [200]: GET /arl-assets/icons/icon-512.png
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56972 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:39 2026] 127.0.0.1:56972 [POST] URI: /api/expense-control/catalogs/types
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56972 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56969 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56973 Accepted
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56970 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56971 Closing
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56973 [200]: GET /arl-assets/icons/icon-maskable-512.png
+[WebServer] [Mon Oct 12 15:41:39 2026] 127.0.0.1:56973 Closing
+[WebServer] [Mon Oct 12 15:41:40 2026] 127.0.0.1:56974 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:40 2026] 127.0.0.1:56974 [POST] URI: /api/expense-control/debts
+[WebServer] [Mon Oct 12 15:41:40 2026] 127.0.0.1:56974 Closing
+[WebServer] [Mon Oct 12 15:41:40 2026] 127.0.0.1:56976 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:40 2026] 127.0.0.1:56976 [GET] URI: /api/expense-control/debts/11/person-payment
+[WebServer] [Mon Oct 12 15:41:40 2026] 127.0.0.1:56976 Closing
+[WebServer] [Mon Oct 12 15:41:40 2026] 127.0.0.1:56977 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:40 2026] 127.0.0.1:56977 [POST] URI: /api/expense-control/debts/11/person-payment
+[WebServer] [Mon Oct 12 15:41:40 2026] 127.0.0.1:56977 Closing
+[WebServer] [Mon Oct 12 15:41:40 2026] 127.0.0.1:56978 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:40 2026] 127.0.0.1:56978 [GET] URI: /api/expense-control/debts/11
+[WebServer] [Mon Oct 12 15:41:40 2026] 127.0.0.1:56978 Closing
+[WebServer] [Mon Oct 12 15:41:40 2026] 127.0.0.1:56979 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:40 2026] 127.0.0.1:56979 [GET] URI: /expense-control
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56979 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56981 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56981 [200]: GET /build/assets/layout-preference-Cw26f9cf.css
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56982 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56983 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56982 [200]: GET /build/assets/appearance-DbDRGotN.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56984 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56983 [200]: GET /build/assets/layout-preference-DkVWKVBu.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56981 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56985 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56986 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56982 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56983 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56987 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56984 [200]: GET /build/assets/brand2026-access-CjT1IdEb.css
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56984 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56988 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56989 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56985 [200]: GET /build/assets/new-order-search-BMjHuotZ.css
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56986 [200]: GET /build/assets/main-B4keWwWw.css
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56987 [200]: GET /build/assets/mobile-home-m593wBba.css
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56990 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56988 [200]: GET /build/assets/brand2026-z0o0XJzq.css
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56989 [200]: GET /build/assets/action-buttons-sfvCbFBd.css
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56990 [200]: GET /build/assets/brand2026-CzEiG9xo.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56985 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56991 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56987 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56986 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56988 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56989 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56992 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56990 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56991 [200]: GET /build/assets/react-ownership-D_a0zXwh.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56993 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56994 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56991 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56995 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56996 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56992 [200]: GET /build/assets/brand2026-access-Cr2PXfD6.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56997 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56993 [200]: GET /build/assets/client-search-Dv4aqmlb.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56992 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56994 [200]: GET /build/assets/order-maintenance-D7dRZ3wR.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56995 [200]: GET /build/assets/order-workflow-uW1kun86.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56996 [200]: GET /build/assets/new-order-search-C_TkjTEB.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56997 [200]: GET /build/assets/opening-whatsapp-Dbb-R6Jj.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56998 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56998 [200]: GET /build/assets/completion-polish-BpL8sqy0.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56993 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56999 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56994 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56995 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56996 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56997 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56998 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57000 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57001 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57002 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57003 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56999 [200]: GET /build/assets/createLucideIcon-0rr9TlA-.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57004 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57000 [200]: GET /build/assets/eye-KmUKPu9F.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57001 [200]: GET /build/assets/record-management-CHv9Eoe3.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57002 [200]: GET /build/assets/ui-final-polish-D1DH92Bq.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57003 [200]: GET /build/assets/ui-regression-guard-BJfvsJTK.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:56999 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57005 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57004 [200]: GET /build/assets/main-C6PKGS3H.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57005 [200]: GET /build/assets/mobile-home-BFKIcNr8.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57000 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57006 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57001 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57002 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57003 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57007 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57006 [200]: GET /build/assets/order-reopened-DP_XlAb7.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57004 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57008 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57005 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57006 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57007 [200]: GET /build/assets/page-isolation-xi0G7lYe.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57008 [200]: GET /build/assets/official-icons-ubo4fiHD.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57007 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57008 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57009 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:41 2026] 127.0.0.1:57009 [GET] URI: /api/settings/logo/menu
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57009 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57010 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57011 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:41 2026] 127.0.0.1:57010 [GET] URI: /api/me
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57010 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57011 [200]: GET /arl-assets/arl.svg
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57011 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57013 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57014 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57015 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57013 [200]: GET /build/assets/expense-control-page-BTN1fNXP.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57016 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57017 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57018 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57013 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57014 [200]: GET /build/assets/order-popup-wl62ohKB.css
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57015 [200]: GET /build/assets/order-popup-aDvZgPF3.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57016 [200]: GET /build/assets/trending-up-D3hJoMv6.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57017 [200]: GET /build/assets/chevron-right-B3J_LGmc.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57018 [200]: GET /build/assets/finance-date-UmYM321Y.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57019 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57019 [200]: GET /build/assets/expense-control-page-BIgIAAwN.css
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57014 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57020 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57015 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57016 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57017 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57018 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57021 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57019 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57022 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57023 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57024 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57020 [200]: GET /build/assets/receipt-text-C_WTHr40.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57021 [200]: GET /build/assets/calendar-days-CrMA2p04.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57022 [200]: GET /build/assets/money-input-CtDije2G.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57023 [200]: GET /build/assets/arrow-left-BT4EXKUx.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57024 [200]: GET /build/assets/camera-B1yqq5mj.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57025 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57025 [200]: GET /build/assets/history-RMXz_-lU.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57020 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57026 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57021 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57022 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57023 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57024 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57027 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57025 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57028 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57029 Accepted
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57026 [200]: GET /build/assets/search-8Mi2h4VH.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57027 [200]: GET /build/assets/pencil-EQ0FD68u.js
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57028 [200]: GET /build/assets/trash-2-C5aHL4IU.js
+[2m[WebServer] [22m[Mon Oct 12 14:41:41 2026] 127.0.0.1:57029 [GET] URI: /api/navigation-summary
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57029 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57026 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57027 Closing
+[WebServer] [Mon Oct 12 15:41:41 2026] 127.0.0.1:57028 Closing
+[WebServer] [Mon Oct 12 15:41:42 2026] 127.0.0.1:57030 Accepted
+[WebServer] [Mon Oct 12 15:41:42 2026] 127.0.0.1:57031 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:42 2026] 127.0.0.1:57030 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:42 2026] 127.0.0.1:57030 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:42 2026] 127.0.0.1:57031 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:42 2026] 127.0.0.1:57031 Closing
+[WebServer] [Mon Oct 12 15:41:43 2026] 127.0.0.1:57032 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:43 2026] 127.0.0.1:57032 [GET] URI: /api/expense-control/person-balances
+[WebServer] [Mon Oct 12 15:41:43 2026] 127.0.0.1:57032 Closing
+[WebServer] [Mon Oct 12 15:41:43 2026] 127.0.0.1:57033 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:43 2026] 127.0.0.1:57033 [GET] URI: /api/expense-control/debts/11/person-payment
+[WebServer] [Mon Oct 12 15:41:43 2026] 127.0.0.1:57033 Closing
+[WebServer] [Mon Oct 12 15:41:43 2026] 127.0.0.1:57034 Accepted
+[WebServer] [Mon Oct 12 15:41:43 2026] 127.0.0.1:57034 [200]: GET /sw.js
+[WebServer] [Mon Oct 12 15:41:43 2026] 127.0.0.1:57034 Closing
+[WebServer] [Mon Oct 12 15:41:43 2026] 127.0.0.1:57056 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:43 2026] 127.0.0.1:57056 [POST] URI: /api/expense-control/debts/11/person-payment
+[WebServer] [Mon Oct 12 15:41:44 2026] 127.0.0.1:57056 Closing
+[WebServer] [Mon Oct 12 15:41:44 2026] 127.0.0.1:57057 Accepted
+[WebServer] [Mon Oct 12 15:41:44 2026] 127.0.0.1:57058 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:44 2026] 127.0.0.1:57057 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:44 2026] 127.0.0.1:57057 Closing
+[WebServer] [Mon Oct 12 15:41:44 2026] 127.0.0.1:57059 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:44 2026] 127.0.0.1:57058 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:44 2026] 127.0.0.1:57058 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:44 2026] 127.0.0.1:57059 [GET] URI: /api/expense-control/debts/11
+[WebServer] [Mon Oct 12 15:41:44 2026] 127.0.0.1:57059 Closing
+[WebServer] [Mon Oct 12 15:41:44 2026] 127.0.0.1:57060 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:44 2026] 127.0.0.1:57060 [GET] URI: /api/expense-control/person-balances
+[WebServer] [Mon Oct 12 15:41:45 2026] 127.0.0.1:57060 Closing
+[WebServer] [Mon Oct 12 15:41:45 2026] 127.0.0.1:57061 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:45 2026] 127.0.0.1:57061 [GET] URI: /api/expense-control/debts/11/person-payment
+[WebServer] [Mon Oct 12 15:41:45 2026] 127.0.0.1:57061 Closing
+[WebServer] [Mon Oct 12 15:41:45 2026] 127.0.0.1:57062 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:45 2026] 127.0.0.1:57062 [POST] URI: /api/expense-control/debts/11/person-payment
+[WebServer] [Mon Oct 12 15:41:46 2026] 127.0.0.1:57062 Closing
+[WebServer] [Mon Oct 12 15:41:46 2026] 127.0.0.1:57063 Accepted
+[WebServer] [Mon Oct 12 15:41:46 2026] 127.0.0.1:57064 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:46 2026] 127.0.0.1:57063 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:46 2026] 127.0.0.1:57063 Closing
+[WebServer] [Mon Oct 12 15:41:46 2026] 127.0.0.1:57065 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:46 2026] 127.0.0.1:57064 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:46 2026] 127.0.0.1:57064 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:46 2026] 127.0.0.1:57065 [GET] URI: /api/expense-control/debts/11
+[WebServer] [Mon Oct 12 15:41:46 2026] 127.0.0.1:57065 Closing
+[WebServer] [Mon Oct 12 15:41:46 2026] 127.0.0.1:57066 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:46 2026] 127.0.0.1:57066 [GET] URI: /api/expense-control/person-balances
+[WebServer] [Mon Oct 12 15:41:47 2026] 127.0.0.1:57066 Closing
+[WebServer] [Mon Oct 12 15:41:47 2026] 127.0.0.1:57067 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:47 2026] 127.0.0.1:57067 [GET] URI: /api/expense-control/debts/11/person-payment
+[WebServer] [Mon Oct 12 15:41:47 2026] 127.0.0.1:57067 Closing
+[WebServer] [Mon Oct 12 15:41:47 2026] 127.0.0.1:57068 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:47 2026] 127.0.0.1:57068 [POST] URI: /api/expense-control/debts/11/person-payment
+[WebServer] [Mon Oct 12 15:41:47 2026] 127.0.0.1:57068 Closing
+[WebServer] [Mon Oct 12 15:41:47 2026] 127.0.0.1:57069 Accepted
+[WebServer] [Mon Oct 12 15:41:47 2026] 127.0.0.1:57070 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:47 2026] 127.0.0.1:57069 [GET] URI: /api/expense-control/configuration
+[WebServer] [Mon Oct 12 15:41:48 2026] 127.0.0.1:57069 Closing
+[WebServer] [Mon Oct 12 15:41:48 2026] 127.0.0.1:57071 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:48 2026] 127.0.0.1:57070 [GET] URI: /api/expense-control/summary
+[WebServer] [Mon Oct 12 15:41:48 2026] 127.0.0.1:57070 Closing
+[2m[WebServer] [22m[Mon Oct 12 14:41:48 2026] 127.0.0.1:57071 [GET] URI: /api/expense-control/debts/11
+[WebServer] [Mon Oct 12 15:41:48 2026] 127.0.0.1:57071 Closing
+[WebServer] [Mon Oct 12 15:41:48 2026] 127.0.0.1:57093 Accepted
+[2m[WebServer] [22m[Mon Oct 12 14:41:48 2026] 127.0.0.1:57093 [GET] URI: /api/expense-control/debts/11
+[WebServer] [Mon Oct 12 15:41:48 2026] 127.0.0.1:57093 Closing
+  ok 5 [mobile-chromium] › tests\e2e\expense-quick-payment-scenario.ts:4:3 › pagamento rápido: mês, valor parcial, saldo total, CSRF e preservação da outra parte (12.3s)
+
+
+  1) [desktop-chromium] › tests\e2e\expense-monthly-final.spec.ts:3:1 › fatura final desktop: categorias, PDFs, CSRF, partes e mês quitado
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThanOrEqual[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: <= [32m1[39m
+    Received:    [31m156.03125[39m
+
+       at expense-monthly-final-flow.ts:57
+
+      55 |   for (const row of await page.locator('.cgo-due-row.has-quick-pay').all()) {
+      56 |     const rowBox = await row.boundingBox(); const buttonBox = await row.locator('button').boundingBox();
+    > 57 |     expect(Math.abs((buttonBox!.x + buttonBox!.width / 2) - (rowBox!.x + rowBox!.width / 2))).toBeLessThanOrEqual(1);
+         |                                                                                               ^
+      58 |   }
+      59 |   if (mobile) for (const title of await page.locator('.cg-invoice-description').all()) expect((await title.boundingBox())?.width).toBeGreaterThan(80);
+      60 |   const root = 'output/correcoes-finais/' + (mobile ? 'mobile' : 'desktop'); mkdirSync(root, { recursive: true });
+        at monthlyInvoiceFlow (C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\tests\e2e\expense-monthly-final-flow.ts:57:95)
+        at C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\tests\e2e\expense-monthly-final.spec.ts:3:123
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\expense-monthly-final-fatu-da95f-s-CSRF-partes-e-mês-quitado-desktop-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\expense-monthly-final-fatu-da95f-s-CSRF-partes-e-mês-quitado-desktop-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\expense-monthly-final-fatu-da95f-s-CSRF-partes-e-mês-quitado-desktop-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\expense-monthly-final-fatu-da95f-s-CSRF-partes-e-mês-quitado-desktop-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\expense-monthly-final-fatu-da95f-s-CSRF-partes-e-mês-quitado-desktop-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [mobile-chromium] › tests\e2e\expense-monthly-final.mobile.spec.ts:3:1 › fatura final mobile: categorias, PDFs, CSRF, partes e mês quitado
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThanOrEqual[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: <= [32m1[39m
+    Received:    [31m58.703125[39m
+
+       at expense-monthly-final-flow.ts:57
+
+      55 |   for (const row of await page.locator('.cgo-due-row.has-quick-pay').all()) {
+      56 |     const rowBox = await row.boundingBox(); const buttonBox = await row.locator('button').boundingBox();
+    > 57 |     expect(Math.abs((buttonBox!.x + buttonBox!.width / 2) - (rowBox!.x + rowBox!.width / 2))).toBeLessThanOrEqual(1);
+         |                                                                                               ^
+      58 |   }
+      59 |   if (mobile) for (const title of await page.locator('.cg-invoice-description').all()) expect((await title.boundingBox())?.width).toBeGreaterThan(80);
+      60 |   const root = 'output/correcoes-finais/' + (mobile ? 'mobile' : 'desktop'); mkdirSync(root, { recursive: true });
+        at monthlyInvoiceFlow (C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\tests\e2e\expense-monthly-final-flow.ts:57:95)
+        at C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\tests\e2e\expense-monthly-final.mobile.spec.ts:3:122
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\expense-monthly-final.mobi-5c369-s-CSRF-partes-e-mês-quitado-mobile-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\expense-monthly-final.mobi-5c369-s-CSRF-partes-e-mês-quitado-mobile-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\expense-monthly-final.mobi-5c369-s-CSRF-partes-e-mês-quitado-mobile-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\expense-monthly-final.mobi-5c369-s-CSRF-partes-e-mês-quitado-mobile-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\expense-monthly-final.mobi-5c369-s-CSRF-partes-e-mês-quitado-mobile-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [desktop-chromium] › tests\e2e\expense-monthly-final.spec.ts:3:1 › fatura final desktop: categorias, PDFs, CSRF, partes e mês quitado
+    [mobile-chromium] › tests\e2e\expense-monthly-final.mobile.spec.ts:3:1 › fatura final mobile: categorias, PDFs, CSRF, partes e mês quitado
+  3 passed (58.8s)

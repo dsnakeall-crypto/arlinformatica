@@ -144,3 +144,11 @@ Comando para quando o proprietário voltar e instruir retomada (NÃO executar ag
     pwsh -NoProfile -File deploy/PUBLICAR-OITO-MELHORIAS.ps1 -PacoteRelatorio output/releases/ARL-OITO-MELHORIAS-eec107ca29b1.json -AutorizarPublicacao
 Se necessário reverter uma ativação futura, usar o mesmo manifesto e -Reverter -Resultado com o relatório REAL da execução; recuperação somente de aliases/ponteiro para e90, sem banco.
 Checkpoint documental de encerramento ficará local, sem novo push para evitar outra CI apenas documental. A fonte enviada/validada e o pacote continuam eec107c; não regenerar pacote por documentação. Hash documental exato: git log -1 --format=%H e CHECKPOINT-OITO-MELHORIAS.txt no backup externo. Branch codex/oito-melhorias-20261012; caminho exclusivo C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012.
+
+
+## Correções finais solicitadas antes de publicar — missão vigente
+As oito melhorias anteriores foram reaproveitadas; correções de saldo mensal, faturas quitadas, totais exclusivos/ações com scope validado no backend e quatro PDFs já implementadas e validadas localmente. Relatório vigente: .agents/CORRECOES_FINAIS_RESULTADO_20261012.md.
+Checkpoint intermediário: 02e65e887560590119f91881b70843ffa58ef38e; o próximo commit inclui cifrões centrais solicitados depois pelo proprietário. Git log -1 identifica a fonte local atual. Usar somente a cópia isolada e branch atuais. Sem migration/schema novo; MySQL descartável na porta 33458/datadir ARL-backups, sem acesso oficial.
+73 PHP/1135 SQLite; 61 PHP/869 MySQL; concorrência ledger passou sem overpayment; 57 unitários incluindo seis PDF; PDFs reais baixados, extraídos e renderizados sem defeitos; lint/types/build e Pint Linux234 aprovados. Posicionamento central desktop/mobile medido e aprovado. Não repetir análises antigas.
+Próximo passo: aguardar CI do commit final, preparar novo ZIP/manifesto e registrar seus hashes aqui. ZIP eec107c NÃO usar para publicar. Executor existente/rollback e90 preservados. NÃO abrir SSH ou publicar na KingHost; aguardar confirmação explícita após o proprietário revisar o resultado.
+Backup completo existente reutilizado e proteção incremental dos arquivos alterados verificada. Não executar novo backup completo/SQL ou mudar .env/uploads/original.
