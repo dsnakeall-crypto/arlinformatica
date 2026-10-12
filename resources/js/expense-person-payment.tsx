@@ -42,7 +42,7 @@ export default function ExpensePersonPayment({ target, month, config, busy, save
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => { controller.abort(); previewRequest.current?.abort(); };
   }, [target, month, reload]);
-  const invalidate = () => { previewRequest.current?.abort(); setPlan(undefined); setError(''); requestKey.current = expenseRequestId(); };
+  const invalidate = () => { previewRequest.current?.abort(); setLoading(false); setPlan(undefined); setError(''); requestKey.current = expenseRequestId(); };
   const choose = (debt: Debt) => { invalidate(); setSelected(debt); setAction(debt.month_remaining_cents > 0 ? 'month' : 'partial'); setValue('0,00'); };
   const preview = async () => {
     if (!selected || loading || busy) return;

@@ -1,0 +1,12 @@
+READY
+READY
+{"status":201,"result":{"id":3,"replayed":false}}
+READY
+{"status":201,"result":{"id":2,"replayed":false}}
+statuses=[201,201] credit_one=10000
+
+In expense-payment-concurrency.php line 41:
+                                                 
+  Concurrent stale preview overpayment detected  
+                                                 
+

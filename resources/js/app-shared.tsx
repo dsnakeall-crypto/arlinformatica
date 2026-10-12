@@ -161,7 +161,7 @@ export function Field({ label, name, value, onChange, error, required = false, s
         {label}
         {required && " *"}
       </span>
-      <input type={type} name={name} value={value} onChange={onChange} spellCheck={spellCheck} />
+      <input type={type} name={name} value={value} onChange={onChange} spellCheck={spellCheck} aria-invalid={error ? true : undefined} />
       {error && <small>{error}</small>}
     </label>
   );

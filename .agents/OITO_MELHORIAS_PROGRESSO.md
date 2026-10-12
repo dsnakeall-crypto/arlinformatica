@@ -33,3 +33,14 @@ Executar na cópia isolada acima:
     npm run test:unit
 
 O hash deste checkpoint é obtido por git log -1 e registrado também no arquivo externo CHECKPOINT-OITO-MELHORIAS.txt dentro do backup. Nunca executar comandos de escrita na cópia original. Não ativar release sem autorização final expressa.
+
+## Checkpoint 2 — validações incrementais
+- CSS das oito melhorias criado; build agora aprovado. Cancelamento de prévia corrige estado de loading.
+- Lint e TypeScript aprovados; testes unitários: 51 aprovados.
+- PHP financeiro/regressão: 63 testes, 977 assertions aprovados (SQLite isolado).
+- Playwright rápido desktop e mobile: 2 aprovados; confirma mês/valor parcial/total, preservação da outra parte, ausência de desconto e rejeição HTTP 419 sem CSRF.
+- MySQL isolado local 127.0.0.1:33458, schema arl_oito_test_20261012, datadir confirmado em ARL-backups/missao-final-mysql-20261011/data: dois processos de usuários distintos com saldo compartilhado, somente uma gravação de 5000, segunda rejeitada 422. Três rodadas passaram.
+- Importante: diagnóstico inicial da concorrência era uma fixture incorreta que consultava o usuário dentro da transação. Corrigida para reproduzir autenticação real. O mecanismo financeiro original foi mantido; comparação com ele também passou em três rodadas. Logs BEFORE/AFTER registram a investigação, não são evidência de defeito em produção.
+- Regressão Playwright de gastos, valores compartilhados, correções de compra e responsividade, mais layout desktop/atendimento mobile: em execução no momento do checkpoint. Resultado ainda pendente.
+- Pendente: revisão visual/evidências, testes adicionais de duplicação/retentativa concorrente, persistência de OS ao salvar/reabrir, segurança final, pacote e autorização expressa de ativação.
+- Produção, banco oficial e repositório original permanecem sem alteração. Nenhum push.
