@@ -301,14 +301,16 @@ class ExpenseControl
         abort_unless($debt, 404);
         abort_if($debt->cancelled_at, 422, 'A dívida está cancelada.');
         $field = $data['target'] === 'one' ? 'remaining_one_cents' : 'remaining_two_cents';
-        $query = $this->installments()->where('d.id', $debt->id);
+        // Read only real installments. Never invent future recurring months to calculate a balance.
+        $allItems = $this->installments()->where('d.id', $debt->id)->orderBy('i.due_on')->orderBy('i.id')->get()
+            ->map(fn ($i) => $this->figures($i))->filter(fn ($i) => $i[$field] > 0)->values();
+        $items = $allItems;
         if ($data['action'] === 'month') {
             $month = $this->month($data['month']);
-            $query->whereBetween('i.due_on', [$month->toDateString(), $month->endOfMonth()->toDateString()]);
+            $start = $month->toDateString();
+            $end = $month->endOfMonth()->toDateString();
+            $items = $allItems->filter(fn ($i) => $i['due_on'] >= $start && $i['due_on'] <= $end)->values();
         }
-        // Read only real installments. Never invent future recurring months to calculate a balance.
-        $items = $query->orderBy('i.due_on')->orderBy('i.id')->get()
-            ->map(fn ($i) => $this->figures($i))->filter(fn ($i) => $i[$field] > 0)->values();
         $balance = (int) $items->sum($field);
         $amount = $data['action'] === 'partial' ? (int) $data['amount_cents'] : $balance;
         abort_if($amount <= 0 || $amount > $balance, 422, 'O valor deve ser positivo e não pode superar o saldo deste responsável na dívida selecionada.');
@@ -326,9 +328,9 @@ class ExpenseControl
 
         return ['debt_id' => (int) $debt->id, 'name' => $debt->name, 'target' => $data['target'], 'action' => $data['action'],
             'recurrence' => $debt->recurrence, 'balance_cents' => $balance, 'total_cents' => $amount,
-            'remaining_cents' => $balance - $amount, 'allocations' => $allocations,
+            'remaining_cents' => (int) $allItems->sum($field) - $amount, 'allocations' => $allocations,
             'preview_hash' => hash('sha256', json_encode([$debt->id, $data['target'], $data['action'], $data['month'], $amount,
-                $items->map(fn ($i) => [$i['id'], $i['due_on'], $i[$field]])->all()]))];
+                $allItems->map(fn ($i) => [$i['id'], $i['due_on'], $i[$field]])->all()]))];
     }
 
     public function record(Request $request, array $data, Audit $audit): array

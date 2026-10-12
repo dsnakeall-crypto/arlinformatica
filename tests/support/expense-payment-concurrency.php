@@ -22,22 +22,25 @@ $planData = ['debt_id'=>$id,'target'=>'one','action'=>'partial','month'=>'2026-1
 $plan = $service->personDebtPlan($planData);
 $dir = storage_path('framework/testing/concurrency-'.Str::uuid()); mkdir($dir,0777,true);
 $workers=[];
+$replay = ($argv[1] ?? '') === 'replay';
+$sharedKey = (string) Str::uuid();
+if ($replay) { $users = [$users[0], $users[0]]; }
 DB::beginTransaction(); DB::table('cg_debts')->where('id',$id)->lockForUpdate()->first();
 try {
     foreach ($users as $n=>$user) {
-        $payload=['user_id'=>$user->id,'payment'=>[...$planData,'request_key'=>(string)Str::uuid(),'preview_hash'=>$plan['preview_hash'],'kind'=>'payment','paid_by'=>1,'occurred_on'=>'2026-10-12']];
+        $payload=['user_id'=>$user->id,'payment'=>[...$planData,'request_key'=>$replay ? $sharedKey : (string)Str::uuid(),'preview_hash'=>$plan['preview_hash'],'kind'=>'payment','paid_by'=>1,'occurred_on'=>'2026-10-12']];
         $path=$dir.'/worker-'.$n.'.json';file_put_contents($path,json_encode($payload));
         $worker=new Process([PHP_BINARY,__DIR__.'/expense-payment-worker.php',$path],dirname(__DIR__,2)); $worker->setTimeout(20);$worker->start();$workers[]=$worker;
     }
     $deadline=microtime(true)+10;
-    while (microtime(true)<$deadline && count(array_filter($workers,fn($w)=>str_contains($w->getOutput(),'READY')))<2) { usleep(10000); }
-    if (count(array_filter($workers,fn($w)=>str_contains($w->getOutput(),'READY')))!==2) { throw new RuntimeException('Workers did not overlap: '.implode(';',array_map(fn($w)=>$w->getErrorOutput(),$workers))); }
+    while (microtime(true)<$deadline && count(array_filter($workers,fn($w)=>str_contains($w->getOutput(),$replay ? 'START' : 'READY')))<2) { usleep(10000); }
+    if (count(array_filter($workers,fn($w)=>str_contains($w->getOutput(),$replay ? 'START' : 'READY')))!==2) { throw new RuntimeException('Workers did not overlap: '.implode(';',array_map(fn($w)=>$w->getErrorOutput(),$workers))); }
     DB::commit();
     $statuses=[];
     foreach($workers as $worker){$worker->wait();echo $worker->getOutput();if(!$worker->isSuccessful())throw new RuntimeException($worker->getErrorOutput());foreach(explode("\n",trim($worker->getOutput())) as $line){if(str_starts_with($line,'{'))$statuses[]=json_decode($line,true)['status'];}}
     sort($statuses);
     $credit=(int)DB::table('cg_entries')->whereIn('installment_id',DB::table('cg_installments')->where('debt_id',$id)->pluck('id'))->sum('credit_one_cents');
     echo 'statuses='.json_encode($statuses).' credit_one='.$credit."\n";
-    if(!in_array($statuses, [[201,409],[201,422]], true) || $credit!==5000)throw new RuntimeException('Concurrent stale preview overpayment detected');
-    echo "PASS: independent users overlap, one payment, stale preview rejected, no overpayment.\n";
+    if(($replay ? $statuses!==[201,201] : !in_array($statuses, [[201,409],[201,422]], true)) || $credit!==5000)throw new RuntimeException('Concurrent stale preview overpayment detected');
+    echo $replay ? "PASS: overlapping same request replays, only one payment, no duplicate.\n" : "PASS: independent users overlap, one payment, stale preview rejected, no overpayment.\n";
 } finally { if(DB::transactionLevel()>0)DB::rollBack();foreach($workers as $worker)if($worker->isRunning())$worker->stop(); }

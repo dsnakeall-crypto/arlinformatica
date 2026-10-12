@@ -53,6 +53,7 @@ class ExpensePersonPaymentTest extends TestCase
         $debt = $this->debt(); $id = $debt['debt']['id'];
         $plan = $this->preview($id);
         $this->assertSame(7001, $plan['total_cents']);
+        $this->assertSame(14002, $plan['remaining_cents']);
         $this->postJson('/api/expense-control/debts/'.$id.'/person-payment', $this->confirmation($plan))->assertCreated();
         $detail = $this->getJson('/api/expense-control/debts/'.$id)->assertOk();
         $detail->assertJsonPath('installments.0.remaining_one_cents', 0)->assertJsonPath('installments.0.remaining_two_cents', 3000)

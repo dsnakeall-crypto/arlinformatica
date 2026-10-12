@@ -1,0 +1,10 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.25
+Configuration: C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012\phpunit.xml
+
+...................................................               51 / 51 (100%)
+
+Time: 00:19.203, Memory: 56.00 MB
+
+OK (51 tests, 712 assertions)

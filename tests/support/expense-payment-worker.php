@@ -13,6 +13,7 @@ $request->setUserResolver(fn () => $user);
 DB::listen(function ($query) {
     if (str_contains($query->sql, 'cg_operations') && str_starts_with($query->sql, 'select')) { echo "READY\n"; flush(); }
 });
+echo "START\n"; flush();
 try {
     $result = app(App\Services\ExpenseControl::class)->record($request, $fixture['payment'], app(App\Services\Audit::class));
     echo json_encode(['status' => 201, 'result' => $result])."\n";
