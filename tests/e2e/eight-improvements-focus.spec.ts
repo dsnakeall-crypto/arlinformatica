@@ -21,7 +21,8 @@ test('foco: campos e status mantêm indicação de teclado suave e erros reais v
   const value = await status.inputValue();
   const functionalColor = await status.evaluate(element => getComputedStyle(element).color);
   await status.focus();
-  await expect.poll(() => status.evaluate(element => getComputedStyle(element).borderColor)).toBe('rgb(121, 137, 156)');
+  await expect.poll(() => status.evaluate(element => getComputedStyle(element).outlineColor)).toBe('rgb(121, 137, 156)');
+  expect(await status.evaluate(element => parseFloat(getComputedStyle(element).outlineWidth))).toBeGreaterThanOrEqual(2);
   expect(await status.inputValue()).toBe(value);
   expect(await status.evaluate(element => getComputedStyle(element).color)).toBe(functionalColor);
   await page.goto('/clients');

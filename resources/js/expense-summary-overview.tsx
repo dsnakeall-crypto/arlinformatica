@@ -69,7 +69,7 @@ export function PersonBalanceCards({ totals, people, portraits, onOpen, onPay }:
         <div><dt>Valor casal</dt><dd>{money(shared)}</dd></div>
         <div><dt>Pago / abatido</dt><dd className="cgo-paid">{money(credited)}</dd></div>
         <div className="cgo-total-row"><dt>Valor total</dt><dd>{money(total)}</dd></div>
-        <div className={'cgo-due-row' + (onPay ? ' has-quick-pay' : '')}><dt>Falta pagar</dt><dd>{onPay && <button type="button" className="cg-person-quick-pay" aria-label={'Pagamento rápido de ' + names[index]} onClick={() => onPay(key)}><DollarSign aria-hidden="true" /></button>}<span>{money(remaining)}</span></dd></div>
+        <div className={'cgo-due-row' + (onPay ? ' has-quick-pay' : '')}><dt>Falta pagar</dt><dd>{onPay && <button type="button" className="cg-person-quick-pay" id={"cg-person-pay-" + key} aria-label={'Pagamento rápido de ' + names[index]} onClick={() => onPay(key)}><DollarSign aria-hidden="true" /></button>}<span>{money(remaining)}</span></dd></div>
       </dl>
       {onOpen && <button type="button" onClick={() => onOpen(key)}>Ver gastos de {names[index]} <ChevronRight /></button>}
     </article>;

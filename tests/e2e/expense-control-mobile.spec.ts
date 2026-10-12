@@ -135,7 +135,8 @@ test('mobile gastos: cinco ícones, resumo correto das partes, instituição, m�
   await expect(page.getByRole('dialog', { name: 'Registrar pagamento ou abatimento' })).toBeVisible();
   await noOverflow(page);
   await page.getByRole('button', { name: 'Fechar formulário de gasto' }).click();
-  await page.getByRole('button', { name: 'Voltar para ARL' }).click();
+  await page.getByRole('button', { name: 'Voltar à ARL' }).click();
+  await page.getByRole('dialog', { name: 'Confirmar retorno para o aplicativo da ARL?', exact: true }).getByRole('button', { name: 'Confirmar retorno', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' })).toBeVisible();
 });
 

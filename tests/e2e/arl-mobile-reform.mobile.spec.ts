@@ -14,7 +14,7 @@ test('barra mobile de cinco itens e Controle de Gastos com navegação independe
   await menu.getByRole('button', { name: 'Gestor de Gasto' }).click();
   await expect(page.locator('.arl-expense-independent.cg-mobile')).toBeVisible();
   await expect(page.locator('.app-head')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Voltar para ARL' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Voltar à ARL' })).toBeVisible();
   const expenses = page.getByRole('navigation', { name: 'Menu do Controle de Gastos' });
   await expect(expenses.locator('button')).toHaveCount(5);
   await expenses.getByRole('button', { name: 'Gastos' }).click();
@@ -23,7 +23,8 @@ test('barra mobile de cinco itens e Controle de Gastos com navegação independe
   await expect(page.getByRole('button', { name: 'Pagamentos' })).toBeVisible();
   await page.getByRole('button', { name: 'Ajustes' }).first().click();
   await expect(page.locator('.arl-expense-own-header button[aria-current=page]')).toBeVisible();
-  await page.getByRole('button', { name: 'Voltar para ARL' }).click();
+  await page.getByRole('button', { name: 'Voltar à ARL' }).click();
+  await page.getByRole('dialog', { name: 'Confirmar retorno para o aplicativo da ARL?', exact: true }).getByRole('button', { name: 'Confirmar retorno', exact: true }).click();
   await expect(menu).toBeVisible();
   await expect(page.locator('.app-head')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);

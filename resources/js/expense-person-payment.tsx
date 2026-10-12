@@ -36,9 +36,13 @@ export default function ExpensePersonPayment({ target, scope, month, config, bus
   const personName = config.people.find(p => p.id === (target === 'one' ? 1 : 2))?.name || 'Responsável';
   useEffect(() => {
     const viewport = window.visualViewport;
-    const update = () => formRef.current?.closest<HTMLElement>('.arl-3d-popup')?.style.setProperty('--cg-visible-height', (viewport?.height || window.innerHeight) + 'px');
-    update(); viewport?.addEventListener('resize', update);
-    return () => viewport?.removeEventListener('resize', update);
+    const update = () => {
+      const overlay = formRef.current?.closest<HTMLElement>('.arl-3d-overlay');
+      overlay?.style.setProperty('--cg-visible-height', (viewport?.height || window.innerHeight) + 'px');
+      overlay?.style.setProperty('--cg-visible-top', (viewport?.offsetTop || 0) + 'px');
+    };
+    update(); viewport?.addEventListener('resize', update); viewport?.addEventListener('scroll', update);
+    return () => { viewport?.removeEventListener('resize', update); viewport?.removeEventListener('scroll', update); };
   }, []);
   useEffect(() => {
     const controller = new AbortController();

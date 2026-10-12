@@ -110,6 +110,7 @@ html body .cg-exclusive-totals dd > button,
 html body .shell:is(.layout-mobile, .layout-desktop) .cg-page.cg-eight-improvements .cgo-person dl .cgo-due-row.has-quick-pay dd > button { grid-column: 1; grid-row: 1; justify-self: center; margin: 0 !important; }
 
 /* Pacote final: popup próprio de pagamento, com corpo rolável e ações fixas. */
+html body .arl-3d-overlay:has(.cg-quick-payment-popup) { top: var(--cg-visible-top, 0px); bottom: auto; height: var(--cg-visible-height, 100dvh); }
 html:root[data-arl-appearance] body .arl-3d-popup.cg-quick-payment-popup {
   width: min(540px, calc(100vw - 24px)) !important;
   height: min(660px, calc(var(--cg-visible-height, 100dvh) - 24px - env(safe-area-inset-bottom, 0px))) !important;
@@ -155,3 +156,6 @@ html body .cg-eight-improvements .cg-debt-card { padding: 10px !important; margi
   .cg-quick-payment-popup .arl-3d-heading-icon { display: none; }
   .cg-quick-payment-popup .cg-person-payment-identity { padding: 7px; }
 }
+
+html:root[data-arl-appearance][data-arl-palette] body button#cg-return-arl { color: #b91c1c !important; }
+html:root[data-arl-appearance][data-arl-palette] body button.cg-person-quick-pay:is(#cg-person-pay-one, #cg-person-pay-two) { color: #198446 !important; border: 1px solid #a8cdb6 !important; border-radius: 50% !important; background: #f5fbf7 !important; }

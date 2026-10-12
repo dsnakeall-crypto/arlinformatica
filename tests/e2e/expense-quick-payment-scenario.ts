@@ -22,6 +22,7 @@ export function quickPaymentScenario(mobile = false) {
     }, headers:{Accept:'application/json'} });
     expect(csrf.status()).toBe(419);
     await page.goto('/expense-control'); await openExpenseSection(page,'Resumo');
+    await expect(page.getByRole('button',{name:'Pagamento rápido de Allan',exact:true})).toHaveCSS('color','rgb(25, 132, 70)');
     const dialog = page.getByRole('dialog',{name:'Pagamento rápido de Allan',exact:true});
     const open = async (owner: string) => {
       await page.getByRole('button',{name:'Pagamento rápido de Allan',exact:true}).click();
@@ -42,6 +43,12 @@ export function quickPaymentScenario(mobile = false) {
     await dialog.getByLabel('Valor a pagar (R$)').fill('2000');
     await dialog.getByRole('button',{name:'Conferir pagamento',exact:true}).click();
     await expect(dialog.getByText('Ficará pendente nesta parte:',{exact:false})).toContainText('50,00');
+    if (mobile) {
+      await page.setViewportSize({width:375,height:420});
+      await expect.poll(async()=>{ const box=await dialog.boundingBox(); return box!.y+box!.height; }).toBeLessThanOrEqual(421);
+      await expect(dialog.getByRole('button',{name:'Confirmar pagamento',exact:true})).toBeVisible();
+      await page.setViewportSize({width:375,height:667});
+    }
     mkdirSync('output/pacote-final',{recursive:true});
     await page.screenshot({path:'output/pacote-final/quick-'+(mobile?'iphone':'desktop')+'.png'});
     await dialog.getByRole('button',{name:'Confirmar pagamento',exact:true}).click(); await expect(dialog).not.toBeVisible();
