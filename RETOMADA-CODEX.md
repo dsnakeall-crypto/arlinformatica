@@ -124,3 +124,23 @@ CI: https://github.com/dsnakeall-crypto/arlinformatica/actions/runs/38246418929;
 Retomada: conferir resultado da CI e git status/HEAD antes de usar qualquer comando. Não reabrir SSH automaticamente. Não é necessário deixar senha/sessão aberta durante a ausência do usuário; senha somente no prompt nativo quando ele retornar.
 
 CI completa 9c6 concluiu 267 E2E aprovados/2 falhas nas expectativas legadas de quatro colunas. Teste alinhado à Alteração 05 aprovada, mantendo validações de igualdade por linha, imagens/ações, redução responsiva e conteúdo sem scroll/corte. Cinco cenários locais aprovados (44,5s), lint/types aprovados. Nenhum runtime novo. Próximo passo: conferir nova CI e pacote do checkpoint seguinte. Não abrir SSH até o proprietário retornar e instruir retomada.
+
+Fonte vigente enviada: eec107ca29b1c4c720265ff376e60bdf69b17832. Nova CI: https://github.com/dsnakeall-crypto/arlinformatica/actions/runs/38249750699.
+Pacote vigente: output/releases/ARL-OITO-MELHORIAS-eec107ca29b1.zip; SHA256 10a59fd9d17a0e31d0eb53aafe32550e24a929b54d0ac0be223c4c1f8961afb2; 37.683.482 bytes/7.856 arquivos; CRC, hashes individuais e -ValidarLocal aprovados. Todos os hashes de runtime iguais ao candidato 9c6. Candidatos antigos não são o pacote vigente.
+Só depois de CI verde E nova instrução para abrir SSH: usar deploy/PUBLICAR-OITO-MELHORIAS.ps1 com -PacoteRelatorio output/releases/ARL-OITO-MELHORIAS-eec107ca29b1.json -AutorizarPublicacao. Não executar agora. Não usar os manifestos anteriores.
+
+
+## Encerramento vigente — 12/10/2026, 10:04 Brasília — parada antes de SSH
+CI completa VERDE da fonte eec107ca29b1c4c720265ff376e60bdf69b17832:
+https://github.com/dsnakeall-crypto/arlinformatica/actions/runs/38249750699
+- Backend SQLite: 386 testes / 7.268 assertions aprovados; Pint e demais checks do job aprovados.
+- Backend MySQL isolado da CI: 386 testes / 7.268 assertions aprovados.
+- Frontend: lint, TypeScript, unitários e build aprovados.
+- E2E completo: 269 aprovados, zero falhas, em 28,8 minutos. Evidência: .agents/CI_EEC107C_FINAL.json. Nenhum teste desabilitado.
+Pacote vigente: output/releases/ARL-OITO-MELHORIAS-eec107ca29b1.zip; manifesto .json; SHA256 10a59fd9d17a0e31d0eb53aafe32550e24a929b54d0ac0be223c4c1f8961afb2; 37.683.482 bytes/7.856 arquivos. CRC/hashes individuais e validação do executor aprovados. Hashes de runtime iguais ao candidato previamente validado; alteração final apenas no teste legado.
+Todas as pendências históricas de CI/push/preparação do pacote desta missão estão resolvidas. Permanecem exclusivamente a retomada expressa do proprietário para abrir SSH, preflight remoto, backup validado de aliases, ativação e smoke real sem gravação financeira. NÃO houve conexão SSH, upload, staging remoto, alteração de aliases, ponteiro ou banco nesta missão. O repositório original não foi alterado.
+Parada obrigatória em vigor. Não abrir SSH nem publicar automaticamente. Não precisa deixar sessão SSH aberta durante a ausência do proprietário. Sem merge/migration/restauração SQL/deleção.
+Comando para quando o proprietário voltar e instruir retomada (NÃO executar agora):
+    pwsh -NoProfile -File deploy/PUBLICAR-OITO-MELHORIAS.ps1 -PacoteRelatorio output/releases/ARL-OITO-MELHORIAS-eec107ca29b1.json -AutorizarPublicacao
+Se necessário reverter uma ativação futura, usar o mesmo manifesto e -Reverter -Resultado com o relatório REAL da execução; recuperação somente de aliases/ponteiro para e90, sem banco.
+Checkpoint documental de encerramento ficará local, sem novo push para evitar outra CI apenas documental. A fonte enviada/validada e o pacote continuam eec107c; não regenerar pacote por documentação. Hash documental exato: git log -1 --format=%H e CHECKPOINT-OITO-MELHORIAS.txt no backup externo. Branch codex/oito-melhorias-20261012; caminho exclusivo C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012.

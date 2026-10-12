@@ -1120,3 +1120,12 @@ Relatório: .agents/OITO_MELHORIAS_RESULTADO_20261012.md. Não iniciar outra eta
 - [OK] CI dessa fonte: backend SQLite, backend MySQL e frontend aprovados.
 - [PENDENTE] Conclusão da suíte E2E remota (run 38246418929).
 - [PENDENTE] Retorno/instrução do proprietário para abrir SSH; preflight, ativação e smoke autenticado. Parada obrigatória antes da conexão. Nenhuma alteração oficial nesta missão.
+
+
+## Encerramento vigente pré-SSH — 12/10/2026, 10:04 Brasília
+- [OK] Fonte eec107c enviada e CI 38249750699 totalmente verde: 386 PHP SQLite/7.268 assertions, 386 PHP MySQL/7.268 assertions, frontend e 269 E2E.
+- [OK] Expectativas legadas alinhadas à Alteração 05, sem modificar aplicativo ou desabilitar testes; cinco cenários locais aprovados.
+- [OK] Pacote eec107ca29b1: SHA 10a59fd9d17a0e31d0eb53aafe32550e24a929b54d0ac0be223c4c1f8961afb2, CRC/hashes/validação local aprovados. Runtime igual ao candidato anterior.
+- [OK] Implementação, testes, preparação e documentação concluídos exclusivamente na cópia isolada. Nenhum SSH ou alteração oficial nesta missão.
+- [PENDENTE] Proprietário retornar e instruir abertura do SSH; preflight, backup de aliases, ativação e smoke autenticado. Parada obrigatória antes da conexão. Não publicar automaticamente.
+Este estado substitui as pendências históricas de confirmação/push/CI/pacote das oito melhorias acima. Etapas de produção permanecem pendentes.

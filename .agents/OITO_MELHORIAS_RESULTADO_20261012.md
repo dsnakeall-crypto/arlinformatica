@@ -99,3 +99,19 @@ Este registro substitui as pendências históricas de confirmação/push e os ca
 CI 9c6eaf403670: 267 aprovados/2 reprovados em 28,6 minutos. Ambos reprovados em expense-web-reference-compact-20261010.spec.ts exigiam quatro colunas; a Alteração 05 expressamente exige cinco, altura conforme categorias e ausência de scroll interno. Atualizado somente esse teste: cinco colunas em tela larga, quebra após quinto cartão, alturas iguais por linha, conteúdo sem corte/scroll interno, redução monotônica em telas estreitas. Preservadas ações, imagens, cores, navegação e overflow horizontal. Nenhum runtime alterado e nenhum teste desabilitado.
 Backup externo do teste antes da edição: Backups/oito-melhorias-base-20261012-012927/expense-web-reference-before-ci-fix.ts; SHA comparado. Prova remota em CI_9c6_E2E_ANNOTATIONS.json.
 Validação local: npx playwright test expense-web-reference-compact-20261010.spec.ts eight-improvements.spec.ts — 5 aprovados em 44,5 segundos. Lint e TypeScript aprovados; logs CI_FIX_LINT/CI_FIX_TYPECHECK. Nova CI completa deverá confirmar o resultado antes da liberação. Continuar parada obrigatória antes de SSH.
+
+
+## Encerramento vigente — 12/10/2026, 10:04 Brasília — parada antes de SSH
+CI completa VERDE da fonte eec107ca29b1c4c720265ff376e60bdf69b17832:
+https://github.com/dsnakeall-crypto/arlinformatica/actions/runs/38249750699
+- Backend SQLite: 386 testes / 7.268 assertions aprovados; Pint e demais checks do job aprovados.
+- Backend MySQL isolado da CI: 386 testes / 7.268 assertions aprovados.
+- Frontend: lint, TypeScript, unitários e build aprovados.
+- E2E completo: 269 aprovados, zero falhas, em 28,8 minutos. Evidência: .agents/CI_EEC107C_FINAL.json. Nenhum teste desabilitado.
+Pacote vigente: output/releases/ARL-OITO-MELHORIAS-eec107ca29b1.zip; manifesto .json; SHA256 10a59fd9d17a0e31d0eb53aafe32550e24a929b54d0ac0be223c4c1f8961afb2; 37.683.482 bytes/7.856 arquivos. CRC/hashes individuais e validação do executor aprovados. Hashes de runtime iguais ao candidato previamente validado; alteração final apenas no teste legado.
+Todas as pendências históricas de CI/push/preparação do pacote desta missão estão resolvidas. Permanecem exclusivamente a retomada expressa do proprietário para abrir SSH, preflight remoto, backup validado de aliases, ativação e smoke real sem gravação financeira. NÃO houve conexão SSH, upload, staging remoto, alteração de aliases, ponteiro ou banco nesta missão. O repositório original não foi alterado.
+Parada obrigatória em vigor. Não abrir SSH nem publicar automaticamente. Não precisa deixar sessão SSH aberta durante a ausência do proprietário. Sem merge/migration/restauração SQL/deleção.
+Comando para quando o proprietário voltar e instruir retomada (NÃO executar agora):
+    pwsh -NoProfile -File deploy/PUBLICAR-OITO-MELHORIAS.ps1 -PacoteRelatorio output/releases/ARL-OITO-MELHORIAS-eec107ca29b1.json -AutorizarPublicacao
+Se necessário reverter uma ativação futura, usar o mesmo manifesto e -Reverter -Resultado com o relatório REAL da execução; recuperação somente de aliases/ponteiro para e90, sem banco.
+Checkpoint documental de encerramento ficará local, sem novo push para evitar outra CI apenas documental. A fonte enviada/validada e o pacote continuam eec107c; não regenerar pacote por documentação. Hash documental exato: git log -1 --format=%H e CHECKPOINT-OITO-MELHORIAS.txt no backup externo. Branch codex/oito-melhorias-20261012; caminho exclusivo C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\02 - Desenvolvimento\arl-oito-melhorias-20261012.
