@@ -24,7 +24,8 @@ if($Reverter){
 if($ValidarLocal){Write-Output 'VALIDACAO LOCAL: SHA verificado, sem SSH ou alteracoes remotas.';return}
 if(-not $AutorizarPublicacao){throw 'Autorizacao expressa obrigatoria; nao usar -AutorizarPublicacao antes da confirmacao.'}
 if(-not (Test-Path -LiteralPath $arlBackupRoot -PathType Container)){throw 'Pasta externa de backup ausente.'}
-$arlPayload=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($arlCode))
+if(-not $arlCode.StartsWith('<?php')){throw 'Payload PHP invalido.'}
+$arlPayload=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($arlCode.Substring(5)))
 $arlConfigEncoded=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(($arlConfig|ConvertTo-Json -Depth 25 -Compress)))
 $arlRemote=[string]::Join([char]10,@('IFS= read -r ARL_EIGHT_PAYLOAD',$arlPayload,'export ARL_EIGHT_PAYLOAD',('export ARL_EIGHT_CONFIG='+$arlConfigEncoded),'exec /usr/bin/php82 -d display_errors=0 -d log_errors=0 -d memory_limit=512M -r ''eval(base64_decode(getenv("ARL_EIGHT_PAYLOAD")));''',''))
 Write-Host 'Uma sessao SSH. Digite a senha somente no prompt nativo.'
