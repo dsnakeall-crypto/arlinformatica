@@ -317,6 +317,7 @@ export function NewOrder({ done, initialClient }: { done: (id: number, fallback?
                 <button
                   type="button"
                   className={attendance === "bench" ? "chosen" : ""}
+                  aria-pressed={attendance === "bench"}
                   onClick={() => setAttendance("bench")}
                 >
                   ANÁLISE NA BANCADA
@@ -324,6 +325,7 @@ export function NewOrder({ done, initialClient }: { done: (id: number, fallback?
                 <button
                   type="button"
                   className={attendance === "external" ? "chosen" : ""}
+                  aria-pressed={attendance === "external"}
                   onClick={() => setAttendance("external")}
                 >
                   ATENDIMENTO EXTERNO

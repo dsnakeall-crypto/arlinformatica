@@ -33,6 +33,7 @@ import '../css/web-clean-black-pink-buttons-20261010.css';
 import '../css/web-clean-final-polish-20261010.css';
 import '../css/web-clean-action-icons-unified-20261010.css';
 import '../css/mobile-modal-nav-click-safety-20261011.css';
+import '../css/arl-eight-improvements-20261012.css';
 
 function ClientForm({ onSaved, onCancel, client }: any) {
   const [data, setData] = useState<any>(client || emptyClient);

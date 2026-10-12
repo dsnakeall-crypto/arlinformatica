@@ -301,7 +301,7 @@ class ExpenseControlController extends Controller
         $month = $this->period($r);
         $this->control->ensureMonth($month);
         $r->validate(['q' => 'nullable|string|max:200', 'institution' => 'nullable|integer', 'type' => 'nullable|integer', 'person' => 'nullable|in:one,two,shared', 'status' => 'nullable|in:active,settled,cancelled', 'sort' => 'nullable|in:newest,oldest,name,value']);
-        $aggregate = $this->control->installments()->select('i.debt_id')->selectRaw('SUM(COALESCE(credits.paid, 0)) AS paid_cents, SUM(COALESCE(credits.discounted, 0)) AS discount_cents, SUM(i.amount_cents) AS original_cents, SUM(i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0)) AS remaining_cents, SUM(CASE WHEN i.month_on = ? THEN i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0) ELSE 0 END) AS month_remaining_cents', [$month->toDateString()])->groupBy('i.debt_id');
+        $aggregate = $this->control->installments()->select('i.debt_id')->selectRaw('SUM(COALESCE(credits.paid, 0)) AS paid_cents, SUM(COALESCE(credits.discounted, 0)) AS discount_cents, SUM(i.amount_cents) AS original_cents, SUM(i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0)) AS remaining_cents, SUM(i.share_one_cents - COALESCE(credits.credit_one, 0)) AS remaining_one_cents, SUM(i.share_two_cents - COALESCE(credits.credit_two, 0)) AS remaining_two_cents, SUM(CASE WHEN i.month_on = ? THEN i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0) ELSE 0 END) AS month_remaining_cents', [$month->toDateString()])->groupBy('i.debt_id');
         $q = DB::table('cg_debts as d')->join('cg_institutions as bank', 'bank.id', '=', 'd.institution_id')->join('cg_types as type', 'type.id', '=', 'd.type_id')->leftJoinSub($aggregate, 'totals', fn ($j) => $j->on('totals.debt_id', '=', 'd.id'))
             ->select('d.*', 'bank.name as institution_name', 'bank.color', 'type.name as type_name', 'totals.paid_cents', 'totals.discount_cents', 'totals.original_cents', 'totals.remaining_cents', 'totals.month_remaining_cents');
         if ($search = trim((string) $r->query('q'))) {
@@ -330,6 +330,14 @@ class ExpenseControlController extends Controller
                 ? $q->where('totals.remaining_cents', 0)->where(fn ($q) => $q->where('d.recurrence', '!=', 'monthly')->orWhereNotNull('d.ended_on'))
                 : $q->where(fn ($q) => $q->where('totals.remaining_cents', '>', 0)->orWhere(fn ($q) => $q->where('d.recurrence', 'monthly')->whereNull('d.ended_on')));
         }
+        $balanceColumn = match ($r->query('person')) {
+            'one' => 'totals.remaining_one_cents', 'two' => 'totals.remaining_two_cents', default => 'totals.remaining_cents'
+        };
+        // Outstanding institution balances include purchases that only have future due dates.
+        // Keep the existing current-month navigation/count filters unchanged.
+        $institutionBalances = (clone $q)->reorder()->select('d.institution_id')
+            ->selectRaw('SUM(COALESCE('.$balanceColumn.', 0)) AS pending_cents')->groupBy('d.institution_id')->get()
+            ->map(fn ($row) => ['institution_id' => (int) $row->institution_id, 'remaining_cents' => (int) $row->pending_cents]);
         if ($status === 'active' && $r->boolean('month_only')) {
             $q->where('totals.month_remaining_cents', '>', 0);
         }
@@ -337,8 +345,9 @@ class ExpenseControlController extends Controller
             'oldest' => $q->orderBy('d.id'), 'name' => $q->orderBy('d.name')->orderBy('d.id'), 'value' => $q->orderByDesc('totals.remaining_cents')->orderBy('d.id'), default => $q->orderByDesc('d.id')
         };
 
-        $counts = (clone $q)->reorder()->select('d.institution_id', 'd.type_id')->selectRaw('COUNT(*) AS debt_count')->groupBy('d.institution_id', 'd.type_id')->get()
-            ->map(fn ($row) => ['institution_id' => (int) $row->institution_id, 'type_id' => (int) $row->type_id, 'count' => (int) $row->debt_count]);
+        $counts = (clone $q)->reorder()->select('d.institution_id', 'd.type_id')
+            ->selectRaw('COUNT(*) AS debt_count, SUM(COALESCE('.$balanceColumn.', 0)) AS pending_cents')->groupBy('d.institution_id', 'd.type_id')->get()
+            ->map(fn ($row) => ['institution_id' => (int) $row->institution_id, 'type_id' => (int) $row->type_id, 'count' => (int) $row->debt_count, 'remaining_cents' => (int) $row->pending_cents]);
 
         $result = $q->paginate(20);
         if ($status === 'settled') {
@@ -351,7 +360,7 @@ class ExpenseControlController extends Controller
             });
         }
 
-        return response()->json([...$result->toArray(), 'catalog_counts' => $counts]);
+        return response()->json([...$result->toArray(), 'catalog_counts' => $counts, 'institution_balances' => $institutionBalances]);
     }
 
     public function show(int $id): JsonResponse
@@ -520,6 +529,44 @@ class ExpenseControlController extends Controller
         $this->control->ensureMonth($this->control->month($data['month']));
 
         return $r->boolean('preview') ? response()->json($this->control->institutionPlan($data)) : response()->json($this->control->recordInstitution($r, $data, $audit), 201);
+    }
+
+    public function personBalances(Request $r): JsonResponse
+    {
+        $data = $r->validate(['target' => 'required|in:one,two', 'month' => 'required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12']);
+        $field = $data['target'] === 'one' ? 'remaining_one_cents' : 'remaining_two_cents';
+        $month = $this->control->month($data['month']);
+        $rows = $this->control->installments()->whereNull('d.cancelled_at')->orderBy('bank.name')->orderBy('type.name')->orderBy('d.name')->orderBy('i.due_on')->get()
+            ->map(fn ($i) => $this->control->figures($i))->filter(fn ($i) => $i[$field] > 0)->groupBy('debt_id');
+        $debts = $rows->map(function ($items) use ($field, $month) {
+            $first = $items->first();
+
+            return ['id' => (int) $first['debt_id'], 'name' => $first['name'], 'institution_id' => (int) $first['institution_id'],
+                'institution_name' => $first['institution_name'], 'type_id' => (int) $first['type_id'], 'type_name' => $first['type_name'],
+                'responsibility' => $first['responsibility'], 'recurrence' => $first['recurrence'], 'remaining_cents' => (int) $items->sum($field),
+                'month_remaining_cents' => (int) $items->filter(fn ($i) => $i['due_on'] >= $month->toDateString() && $i['due_on'] <= $month->endOfMonth()->toDateString())->sum($field)];
+        })->values();
+
+        return response()->json(['target' => $data['target'], 'month' => $data['month'], 'debts' => $debts])->header('Cache-Control', 'no-store, private');
+    }
+
+    public function personPayment(Request $r, int $id, Audit $audit): JsonResponse
+    {
+        $preview = $r->isMethod('get');
+        $rules = ['target' => 'required|in:one,two', 'action' => 'required|in:month,partial,total',
+            'month' => 'required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12',
+            'amount_cents' => ($preview ? 'nullable|required_if:action,partial' : 'required').'|integer|min:1|max:100000000'];
+        if (! $preview) {
+            $rules += ['request_key' => 'required|uuid', 'preview_hash' => 'required|string|size:64',
+                'paid_by' => 'required|integer|in:1,2', 'occurred_on' => 'required|date_format:Y-m-d|before_or_equal:today', 'notes' => 'nullable|string|max:500'];
+        }
+        $data = [...$r->validate($rules), 'debt_id' => $id];
+        if ($preview) {
+            return response()->json($this->control->personDebtPlan($data))->header('Cache-Control', 'no-store, private');
+        }
+        $data['kind'] = $data['action'] === 'total' ? 'advance' : 'payment';
+
+        return response()->json($this->control->record($r, $data, $audit), 201);
     }
 
     public function operation(Request $r, Audit $audit): JsonResponse

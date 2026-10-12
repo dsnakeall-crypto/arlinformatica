@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CalendarDays, ChevronRight, CircleDollarSign, Users, Wallet } from 'lucide-react';
+import { CalendarDays, ChevronRight, CircleDollarSign, DollarSign, Users, Wallet } from 'lucide-react';
 import '../css/expense-summary-overview.css';
 
 /** Os valores originais e os saldos permanecem calculados pelo backend em centavos. */
@@ -54,7 +54,7 @@ export function SummaryIndicators({ totals, people, portraits, onExport, onNext 
   </section>;
 }
 
-export function PersonBalanceCards({ totals, people, portraits, onOpen }: { totals: Totals; people: Person[]; portraits: ReactNode[]; onOpen?: (person: 'one' | 'two') => void }) {
+export function PersonBalanceCards({ totals, people, portraits, onOpen, onPay }: { totals: Totals; people: Person[]; portraits: ReactNode[]; onOpen?: (person: 'one' | 'two') => void; onPay?: (person: 'one' | 'two') => void }) {
   const names = personNames(people);
   return <div className="cgo-people" aria-label="Valores por responsável">{(['one', 'two'] as const).map((key, index) => {
     const personal = cents(totals, key + '_personal_original_cents');
@@ -69,7 +69,7 @@ export function PersonBalanceCards({ totals, people, portraits, onOpen }: { tota
         <div><dt>Valor casal</dt><dd>{money(shared)}</dd></div>
         <div><dt>Pago / abatido</dt><dd className="cgo-paid">{money(credited)}</dd></div>
         <div className="cgo-total-row"><dt>Valor total</dt><dd>{money(total)}</dd></div>
-        <div className="cgo-due-row"><dt>Falta pagar</dt><dd>{money(remaining)}</dd></div>
+        <div className="cgo-due-row"><dt>Falta pagar{onPay && <button type="button" className="cg-person-quick-pay" aria-label={'Pagamento rápido de ' + names[index]} onClick={() => onPay(key)}><DollarSign aria-hidden="true" /></button>}</dt><dd>{money(remaining)}</dd></div>
       </dl>
       {onOpen && <button type="button" onClick={() => onOpen(key)}>Ver gastos de {names[index]} <ChevronRight /></button>}
     </article>;

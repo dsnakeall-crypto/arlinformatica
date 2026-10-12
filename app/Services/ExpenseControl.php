@@ -295,6 +295,42 @@ class ExpenseControl
         }, 3);
     }
 
+    public function personDebtPlan(array $data): array
+    {
+        $debt = DB::table('cg_debts')->find($data['debt_id']);
+        abort_unless($debt, 404);
+        abort_if($debt->cancelled_at, 422, 'A dívida está cancelada.');
+        $field = $data['target'] === 'one' ? 'remaining_one_cents' : 'remaining_two_cents';
+        $query = $this->installments()->where('d.id', $debt->id);
+        if ($data['action'] === 'month') {
+            $month = $this->month($data['month']);
+            $query->whereBetween('i.due_on', [$month->toDateString(), $month->endOfMonth()->toDateString()]);
+        }
+        // Read only real installments. Never invent future recurring months to calculate a balance.
+        $items = $query->orderBy('i.due_on')->orderBy('i.id')->get()
+            ->map(fn ($i) => $this->figures($i))->filter(fn ($i) => $i[$field] > 0)->values();
+        $balance = (int) $items->sum($field);
+        $amount = $data['action'] === 'partial' ? (int) $data['amount_cents'] : $balance;
+        abort_if($amount <= 0 || $amount > $balance, 422, 'O valor deve ser positivo e não pode superar o saldo deste responsável na dívida selecionada.');
+        $left = $amount;
+        $allocations = [];
+        foreach ($items as $item) {
+            if ($left === 0) {
+                break;
+            }
+            $credit = min($left, $item[$field]);
+            $allocations[] = ['id' => (int) $item['id'], 'number' => (int) $item['number'], 'due_on' => $item['due_on'],
+                'amount_cents' => $credit, 'remaining_cents' => $item[$field] - $credit];
+            $left -= $credit;
+        }
+
+        return ['debt_id' => (int) $debt->id, 'name' => $debt->name, 'target' => $data['target'], 'action' => $data['action'],
+            'recurrence' => $debt->recurrence, 'balance_cents' => $balance, 'total_cents' => $amount,
+            'remaining_cents' => $balance - $amount, 'allocations' => $allocations,
+            'preview_hash' => hash('sha256', json_encode([$debt->id, $data['target'], $data['action'], $data['month'], $amount,
+                $items->map(fn ($i) => [$i['id'], $i['due_on'], $i[$field]])->all()]))];
+    }
+
     public function record(Request $request, array $data, Audit $audit): array
     {
         return DB::transaction(function () use ($request, $data, $audit) {
@@ -306,7 +342,19 @@ class ExpenseControl
 
                 return ['id' => $old->id, 'replayed' => true];
             }
-            $ids = $data['installment_ids'];
+            $quick = isset($data['debt_id']);
+            $amounts = [];
+            if ($quick) {
+                DB::table('cg_debts')->where('id', $data['debt_id'])->lockForUpdate()->first();
+                DB::table('cg_installments')->where('debt_id', $data['debt_id'])->orderBy('id')->lockForUpdate()->get();
+                $plan = $this->personDebtPlan($data);
+                abort_unless(hash_equals($plan['preview_hash'], $data['preview_hash']), 409, 'O saldo mudou. Confira novamente antes de confirmar.');
+                abort_unless((int) $data['amount_cents'] === $plan['total_cents'], 409, 'O valor mudou. Confira novamente antes de confirmar.');
+                $amounts = array_column($plan['allocations'], 'amount_cents', 'id');
+                $ids = array_keys($amounts);
+            } else {
+                $ids = $data['installment_ids'];
+            }
             $debtIds = DB::table('cg_installments')->whereIn('id', $ids)->distinct()->orderBy('debt_id')->pluck('debt_id');
             DB::table('cg_debts')->whereIn('id', $debtIds)->orderBy('id')->lockForUpdate()->get();
             DB::table('cg_installments')->whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get();
@@ -319,7 +367,7 @@ class ExpenseControl
                 $one = $data['target'] === 'two' ? 0 : $figures['remaining_one_cents'];
                 $two = $data['target'] === 'one' ? 0 : $figures['remaining_two_cents'];
                 $remaining = $one + $two;
-                $amount = $data['amount_cents'] ?? $remaining;
+                $amount = $quick ? $amounts[$item->id] : ($data['amount_cents'] ?? $remaining);
                 abort_if($amount <= 0 || $amount > $remaining, 422, 'O valor deve ser positivo e não pode superar o saldo da parte selecionada.');
                 if ($one === 0) {
                     $a = 0;
