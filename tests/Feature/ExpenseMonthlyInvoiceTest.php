@@ -80,6 +80,23 @@ class ExpenseMonthlyInvoiceTest extends TestCase
         $this->assertDatabaseCount('cg_entries', 3);
     }
 
+    public function test_purchase_list_distinguishes_registered_total_monthly_original_payment_and_discount(): void
+    {
+        $debt = $this->debt('one', 10000, ['recurrence' => 'installments', 'installment_count' => 3]);
+        $this->pay($debt, 'one', 2000);
+        $this->postJson('/api/expense-control/operations', ['request_key' => (string) Str::uuid(), 'installment_ids' => [$debt['installments'][0]['id']], 'target' => 'one', 'kind' => 'discount', 'amount_cents' => 1000, 'occurred_on' => '2026-10-15'])->assertCreated();
+        $october = $this->getJson('/api/expense-control/debts?month=2026-10&type='.$this->type)->assertOk()
+            ->assertJsonPath('data.0.month_original_cents', 10000)->assertJsonPath('data.0.month_paid_cents', 2000)
+            ->assertJsonPath('data.0.month_discount_cents', 1000)->json('data.0');
+        $this->assertSame(30000, (int) $october['original_cents']);
+        $this->assertSame(27000, (int) $october['remaining_cents']);
+        $this->assertSame(7000, (int) $october['month_remaining_cents']);
+        $this->getJson('/api/expense-control/debts?month=2026-11&type='.$this->type)->assertOk()
+            ->assertJsonPath('data.0.month_original_cents', 10000)->assertJsonPath('data.0.month_paid_cents', 0)
+            ->assertJsonPath('data.0.month_discount_cents', 0);
+        $this->assertDatabaseCount('cg_entries', 2);
+    }
+
     public function test_invoice_modalities_are_not_mixed_and_partial_state_is_explicit(): void
     {
         $one = $this->debt('one', 10000);

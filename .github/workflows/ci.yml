@@ -27,6 +27,10 @@ jobs:
       - run: php artisan migrate --seed --force
       - run: vendor/bin/pint --test
       - run: php artisan test
+      - name: Validate prepared publication without SSH or SQL
+        run: |
+          php deploy/test-final-publication-helpers.php
+          php deploy/test-final-publication-integration.php
       - name: Validate production PHP dependencies
         run: |
           composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress

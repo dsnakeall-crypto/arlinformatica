@@ -51,24 +51,24 @@ export async function createExpenseStatementPdf(scope: SummaryScope, summary: Su
     const description=doc.splitTextToSize(clean('Mês: '+monthLabel(month)+'   •   Responsável: '+owner),R-L) as string[];
     doc.text(description,L,y);
     y+=description.length*5+6;
-    doc.setFillColor(...theme.soft);doc.roundedRect(L,y,R-L,27,4,4,'F');
+    doc.setFillColor(...theme.soft);doc.roundedRect(L,y,R-L,23,4,4,'F');
     font(8,false,theme.secondary);
     doc.text('TOTAL ORIGINAL',L+6,y+8);doc.text('PAGO',L+65,y+8);doc.text('FALTA PAGAR',L+125,y+8);
     font(12,true);
     doc.text(money(original),L+6,y+19);doc.text(money(paid),L+65,y+19);doc.text(money(remaining),L+125,y+19);
-    y+=37;
+    y+=30;
     if (result.credit_cents > paid) { font(8,false,theme.secondary); doc.text('Abatimentos sem pagamento: '+money(result.credit_cents-paid),L,y); y+=8; }
     if(scope==='one'||scope==='two'){
       const personal=num(totals,scope+'_personal_original_cents');
       const shared=num(totals,scope+'_shared_original_cents');
       font(9,false,theme.secondary);
-      doc.text('Pessoal: '+money(personal)+'     Casal (minha parte): '+money(shared),L,y);y+=10;
+      doc.text('Pessoal: '+money(personal)+'     Casal (minha parte): '+money(shared),L,y);y+=5;
     } else if(scope==='shared'){
       font(9,false,theme.secondary);
       doc.text(clean('Parte de '+one+': '+money(num(totals,'one_shared_original_cents'))),L,y);y+=6;
       doc.text(clean('Parte de '+two+': '+money(num(totals,'two_shared_original_cents'))),L,y);y+=9;
     }
-    font(8,false,theme.secondary);doc.text('Instituições, faturas e parcelas do mês selecionado (inclusive já quitadas).',L,y);y+=10;
+    font(8,false,theme.secondary);doc.text('Instituições, faturas e parcelas do mês selecionado (inclusive já quitadas).',L,y);y+=7;
   };
   topHeader();
   if(!result.institutions.length){
@@ -108,12 +108,12 @@ export async function createExpenseStatementPdf(scope: SummaryScope, summary: Su
   };
   const invoice=(i:StatementInvoice) => {
     const labelLines=paragraph(i.label,111,9.5,true);
-    const headerHeight=Math.max(16,10+labelLines.length*5);
+    const headerHeight=Math.max(14,8+labelLines.length*4.5);
     reserve(headerHeight+14);
     doc.setFillColor(...theme.soft);doc.roundedRect(L+2,y-2,R-L-4,headerHeight,2,2,'F');
     font(9.5,true);doc.text(labelLines,L+6,y+5);
     font(8,false,theme.secondary);doc.text('Vence '+formatDate(i.due_on),R-5,y+5,{align:'right'});
-    y+=headerHeight+3;
+    y+=headerHeight+1;
     reserve(8);
     font(7.5,true,theme.secondary);
     doc.text('DÍVIDA / PARCELA',L+5,y);
@@ -133,7 +133,7 @@ export async function createExpenseStatementPdf(scope: SummaryScope, summary: Su
     const headingHeight=Math.max(15,7+name.length*5.5);
     reserve(headingHeight+5);
     doc.setFillColor(...theme.navy);doc.roundedRect(L,y,R-L,headingHeight,2.5,2.5,'F');
-    font(10.5,true,[255,255,255]);doc.text(name,L+5,y+9);y+=headingHeight+6;
+    font(10.5,true,[255,255,255]);doc.text(name,L+5,y+9);y+=headingHeight+3;
     for(const inv of institution.invoices)invoice(inv);
     subline('TOTAL DA INSTITUIÇÃO', money(institution.original_cents));
     reserve(7);font(8,false,theme.secondary);

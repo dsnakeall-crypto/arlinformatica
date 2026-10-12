@@ -299,9 +299,9 @@ class ExpenseControlController extends Controller
         $month = $this->period($r);
         $this->control->ensureMonth($month);
         $r->validate(['q' => 'nullable|string|max:200', 'institution' => 'nullable|integer', 'type' => 'nullable|integer', 'person' => 'nullable|in:one,two,shared', 'status' => 'nullable|in:active,settled,cancelled', 'sort' => 'nullable|in:newest,oldest,name,value']);
-        $aggregate = $this->control->installments()->select('i.debt_id')->selectRaw('SUM(COALESCE(credits.paid, 0)) AS paid_cents, SUM(COALESCE(credits.discounted, 0)) AS discount_cents, SUM(i.amount_cents) AS original_cents, SUM(i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0)) AS remaining_cents, SUM(i.share_one_cents - COALESCE(credits.credit_one, 0)) AS remaining_one_cents, SUM(i.share_two_cents - COALESCE(credits.credit_two, 0)) AS remaining_two_cents, SUM(CASE WHEN i.month_on = ? THEN i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0) ELSE 0 END) AS month_remaining_cents', [$month->toDateString()])->groupBy('i.debt_id');
+        $aggregate = $this->control->installments()->select('i.debt_id')->selectRaw('SUM(COALESCE(credits.paid, 0)) AS paid_cents, SUM(COALESCE(credits.discounted, 0)) AS discount_cents, SUM(i.amount_cents) AS original_cents, SUM(i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0)) AS remaining_cents, SUM(i.share_one_cents - COALESCE(credits.credit_one, 0)) AS remaining_one_cents, SUM(i.share_two_cents - COALESCE(credits.credit_two, 0)) AS remaining_two_cents, SUM(CASE WHEN i.month_on = ? THEN i.amount_cents - COALESCE(credits.credit_one, 0) - COALESCE(credits.credit_two, 0) ELSE 0 END) AS month_remaining_cents', [$month->toDateString()])->selectRaw('SUM(CASE WHEN i.month_on = ? THEN i.amount_cents ELSE 0 END) AS month_original_cents, SUM(CASE WHEN i.month_on = ? THEN COALESCE(credits.paid, 0) ELSE 0 END) AS month_paid_cents, SUM(CASE WHEN i.month_on = ? THEN COALESCE(credits.discounted, 0) ELSE 0 END) AS month_discount_cents', [$month->toDateString(), $month->toDateString(), $month->toDateString()])->groupBy('i.debt_id');
         $q = DB::table('cg_debts as d')->join('cg_institutions as bank', 'bank.id', '=', 'd.institution_id')->join('cg_types as type', 'type.id', '=', 'd.type_id')->leftJoinSub($aggregate, 'totals', fn ($j) => $j->on('totals.debt_id', '=', 'd.id'))
-            ->select('d.*', 'bank.name as institution_name', 'bank.color', 'type.name as type_name', 'totals.paid_cents', 'totals.discount_cents', 'totals.original_cents', 'totals.remaining_cents', 'totals.month_remaining_cents');
+            ->select('d.*', 'bank.name as institution_name', 'bank.color', 'type.name as type_name', 'totals.paid_cents', 'totals.discount_cents', 'totals.original_cents', 'totals.remaining_cents', 'totals.month_remaining_cents', 'totals.month_original_cents', 'totals.month_paid_cents', 'totals.month_discount_cents');
         if ($search = trim((string) $r->query('q'))) {
             $q->where(fn ($q) => $q->where('d.name', 'like', '%'.$search.'%')->orWhere('bank.name', 'like', '%'.$search.'%'));
         }
@@ -348,6 +348,11 @@ class ExpenseControlController extends Controller
             ->map(fn ($row) => ['institution_id' => (int) $row->institution_id, 'type_id' => (int) $row->type_id, 'count' => (int) $row->debt_count, 'remaining_cents' => (int) $row->pending_cents]);
 
         $result = $q->paginate(20);
+        $result->getCollection()->each(function ($row) {
+            foreach (['month_original_cents', 'month_paid_cents', 'month_discount_cents'] as $field) {
+                $row->{$field} = (int) ($row->{$field} ?? 0);
+            }
+        });
         if ($status === 'settled') {
             $payers = DB::table('cg_entries as e')->join('cg_installments as i', 'i.id', '=', 'e.installment_id')
                 ->whereIn('i.debt_id', $result->getCollection()->pluck('id'))->whereNull('e.reversed_at')

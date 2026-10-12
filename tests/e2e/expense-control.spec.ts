@@ -136,12 +136,12 @@ test('controle: resumo com cinco indicadores e projeção oferece lista e cards'
   const month = await page.getByRole('button', { name: 'Selecionar mês do Controle de Gasto', exact: true }).getAttribute('data-month');
   const data = (await api(page, '/expense-control/summary?month=' + month)).body;
   const money = (n: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n / 100);
-  // 09/10/2026: o seletor Allan/Carol/Casal foi removido; cinco indicadores mostram original e falta pagar ao mesmo tempo.
+  // 09/10/2026: o seletor Allan/Carol/Casal foi removido; cinco indicadores mostram o saldo pendente; históricos originais permanecem no backend.
   await expect(page.locator('.cg-summary-filter')).toHaveCount(0);
   const indicators = page.getByRole('region', { name: 'Indicadores do mês' });
   for (const key of ['month', 'one', 'two', 'shared']) {
     const prefix = key === 'month' ? '' : key + '_';
-    await expect(indicators.locator('.cgo-' + key + ' .cgo-original')).toContainText(money(data.totals[key === 'month' ? 'remaining_cents' : prefix + 'original_cents']));
+    await expect(indicators.locator('.cgo-' + key + ' .cgo-original')).toContainText(money(data.totals[prefix + 'remaining_cents']));
     if (key === 'month') {
       await expect(indicators.locator('.cgo-month .cgo-remaining')).toHaveCount(0);
     } else {

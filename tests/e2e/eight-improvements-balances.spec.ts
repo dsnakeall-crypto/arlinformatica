@@ -16,7 +16,7 @@ for (const width of [1366, 390]) test(`saldos e parcelas pessoais preservados em
     expect(type.status).toBe(200); firstType ??= type.body.id;
     const debt = await api(page, '/expense-control/debts', 'POST', { request_key: crypto.randomUUID(), institution_id: bank.body.id, type_id: type.body.id,
       name: index === 0 ? name : name + ' ' + index, recurrence: 'once', responsibility: 'one', percent_one: 100, amount_cents: 10000, installment_count: 1, first_number: 1, start_month: month, due_day: 12,
-      notes: index === 0 ? 'Cadastro por foto. Dados conferidos pelo usuário. Observação manual preservada' : null });
+      notes: index === 0 ? 'Importado por foto\nCadastro por foto. Dados conferidos pelo usuário. Observação manual preservada' : null });
     expect(debt.status, JSON.stringify(debt.body)).toBe(201);
   }
   const future = new Date(); future.setDate(1); future.setMonth(future.getMonth() + 1);
@@ -36,7 +36,24 @@ for (const width of [1366, 390]) test(`saldos e parcelas pessoais preservados em
   }
   await page.locator('.cg-institution').filter({ hasText: bank.body.name }).click();
   await page.locator('.cg-type-grid button').filter({ hasText: 'Tipo ' + stamp + ' 0' }).click();
-  await page.locator('.cg-debt-row').filter({ has: page.getByText(name, { exact: true }) }).click();
+  const purchase = page.locator('.cg-debt-row').filter({ has: page.getByText(name, { exact: true }) });
+  await expect(purchase).toContainText('Observação manual preservada');
+  await expect(purchase).not.toContainText('Importado por foto');
+  await expect(purchase).not.toContainText('Dados conferidos pelo usuário');
+  await expect(purchase.locator('.cg-debt-figures')).toContainText('Valor cadastrado');
+  await expect(purchase.locator('.cg-debt-figures')).toContainText('Parcela do mês');
+  await expect(purchase.locator('.cg-debt-figures')).toContainText('Pago no mês');
+  await expect(purchase.locator('.cg-debt-figures')).toContainText('Pendente no mês');
+  expect((await purchase.boundingBox())!.height).toBeLessThanOrEqual(width < 700 ? 170 : 130);
+  await expect(purchase).toHaveCSS('padding-top', '8px');
+  await page.screenshot({path:`output/pacote-final/compra-${width}.png`,fullPage:true});
+  await purchase.click();
+  const edit = page.getByRole('button',{name:'Editar identificação',exact:true});
+  const remove = page.getByRole('button',{name:'Excluir dívida',exact:true});
+  const editBox=await edit.boundingBox(), removeBox=await remove.boundingBox();
+  expect(Math.abs(editBox!.y-removeBox!.y)).toBeLessThanOrEqual(1);
+  expect(removeBox!.x).toBeGreaterThan(editBox!.x);
+
   const row = page.locator('.cg-table-wrap tbody tr').first();
   await expect(row.locator('.cg-installment-name')).toContainText(name);
   await expect(row.locator('.cg-installment-origin').first()).toContainText(bank.body.name);

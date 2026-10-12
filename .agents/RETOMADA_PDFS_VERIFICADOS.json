@@ -1,0 +1,32 @@
+[
+  {
+    "report": "one",
+    "pages": 1,
+    "has_month": true,
+    "has_total": true
+  },
+  {
+    "report": "two",
+    "pages": 1,
+    "has_month": true,
+    "has_total": true
+  },
+  {
+    "report": "shared",
+    "pages": 1,
+    "has_month": true,
+    "has_total": true
+  },
+  {
+    "report": "month",
+    "pages": 1,
+    "has_month": true,
+    "has_total": true
+  },
+  {
+    "report": "zero",
+    "pages": 1,
+    "has_month": true,
+    "has_total": true
+  }
+]

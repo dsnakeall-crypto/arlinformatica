@@ -149,7 +149,7 @@ html body .cg-eight-improvements .cg-debt-heading .cg-actions button { width: au
 html body .cg-eight-improvements .cg-debt-identity h2 { margin: 4px 0; font-size: 18px; }
 html body .cg-eight-improvements .cg-detail-totals { margin-top: 8px; padding: 8px; gap: 8px; }
 html body .cg-eight-improvements .cg-section-heading h2 { font-size: 18px; }
-html body .cg-eight-improvements .cg-debt-card { padding: 10px !important; margin-bottom: 8px; }
+
 @media (max-width: 700px) {
   html body .shell.layout-mobile .arl-expense-bottom.arl-expense-matched,
   html body .shell.layout-mobile .arl-global-mobile-nav.arl-mobile-five { bottom: 0 !important; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important; }
@@ -159,3 +159,30 @@ html body .cg-eight-improvements .cg-debt-card { padding: 10px !important; margi
 
 html:root[data-arl-appearance][data-arl-palette] body button#cg-return-arl { color: #b91c1c !important; }
 html:root[data-arl-appearance][data-arl-palette] body button.cg-person-quick-pay:is(#cg-person-pay-one, #cg-person-pay-two) { color: #198446 !important; border: 1px solid #a8cdb6 !important; border-radius: 50% !important; background: #f5fbf7 !important; }
+
+/* Lista real de compras: números separados, conteúdo manual preservado. */
+html:root[data-layout] body .shell .cg-page.cg-eight-improvements .cg-debt-row {
+  display: grid !important; grid-template-columns: 28px minmax(0, 1fr) minmax(230px, .8fr) 16px;
+  gap: 8px !important; padding: 8px 10px !important; min-height: 0 !important; align-items: center;
+}
+.cg-debt-figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 10px; text-align: right; }
+.cg-debt-figures > span { min-width: 0; }
+html body .cg-eight-improvements .cg-debt-figures b { font-size: 12px; margin: 2px 0 0; }
+html body .cg-eight-improvements .cg-debt-figures small { font-size: 10px; line-height: 1.2; margin-top: 0; }
+html body .cg-eight-improvements .cg-debt-month-pending strong { font-size: 14px; }
+html body .cg-eight-improvements .cg-debt-heading .cg-actions > button:first-child { order: 1; }
+html body .cg-eight-improvements .cg-debt-heading .cg-actions > .cg-danger { order: 2; }
+html body .cg-eight-improvements .cg-debt-heading .cg-actions > button:not(:first-child):not(.cg-danger) { order: 3; }
+@media (max-width: 700px) {
+  html:root[data-layout] body .shell .cg-page.cg-eight-improvements .cg-debt-row { grid-template-columns: 24px minmax(0, 1fr) 14px; }
+  html body .cg-eight-improvements .cg-debt-row > span:nth-child(2) { grid-column: 2; min-width: 0; }
+  html body .cg-eight-improvements .cg-debt-row > .cg-row-values { grid-column: 2; grid-row: 2; width: 100%; margin: 0; }
+  html body .cg-eight-improvements .cg-debt-row > svg:last-child { grid-column: 3; grid-row: 1; }
+  .cg-debt-figures { text-align: left; }
+}
+
+html body .cg-eight-improvements .cg-debt-heading .cg-actions { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(100%, 340px); max-width: 100%; flex: 0 0 340px; }
+html body .cg-eight-improvements .cg-debt-heading .cg-actions > button { width: 100% !important; min-width: 0; white-space: normal; }
+html body .cg-eight-improvements .cg-debt-heading .cg-actions > button:not(:first-child):not(.cg-danger) { grid-column: 1 / -1; }
+html body .cg-eight-improvements .cg-debt-row > span:nth-child(2) b { font-size: 12px !important; line-height: 1.25; }
+html body .cg-eight-improvements .cg-debt-row small { font-size: 10px !important; line-height: 1.2 !important; margin-top: 1px !important; }
