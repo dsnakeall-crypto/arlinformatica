@@ -85,3 +85,12 @@ Antes de ativar, a conferência da mesma regra de CI (Pint completo) apontou for
 A CI remota completa também será conferida antes de ativar. Não pedir autorização novamente para as mesmas ações já autorizadas. Senha apenas no prompt nativo SSH.
 
 Conferência remota apontou duas diferenças adicionais de Pint somente em deploy/*.php, relacionadas ao PHP 8.2/Linux. Reproduzidas no container Linux existente, sem rede, e corrigidas no ambiente igual à CI. Pint completo Linux e helpers de ativação/rollback revalidados; não há alteração de runtime/schema. Aguardar CI do novo checkpoint antes da ativação. Candidatos ZIP anteriores continuam preservados e sem uso em produção.
+
+## Estado vigente pré-SSH — 12/10/2026
+Este registro substitui as pendências históricas de confirmação/push e os candidatos anteriores acima. O proprietário autorizou o push e, depois, determinou parada ANTES de abrir SSH. Essa parada é obrigatória até nova instrução.
+- Fonte enviada ao GitHub: 9c6eaf403670def1a43b68850f7eef2b08f9b524, branch codex/oito-melhorias-20261012.
+- Pacote atual: output/releases/ARL-OITO-MELHORIAS-9c6eaf403670.zip; SHA256 ed262aa93f926ab14054cfad7e7632d315e255790f183a6970887a545268bc2e; 37.683.483 bytes/7.856 arquivos. CRC/hashes/validação local aprovados; runtime idêntico ao primeiro candidato validado. Candidatos anteriores preservados.
+- CI atual: https://github.com/dsnakeall-crypto/arlinformatica/actions/runs/38246418929. Backend SQLite, MySQL e frontend aprovados; E2E ainda em execução às 09:15 de Brasília. Não declarar CI completa verde enquanto faltar esse resultado.
+- Nenhum SSH, upload ou alteração de servidor/banco foi executado nesta missão. Não é necessário deixar uma sessão SSH aberta durante a ausência do proprietário.
+- Depois de CI verde e nova instrução para retomar: executar o executor com o manifesto 9c6eaf403670 e -AutorizarPublicacao; senha apenas no prompt nativo. Fazer smoke autenticado somente de leitura. Sem migrations, merge ou pagamentos fictícios.
+- Comando de validação sem conexão: pwsh -NoProfile -File deploy/PUBLICAR-OITO-MELHORIAS.ps1 -PacoteRelatorio output/releases/ARL-OITO-MELHORIAS-9c6eaf403670.json -ValidarLocal.

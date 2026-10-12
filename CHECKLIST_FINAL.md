@@ -1114,3 +1114,9 @@ Relatório: .agents/OITO_MELHORIAS_RESULTADO_20261012.md. Não iniciar outra eta
 - [OK] Pacote c9ded0e0458d: CRC/hashes individuais/SHA e varredura independente aprovados; 37.683.480 bytes, 7.856 arquivos; sem env/bancos/storage/uploads/testes/logs/deploy/node_modules.
 - [OK] Executor local validado e autorização ausente bloqueada antes de SSH.
 - [PENDENTE] Confirmação expressa para push/KingHost; preflight remoto, CI GitHub e smoke autenticado. Nenhuma dessas etapas foi executada.
+
+## Estado vigente das oito melhorias — antes de SSH
+- [OK] Fonte 9c6eaf403670 enviada ao GitHub com autorização; pacote correspondente validado. Candidatos anteriores são históricos.
+- [OK] CI dessa fonte: backend SQLite, backend MySQL e frontend aprovados.
+- [PENDENTE] Conclusão da suíte E2E remota (run 38246418929).
+- [PENDENTE] Retorno/instrução do proprietário para abrir SSH; preflight, ativação e smoke autenticado. Parada obrigatória antes da conexão. Nenhuma alteração oficial nesta missão.

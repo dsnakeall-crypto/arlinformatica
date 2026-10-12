@@ -115,3 +115,10 @@ A automação está PAUSED. Nenhum push/KingHost/produção. Próximo passo apó
 
 Pacote pronto para revisão: output/releases/ARL-OITO-MELHORIAS-c9ded0e0458d.zip e manifesto .json. Fonte c9ded0e0458d25091156eb0bd084ad20a05fa7b4; SHA256 f5d6f455aeb4a4754f85acf921514eb04c24aab1c1681dc8a9d7ddd80bfee117.
 Executor novo e comandos em .agents/OITO_MELHORIAS_RESULTADO_20261012.md. Local validation/guard de autorização aprovados; sem SSH. Trabalho de implementação/validação encerrado: aguardar confirmação expressa do proprietário para push e ativação. Não iniciar publicação automaticamente.
+
+## Pausa obrigatória antes de SSH — instrução prioritária do proprietário
+O proprietário pediu: "antes da publicacao oficial pare ... finalize tudo q precisar ... a hr q precisar abrir o SSH pare". Ainda não foi aberto SSH nesta publicação e não houve upload, staging remoto, alteração de aliases, ponteiro, banco ou servidor. Pode concluir preparação/CI/correções locais e pushes autorizados, mas NÃO iniciar SSH ou ativação até nova instrução do proprietário.
+Fonte preparada atual: 9c6eaf403670def1a43b68850f7eef2b08f9b524.
+Pacote atual: output/releases/ARL-OITO-MELHORIAS-9c6eaf403670.zip; SHA256 ed262aa93f926ab14054cfad7e7632d315e255790f183a6970887a545268bc2e. Mesmos hashes de runtime do candidato inicial aprovado; somente identificação atualizada.
+CI: https://github.com/dsnakeall-crypto/arlinformatica/actions/runs/38246418929; backend SQLite, backend MySQL e frontend aprovados; E2E ainda aguardando conclusão na hora desta anotação.
+Retomada: conferir resultado da CI e git status/HEAD antes de usar qualquer comando. Não reabrir SSH automaticamente. Não é necessário deixar senha/sessão aberta durante a ausência do usuário; senha somente no prompt nativo quando ele retornar.
