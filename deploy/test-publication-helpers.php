@@ -4,6 +4,11 @@
 declare(strict_types=1);
 define('ARL_DEPLOY_LIBRARY_ONLY', true);
 require __DIR__.'/publish-eight-improvements.php';
+arlCheck(arlStaticEquivalent('arl-assets/arl.svg', "<svg>\r\n</svg>\r\n", "<svg>\n</svg>\n"), 'STATIC_NEWLINE_FAILED');
+arlCheck(arlStaticEquivalent('manifest.webmanifest', "{}\r\n", "{}\n"), 'MANIFEST_NEWLINE_FAILED');
+arlCheck(! arlStaticEquivalent('arl-assets/arl.svg', "<svg>A</svg>\r\n", "<svg>B</svg>\n"), 'STATIC_CONTENT_CHANGE_ACCEPTED');
+arlCheck(! arlStaticEquivalent('build/assets/app.js', "a\r\n", "a\n"), 'HASHED_ASSET_NEWLINE_ACCEPTED');
+arlCheck(! arlStaticEquivalent('unknown.json', "{}\r\n", "{}\n"), 'UNKNOWN_STATIC_ACCEPTED');
 $dir = dirname(__DIR__).'/output/releases/simulation-'.bin2hex(random_bytes(6));
 arlCheck(mkdir($dir, 0700, true), 'FIXTURE_FAILED');
 $dir = realpath($dir);

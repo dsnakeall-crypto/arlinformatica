@@ -37,6 +37,15 @@ function arlPointer(string $pointer, string $root): void
     clearstatcache(true, $pointer);
     arlCheck(realpath($pointer) === $root, 'POINTER_VERIFY_FAILED');
 }
+function arlStaticEquivalent(string $name, string $existing, string $candidate): bool
+{
+    if ($existing === $candidate) {
+        return true;
+    }
+
+    return in_array($name, ['arl-assets/arl.svg', 'icons/arl.svg', 'arl-assets/expense-cards/catalog.json', 'manifest.webmanifest'], true)
+        && str_replace("\r\n", "\n", $existing) === str_replace("\r\n", "\n", $candidate);
+}
 function arlShared(string $pointer, array $roots, string $current, string $release, string $e90): string
 {
     $allowed = implode(',', array_map(fn ($value) => var_export($value, true), $roots));
@@ -128,31 +137,37 @@ try {
         exit;
     }
     $phase = 'PACKAGE_UPLOAD';
-    arlCheck(! file_exists($base) && ! is_link($base), 'STAGE_EXISTS_DO_NOT_OVERWRITE');
-    arlCheck(mkdir($base, 0750), 'STAGE_CREATE_FAILED');
-    arlEvent('READY_UPLOAD');
+    $reuseStage = is_dir($base);
+    arlCheck(! is_link($base) && (! file_exists($base) || realpath($base) === $base), 'STAGE_EXISTS_DO_NOT_OVERWRITE');
     $zipPath = $base.'/package.zip';
-    $upload = fopen($zipPath, 'xb');
-    arlCheck($upload !== false, 'UPLOAD_OPEN_FAILED');
-    $size = 0;
-    try {
-        while (($line = fgets(STDIN)) !== false) {
-            $line = trim($line);
-            if ($line === 'END_PACKAGE') {
-                break;
-            }$bytes = base64_decode($line, true);
-            arlCheck(is_string($bytes), 'UPLOAD_ENCODING_FAILED');
-            $size += strlen($bytes);
-            arlCheck($size <= $cfg['bytes'], 'UPLOAD_SIZE_EXCEEDED');
-            arlCheck(fwrite($upload, $bytes) === strlen($bytes), 'UPLOAD_WRITE_FAILED');
-        }arlCheck(fflush($upload), 'UPLOAD_FLUSH_FAILED');
-        if (function_exists('fsync')) {
-            arlCheck(fsync($upload), 'UPLOAD_SYNC_FAILED');
+    if ($reuseStage) {
+        arlCheck(is_file($zipPath) && ! is_link($zipPath) && filesize($zipPath) === $cfg['bytes'] && hash_file('sha256', $zipPath) === $cfg['sha256'] && realpath($new) === $new, 'STAGE_REUSE_INVALID');
+        arlEvent('STAGE_REUSED_VERIFIED');
+    } else {
+        arlCheck(mkdir($base, 0750), 'STAGE_CREATE_FAILED');
+        arlEvent('READY_UPLOAD');
+        $upload = fopen($zipPath, 'xb');
+        arlCheck($upload !== false, 'UPLOAD_OPEN_FAILED');
+        $size = 0;
+        try {
+            while (($line = fgets(STDIN)) !== false) {
+                $line = trim($line);
+                if ($line === 'END_PACKAGE') {
+                    break;
+                }$bytes = base64_decode($line, true);
+                arlCheck(is_string($bytes), 'UPLOAD_ENCODING_FAILED');
+                $size += strlen($bytes);
+                arlCheck($size <= $cfg['bytes'], 'UPLOAD_SIZE_EXCEEDED');
+                arlCheck(fwrite($upload, $bytes) === strlen($bytes), 'UPLOAD_WRITE_FAILED');
+            }arlCheck(fflush($upload), 'UPLOAD_FLUSH_FAILED');
+            if (function_exists('fsync')) {
+                arlCheck(fsync($upload), 'UPLOAD_SYNC_FAILED');
+            }
+        } finally {
+            fclose($upload);
         }
-    } finally {
-        fclose($upload);
+        arlCheck($size === $cfg['bytes'] && hash_file('sha256', $zipPath) === $cfg['sha256'], 'UPLOAD_HASH_FAILED');
     }
-    arlCheck($size === $cfg['bytes'] && hash_file('sha256', $zipPath) === $cfg['sha256'], 'UPLOAD_HASH_FAILED');
     $phase = 'PACKAGE_VERIFY';
     $zip = new ZipArchive;
     arlCheck($zip->open($zipPath, ZipArchive::CHECKCONS) === true, 'ZIP_FAILED');
@@ -165,7 +180,10 @@ try {
         $zip->getExternalAttributesIndex($i, $opsys, $attributes);
         arlCheck((($attributes >> 16) & 0170000) !== 0120000, 'ZIP_SYMLINK');
     }
-    arlCheck($zip->extractTo($base), 'EXTRACT_FAILED');
+    if (! $reuseStage) {
+        arlCheck($zip->extractTo($base), 'EXTRACT_FAILED');
+    }
+    arlCheck(file_get_contents($new.'/.release.json') === $zip->getFromName($prefix.'.release.json'), 'STAGE_METADATA_CHANGED');
     $zip->close();
     arlCheck(realpath($new) === $new, 'STAGE_PATH_CHANGED');
     $metadata = json_decode(file_get_contents($new.'/.release.json'), true, 512, JSON_THROW_ON_ERROR);
@@ -179,8 +197,17 @@ try {
     $envHash = hash_file('sha256', $old.'/.env');
     $storage = realpath($old.'/storage');
     arlCheck(is_string($storage) && str_starts_with($storage, '/home/arlinfocg/'), 'SHARED_STORAGE_INVALID');
-    arlCheck(symlink($old.'/.env', $new.'/.env') && symlink($storage, $new.'/storage'), 'PRIVATE_LINK_FAILED');
-    arlCheck(mkdir($new.'/bootstrap/cache', 0750), 'CACHE_CREATE_FAILED');
+    foreach (['.env' => $old.'/.env', 'storage' => $storage] as $name => $target) {
+        $link = $new.'/'.$name;
+        if (! file_exists($link) && ! is_link($link)) {
+            arlCheck(symlink($target, $link), 'PRIVATE_LINK_FAILED');
+        }
+        arlCheck(is_link($link) && realpath($link) === realpath($target), 'PRIVATE_LINK_CHANGED');
+    }
+    if (! is_dir($new.'/bootstrap/cache')) {
+        arlCheck(mkdir($new.'/bootstrap/cache', 0750), 'CACHE_CREATE_FAILED');
+    }
+    arlCheck(! is_link($new.'/bootstrap/cache') && realpath($new.'/bootstrap/cache') === $new.'/bootstrap/cache', 'CACHE_PATH_CHANGED');
     foreach (['vendor/autoload.php', 'bootstrap/app.php', 'public/build/manifest.json'] as $path) {
         arlCheck(is_file($new.'/'.$path), 'RUNTIME_MISSING');
     }
@@ -227,7 +254,7 @@ try {
         $static[$name] = hash_file('sha256', $file->getPathname());
         if (file_exists($target)) {
             arlCheck(! is_link($target), 'STATIC_TARGET_SYMLINK');
-            arlCheck(isset($next[$name]) || hash_file('sha256', $target) === $static[$name], 'STATIC_COLLISION');
+            arlCheck(isset($next[$name]) || arlStaticEquivalent($name, file_get_contents($target), file_get_contents($file->getPathname())), 'STATIC_COLLISION');
 
             continue;
         }$parent = dirname($target);
