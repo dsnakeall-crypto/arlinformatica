@@ -94,3 +94,8 @@ Este registro substitui as pendências históricas de confirmação/push e os ca
 - Nenhum SSH, upload ou alteração de servidor/banco foi executado nesta missão. Não é necessário deixar uma sessão SSH aberta durante a ausência do proprietário.
 - Depois de CI verde e nova instrução para retomar: executar o executor com o manifesto 9c6eaf403670 e -AutorizarPublicacao; senha apenas no prompt nativo. Fazer smoke autenticado somente de leitura. Sem migrations, merge ou pagamentos fictícios.
 - Comando de validação sem conexão: pwsh -NoProfile -File deploy/PUBLICAR-OITO-MELHORIAS.ps1 -PacoteRelatorio output/releases/ARL-OITO-MELHORIAS-9c6eaf403670.json -ValidarLocal.
+
+## Correção de expectativas E2E após CI completa
+CI 9c6eaf403670: 267 aprovados/2 reprovados em 28,6 minutos. Ambos reprovados em expense-web-reference-compact-20261010.spec.ts exigiam quatro colunas; a Alteração 05 expressamente exige cinco, altura conforme categorias e ausência de scroll interno. Atualizado somente esse teste: cinco colunas em tela larga, quebra após quinto cartão, alturas iguais por linha, conteúdo sem corte/scroll interno, redução monotônica em telas estreitas. Preservadas ações, imagens, cores, navegação e overflow horizontal. Nenhum runtime alterado e nenhum teste desabilitado.
+Backup externo do teste antes da edição: Backups/oito-melhorias-base-20261012-012927/expense-web-reference-before-ci-fix.ts; SHA comparado. Prova remota em CI_9c6_E2E_ANNOTATIONS.json.
+Validação local: npx playwright test expense-web-reference-compact-20261010.spec.ts eight-improvements.spec.ts — 5 aprovados em 44,5 segundos. Lint e TypeScript aprovados; logs CI_FIX_LINT/CI_FIX_TYPECHECK. Nova CI completa deverá confirmar o resultado antes da liberação. Continuar parada obrigatória antes de SSH.

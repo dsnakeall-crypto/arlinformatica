@@ -37,7 +37,7 @@ async function gridMetrics(grid:Locator) {
   });
 }
 
-test('Web Gastos e Instituições: cartões COMPACTOS em 4 colunas e visual da referência',async({page})=>{
+test('Web Gastos e Instituições: cartões em 5 colunas, altura automática e visual preservado',async({page})=>{
   mkdirSync(shots,{recursive:true});
   await page.setViewportSize({width:1600,height:900});
   await login(page);
@@ -55,13 +55,22 @@ test('Web Gastos e Instituições: cartões COMPACTOS em 4 colunas e visual da r
     await expect(grid).toBeVisible();
     await expect.poll(async()=>grid.locator(':scope > .cg-institution').count()).toBeGreaterThanOrEqual(8);
     const metrics=await gridMetrics(grid);
-    expect(metrics.columns,JSON.stringify(metrics)).toBe(4);
-    expect(metrics.boxes[0].y).toBe(metrics.boxes[3].y);
-    expect(metrics.boxes[4].y).toBeGreaterThan(metrics.boxes[0].y);
+    expect(metrics.columns,JSON.stringify(metrics)).toBe(5);
+    expect(metrics.boxes[0].y).toBe(metrics.boxes[4].y);
+    expect(metrics.boxes[5].y).toBeGreaterThan(metrics.boxes[0].y);
     for(const card of metrics.boxes) {
       expect(card.w,JSON.stringify(metrics)).toBeLessThanOrEqual(330);
       expect(card.w).toBeGreaterThan(150);
-      expect(card.h,JSON.stringify(metrics)).toBeLessThanOrEqual(400);
+      expect(card.h,JSON.stringify(metrics)).toBeGreaterThan(0);
+      // Alteração 05: a altura acompanha categorias, sem teto que corte conteúdo.
+      const sameRow=metrics.boxes.filter(other=>other.y===card.y);
+      expect(new Set(sameRow.map(other=>other.h)).size).toBe(1);
+    }
+    const counts=grid.locator('.cg-institution-counts');
+    for(const content of await counts.all()) {
+      const size=await content.evaluate(el=>({overflow:getComputedStyle(el).overflowY,scroll:el.scrollHeight,client:el.clientHeight}));
+      expect(size.overflow).toBe('visible');
+      expect(size.scroll).toBeLessThanOrEqual(size.client+1);
     }
     const first=grid.locator(':scope > .cg-institution').first();
     await expect(first).toBeVisible();
@@ -87,6 +96,7 @@ test('Web Gastos/Instituições se adapta em janelas estreitas e preserva layout
   await selectDesktop(page);
   await seedBanks(page);
   await page.goto('/expense-control');
+  const previousColumns=new Map<string,number>();
   for(const width of [1440,1220,950,760]){
     await page.setViewportSize({width,height:850});
     for(const tab of ['Gastos','Instituições']){
@@ -99,11 +109,14 @@ test('Web Gastos/Instituições se adapta em janelas estreitas e preserva layout
       await expect(grid).toBeVisible();
       const m=await gridMetrics(grid);
       expect(m.columns).toBeGreaterThanOrEqual(1);
-      expect(m.columns).toBeLessThanOrEqual(4);
+      expect(m.columns).toBeLessThanOrEqual(5);
+      expect(m.columns).toBeLessThanOrEqual(previousColumns.get(tab) ?? 5);
+      previousColumns.set(tab,m.columns);
       await expect(page.locator('.shell.layout-desktop')).toBeVisible();
       expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+3);
-      // Sidebar ocupa parte do viewport; aos 1220px a grade pode ter 3 colunas.
-      if(width>=1440) expect(m.columns,JSON.stringify({width,m})).toBe(4);
+      // Cinco cartões em tela larga, redução real nas janelas estreitas.
+      if(width>=1440) expect(m.columns,JSON.stringify({width,m})).toBe(5);
+      if(width<=950) expect(m.columns).toBeLessThan(5);
     }
   }
 });

@@ -1,0 +1,62 @@
+[
+  {
+    "path": ".github",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/9c6eaf403670def1a43b68850f7eef2b08f9b524/.github",
+    "start_line": 2,
+    "start_column": null,
+    "end_line": 2,
+    "end_column": null,
+    "annotation_level": "warning",
+    "title": "",
+    "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/",
+    "raw_details": ""
+  },
+  {
+    "path": ".github",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/9c6eaf403670def1a43b68850f7eef2b08f9b524/.github",
+    "start_line": 82619,
+    "start_column": null,
+    "end_line": 82619,
+    "end_column": null,
+    "annotation_level": "failure",
+    "title": "",
+    "message": "Process completed with exit code 1.",
+    "raw_details": ""
+  },
+  {
+    "path": ".github",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/9c6eaf403670def1a43b68850f7eef2b08f9b524/.github",
+    "start_line": 82615,
+    "start_column": null,
+    "end_line": 82615,
+    "end_column": null,
+    "annotation_level": "notice",
+    "title": "🎭 Playwright Run Summary",
+    "message": "  2 failed\n    [desktop-chromium] › tests/e2e/expense-web-reference-compact-20261010.spec.ts:40:1 › Web Gastos e Instituições: cartões COMPACTOS em 4 colunas e visual da referência \n    [desktop-chromium] › tests/e2e/expense-web-reference-compact-20261010.spec.ts:84:1 › Web Gastos/Instituições se adapta em janelas estreitas e preserva layout Web \n  267 passed (28.6m)",
+    "raw_details": ""
+  },
+  {
+    "path": "tests/e2e/expense-web-reference-compact-20261010.spec.ts",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/9c6eaf403670def1a43b68850f7eef2b08f9b524/tests/e2e/expense-web-reference-compact-20261010.spec.ts",
+    "start_line": 102,
+    "start_column": 25,
+    "end_line": 102,
+    "end_column": 25,
+    "annotation_level": "failure",
+    "title": "[desktop-chromium] › tests/e2e/expense-web-reference-compact-20261010.spec.ts:84:1 › Web Gastos/Instituições se adapta em janelas estreitas e preserva layout Web",
+    "message": "  2) [desktop-chromium] › tests/e2e/expense-web-reference-compact-20261010.spec.ts:84:1 › Web Gastos/Instituições se adapta em janelas estreitas e preserva layout Web \n    Error: expect(received).toBeLessThanOrEqual(expected)\n\n    Expected: <= 4\n    Received:    5\n\n      100 |       const m=await gridMetrics(grid);\n      101 |       expect(m.columns).toBeGreaterThanOrEqual(1);\n    > 102 |       expect(m.columns).toBeLessThanOrEqual(4);\n          |                         ^\n      103 |       await expect(page.locator('.shell.layout-desktop')).toBeVisible();\n      104 |       expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+3);\n      105 |       // Sidebar ocupa parte do viewport; aos 1220px a grade pode ter 3 colunas.\n        at /home/runner/work/arlinformatica/arlinformatica/tests/e2e/expense-web-reference-compact-20261010.spec.ts:102:25",
+    "raw_details": ""
+  },
+  {
+    "path": "tests/e2e/expense-web-reference-compact-20261010.spec.ts",
+    "blob_href": "https://github.com/dsnakeall-crypto/arlinformatica/blob/9c6eaf403670def1a43b68850f7eef2b08f9b524/tests/e2e/expense-web-reference-compact-20261010.spec.ts",
+    "start_line": 58,
+    "start_column": 53,
+    "end_line": 58,
+    "end_column": 53,
+    "annotation_level": "failure",
+    "title": "[desktop-chromium] › tests/e2e/expense-web-reference-compact-20261010.spec.ts:40:1 › Web Gastos e Instituições: cartões COMPACTOS em 4 colunas e visual da referência",
+    "message": "  1) [desktop-chromium] › tests/e2e/expense-web-reference-compact-20261010.spec.ts:40:1 › Web Gastos e Instituições: cartões COMPACTOS em 4 colunas e visual da referência \n    Error: {\"boxes\":[{\"x\":114,\"y\":526,\"w\":212,\"h\":1293},{\"x\":336,\"y\":526,\"w\":212,\"h\":1293},{\"x\":558,\"y\":526,\"w\":212,\"h\":1293},{\"x\":780,\"y\":526,\"w\":212,\"h\":1293},{\"x\":1002,\"y\":526,\"w\":212,\"h\":1293},{\"x\":114,\"y\":1829,\"w\":212,\"h\":1293},{\"x\":336,\"y\":1829,\"w\":212,\"h\":1293},{\"x\":558,\"y\":1829,\"w\":212,\"h\":1293}],\"columns\":5,\"width\":1100}\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: 4\n    Received: 5\n\n      56 |     await expect.poll(async()=>grid.locator(':scope > .cg-institution').count()).toBeGreaterThanOrEqual(8);\n      57 |     const metrics=await gridMetrics(grid);\n    > 58 |     expect(metrics.columns,JSON.stringify(metrics)).toBe(4);\n         |                                                     ^\n      59 |     expect(metrics.boxes[0].y).toBe(metrics.boxes[3].y);\n      60 |     expect(metrics.boxes[4].y).toBeGreaterThan(metrics.boxes[0].y);\n      61 |     for(const card of metrics.boxes) {\n        at /home/runner/work/arlinformatica/arlinformatica/tests/e2e/expense-web-reference-compact-20261010.spec.ts:58:53",
+    "raw_details": ""
+  }
+]
