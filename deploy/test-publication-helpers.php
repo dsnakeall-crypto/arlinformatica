@@ -4,6 +4,13 @@
 declare(strict_types=1);
 define('ARL_DEPLOY_LIBRARY_ONLY', true);
 require __DIR__.'/publish-eight-improvements.php';
+arlCheck(arlExpenseAsset(['_expense-abcd.js' => ['file' => 'assets/expense-abcd.js', 'name' => 'expense-control-page', 'isDynamicEntry' => true]]) === 'assets/expense-abcd.js', 'DYNAMIC_MANIFEST_FAILED');
+try {
+    arlExpenseAsset([]);
+    throw new RuntimeException('MISSING_MANIFEST_ACCEPTED');
+} catch (RuntimeException $error) {
+    arlCheck($error->getMessage() === 'EXPENSE_MANIFEST_ENTRY_INVALID', 'MANIFEST_GUARD_FAILED');
+}
 arlCheck(arlStaticEquivalent('arl-assets/arl.svg', "<svg>\r\n</svg>\r\n", "<svg>\n</svg>\n"), 'STATIC_NEWLINE_FAILED');
 arlCheck(arlStaticEquivalent('manifest.webmanifest', "{}\r\n", "{}\n"), 'MANIFEST_NEWLINE_FAILED');
 arlCheck(! arlStaticEquivalent('arl-assets/arl.svg', "<svg>A</svg>\r\n", "<svg>B</svg>\n"), 'STATIC_CONTENT_CHANGE_ACCEPTED');

@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$PacoteRelatorio,[switch]$AutorizarPublicacao,[switch]$ValidarLocal,[switch]$Reverter,[string]$Resultado)
+param([Parameter(Mandatory=$true)][string]$PacoteRelatorio,[switch]$AutorizarPublicacao,[switch]$ValidarLocal,[switch]$Reverter,[string]$Resultado,[string]$BackupAliasesExistente)
 $ErrorActionPreference='Stop'
 $arlReport=Get-Content -LiteralPath $PacoteRelatorio -Raw|ConvertFrom-Json
 $arlPackage=[IO.Path]::GetFullPath($arlReport.package)
@@ -46,10 +46,20 @@ try{
       $arlProcess.StandardInput.WriteLine('END_PACKAGE');$arlProcess.StandardInput.Flush()
     }
     if($arlEvent.event -eq 'BACKUP_ALIASES'){
+      if(-not [string]::IsNullOrWhiteSpace($BackupAliasesExistente)){
+        $arlBackupFile=[IO.Path]::GetFullPath($BackupAliasesExistente)
+        $arlVerified=Get-Content -LiteralPath $arlBackupFile -Raw|ConvertFrom-Json
+        foreach($arlField in @('release','old','new','lock')){if($arlVerified.$arlField -ne $arlEvent.backup.$arlField){throw 'Backup existente de outro estado.'}}
+        foreach($arlAlias in $arlEvent.backup.aliases.PSObject.Properties){
+          $arlExisting=$arlVerified.aliases.($arlAlias.Name)
+          if($null -eq $arlExisting -or $arlExisting.sha256 -ne $arlAlias.Value.sha256 -or $arlExisting.data -ne $arlAlias.Value.data){throw 'Alias diverge do backup existente; nao criar novo backup.'}
+        }
+      }else{
       $arlBackupBytes=[Text.Encoding]::UTF8.GetBytes(($arlEvent.backup|ConvertTo-Json -Depth 20))
       $arlBackupFile=Join-Path $arlBackupRoot ('ARL-Oito-Aliases-e90-'+$arlStamp+'.json')
       $arlStream=[IO.File]::Open($arlBackupFile,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
       try{$arlStream.Write($arlBackupBytes,0,$arlBackupBytes.Length);$arlStream.Flush($true)}finally{$arlStream.Dispose()}
+      }
       $arlBackupHash=(Get-FileHash -LiteralPath $arlBackupFile).Hash.ToLowerInvariant()
       $arlVerified=Get-Content -LiteralPath $arlBackupFile -Raw|ConvertFrom-Json
       foreach($arlAlias in $arlVerified.aliases.PSObject.Properties){
@@ -62,7 +72,7 @@ try{
       $arlEvent|Add-Member -NotePropertyName backup_sha256 -NotePropertyValue $arlBackupHash
       $arlEvents.Add($arlEvent);Save-ArlEvents
       $arlProcess.StandardInput.WriteLine('BACKUP_VERIFIED');$arlProcess.StandardInput.Flush()
-      Write-Host 'Backup de aliases e90 validado no OneDrive.'
+      Write-Host 'Backup de aliases e90 validado no OneDrive (existente quando informado).'
     }else{$arlEvents.Add($arlEvent);Save-ArlEvents}
     Write-Host ('ARL: '+$arlEvent.event)
   }

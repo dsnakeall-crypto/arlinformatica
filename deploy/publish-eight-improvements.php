@@ -53,6 +53,13 @@ function arlCronProbe(string $source, string $probe, string $pointer): string
 
     return substr_replace($source, "\n".$standalone, 5, 0);
 }
+function arlExpenseAsset(array $manifest): string
+{
+    $matches = array_filter($manifest, fn ($entry) => ($entry['name'] ?? '') === 'expense-control-page' && ($entry['isDynamicEntry'] ?? false) === true && str_ends_with($entry['file'] ?? '', '.js'));
+    arlCheck(count($matches) === 1, 'EXPENSE_MANIFEST_ENTRY_INVALID');
+
+    return array_values($matches)[0]['file'];
+}
 function arlShared(string $pointer, array $roots, string $current, string $release, string $e90): string
 {
     $allowed = implode(',', array_map(fn ($value) => var_export($value, true), $roots));
@@ -332,8 +339,8 @@ try {
         arlCheck(arlHttp($path, ['Accept: application/json'])['status'] === 401, 'PRIVATE_API_NOT_PROTECTED');
     }
     arlCheck(arlHttp('cron-scheduler.php')['status'] === 403, 'CRON_AUTH_FAILED');
-    foreach (['resources/js/main.tsx', 'resources/js/expense-control-page.tsx'] as $key) {
-        $asset = 'build/'.$manifest[$key]['file'];
+    foreach ([$manifest['resources/js/main.tsx']['file'], arlExpenseAsset($manifest)] as $file) {
+        $asset = 'build/'.$file;
         $r = arlHttp($asset);
         arlCheck($r['status'] === 200 && hash('sha256', $r['body']) === $static[$asset], 'ASSET_HTTP_HASH_FAILED');
     }
