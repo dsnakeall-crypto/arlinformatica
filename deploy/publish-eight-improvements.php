@@ -53,7 +53,7 @@ function arlHttp(string $path, array $headers = []): array
             $received[strtolower(trim($key))] = trim($value);
         }
 
-return strlen($line);
+        return strlen($line);
     }]);
     $body = curl_exec($h);
     $status = curl_getinfo($h, CURLINFO_HTTP_CODE);
@@ -296,14 +296,14 @@ try {
         arlCheck($r['status'] === 200 && hash('sha256', $r['body']) === $static[$asset], 'ASSET_HTTP_HASH_FAILED');
     }
     foreach (['index.php', 'cron-scheduler.php'] as $name) {
-        arlAtomic($www.'/'.$name,str_replace($probe,'',$next[$name]));
+        arlAtomic($www.'/'.$name, str_replace($probe, '', $next[$name]));
     }
     $home = arlHttp('');
-    arlCheck($home['status'] === 200 && ($home['headers']['x-arl-release'] ?? '') === $release,'FINAL_RELEASE_FAILED');
-    arlCheck(hash_file('sha256',$old.'/.env') === $envHash && realpath($new.'/storage') === $storage,'FINAL_PRIVATE_REFERENCES_CHANGED');
+    arlCheck($home['status'] === 200 && ($home['headers']['x-arl-release'] ?? '') === $release, 'FINAL_RELEASE_FAILED');
+    arlCheck(hash_file('sha256', $old.'/.env') === $envHash && realpath($new.'/storage') === $storage, 'FINAL_PRIVATE_REFERENCES_CHANGED');
     $success = true;
-    arlEvent('PUBLISHED',['release' => $release, 'old' => $old, 'new' => $new, 'database' => 'UNCHANGED_NO_MIGRATION', 'private_files' => 'SHARED_UNCHANGED', 'authenticated_smoke' => 'OWNER_SESSION_REQUIRED']);
+    arlEvent('PUBLISHED', ['release' => $release, 'old' => $old, 'new' => $new, 'database' => 'UNCHANGED_NO_MIGRATION', 'private_files' => 'SHARED_UNCHANGED', 'authenticated_smoke' => 'OWNER_SESSION_REQUIRED']);
 } catch (Throwable $error) {
-    arlEvent('BLOCKED',['phase' => $phase, 'reason' => $error instanceof RuntimeException && preg_match('/^[A-Z0-9_]+$/',$error->getMessage()) ? $error->getMessage() : 'INTERNAL_ERROR_REQUIRES_REVIEW', 'database' => 'UNCHANGED_NO_SQL_RESTORE_NO_MIGRATION']);
+    arlEvent('BLOCKED', ['phase' => $phase, 'reason' => $error instanceof RuntimeException && preg_match('/^[A-Z0-9_]+$/', $error->getMessage()) ? $error->getMessage() : 'INTERNAL_ERROR_REQUIRES_REVIEW', 'database' => 'UNCHANGED_NO_SQL_RESTORE_NO_MIGRATION']);
     exit(20);
 }

@@ -42,7 +42,7 @@ try {
     arlAtomic($pointer, 'unsafe');
     throw new RuntimeException('UNSAFE_ALIAS_ACCEPTED');
 } catch (RuntimeException $e) {
-    arlCheck($e->getMessage() === 'UNSAFE_ALIAS','SYMLINK_GUARD_FAILED');
+    arlCheck($e->getMessage() === 'UNSAFE_ALIAS', 'SYMLINK_GUARD_FAILED');
 }
 echo "PASS: launcher syntax, allowlist extension, atomic activation, e90 rollback hashes and symlink guard.\n";
 echo 'Fixture: '.$dir."\n";
