@@ -1099,3 +1099,14 @@ Validação desta entrega: lint, 39 testes frontend, TypeScript/build de produç
 - [PENDENTE] Publicação/rollback: aguardar autorização específica. Não executar migrate:fresh, key:generate ou rollback destrutivo no banco oficial.
 
 Relatório: docs/PRE_PUBLICACAO_RESULTADO_20261011.md.
+
+# Oito melhorias — validação local de 12/10/2026
+- [OK] Oito alterações implementadas; saldos futuros, parte individual/casal, pagamento personalizado em dinheiro e histórico preservados.
+- [OK] Financeiro PHP: 64/64 SQLite (987 assertions), 52/52 MySQL (721 assertions); concorrência e replay isolados aprovados.
+- [OK] Playwright final: 28/28; frontend unitário: 51/51; lint, TypeScript e build final aprovados.
+- [OK] Segurança/CSRF, transação/rollback, efeitos colaterais e fluxo OS salvo/reaberto/editado verificados localmente.
+- [OK] Checkpoints exclusivamente na cópia isolada; original e produção sem alterações.
+- [OK] Helpers do executor testados em PHP 8.2/Linux local sem rede: troca atômica e rollback e90 por hash.
+- [PENDENTE] Manifesto do pacote final, preflight remoto, confirmação de push/ativação e smoke autenticado de produção.
+- [PENDENTE] CI remota GitHub: nenhum push executado; não afirmar aprovação remota a partir dos testes locais.
+Relatório: .agents/OITO_MELHORIAS_RESULTADO_20261012.md. Não iniciar outra etapa ou publicar automaticamente.

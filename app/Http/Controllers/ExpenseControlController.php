@@ -555,7 +555,8 @@ class ExpenseControlController extends Controller
         $preview = $r->isMethod('get');
         $rules = ['target' => 'required|in:one,two', 'action' => 'required|in:month,partial,total',
             'month' => 'required|date_format:Y-m|after_or_equal:2000-01|before_or_equal:2099-12',
-            'amount_cents' => ($preview ? 'nullable|required_if:action,partial' : 'required').'|integer|min:1|max:100000000'];
+            // Aggregate payments are bounded by the authoritative debt plan, not the per-installment ceiling.
+            'amount_cents' => ($preview ? 'nullable|required_if:action,partial' : 'required').'|integer|min:1'];
         if (! $preview) {
             $rules += ['request_key' => 'required|uuid', 'preview_hash' => 'required|string|size:64',
                 'paid_by' => 'required|integer|in:1,2', 'occurred_on' => 'required|date_format:Y-m-d|before_or_equal:today', 'notes' => 'nullable|string|max:500'];

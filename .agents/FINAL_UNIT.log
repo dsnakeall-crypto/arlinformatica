@@ -1,0 +1,65 @@
+
+> test:unit
+> node --experimental-strip-types --test tests/frontend/*.test.mjs
+
+✔ aparência rejeita preferências inválidas e preserva original como padrão (1.263ms)
+✔ sete paletas têm contraste AA para o texto dos botões (0.3836ms)
+(node:177768) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cached order presentation excludes balances, payments, passwords and full details (1.4586ms)
+✔ only four safe auxiliary endpoints are allowed; complete parameters retained (18.9182ms)
+✔ successful mutations invalidate related resources; failures keep valid data (4.299ms)
+✔ 401/419 clear generation, 403 removes appropriate resource, logout rejects old response (0.2615ms)
+✔ safe auxiliaries share a pending GET, reuse completed data, revalidate after invalidation (12.0879ms)
+✔ pending auxiliary response cannot return user A data after identity change (4.413ms)
+✔ tabs exchange topic names/clear only, never cached clients, tokens or personal payloads (0.9916ms)
+✔ daily receipts preserve cents and exclude outflows, refunds and expenses (1.0485ms)
+✔ UUID de requisição funciona sem randomUUID, preserva versão 4 e não repete IDs (9.3376ms)
+✔ hash local SHA-256 coincide com implementação nativa, inclusive limites de bloco e foto grande (73.5067ms)
+✔ extrai compras, não confunde data com parcela e ignora pagamentos/totais (2.3848ms)
+✔ aceita parcela após o valor, de e descrição quebrada em duas linhas (0.2637ms)
+✔ sinaliza duplicata sem descartá-la e não confunde compras de datas distintas (0.3039ms)
+✔ valores negativos, zero e linhas sem descrição não viram dívidas (0.1447ms)
+✔ parcelas inválidas e múltiplos valores exigem correção visível (0.2478ms)
+✔ Carol: inclui sua parte das compras do casal, sua fatura paga e empréstimo de outro banco (15.5394ms)
+✔ Allan: não contabiliza despesas próprias da Carol, nem a parcela dela nas compartilhadas (0.2254ms)
+✔ Casal: mostra só dívidas compartilhadas e preserva a divisão entre responsáveis (0.2978ms)
+✔ Global: soma originais e créditos sem somar novamente as cotas do casal (0.2753ms)
+✔ Fatura quitada continua detalhada mesmo com saldo restante zero (0.2171ms)
+✔ Lançamentos do mês renderiza timestamp SQL UTC em São Paulo sem acrescentar um segundo horário (22.6447ms)
+✔ timestamps ISO com Z e offset representam o mesmo instante no Financeiro (1.3969ms)
+✔ instante UTC perto da meia-noite aparece no dia anterior em São Paulo (0.4962ms)
+✔ data civil da despesa permanece no dia escolhido sem inventar horário na tela (0.8857ms)
+✔ linha complementar mostra estorno e líquido sem substituir o bruto (5.4335ms)
+✔ OS estornada preserva o cobrado, mostra líquido e devolução sem afirmar quitação (4.2519ms)
+✔ OS sem estorno conserva a mensagem de quitação (0.861ms)
+✔ GET simultâneo compartilha a mesma Promise e GET posterior volta ao servidor (0.8978ms)
+✔ erro limpa mapa; escopos, URLs e métodos distintos não são compartilhados (0.4725ms)
+✔ sinais e headers próprios não compartilham cancelamento ou identidade (0.1809ms)
+✔ jsPDF atual gera relatorio simples com as primitivas utilizadas pelo ARL (7.7855ms)
+✔ o Web/PC escolhido continua Web ao minimizar ou redimensionar para 390px (0.8826ms)
+✔ o mobile escolhido num computador continua mobile em monitor grande (0.1143ms)
+✔ novo navegador preserva escolha inicial automática mas a grava uma única vez (0.0913ms)
+✔ celular/tablet real recebe mobile independentemente de preferência anterior (0.0893ms)
+✔ default clock reads current Date.now rather than retaining an earlier function (1.108ms)
+✔ identity must be confirmed; session generation prevents old responses and user leaks (0.7032ms)
+✔ TTL, idle retention and bounded LRU are separate (0.3208ms)
+✔ a displayed list touched on exit starts idle retention then, without extending freshness (0.2536ms)
+✔ canonical parameters separate pages/search/tabs and completed responses cannot race (8.7969ms)
+✔ invalidation retains presentation, rejects pending writes; revocation removes content (0.5849ms)
+✔ auxiliary TTL is five minutes and invalidation overrides freshness (1.2323ms)
+✔ headers objeto, Headers e tuplas preservam CSRF e campos personalizados (20.4715ms)
+✔ Request mantém método, headers e corpo sem consumir o upload (1.818ms)
+✔ FormData não ganha Content-Type forçado e requisição externa não recebe token (0.1835ms)
+✔ 401/419 preservam Response e não repetem pagamentos após erro (0.822ms)
+✔ GET e erros de outra origem não disparam a recuperação de sessão (0.3713ms)
+✔ WhatsApp só abre após criação confirmada; bloqueio fornece alternativa e desativação fecha reserva (0.8877ms)
+✔ Mensagem final identifica somente quitação confirmada, em negrito entre parênteses (0.1596ms)
+ℹ tests 51
+ℹ suites 0
+ℹ pass 51
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 297.0521

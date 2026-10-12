@@ -154,6 +154,17 @@ class ExpensePersonPaymentTest extends TestCase
         $this->assertSame(21003, $this->preview($id, ['action' => 'total'])['total_cents']);
     }
 
+    public function test_aggregate_settlement_supports_valid_installments_above_the_single_installment_ceiling(): void
+    {
+        $id = $this->debt(['responsibility' => 'one', 'amount_cents' => 100000000, 'installment_count' => 2])['debt']['id'];
+        $plan = $this->preview($id, ['action' => 'total']);
+        $this->assertSame(200000000, $plan['total_cents']);
+        $this->postJson('/api/expense-control/debts/'.$id.'/person-payment', $this->confirmation($plan))->assertCreated();
+        $this->assertSame(200000000, (int) DB::table('cg_entries')->sum('amount_cents'));
+        $this->assertSame(100000000, (int) DB::table('cg_entries')->max('amount_cents'));
+        $this->assertSame(0, (int) DB::table('cg_entries')->sum('credit_two_cents'));
+    }
+
     public function test_unpermitted_user_cannot_read_plans_or_record_payment(): void
     {
         $id = $this->debt()['debt']['id'];$plan = $this->preview($id);

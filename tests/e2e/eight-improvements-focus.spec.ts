@@ -1,0 +1,35 @@
+import { test, expect } from '@playwright/test';
+import { api, login, uniqueDocument } from './helpers';
+
+test('foco: campos e status mantêm indicação de teclado suave e erros reais visíveis', async ({ page }) => {
+  await login(page);
+  await page.goto('/new');
+  const equipmentInput = page.getByLabel('Equipamento *');
+  await equipmentInput.focus();
+  await expect.poll(() => equipmentInput.evaluate(element => getComputedStyle(element).borderColor)).toBe('rgb(121, 137, 156)');
+  await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+  expect(await equipmentInput.evaluate(element => parseFloat(getComputedStyle(element).outlineWidth))).toBeGreaterThanOrEqual(2);
+  const stamp = Date.now();
+  const client = await api(page, '/clients', 'POST', { name: 'Focus client ' + stamp, document: uniqueDocument(stamp), phone: '34999998888', postal_code: '38400000', street: 'Rua fixture', number: '10', district: 'Centro', city: 'Uberlândia', state: 'MG' });
+  expect(client.status).toBe(201);
+  const catalog = await api(page, '/catalogs/equipment');
+  const order = await api(page, '/orders', 'POST', { client_id: client.body.id, equipment_type_id: catalog.body[0].id, attendance_type: 'bench', reported_problem: 'Fixture focus', checklist: [] });
+  expect(order.status).toBe(201);
+  await page.goto('/orders'); await page.mouse.move(1250, 10);
+  const status = page.locator(`select[aria-label="Status da OS ${order.body.number}"]:visible`).first();
+  await expect(status).toBeVisible();
+  const value = await status.inputValue();
+  const functionalColor = await status.evaluate(element => getComputedStyle(element).color);
+  await status.focus();
+  await expect.poll(() => status.evaluate(element => getComputedStyle(element).borderColor)).toBe('rgb(121, 137, 156)');
+  expect(await status.inputValue()).toBe(value);
+  expect(await status.evaluate(element => getComputedStyle(element).color)).toBe(functionalColor);
+  await page.goto('/clients');
+  await page.getByRole('button', { name: 'Novo cliente', exact: true }).click();
+  const form = page.getByTestId('client-form');
+  const response = page.waitForResponse(r => new URL(r.url()).pathname === '/api/clients' && r.request().method() === 'POST');
+  await form.getByRole('button', { name: 'Salvar cliente', exact: true }).click();
+  expect((await response).status()).toBe(422);
+  await expect(form.locator('input[name="name"]')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.locator('input[name="name"]').locator('..').locator('small')).toBeVisible();
+});

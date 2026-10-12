@@ -107,3 +107,8 @@ Automação retomar-arl-s-03-55 disparou e foi pausada oficialmente (sem nova se
 - Teste com 8 tipos: a regra antiga de overflow tinha mesma especificidade e era carregada depois. Corrigida prioridade apenas do cartão de Gastos. Totais incluem compras somente futuras (1000 reais na fixture). Validação final visual em execução; não declarar concluída antes do resultado.
 - Falhas intermediárias de fixtures preservadas em logs: percent_one obrigatório faltante, navegação mobile sem pesquisa (fluxo real usa instituição/tipo) e seleção de dívida por substring pegando outra dívida. Corrigidas fixtures para dados e fluxos reais; nenhum teste desabilitado.
 - Próximos passos: confirmar saldos/parcelas pessoais desktop/mobile, validar foco e estados de erro/status, revisão de segurança e regressões após correção financeira, lint/types/unit/build, relatório/checklist e preparação de pacote. Nenhuma publicação/push autorizada.
+
+## Resultado final local da retomada
+As oito melhorias passaram na validação local; detalhes em .agents/OITO_MELHORIAS_RESULTADO_20261012.md.
+Resultados finais: 64 PHP SQLite/987 assertions; 52 PHP MySQL/721 assertions; 28 Playwright; 51 unitários; lint/types/build. Concorrência ledger-only e replay aprovados após lockForUpdate do lookup de operação. Nenhuma migration.
+A automação está PAUSED. Nenhum push/KingHost/produção. Próximo passo após a preparação do pacote: proprietário revisar e dar confirmação expressa para qualquer push/ativação. Usar executor novo; rollback e90, não executor antigo com rollback 970. Não repetir análises/testes aprovados sem nova mudança ou preocupação concreta.
