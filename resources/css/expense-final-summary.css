@@ -1,0 +1,41 @@
+/* Escopo exclusivo do resumo aprovado para a missão de 13/10/2026. */
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-indicators.cgo-final-summary {
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;
+}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary>.cgo-indicator {
+  display:grid!important;grid-template-columns:minmax(0,1fr) 40px!important;
+  gap:6px 10px!important;padding:12px!important;border-radius:18px!important;
+}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary>.cgo-month {grid-column:1/-1!important}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary>.cgo-shared {background:linear-gradient(145deg,#fff9df,#fff0bc)!important;color:#30250b!important}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary .cgo-card-action {
+  min-height:0!important;height:auto!important;padding:0!important;background:transparent!important;
+  box-shadow:none!important;grid-column:1!important;border:0!important;
+}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary .cgo-card-content {
+  display:grid!important;grid-template-columns:38px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;gap:4px 9px!important;padding:0!important;
+}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary .cgo-card-heading {grid-column:1/-1!important;display:flex!important;min-height:0!important;text-transform:none!important;letter-spacing:0!important}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary .cgo-card-content>.cgo-original {
+  grid-column:2!important;margin:0!important;justify-self:start!important;
+  color:#111!important;font-size:19px!important;line-height:1.25!important;
+}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary .cgo-original-second {
+  grid-column:1/-1!important;background:transparent!important;border:0!important;
+  padding:3px 0!important;margin:0!important;color:#08742e!important;
+}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary .cgo-original-second b {color:#08742e!important;font-size:17px!important}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary .cg-payment-dollar {grid-column:2!important;grid-row:1!important;align-self:center!important}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary .cgo-next-inline {grid-column:1/-1!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;font-size:11px!important;text-align:left!important;color:#47566b!important}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary .cgo-view-person {grid-column:1/-1!important;display:flex!important;justify-content:space-between!important;min-height:30px!important;padding:3px 0!important;background:transparent!important;border:0!important;box-shadow:none!important;font-size:11px!important}
+.cgo-view-person svg{width:14px;height:14px}
+@media(max-width:760px){html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-indicators.cgo-final-summary{grid-template-columns:minmax(0,1fr)!important}}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) button.cg-payment-dollar {
+  background:linear-gradient(160deg,#42df7b,#18ad4c)!important;color:#000!important;
+  border:1px solid #172b1d!important;border-radius:50%!important;width:36px!important;height:36px!important;min-height:36px!important;padding:0!important;
+}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary>.cgo-indicator:not(.cgo-month) .cgo-card-content{grid-template-columns:minmax(70px,.85fr) minmax(100px,1.15fr)!important}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary>.cgo-indicator:not(.cgo-month) .cgo-card-heading{grid-column:1!important;grid-row:1/span 2!important;gap:5px!important;font-size:11px!important}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary .cgo-card-heading .cgo-icon{width:32px!important;height:32px!important;flex-shrink:0!important}
+html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary>.cgo-indicator:not(.cgo-month) .cgo-original-second{grid-column:2!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:2px!important;font-size:10px!important}

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\BackupService;
+use App\Services\ExpensePaymentReceipt;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -416,6 +417,81 @@ class ExpenseControlTest extends TestCase
         $this->assertSame('2026-10-31', $summary['views']['one']['due_institutions'][0]['due_on']);
         $monthly = $this->createDebt(['recurrence' => 'monthly']);
         $this->postJson('/api/expense-control/debts/'.$monthly['debt']['id'].'/settlement', ['preview' => true])->assertUnprocessable();
+    }
+
+    public function test_quick_institution_payment_separates_modality_month_and_other_person(): void
+    {
+        $personal = $this->createDebt(['responsibility' => 'one', 'amount_cents' => 10000]);
+        $shared = $this->createDebt(['amount_cents' => 20000]);
+        $loanType = $this->postJson('/api/expense-control/catalogs/types', ['name' => 'Empréstimo', 'active' => true])->assertOk()->json('id');
+        $this->createDebt(['type_id' => $loanType, 'responsibility' => 'one', 'amount_cents' => 50000]);
+        $base = ['institution_id' => $this->bank, 'type_id' => $this->type, 'scope' => 'one', 'month' => '2026-10', 'target' => 'one', 'amount_cents' => 20000];
+        $plan = $this->postJson('/api/expense-control/institution-payments', $base + ['preview' => true])->assertOk()->assertJsonPath('balance_cents', 20000)->assertJsonCount(2, 'allocations')->json();
+        $payment = $base + ['request_key' => (string) Str::uuid(), 'preview_hash' => $plan['preview_hash'], 'kind' => 'payment', 'paid_by' => 1, 'occurred_on' => '2026-10-02'];
+        $operation = $this->postJson('/api/expense-control/institution-payments', $payment)->assertCreated()->assertJsonPath('replayed', false)->json('id');
+        $this->postJson('/api/expense-control/institution-payments', $payment)->assertCreated()->assertJsonPath('id', $operation)->assertJsonPath('replayed', true);
+        $this->assertDatabaseCount('cg_entries', 2);
+        $this->assertSame(20000, (int) DB::table('cg_entries')->sum('credit_one_cents'));
+        $this->assertSame(0, (int) DB::table('cg_entries')->sum('credit_two_cents'));
+        foreach ([$personal, $shared] as $debt) {
+            $entries = DB::table('cg_entries')->where('installment_id', $debt['installments'][1]['id'])->count();
+            $this->assertSame(0, $entries, 'Parcelas futuras não devem ser antecipadas.');
+        }
+    }
+
+    public function test_quick_shared_institution_payment_rejects_changed_scope_and_wrong_payer(): void
+    {
+        $this->createDebt(['responsibility' => 'one', 'amount_cents' => 90000]);
+        $this->createDebt(['amount_cents' => 20000]);
+        $base = ['institution_id' => $this->bank, 'type_id' => $this->type, 'scope' => 'shared', 'month' => '2026-10', 'target' => 'one', 'amount_cents' => 10000];
+        $plan = $this->postJson('/api/expense-control/institution-payments', $base + ['preview' => true])->assertOk()->assertJsonPath('balance_cents', 10000)->assertJsonCount(1, 'allocations')->json();
+        $payment = $base + ['request_key' => (string) Str::uuid(), 'preview_hash' => $plan['preview_hash'], 'kind' => 'payment', 'paid_by' => 1, 'occurred_on' => '2026-10-02'];
+        $this->postJson('/api/expense-control/institution-payments', [...$payment, 'paid_by' => 2])->assertUnprocessable();
+        $this->postJson('/api/expense-control/institution-payments', [...$payment, 'scope' => 'two'])->assertUnprocessable();
+        $this->postJson('/api/expense-control/institution-payments', [...$payment, 'scope' => 'one'])->assertConflict();
+        $this->assertDatabaseCount('cg_entries', 0);
+        $this->postJson('/api/expense-control/institution-payments', $payment)->assertCreated();
+        $this->assertSame(0, (int) DB::table('cg_entries')->sum('credit_two_cents'));
+    }
+
+    public function test_payment_receipt_preserves_values_names_and_can_be_reissued_after_reversal(): void
+    {
+        $debt = $this->createDebt(['name' => 'Compra original', 'amount_cents' => 10000]);
+        $operation = $this->postJson('/api/expense-control/operations', $this->payment([$debt['installments'][0]['id']], ['amount_cents' => 2000]))->assertCreated()->json('id');
+        $url = '/api/expense-control/operations/'.$operation.'/receipt';
+        $this->getJson($url)->assertOk()->assertHeader('Cache-Control', 'no-store, private')
+            ->assertJsonPath('total_paid_cents', 2000)->assertJsonPath('rows.0.before_cents', 5000)
+            ->assertJsonPath('rows.0.after_cents', 3000)->assertJsonPath('rows.0.debt_name', 'Compra original');
+        DB::table('cg_debts')->where('id', $debt['debt']['id'])->update(['name' => 'Nome novo']);
+        $this->getJson($url)->assertOk()->assertJsonPath('rows.0.debt_name', 'Compra original');
+        $entry = DB::table('cg_entries')->where('operation_id', $operation)->value('id');
+        $this->postJson('/api/expense-control/entries/'.$entry.'/reverse', ['reason' => 'Estorno autorizado no teste'])->assertOk();
+        $this->getJson($url)->assertOk()->assertJsonPath('status', 'reversed')->assertJsonPath('total_paid_cents', 2000);
+        $this->assertDatabaseCount('cg_operations', 1);
+        $this->assertDatabaseCount('cg_entries', 1);
+        $this->actingAs($this->account('Usuário local'));
+        $this->getJson($url)->assertForbidden();
+    }
+
+    public function test_institution_payment_rolls_back_every_entry_if_receipt_snapshot_fails(): void
+    {
+        $this->createDebt(['responsibility' => 'one', 'amount_cents' => 10000]);
+        $this->createDebt(['responsibility' => 'one', 'amount_cents' => 20000]);
+        $base = ['institution_id' => $this->bank, 'type_id' => $this->type, 'scope' => 'one', 'month' => '2026-10', 'target' => 'one', 'amount_cents' => 30000];
+        $plan = $this->postJson('/api/expense-control/institution-payments', $base + ['preview' => true])->assertOk()->json();
+        $this->mock(ExpensePaymentReceipt::class, function ($mock) {
+            $mock->shouldReceive('capture')->once()->andThrow(new \RuntimeException('Falha fictícia no comprovante'));
+        });
+        $this->withoutExceptionHandling();
+        try {
+            $this->postJson('/api/expense-control/institution-payments', $base + ['request_key' => (string) Str::uuid(), 'preview_hash' => $plan['preview_hash'], 'kind' => 'payment', 'paid_by' => 1, 'occurred_on' => '2026-10-02']);
+            $this->fail('A falha precisa desfazer toda a transação.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('Falha fictícia no comprovante', $e->getMessage());
+        }
+        $this->assertDatabaseCount('cg_entries', 0);
+        $this->assertDatabaseCount('cg_operations', 0);
+        $this->assertSame(0, DB::table('audit_logs')->where('action', 'expense_control.operation_created')->count());
     }
 
     public function test_migration_starts_without_financial_data_or_changes_to_business_records(): void

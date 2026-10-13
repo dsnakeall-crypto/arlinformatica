@@ -18,7 +18,9 @@ if (DB::connection()->getDriverName() !== 'mysql' || ! preg_match('/(?:^|_)test(
     throw new RuntimeException('Explicit isolated local MySQL test required.');
 }
 $datadir = preg_replace('~/+~', '/', str_replace('\\', '/', DB::selectOne('SELECT @@datadir AS dir')->dir));
-if (! str_contains($datadir, 'ARL-backups/missao-final-mysql-20261011/data')) {
+$laragonFixture = str_contains($datadir, 'APP ARL/BACKUPS APP/LARAGON-SINCRONIZACAO-20261013/mysql-test-data')
+    && (int) config('database.connections.mysql.port') === 33418;
+if (! str_contains($datadir, 'ARL-backups/missao-final-mysql-20261011/data') && ! $laragonFixture) {
     throw new RuntimeException('Unexpected MySQL datadir.');
 }
 $users = [];
@@ -32,7 +34,11 @@ $request = Request::create('/fixture', 'POST');
 $request->setUserResolver(fn () => $users[0]);
 $id = $service->createDebt($request, ['request_key' => (string) Str::uuid(), 'institution_id' => $bank, 'type_id' => $type, 'name' => 'Concurrent shared', 'recurrence' => 'once', 'responsibility' => 'shared', 'percent_one' => 70, 'amount_cents' => 10000, 'installment_count' => 1, 'first_number' => 1, 'start_month' => '2026-10', 'due_day' => 10, 'notes' => null]);
 $planData = ['debt_id' => $id, 'target' => 'one', 'action' => 'partial', 'month' => '2026-10', 'amount_cents' => 5000];
-$plan = $service->personDebtPlan($planData);
+$institution = ($argv[2] ?? '') === 'institution';
+if ($institution) {
+    $planData = ['institution_id' => $bank, 'type_id' => $type, 'scope' => 'shared', 'target' => 'one', 'month' => '2026-10', 'amount_cents' => 5000];
+}
+$plan = $institution ? $service->institutionPlan($planData) : $service->personDebtPlan($planData);
 $dir = storage_path('framework/testing/concurrency-'.Str::uuid());
 mkdir($dir, 0777, true);
 $workers = [];

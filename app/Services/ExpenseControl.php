@@ -240,6 +240,8 @@ class ExpenseControl
     {
         $field = $data['target'] === 'one' ? 'remaining_one_cents' : 'remaining_two_cents';
         $items = $this->installments()->where('d.institution_id', $data['institution_id'])
+            ->when(isset($data['type_id']), fn ($query) => $query->where('d.type_id', $data['type_id']))
+            ->when(($data['scope'] ?? null) === 'shared', fn ($query) => $query->where('d.responsibility', 'shared'))
             ->whereNull('d.cancelled_at')->where('i.month_on', $this->month($data['month'])->toDateString())
             ->orderBy('d.start_on')->orderBy('d.id')->orderBy('i.id')->get()
             ->map(fn ($i) => $this->figures($i))->filter(fn ($i) => $i[$field] > 0)->values();
@@ -258,7 +260,7 @@ class ExpenseControl
         }
 
         return ['balance_cents' => $balance, 'remaining_cents' => $balance - $data['amount_cents'], 'allocations' => $allocations,
-            'preview_hash' => hash('sha256', json_encode([$data['institution_id'], $data['month'], $data['target'], $data['amount_cents'], $items->map(fn ($i) => [$i['id'], $i[$field]])->all()]))];
+            'preview_hash' => hash('sha256', json_encode([$data['institution_id'], $data['month'], $data['target'], $data['amount_cents'], $data['type_id'] ?? null, $data['scope'] ?? null, $items->map(fn ($i) => [$i['id'], $i[$field]])->all()]))];
     }
 
     public function recordInstitution(Request $request, array $data, Audit $audit): array
@@ -266,7 +268,7 @@ class ExpenseControl
         return DB::transaction(function () use ($request, $data, $audit) {
             DB::table('users')->where('id', $request->user()->id)->lockForUpdate()->first();
             $hash = hash('sha256', json_encode($data));
-            $old = DB::table('cg_operations')->where('request_key', $data['request_key'])->first();
+            $old = DB::table('cg_operations')->where('request_key', $data['request_key'])->lockForUpdate()->first();
             if ($old) {
                 abort_unless($old->created_by === $request->user()->id && hash_equals($old->payload_hash, $hash), 409, 'Solicitação já utilizada com outros dados.');
 
@@ -283,6 +285,7 @@ class ExpenseControl
                     'notes' => 'Pagamento da instituição · '.($data['notes'] ?? ''), 'created_at' => now(), 'updated_at' => now()]);
             }
             $audit->record($request, 'expense_control.operation_created', 'expense_control', $operation, null, [...$data, 'allocations' => $plan['allocations']]);
+            app(ExpensePaymentReceipt::class)->capture($request, $operation, $audit);
             app(ExpenseNotifications::class)->operation($request, $operation);
 
             return ['id' => $operation, 'replayed' => false];
@@ -325,6 +328,7 @@ class ExpenseControl
                     'notes' => 'Quitação integral da compra · '.($data['notes'] ?? ''), 'created_at' => now(), 'updated_at' => now()]);
             }
             $audit->record($request, 'expense_control.operation_created', 'expense_control', $operation, null, ['debt_id' => $id, 'total_cents' => $plan['total_cents'], ...$data]);
+            app(ExpensePaymentReceipt::class)->capture($request, $operation, $audit);
             app(ExpenseNotifications::class)->operation($request, $operation);
 
             return ['id' => $operation, 'replayed' => false];
@@ -444,6 +448,7 @@ class ExpenseControl
                 ]);
             }
             $audit->record($request, 'expense_control.operation_created', 'expense_control', $operation, null, $data);
+            app(ExpensePaymentReceipt::class)->capture($request, $operation, $audit);
             app(ExpenseNotifications::class)->operation($request, $operation);
 
             return ['id' => $operation, 'replayed' => false];

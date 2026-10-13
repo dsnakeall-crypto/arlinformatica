@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/installments/{id}', [ExpenseControlController::class, 'installment'])->whereNumber('id');
         Route::post('/operations', [ExpenseControlController::class, 'operation']);
         Route::post('/institution-payments', [ExpenseControlController::class, 'institutionPayment']);
+        Route::get('/operations/{id}/receipt', [ExpenseControlController::class, 'paymentReceipt'])->whereNumber('id');
         Route::post('/debts/{id}/settlement', [ExpenseControlController::class, 'settlePurchase'])->whereNumber('id');
         Route::post('/entries/{id}/reverse', [ExpenseControlController::class, 'reverse'])->whereNumber('id');
     });

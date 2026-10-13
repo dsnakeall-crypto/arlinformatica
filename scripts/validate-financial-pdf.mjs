@@ -1,0 +1,15 @@
+import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
+import ts from 'typescript';
+const require=createRequire(import.meta.url);
+let source=readFileSync(new URL('../resources/js/expense-payment-receipt.ts',import.meta.url),'utf8');
+const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replaceAll("'./expense-control-api'",JSON.stringify(new URL('../resources/js/expense-control-api.ts',import.meta.url).href)).replaceAll("import('jspdf')",'import('+JSON.stringify(pathToFileURL(require.resolve('jspdf')).href)+')');
+const {createPaymentReceiptPdf,validatePaymentReceipt}=await import('data:text/javascript;base64,'+Buffer.from(compiled).toString('base64'));
+const rows=Array.from({length:18},(_,i)=>({entry_id:i+1,debt_name:'Compra de teste '+i+' - descrição longa com acentuação para conferência do comprovante e das parcelas compartilhadas',institution_name:'Instituição fictícia',type_name:'Cartão de Crédito',month:'2026-10',number:i+1,payer:'Allan',part:'one',kind:'payment',occurred_on:'2026-10-13',before_cents:5000,paid_cents:2000,after_cents:3000}));
+const receipt={operation_id:999,recorded_at:'2026-10-13T10:00:00-03:00',total_paid_cents:36000,status:'confirmed',rows};
+validatePaymentReceipt(receipt);
+const doc=await createPaymentReceiptPdf(receipt);
+mkdirSync('output/final-financeiro-20261013',{recursive:true});
+writeFileSync('output/final-financeiro-20261013/comprovante-ficticio.pdf',Buffer.from(doc.output('arraybuffer')));
+console.log('PASS: comprovante fictício; páginas='+doc.getNumberOfPages()+'; soma em centavos correta');

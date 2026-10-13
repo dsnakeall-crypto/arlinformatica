@@ -36,7 +36,10 @@ DB::listen(function ($query) {
 echo "START\n";
 flush();
 try {
-    $result = app(ExpenseControl::class)->record($request, $fixture['payment'], app(Audit::class));
+    $service = app(ExpenseControl::class);
+    $result = isset($fixture['payment']['institution_id'])
+        ? $service->recordInstitution($request, $fixture['payment'], app(Audit::class))
+        : $service->record($request, $fixture['payment'], app(Audit::class));
     echo json_encode(['status' => 201, 'result' => $result])."\n";
 } catch (HttpExceptionInterface $error) {
     echo json_encode(['status' => $error->getStatusCode(), 'message' => $error->getMessage()])."\n";

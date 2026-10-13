@@ -8,7 +8,7 @@ import "../css/homologation.css";
 import "../css/desktop-adaptive.css";
 import "../css/arl-ui-system.css";
 import "../css/action-icons.css";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Bell, Box, ClipboardList, LayoutDashboard, Plus, Settings, Users, Wallet, Phone, Menu, X, PackageSearch, Pin, LogOut, CircleDollarSign, Truck } from "lucide-react";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
 import { OrderPaymentFigures } from "./finance-refund-summary";
@@ -2054,10 +2054,11 @@ function App() {
     mobileDrawerTimer.current = null;
   };
   const closeMobileDrawer = () => { cancelMobileDrawerClose(); setMobileMenu(false); };
-  const closeMobileDrawerOutside = () => {
-    cancelMobileDrawerClose();
-    mobileDrawerTimer.current = setTimeout(() => { mobileDrawerTimer.current = null; setMobileMenu(false); }, 2000);
-  };
+  const restartMobileDrawerClose = useCallback(() => {
+    if (mobileDrawerTimer.current !== null) clearTimeout(mobileDrawerTimer.current);
+    mobileDrawerTimer.current = setTimeout(() => { mobileDrawerTimer.current = null; setMobileMenu(false); }, 3000);
+  }, []);
+  const closeMobileDrawerOutside = closeMobileDrawer;
   useEffect(() => () => { if (mobileDrawerTimer.current !== null) clearTimeout(mobileDrawerTimer.current); }, []);
   const [mobileNavMode, setMobileNavMode] = useState<'bottom' | 'compact'>('bottom');
   useEffect(() => {
@@ -2174,6 +2175,10 @@ function App() {
   // Gestor de Gastos independente apenas no Mobile (ou no perfil dedicado,
   // que não tem permissão para navegar na ARL). No Web, mantém shell e sidebar da ARL.
   const expenseWorkspace = expenseOnly || (mobileLayout && page === 'expense-control');
+  useEffect(() => {
+    if (mobileMenu && mobileLayout && mobileNavMode === 'bottom' && !expenseWorkspace) restartMobileDrawerClose();
+    return () => { if (mobileDrawerTimer.current !== null) clearTimeout(mobileDrawerTimer.current); mobileDrawerTimer.current = null; };
+  }, [mobileMenu, mobileLayout, mobileNavMode, expenseWorkspace, restartMobileDrawerClose]);
   const groups = [
     {
       label: "Operação",
@@ -2224,8 +2229,10 @@ function App() {
             aria-label="Menu lateral compacto"
             aria-hidden={!mobileMenu}
             inert={!mobileMenu}
-            onPointerDown={cancelMobileDrawerClose}
-            onFocusCapture={cancelMobileDrawerClose}
+            onPointerDown={restartMobileDrawerClose}
+            onPointerMove={restartMobileDrawerClose}
+            onKeyDown={restartMobileDrawerClose}
+            onFocusCapture={restartMobileDrawerClose}
           >
             <button type="button" className="arl-rail-close" aria-label="Fechar menu agora"
               title="Fechar menu" onClick={closeMobileDrawer}><X aria-hidden="true" /></button>

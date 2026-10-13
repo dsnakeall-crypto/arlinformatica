@@ -20,6 +20,7 @@ import '../css/expense-reference-mobile-2026.css';
 import '../css/expense-web-mobile-visual-20261010.css';
 import '../css/expense-web-reference-compact-20261010.css';
 import '../css/expense-web-floating-invoices-20261010.css';
+import '../css/expense-final-summary.css';
 import CardArtworkPicker, { CardArtworkView, type CardArtwork } from './expense-card-artwork';
 
 type Person = { id: number; name: string; user_id: number | null; default_percent: number };
@@ -28,7 +29,7 @@ type Kind = { id: number; name: string; active: boolean };
 export type Configuration = { account_id: number; card_artworks: CardArtwork[]; people: Person[]; institutions: Institution[]; types: Kind[]; my_person_id: number | null; can_assign_users: boolean; accounts: { id: number; name: string }[] };
 type Debt = { payers?: { paid_by: number | null; amount_cents: number }[]; payment_method?: string | null; id: number; name: string; institution_id: number; institution_name: string; type_id: number; type_name: string; recurrence: string; responsibility: string; percent_one: number; amount_cents: number; installment_count: number; first_number: number; start_on: string; due_day: number; notes: string | null; original_cents: number; paid_cents: number; discount_cents: number; remaining_cents: number; month_remaining_cents: number; month_original_cents: number; month_paid_cents: number; month_discount_cents: number; cancelled_at: string | null; cancellation_reason: string | null; ended_on: string | null };
 type Installment = { purchase_notes?: string | null; id: number; number: number; name: string; debt_id: number; month_on: string; due_on: string; amount_cents: number; share_one_cents: number; share_two_cents: number; remaining_one_cents: number; remaining_two_cents: number; remaining_cents: number; institution_name: string; paid_cents: number; discount_cents: number; status: string };
-type Entry = { id: number; installment_id: number; name: string; institution_name: string; number: number; kind: string; paid_by: number | null; occurred_on: string; amount_cents: number; credit_one_cents: number; credit_two_cents: number; reversed_at: string | null; reversal_reason: string | null; notes: string | null; recorded_by: string | null };
+type Entry = { operation_id?: number; id: number; installment_id: number; name: string; institution_name: string; number: number; kind: string; paid_by: number | null; occurred_on: string; amount_cents: number; credit_one_cents: number; credit_two_cents: number; reversed_at: string | null; reversal_reason: string | null; notes: string | null; recorded_by: string | null };
 type Detail = { debt: Debt; installments: Installment[]; entries: Entry[]; financial_locked: boolean };
 type Pager<T> = { institution_balances?: { institution_id: number; remaining_cents: number }[]; catalog_counts?: { institution_id: number; type_id: number; count: number; remaining_cents?: number }[]; data: T[]; current_page: number; last_page: number; total: number };
 type ScopeSummary = { due_institutions?: { id: number; name: string; due_on: string; remaining_cents: number; count: number }[]; original_cents: number; paid_cents: number; remaining_cents: number; count: number; next_due: Installment[]; overdue: Installment[]; institutions: { id: number; name: string; remaining_cents: number; count: number }[] };
@@ -76,6 +77,8 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
   const [invoicePay, setInvoicePay] = useState<{ scope: InvoiceScope; target?: 'one' | 'two'; totals?: InvoiceTotals }>();
   const [returnConfirm, setReturnConfirm] = useState(false);
   const [quickPerson, setQuickPerson] = useState<'one' | 'two'>();
+  const [lastReceipt, setLastReceipt] = useState<number>();
+  const mutating = useRef(false);
   const detailRequest = useRef(0);
   // Cache apenas em memória do componente. Catálogos são revalidados periodicamente
   // e depois de qualquer mutação; o Resumo sempre é atualizado ao voltar à sua aba.
@@ -137,11 +140,23 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
   const navigate = (next: Tab, preserveFilters = false) => { if (next === 'debts' && !preserveFilters) { setQ(''); setQuery(''); setBank(''); setType(''); setPerson(''); setStatus('active'); setSort('newest'); } ++detailRequest.current; setTab(next); if (next === 'projection') { setProjectionView('list'); setProjectionSection('future'); } setFiltersOpen(false); setDetail(undefined); setSelected([]); setPage(1); setNotice(''); };
   const openDialog = (next: Dialog) => { setError(''); setDialog(next); };
   const mutate = async (path: string, method: string, body: unknown) => {
-    if (busy) return false;
+    if (busy || mutating.current) return false;
+    mutating.current = true;
     setBusy(true); setError('');
-    try { await api(path, method, body); setDialog(undefined); setCatalogRemoval(undefined); setNotice('Alteração salva com sucesso.'); setRevision(n => n + 1); if (detail) await showDetail(detail.debt.id); return true; }
+    try {
+      const result = await api<{ id?: number }>(path, method, body);
+      setDialog(undefined); setCatalogRemoval(undefined); setNotice('Alteração salva com sucesso.'); setRevision(n => n + 1);
+      if (result.id && method === 'POST' && /\/(operations|institution-payments|person-payment|invoice-payment|settlement)$/.test(path)
+          && (body as { kind?: string }).kind !== 'discount') {
+        setLastReceipt(result.id);
+        try { const { downloadExpensePaymentReceipt } = await import('./expense-payment-receipt'); await downloadExpensePaymentReceipt(result.id); }
+        catch (cause) { setNotice('Pagamento registrado. Baixe o comprovante pelo botão abaixo. ' + (cause instanceof Error ? cause.message : 'O download automático não foi concluído.')); }
+      }
+      if (detail) await showDetail(detail.debt.id);
+      return true;
+    }
     catch (e: any) { setError(e.message); return false; }
-    finally { setBusy(false); }
+    finally { setBusy(false); mutating.current = false; }
   };
   const name = (id: number) => config.people.find(p => p.id === id)?.name || 'Pessoa ' + id;
   const responsibility = (value: string) => value === 'shared' ? 'Casal' : name(value === 'one' ? 1 : 2);
@@ -177,8 +192,8 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
         <button type="button" aria-pressed={tab === 'projection' && projectionSection === 'history'} onClick={() => { navigate('projection'); setProjectionSection('history'); }}><History /> Histórico de gastos</button>
       </nav>}
     <div className="cg-navigation"><div className="cg-tabs" role="tablist" aria-label="Seções do Controle de Gasto">{tabs.filter(([id]) => !mobile || id !== 'activity').map(([id, label, Icon]) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => navigate(id)} className={tab === id ? 'active' : ''}><Icon /><span>{label}</span></button>)}</div></div>
-    {error && !dialog && <p className="cg-alert" role="alert">{error}</p>}{notice && <p className="cg-notice" role="status"><Check /> {notice}</p>}{loading && <p className="cg-loading" role="status">Atualizando informações…</p>}
-    {tab === 'summary' && !detail && <ExpenseMobileSummary onMonth={() => setInvoiceOpen(true)} onPay={key => { setError(''); setQuickPerson(key); }} onExport={setStatementScope} onNext={() => setNextPaymentOpen(true)} key={config.account_id + "-" + config.my_person_id} summary={summary} config={config} month={month} portraits={[<PersonPortrait key="one" kind="man" />, <PersonPortrait key="two" kind="woman" />, <PersonPortrait key="shared" kind="couple" />]} onInstitution={(id, selectedScope) => { setPerson(selectedScope === 'all' ? '' : selectedScope); goBank(id); }} onDebt={id => { void showDetail(id, true); }} onInvoice={openMonthlyInvoice} onPerson={key => { setPerson(key); setBank(''); navigate('debts', true); }} />}
+    {error && !dialog && <p className="cg-alert" role="alert">{error}</p>}{lastReceipt && <ReceiptDownload operation={lastReceipt} />}{notice && <p className="cg-notice" role="status"><Check /> {notice}</p>}{loading && <p className="cg-loading" role="status">Atualizando informações…</p>}
+    {tab === 'summary' && !detail && <ExpenseMobileSummary onSharedPay={() => setInvoicePay({ scope: 'shared', totals: summary?.invoice_totals })} onMonth={() => setInvoiceOpen(true)} onPay={key => { setError(''); setQuickPerson(key); }} onExport={setStatementScope} onNext={() => setNextPaymentOpen(true)} key={config.account_id + "-" + config.my_person_id} summary={summary} config={config} month={month} portraits={[<PersonPortrait key="one" kind="man" />, <PersonPortrait key="two" kind="woman" />, <PersonPortrait key="shared" kind="couple" />]} onInstitution={(id, selectedScope) => { setPerson(selectedScope === 'all' ? '' : selectedScope); goBank(id); }} onDebt={id => { void showDetail(id, true); }} onInvoice={openMonthlyInvoice} onPerson={key => { setPerson(key); setBank(''); navigate('debts', true); }} />}
     {(tab === 'debts' || tab === 'settled') && !detail && <>
       <div className="cg-section-heading"><div><span className="cg-eyebrow">{tab === 'settled' ? 'HISTÓRICO PRESERVADO' : 'GESTÃO DE COMPROMISSOS'}</span><h2>{tab === 'settled' ? 'Dívidas quitadas' : 'Gastos e parcelas'}</h2><p>{tab === 'settled' ? 'Compras encerradas continuam disponíveis para consulta.' : 'Escolha a instituição e o tipo para abrir as compras.'}</p></div></div>
       {mobile && tab !== 'debts' && <button className="cgm-filter-toggle" aria-expanded={filtersOpen} aria-controls="cg-debt-filters" onClick={() => setFiltersOpen(!filtersOpen)}><Search /> {filtersOpen ? 'Fechar filtros' : 'Pesquisar e filtrar'}{(q || bank || type || person || status !== 'active' || sort !== 'newest') && <span>Filtros ativos</span>}</button>}
@@ -265,8 +280,8 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
     {invoicePay?.scope === 'shared' && !invoicePay.target && <OrderPopup title="Qual parte do casal será paga?" eyebrow="CONTROLE DE GASTO" description="Escolha uma parte. A outra permanece preservada." icon={Wallet} variant="budget" theme="expense" onClose={() => setInvoicePay(undefined)}>
       <div className="cg-dialog-body cg-invoice-part-choice">{(['one', 'two'] as const).map(target => <button key={target} type="button" onClick={() => setInvoicePay({ ...invoicePay, target })}>{target === 'two' ? 'Parte da ' : 'Parte do '}{name(target === 'one' ? 1 : 2)} · {money(invoicePay.totals?.[target === 'one' ? 'shared_one_cents' : 'shared_two_cents'] || 0)}</button>)}</div>
     </OrderPopup>}
-    {invoicePay?.target && <ExpensePersonPayment key={invoicePay.scope + invoicePay.target + month} scope={invoicePay.scope === 'shared' ? 'shared' : undefined} target={invoicePay.target} month={month} config={config} busy={busy} saveError={error} onClose={() => { if (!busy) { setInvoicePay(undefined); setError(''); setInvoiceOpen(true); } }} onSave={(id, data) => mutate('/debts/' + id + (invoicePay.scope === 'shared' ? '/invoice-payment' : '/person-payment'), 'POST', data)} />}
-    {quickPerson && <ExpensePersonPayment key={quickPerson + month} target={quickPerson} month={month} config={config} busy={busy} saveError={error} onClose={() => { if (!busy) { setQuickPerson(undefined); setError(''); } }} onSave={(id, data) => mutate('/debts/' + id + '/person-payment', 'POST', data)} />}
+    {invoicePay?.target && <ExpensePersonPayment key={invoicePay.scope + invoicePay.target + month} scope={invoicePay.scope === 'shared' ? 'shared' : undefined} target={invoicePay.target} month={month} config={config} busy={busy} saveError={error} onInstitutionSave={data => mutate('/institution-payments', 'POST', data)} onClose={() => { if (!busy) { setInvoicePay(undefined); setError(''); setInvoiceOpen(true); } }} onSave={(id, data) => mutate('/debts/' + id + (invoicePay.scope === 'shared' ? '/invoice-payment' : '/person-payment'), 'POST', data)} />}
+    {quickPerson && <ExpensePersonPayment key={quickPerson + month} target={quickPerson} month={month} config={config} busy={busy} saveError={error} onInstitutionSave={data => mutate('/institution-payments', 'POST', data)} onClose={() => { if (!busy) { setQuickPerson(undefined); setError(''); } }} onSave={(id, data) => mutate('/debts/' + id + '/person-payment', 'POST', data)} />}
     {newDebtChoice && <OrderPopup title="Nova dívida" eyebrow="CONTROLE DE GASTO" description="Escolha como deseja cadastrar." icon={Plus} variant="budget" theme="expense" closeLabel="Fechar opções de cadastro" onClose={() => setNewDebtChoice(false)}><div className="cg-dialog-body cgm-debt-choice"><button onClick={() => { setNewDebtChoice(false); openDialog({ kind: 'debt' }); }}><Pencil /><span><b>Cadastro manual</b><small>Informe a compra, parcelas e responsável.</small></span><ChevronRight /></button><button disabled={loading} onClick={() => { setNewDebtChoice(false); setPhotoOpen(true); }}><Camera /><span><b>Cadastrar por foto</b><small>Leia a fatura com IA e confira as compras.</small></span><ChevronRight /></button></div></OrderPopup>}
     {photoOpen && <Suspense fallback={<p role="status">Preparando cadastro por foto…</p>}><PhotoImport config={config} month={month} institution={bank} onClose={() => setPhotoOpen(false)} onSaved={(count, id) => { setPhotoOpen(false); goBank(id); setNotice(count + " compras cadastradas por foto."); setRevision(n => n + 1); }} /></Suspense>}
     {purchaseSettlement && <PurchaseSettlement bank={Number(bank)} busy={busy} saveError={error} onClose={() => { if (!busy) setPurchaseSettlement(false); }} onSave={async (id, data) => { const ok = await mutate('/debts/' + id + '/settlement', 'POST', data); if (ok) setPurchaseSettlement(false); return ok; }} />}
@@ -278,7 +293,19 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
 
 function Empty({ title, text, action }: { title: string; text: string; action?: React.ReactNode }) { return <div className="cg-empty"><CircleDollarSign /><h3>{title}</h3><p>{text}</p>{action}</div>; }
 function Pagination({ current, last, onChange }: { current: number; last: number; onChange: (page: number) => void }) { return last > 1 ? <div className="cg-pagination"><button disabled={current === 1} onClick={() => onChange(current - 1)}><ChevronLeft /> Anterior</button><span>Página {current} de {last}</span><button disabled={current === last} onClick={() => onChange(current + 1)}>Próxima <ChevronRight /></button></div> : null; }
-function EntryRow({ entry: e, name, onReverse }: { entry: Entry; name: (id: number) => string; onReverse: () => void }) { return <article className={'cg-entry' + (e.reversed_at ? ' reversed' : '')}><span className="cg-bank-icon"><ArrowDownLeft /></span><div><b>{e.name || 'Parcela ' + e.number}</b><small>{kindLabel(e.kind)} · parcela {e.number} · {date(e.occurred_on)} · {e.paid_by ? 'Pago por ' + name(e.paid_by) : e.kind === 'discount' ? 'Redução do saldo' : 'Pago pelo casal'}</small><small>{name(1)}: {money(e.credit_one_cents)} · {name(2)}: {money(e.credit_two_cents)}{e.institution_name && ' · ' + e.institution_name}</small>{e.notes && <small>{e.notes}</small>}{e.reversed_at && <small>Desfeito: {e.reversal_reason}</small>}</div><strong>{money(e.amount_cents)}</strong>{!e.reversed_at && <button onClick={onReverse}>Desfazer</button>}</article>; }
+function ReceiptDownload({ operation }: { operation: number }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const download = async () => {
+    if (busy) return;
+    setBusy(true); setError('');
+    try { const { downloadExpensePaymentReceipt } = await import('./expense-payment-receipt'); await downloadExpensePaymentReceipt(operation); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível baixar o comprovante.'); }
+    finally { setBusy(false); }
+  };
+  return <div className="cg-receipt-download"><button type="button" disabled={busy} onClick={() => void download()}>{busy ? 'Gerando comprovante…' : 'Baixar comprovante #' + operation}</button>{error && <p role="alert">{error}</p>}</div>;
+}
+function EntryRow({ entry: e, name, onReverse }: { entry: Entry; name: (id: number) => string; onReverse: () => void }) { return <article className={'cg-entry' + (e.reversed_at ? ' reversed' : '')}><span className="cg-bank-icon"><ArrowDownLeft /></span><div><b>{e.name || 'Parcela ' + e.number}</b><small>{kindLabel(e.kind)} · parcela {e.number} · {date(e.occurred_on)} · {e.paid_by ? 'Pago por ' + name(e.paid_by) : e.kind === 'discount' ? 'Redução do saldo' : 'Pago pelo casal'}</small><small>{name(1)}: {money(e.credit_one_cents)} · {name(2)}: {money(e.credit_two_cents)}{e.institution_name && ' · ' + e.institution_name}</small>{e.notes && <small>{e.notes}</small>}{e.reversed_at && <small>Desfeito: {e.reversal_reason}</small>}</div><strong>{money(e.amount_cents)}</strong>{e.operation_id && e.kind !== 'discount' && <ReceiptDownload operation={e.operation_id} />}{!e.reversed_at && <button onClick={onReverse}>Desfazer</button>}</article>; }
 
 function PeopleSettings({ config, busy, onSave }: { config: Configuration; busy: boolean; onSave: (data: unknown) => Promise<boolean> }) {
   const [people, setPeople] = useState(config.people);

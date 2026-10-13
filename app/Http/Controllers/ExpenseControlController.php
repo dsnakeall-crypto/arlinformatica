@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\Audit;
 use App\Services\ExpenseCardImage;
 use App\Services\ExpenseControl;
+use App\Services\ExpensePaymentReceipt;
 use App\Services\ExpenseSpendingHistory;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -529,6 +530,13 @@ class ExpenseControlController extends Controller
             $rules += ['request_key' => 'required|uuid', 'preview_hash' => 'required|string|size:64', 'kind' => 'required|in:payment,advance', 'paid_by' => 'required|integer|in:1,2', 'occurred_on' => 'required|date_format:Y-m-d|before_or_equal:today', 'notes' => 'nullable|string|max:500'];
         }
         $data = $r->validate($rules);
+        $data += $r->validate(['type_id' => 'sometimes|required|integer|exists:cg_types,id', 'scope' => 'sometimes|required|in:one,two,shared']);
+        if (isset($data['scope'])) {
+            abort_unless($data['scope'] === 'shared' || $data['scope'] === $data['target'], 422, 'Responsável incompatível com o pagamento.');
+            if (! $r->boolean('preview')) {
+                abort_unless((int) $data['paid_by'] === ($data['target'] === 'one' ? 1 : 2) && $data['kind'] === 'payment', 422, 'Pagamento rápido exige o responsável escolhido e somente a fatura mensal.');
+            }
+        }
         $this->control->ensureMonth($this->control->month($data['month']));
 
         return $r->boolean('preview') ? response()->json($this->control->institutionPlan($data)) : response()->json($this->control->recordInstitution($r, $data, $audit), 201);
@@ -619,6 +627,11 @@ class ExpenseControlController extends Controller
         abort_if(count($data['installment_ids']) > 1 && isset($data['amount_cents']), 422, 'Pagamento parcial deve selecionar somente uma parcela.');
 
         return response()->json($this->control->record($r, $data, $audit), 201);
+    }
+
+    public function paymentReceipt(int $id): JsonResponse
+    {
+        return response()->json(app(ExpensePaymentReceipt::class)->read($id))->header('Cache-Control', 'no-store, private');
     }
 
     public function reverse(Request $r, int $id, Audit $audit): JsonResponse

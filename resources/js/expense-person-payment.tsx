@@ -5,6 +5,8 @@ import type { Configuration } from './expense-control-page';
 import { expenseControlApi as api } from './expense-control-api';
 import { expenseRequestId } from './expense-browser-crypto';
 import { centsFromMoneyInput, maskMoneyInput } from './money-input';
+import ExpensePaymentButton from './expense-payment-button';
+import ExpenseInstitutionSettlement from './expense-institution-settlement';
 
 type Target = 'one' | 'two';
 type Action = 'month' | 'partial' | 'total';
@@ -15,12 +17,14 @@ const today = () => new Date().toLocaleDateString('sv-SE');
 const date = (value: string) => value.slice(0, 10).split('-').reverse().join('/');
 const actions: Record<Action, string> = { month: 'Quitar a fatura do mês', partial: 'Pagar parte da fatura do mês', total: 'Quitar a dívida inteira' };
 
-export default function ExpensePersonPayment({ target, scope, month, config, busy, saveError, onClose, onSave }: {
+export default function ExpensePersonPayment({ target, scope, month, config, busy, saveError, onClose, onSave, onInstitutionSave }: {
   target: Target; scope?: 'one' | 'two' | 'shared'; month: string; config: Configuration; busy: boolean; saveError: string;
   onClose: () => void; onSave: (id: number, data: unknown) => Promise<boolean>;
+  onInstitutionSave: (data: unknown) => Promise<boolean>;
 }) {
   const [debts, setDebts] = useState<Debt[]>([]);
   const [selected, setSelected] = useState<Debt>();
+  const [institution, setInstitution] = useState<Debt>();
   const [action, setAction] = useState<Action>('month');
   const [value, setValue] = useState('0,00');
   const [totalConfirmed, setTotalConfirmed] = useState(false);
@@ -78,9 +82,10 @@ export default function ExpensePersonPayment({ target, scope, month, config, bus
     } finally { submitting.current = false; }
   };
   const groups = debts.reduce<Record<string, Debt[]>>((result, debt) => {
-    const key = String(debt.institution_id);
+    const key = debt.institution_id + ':' + debt.type_id;
     (result[key] ||= []).push(debt); return result;
   }, {});
+  if (institution) return <ExpenseInstitutionSettlement bank={institution.institution_id} type={institution.type_id} institutionName={institution.institution_name} typeName={institution.type_name} target={target} scope={scope} month={month} config={config} busy={busy} saveError={saveError} onClose={() => { if (!busy) setInstitution(undefined); }} onSave={async data => { const ok = await onInstitutionSave(data); if (ok) onClose(); return ok; }} />;
   return <OrderPopup className="cg-quick-payment-popup" title={'Pagamento rápido de ' + personName} eyebrow="CONTROLE DE GASTO" description={month.split('-').reverse().join('/') + ' · Escolha uma dívida. Somente a sua parte.'} icon={CircleDollarSign} variant="budget" theme="expense" closeLabel="Fechar pagamento rápido" onClose={() => { if (!submitting.current) onClose(); }}>
     <form ref={formRef} className="cg-person-payment-form" onSubmit={event => void save(event)}>
       <div className="cg-dialog-grid cg-person-payment-body">
@@ -88,7 +93,7 @@ export default function ExpensePersonPayment({ target, scope, month, config, bus
         {loading && <p role="status">Conferindo saldos…</p>}
         {!selected ? <>
           {Object.entries(groups).map(([key, rows]) => <section className="cg-person-payment-group" key={key}>
-            <h3>{rows[0].institution_name}</h3>
+            <div className="cg-institution-group-title"><h3>{rows[0].institution_name} — {rows[0].type_name}</h3><ExpensePaymentButton aria-label={'Quitar fatura de ' + rows[0].institution_name + ' — ' + rows[0].type_name + ' de ' + personName} disabled={loading || busy} onClick={() => setInstitution(rows[0])} /></div>
             {rows.map(debt => <button type="button" className="cg-person-debt-choice" key={debt.id} onClick={() => choose(debt)} disabled={loading}>
               <span><b>{debt.name}</b><small>{debt.type_name} · {debt.responsibility === 'shared' ? 'Sua parte do casal no mês' : 'Dívida pessoal no mês'}</small></span><strong>{money(debt.month_remaining_cents)}</strong>
             </button>)}
