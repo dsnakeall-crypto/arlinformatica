@@ -114,7 +114,9 @@ jobs:
       - run: composer install --no-interaction --prefer-dist --no-progress
       - run: npm ci
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Validate mobile navigation with iPhone WebKit
+        run: npx playwright test --config playwright.ios-nav.config.ts
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()

@@ -39,7 +39,6 @@ html body .shell .cg-page.cg-clean-only.cg-eight-improvements [hidden] { display
 html body .shell.layout-mobile .cg-page.cg-clean-only.cg-eight-improvements .cg-installment-name { font-size: 12px; }
 html body .shell.layout-mobile .cg-page.cg-clean-only.cg-eight-improvements .cg-table-wrap tbody tr:has(.cg-installment-name) { padding: 6px 8px; gap: 4px 8px; margin-bottom: 6px; }
 html body .shell.layout-mobile .cg-page.cg-clean-only.cg-eight-improvements .cg-table-wrap td[data-label$=" · falta"] { text-align: center; padding-inline: 6px; }
-html body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five,
 html body .shell.layout-mobile .cg-page.cg-clean-only.cg-eight-improvements .arl-expense-bottom.arl-expense-matched {
   bottom: 0 !important; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important;
 }
@@ -151,8 +150,7 @@ html body .cg-eight-improvements .cg-detail-totals { margin-top: 8px; padding: 8
 html body .cg-eight-improvements .cg-section-heading h2 { font-size: 18px; }
 
 @media (max-width: 700px) {
-  html body .shell.layout-mobile .arl-expense-bottom.arl-expense-matched,
-  html body .shell.layout-mobile .arl-global-mobile-nav.arl-mobile-five { bottom: 0 !important; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important; }
+  html body .shell.layout-mobile .arl-expense-bottom.arl-expense-matched { bottom: 0 !important; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important; }
   .cg-quick-payment-popup .arl-3d-heading-icon { display: none; }
   .cg-quick-payment-popup .cg-person-payment-identity { padding: 7px; }
 }

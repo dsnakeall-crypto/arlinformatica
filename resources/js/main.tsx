@@ -21,6 +21,7 @@ import { ClientsPage, ExpenseControlPage, OrderDetailPage, Dashboard, Orders, Fi
 import { StorageAdmin } from './settings-page';
 import { SimpleSettingsPage, type LayoutSelection } from './layouts-settings';
 import { isHandheldDevice, layoutStorageKey, resolveLayoutMode } from './layout-preference';
+import { useMobileNavViewport } from './use-mobile-nav-viewport';
 import '../css/arl-mobile-reform.css';
 import '../css/arl-mobile-screens.css';
 import '../css/arl-reference-bottom-nav.css';
@@ -1912,6 +1913,7 @@ function AdminCatalogs({ role }: any) {
 }
 
 function MobileBottomBar({ go, page, canFinance, canExpenses }: { go: (page: Page) => void; page: Page; canFinance: boolean; canExpenses: boolean }) {
+  const viewportRef = useMobileNavViewport();
   const destinations: { page: Page; title: string; Icon: typeof Wallet }[] = [
     { page: 'dashboard', title: 'Painel', Icon: LayoutDashboard },
     { page: 'clients', title: 'Clientes', Icon: Users },
@@ -1919,7 +1921,7 @@ function MobileBottomBar({ go, page, canFinance, canExpenses }: { go: (page: Pag
     ...(canFinance ? [{ page: 'finance' as Page, title: 'Financeiro', Icon: Wallet }] : []),
     ...(canExpenses ? [{ page: 'expense-control' as Page, title: 'Gestor de Gasto', Icon: CircleDollarSign }] : []),
   ];
-  return <nav className="arl-global-mobile-nav arl-mobile-icon-nav arl-mobile-five" aria-label="Navegação Mobile / Tablet" style={{ gridTemplateColumns: `repeat(${destinations.length}, minmax(0, 1fr))` }}>
+  return <nav ref={viewportRef} className="arl-global-mobile-nav arl-mobile-icon-nav arl-mobile-five" aria-label="Navegação Mobile / Tablet" style={{ gridTemplateColumns: `repeat(${destinations.length}, minmax(0, 1fr))` }}>
     {destinations.map(({ page: destination, title, Icon }) => <button key={destination} type="button" aria-label={title} title={title}
       className={'arl-nav-reference-button ' + (destination === 'new' ? 'primary-shortcut' : page === destination ? 'active' : '')}
       aria-current={page === destination ? 'page' : undefined} onClick={() => go(destination)}>

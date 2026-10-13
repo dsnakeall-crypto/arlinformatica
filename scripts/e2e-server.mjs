@@ -68,6 +68,9 @@ const environment = {
   DB_CONNECTION: 'sqlite',
   DB_DATABASE: database,
   SESSION_DRIVER: 'file',
+  // HTTP is confined to this disposable loopback server; WebKit rejects Secure cookies here.
+  SESSION_SECURE_COOKIE: 'false',
+  SESSION_DOMAIN: '',
   CACHE_STORE: 'array',
   QUEUE_CONNECTION: 'sync',
   // Test browsers must not inherit paid-reader activation or keys from the local .env.
