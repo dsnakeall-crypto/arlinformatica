@@ -31,6 +31,8 @@ jobs:
         run: |
           php deploy/test-final-publication-helpers.php
           php deploy/test-final-publication-integration.php
+          php deploy/test-laragon-publication-integration.php
+          php deploy/test-retired-cleanup.php
       - name: Validate production PHP dependencies
         run: |
           composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
