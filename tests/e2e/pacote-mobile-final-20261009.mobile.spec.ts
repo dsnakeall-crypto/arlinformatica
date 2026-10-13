@@ -40,7 +40,6 @@ test('card resumo confirma PDF local, e próximo pagamento abre popup',async({pa
   const top=page.locator('.cgo-indicators');
   await expect(top).toBeVisible();
   await expect(top.locator('.cgo-month .cgo-tag')).toHaveCount(0);
-  const dialog=page.getByRole('dialog',{name:/Baixar resumo em PDF/i});
   await top.locator('.cgo-month .cgo-card-action').click();
   const monthDialog = page.getByRole('dialog', { name: 'Total a pagar no mês', exact: true });
   await expect(monthDialog.locator('.cg-exclusive-totals > div')).toHaveCount(4);
@@ -51,11 +50,10 @@ test('card resumo confirma PDF local, e próximo pagamento abre popup',async({pa
   const monthlyPath = await monthlyFile.path();
   expect(readFileSync(monthlyPath!).subarray(0, 4).toString()).toBe('%PDF');
   await monthDialog.getByRole('button', { name: 'Fechar total do mês', exact: true }).click();
-  for(const scope of ['one','two','shared']) {
-    await top.locator('.cgo-'+scope+' .cgo-card-action').click();
-    await expect(dialog).toBeVisible();
+  for(const [scope,label] of [['one','Allan'],['two','Carol'],['shared','Casal']]) {
+    await top.locator('.cgo-month .cgo-card-action').click();
     const pending=page.waitForEvent('download');
-    await dialog.getByRole('button',{name:'Confirmar e baixar PDF'}).click();
+    await monthDialog.getByRole('button',{name:'PDF '+label,exact:true}).click();
     const download=await pending;
     expect(download.suggestedFilename()).toMatch(new RegExp('^controle-gastos-detalhado-\\d{4}-\\d{2}-'+scope+'\\.pdf$'));
     const path=await download.path();
@@ -63,11 +61,14 @@ test('card resumo confirma PDF local, e próximo pagamento abre popup',async({pa
     const contents=readFileSync(path!);
     expect(contents.subarray(0,4).toString()).toBe('%PDF');
     expect(contents.length).toBeGreaterThan(2000);
-    await expect(dialog).toBeHidden();
+    await monthDialog.getByRole('button',{name:'Fechar total do mês',exact:true}).click();
   }
-  await top.locator('.cgo-next .cgo-card-action').click();
-  await expect(page.getByRole('dialog',{name:/Próximo pagamento/i})).toBeVisible();
-  await page.getByRole('dialog',{name:/Próximo pagamento/i}).getByRole('button',{name:'Fechar',exact:true}).click();
+  const next=top.locator('.cgo-next-inline');
+  if(await next.isEnabled()) {
+    await next.click();
+    await expect(page.getByRole('dialog',{name:/Próximo pagamento/i})).toBeVisible();
+    await page.getByRole('dialog',{name:/Próximo pagamento/i}).getByRole('button',{name:'Fechar',exact:true}).click();
+  } else await expect(next).toHaveText('Próximo vencimento: nenhum pendente');
 });
 
 test('lista de Instituições abre tipos de dívida via popup em vez da grade extensa',async({page})=>{

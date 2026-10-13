@@ -47,30 +47,35 @@ export async function createExpenseStatementPdf(scope: SummaryScope, summary: Su
     currentGroup=group.name;
     if(!first)newPage();else {text(currentGroup,12,true);first=false;}
     for(const row of group.rows){
+      font(10,true);
       const titleLines=doc.splitTextToSize(clean(row.debt_name),R-L-10) as string[];
-      const extra=scope==='month'||scope==='shared'?row.responsibility==='shared'?3:0:row.responsibility==='shared'?1:0;
-      const height=41+titleLines.length*4.5+extra*7+(row.scope_credit_cents>scopedPaid(row)?8:0);
+      const responsible=row.responsibility==='shared'?'Casal':row.responsibility==='one'?one:two;
+      const fields: [string,number,boolean][] = [
+        ['Responsável: '+responsible+(row.responsibility==='shared'&&(scope==='one'||scope==='two')?' - participação de '+owner:''),9,false],
+        ['Referência: '+month.split('-').reverse().join('/')+' | Parcela '+row.number+'/'+Math.max(row.installment_count,row.number)+' | Vencimento '+formatDate(row.due_on),8,false],
+        [(row.responsibility==='shared'&&(scope==='one'||scope==='two')?'Parcela mensal total do casal: ':'Valor total da parcela: ')+money(row.original_cents),9,true],
+      ];
+      if(row.responsibility==='shared'&&(scope==='one'||scope==='two'))fields.push(['Participação de '+owner+': '+money(row.scope_original_cents),9,false]);
+      fields.push(['Já pago: '+money(scopedPaid(row))+' | Falta pagar: '+money(row.scope_remaining_cents),10,true]);
+      if(row.responsibility==='shared'&&(scope==='month'||scope==='shared')){
+        fields.push(['Parte de '+one+': '+money(row.share_one_cents)+' | Pago: '+money(row.paid_one_cents??row.credit_one_cents)+' | Falta: '+money(row.remaining_one_cents),8,false]);
+        fields.push(['Parte de '+two+': '+money(row.share_two_cents)+' | Pago: '+money(row.paid_two_cents??row.credit_two_cents)+' | Falta: '+money(row.remaining_two_cents),8,false]);
+      }
+      if(row.scope_credit_cents>scopedPaid(row))fields.push(['Abatimento sem pagamento: '+money(row.scope_credit_cents-scopedPaid(row)),8,false]);
+      const height=titleLines.length*4.5+5+fields.reduce((sum,[value,size,bold])=>{
+        font(size,bold);return sum+(doc.splitTextToSize(clean(value),R-L-10) as string[]).length*4.5+3;
+      },0)+8;
       reserve(height+4);
       if(tableNumber++%2===0)doc.setFillColor(228,240,255);else doc.setFillColor(214,241,221);
       doc.setDrawColor(174,193,208);doc.roundedRect(L,y-4,R-L,height,3,3,'FD');
       font(10,true);doc.text(titleLines,L+5,y+2);y+=titleLines.length*4.5+5;
-      const responsible=row.responsibility==='shared'?'Casal':row.responsibility==='one'?one:two;
-      text('Responsável: '+responsible+(row.responsibility==='shared'&&(scope==='one'||scope==='two')?' - participação de '+owner:''),9);
-      text('Referência: '+month.split('-').reverse().join('/')+' | Parcela '+row.number+'/'+Math.max(row.installment_count,row.number)+' | Vencimento '+formatDate(row.due_on),8);
-      text((row.responsibility==='shared'&&(scope==='one'||scope==='two')?'Parcela mensal total do casal: ':'Valor total da parcela: ')+money(row.original_cents),9,true);
-      if(row.responsibility==='shared'&&(scope==='one'||scope==='two'))text('Participação de '+owner+': '+money(row.scope_original_cents),9);
-      text('Já pago: '+money(scopedPaid(row))+' | Falta pagar: '+money(row.scope_remaining_cents),10,true);
-      if(row.responsibility==='shared'&&(scope==='month'||scope==='shared')){
-        text('Parte de '+one+': '+money(row.share_one_cents)+' | Pago: '+money(row.paid_one_cents??row.credit_one_cents)+' | Falta: '+money(row.remaining_one_cents),8);
-        text('Parte de '+two+': '+money(row.share_two_cents)+' | Pago: '+money(row.paid_two_cents??row.credit_two_cents)+' | Falta: '+money(row.remaining_two_cents),8);
-      }
-      if(row.scope_credit_cents>scopedPaid(row))text('Abatimento sem pagamento: '+money(row.scope_credit_cents-scopedPaid(row)),8);
-      y+=8;
+      for(const [value,size,bold] of fields)text(value,size,bold);
+      y+=12;
     }
     const subtotal=group.rows.reduce((sum,row)=>sum+row.scope_original_cents,0);
     const subtotalPaid=group.rows.reduce((sum,row)=>sum+scopedPaid(row),0);
     const subtotalRemaining=group.rows.reduce((sum,row)=>sum+row.scope_remaining_cents,0);
-    reserve(19);text('Subtotal '+group.name,10,true);text('Fatura: '+money(subtotal)+' | Pago: '+money(subtotalPaid)+' | Falta: '+money(subtotalRemaining),9,true);
+    font(10,true);reserve((doc.splitTextToSize(clean('Subtotal '+group.name),R-L-10) as string[]).length*4.5+15);text('Subtotal '+group.name,10,true);text('Fatura: '+money(subtotal)+' | Pago: '+money(subtotalPaid)+' | Falta: '+money(subtotalRemaining),9,true);
   }
   if(!groups.size)text('Nenhuma fatura cadastrada neste período.',10);
   reserve(14);text('TOTAL GERAL DO RELATÓRIO: '+money(original)+' | Pago: '+money(paid)+' | Falta: '+money(remaining),10,true);

@@ -34,7 +34,7 @@ test('mobile gastos: conta vinculada abre saldo pessoal e mantém escolha de out
       await expect(page.locator('.cgo-person')).toHaveCount(2);
       await expect(page.locator('.cgo-person h3').nth(id - 1)).toHaveText(people[id - 1].name);
       await page.reload();
-      await expect(indicators.locator('.cgo-indicator')).toHaveCount(5);
+      await expect(indicators.locator('.cgo-indicator')).toHaveCount(4);
       await page.screenshot({ path: 'output/controle-gasto/mobile-vinculo-' + id + '.png', fullPage: true });
     }
   } finally { expect((await api(page, '/expense-control/people', 'PUT', { people })).status).toBe(200); }
@@ -80,7 +80,7 @@ test('mobile gastos: cinco ícones, resumo correto das partes, instituição, m�
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   const summary = (await api(page, '/expense-control/summary?month=2028-05')).body;
   const indicators = page.getByRole('region', { name: 'Indicadores do mês' });
-  await expect(indicators.locator('.cgo-indicator')).toHaveCount(5);
+  await expect(indicators.locator('.cgo-indicator')).toHaveCount(4);
   for (const key of ['month', 'one', 'two', 'shared']) {
     const prefix = key === 'month' ? '' : key + '_';
     await expect(indicators.locator('.cgo-' + key + ' .cgo-original')).toContainText(money(summary.totals[key === 'month' ? 'remaining_cents' : prefix + 'original_cents']));
@@ -95,8 +95,8 @@ test('mobile gastos: cinco ícones, resumo correto das partes, instituição, m�
   await expect(institution).toContainText('R$ 600,00');
   await expect(institution).toContainText('12/05');
   await expect(page.locator('.cgo-person')).toHaveCount(2);
-  await expect(page.locator('.cgo-person-one .cgo-due-row dd')).toHaveText(money(summary.totals.one_remaining_cents));
-  await expect(page.locator('.cgo-person-two .cgo-due-row dd')).toHaveText(money(summary.totals.two_remaining_cents));
+  await expect(page.locator('.cgo-person-one .cgo-due-row dd>span')).toHaveText(money(summary.totals.one_remaining_cents));
+  await expect(page.locator('.cgo-person-two .cgo-due-row dd>span')).toHaveText(money(summary.totals.two_remaining_cents));
   await page.screenshot({ path: 'output/controle-gasto/mobile-resumo-novo.png', fullPage: true });
   await noOverflow(page);
   await page.setViewportSize({ width: 320, height: 740 }); await noOverflow(page);

@@ -35,3 +35,7 @@ npm-debug.log*
 /teste-e2e.txt
 /playwright.8001.config.ts
 /scripts/e2e-server-8001.sh
+
+# Local SSH credentials: never commit or package.
+/senhassh
+/senhassh.*

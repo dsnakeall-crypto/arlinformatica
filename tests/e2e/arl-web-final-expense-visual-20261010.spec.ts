@@ -30,7 +30,7 @@ test('Controle de Gastos Web usa resumo e acabamento do mobile sem perder menu d
  await expect(main.locator('.cg-alert')).toHaveCount(0);
  await expect(main.locator('.cg-mobile-summary')).toBeVisible();
  await expect(main.locator('.cgo-indicators')).toBeVisible();
- await expect(main.locator('.cgo-indicators>.cgo-indicator')).toHaveCount(5);
+ await expect(main.locator('.cgo-indicators>.cgo-indicator')).toHaveCount(4);
  await expect(main.locator('.cgo-people')).toBeVisible();
  await expect(main.locator('.cg-monthly-invoices')).toBeVisible();
  await expect(main.locator('.cg-navigation .cg-tabs')).toBeVisible();

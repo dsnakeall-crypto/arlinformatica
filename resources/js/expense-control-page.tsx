@@ -6,6 +6,7 @@ import PersonPortrait from './expense-person-portrait';
 import PageHeader from './page-header';
 import ExpenseMobileSummary from './expense-control-mobile-summary';
 import ExpensePersonPayment from './expense-person-payment';
+import ExpensePersonMonthSummary from './expense-person-month-summary';
 import ExpenseMonthlyInvoice, { type InvoiceScope, type InvoiceTotals } from './expense-monthly-invoice';
 import { type SummaryScope } from './expense-summary-overview';
 import ExpenseSpendingHistory from './expense-spending-history';
@@ -77,6 +78,7 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
   const [invoicePay, setInvoicePay] = useState<{ scope: InvoiceScope; target?: 'one' | 'two'; totals?: InvoiceTotals }>();
   const [returnConfirm, setReturnConfirm] = useState(false);
   const [quickPerson, setQuickPerson] = useState<'one' | 'two'>();
+  const [summaryPerson, setSummaryPerson] = useState<'one' | 'two'>();
   const [lastReceipt, setLastReceipt] = useState<number>();
   const mutating = useRef(false);
   const detailRequest = useRef(0);
@@ -193,7 +195,7 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
       </nav>}
     <div className="cg-navigation"><div className="cg-tabs" role="tablist" aria-label="Seções do Controle de Gasto">{tabs.filter(([id]) => !mobile || id !== 'activity').map(([id, label, Icon]) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => navigate(id)} className={tab === id ? 'active' : ''}><Icon /><span>{label}</span></button>)}</div></div>
     {error && !dialog && <p className="cg-alert" role="alert">{error}</p>}{lastReceipt && <ReceiptDownload operation={lastReceipt} />}{notice && <p className="cg-notice" role="status"><Check /> {notice}</p>}{loading && <p className="cg-loading" role="status">Atualizando informações…</p>}
-    {tab === 'summary' && !detail && <ExpenseMobileSummary onSharedPay={() => setInvoicePay({ scope: 'shared', totals: summary?.invoice_totals })} onMonth={() => setInvoiceOpen(true)} onPay={key => { setError(''); setQuickPerson(key); }} onExport={setStatementScope} onNext={() => setNextPaymentOpen(true)} key={config.account_id + "-" + config.my_person_id} summary={summary} config={config} month={month} portraits={[<PersonPortrait key="one" kind="man" />, <PersonPortrait key="two" kind="woman" />, <PersonPortrait key="shared" kind="couple" />]} onInstitution={(id, selectedScope) => { setPerson(selectedScope === 'all' ? '' : selectedScope); goBank(id); }} onDebt={id => { void showDetail(id, true); }} onInvoice={openMonthlyInvoice} onPerson={key => { setPerson(key); setBank(''); navigate('debts', true); }} />}
+    {tab === 'summary' && !detail && <ExpenseMobileSummary onCompactPerson={setSummaryPerson} onSharedPay={() => setInvoicePay({ scope: 'shared', totals: summary?.invoice_totals })} onMonth={() => setInvoiceOpen(true)} onPay={key => { setError(''); setQuickPerson(key); }} onExport={setStatementScope} onNext={() => setNextPaymentOpen(true)} key={config.account_id + "-" + config.my_person_id} summary={summary} config={config} month={month} portraits={[<PersonPortrait key="one" kind="man" />, <PersonPortrait key="two" kind="woman" />, <PersonPortrait key="shared" kind="couple" />]} onInstitution={(id, selectedScope) => { setPerson(selectedScope === 'all' ? '' : selectedScope); goBank(id); }} onDebt={id => { void showDetail(id, true); }} onInvoice={openMonthlyInvoice} onPerson={key => { setPerson(key); setBank(''); navigate('debts', true); }} />}
     {(tab === 'debts' || tab === 'settled') && !detail && <>
       <div className="cg-section-heading"><div><span className="cg-eyebrow">{tab === 'settled' ? 'HISTÓRICO PRESERVADO' : 'GESTÃO DE COMPROMISSOS'}</span><h2>{tab === 'settled' ? 'Dívidas quitadas' : 'Gastos e parcelas'}</h2><p>{tab === 'settled' ? 'Compras encerradas continuam disponíveis para consulta.' : 'Escolha a instituição e o tipo para abrir as compras.'}</p></div></div>
       {mobile && tab !== 'debts' && <button className="cgm-filter-toggle" aria-expanded={filtersOpen} aria-controls="cg-debt-filters" onClick={() => setFiltersOpen(!filtersOpen)}><Search /> {filtersOpen ? 'Fechar filtros' : 'Pesquisar e filtrar'}{(q || bank || type || person || status !== 'active' || sort !== 'newest') && <span>Filtros ativos</span>}</button>}
@@ -238,6 +240,7 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
         <button type="button" onClick={() => setTypeManagerOpen(false)}>Fechar</button>
       </div>
     </OrderPopup>}
+    {summaryPerson && <ExpensePersonMonthSummary target={summaryPerson} name={name(summaryPerson === 'one' ? 1 : 2)} month={month} onClose={() => setSummaryPerson(undefined)} />}
     {statementScope && summary && <OrderPopup
       title="Baixar resumo em PDF" eyebrow="CONTROLE DE GASTO"
       description={'Resumo de ' + (statementScope === 'month' ? 'todos os gastos' : statementScope === 'shared' ? 'Casal' : name(statementScope === 'one' ? 1 : 2)) + ' · ' + monthLabel(month)}

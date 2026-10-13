@@ -12,3 +12,10 @@
 .cg-payment-dollar:disabled{opacity:.5;cursor:wait}
 .cg-institution-group-title{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .cg-institution-group-title h3{min-width:0;overflow-wrap:anywhere}
+html:root[data-arl-appearance] body .arl-3d-overlay[data-arl-order-detail-react] .arl-3d-popup.cg-popup-blue button.cg-payment-dollar{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:36px!important;min-width:36px!important;height:36px!important;min-height:36px!important;padding:0!important;
+  border:1px solid #172b1d!important;border-radius:50%!important;color:#000!important;
+  background:linear-gradient(160deg,#42df7b,#18ad4c)!important;
+  box-shadow:0 3px 5px #13382042,inset 0 2px 1px #ffffff99,inset 0 -2px 1px #08632c55!important;
+}

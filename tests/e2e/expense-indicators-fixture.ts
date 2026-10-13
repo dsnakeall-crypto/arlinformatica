@@ -44,10 +44,10 @@ export async function openMonth(page: Page) {
 export async function assertOwnerExample(page: Page, before: Record<string, number>) {
   const b = (key: string) => Number(before[key] || 0);
   const indicators = page.getByRole('region', { name: 'Indicadores do mês' });
-  await expect(indicators.locator('.cgo-indicator')).toHaveCount(5);
-  const expectCard = async (key: string, _original: number, remaining: number) => {
+  await expect(indicators.locator('.cgo-indicator')).toHaveCount(4);
+  const expectCard = async (key: string, original: number, remaining: number) => {
     const card = indicators.locator('.cgo-' + key);
-    await expect(card.locator('.cgo-original')).toContainText(brl(remaining));
+    await expect(card.locator('.cgo-original')).toContainText(brl(key === 'month' ? remaining : original));
     await expect(card.locator('.cgo-original .cgo-tag')).toHaveCount(0);
     if(key === 'month') await expect(card.locator('.cgo-remaining')).toHaveCount(0);
     else {
@@ -63,8 +63,8 @@ export async function assertOwnerExample(page: Page, before: Record<string, numb
   await expectCard('one', b('one_original_cents') + 130000, b('one_remaining_cents') + 110000);
   await expectCard('two', b('two_original_cents') + 60000, b('two_remaining_cents') + 50000);
   await expectCard('shared', b('shared_original_cents') + 40000, b('shared_remaining_cents') + 40000);
-  if (!before.next_due_on || String(before.next_due_on) >= '2033-03-15') await expect(indicators.locator('.cgo-next .cgo-date')).toHaveText('15/03/2033');
-  const person = (key: string) => page.locator('.cgo-person-' + key + ' dd');
+  if (!before.next_due_on || String(before.next_due_on) >= '2033-03-15') await expect(indicators.locator('.cgo-next-inline')).toContainText('15/03/2033');
+  const person = (key: string) => page.locator('.cgo-person-' + key + ' dd:not(.cgo-due-row dd), .cgo-person-' + key + ' .cgo-due-row dd>span');
   await expect(person('one')).toHaveText([brl(b('one_personal_original_cents') + 100000), brl(b('one_shared_original_cents') + 30000), brl(b('one_credited_cents') + 20000), brl(b('one_original_cents') + 130000), brl(b('one_remaining_cents') + 110000)]);
   await expect(person('two')).toHaveText([brl(b('two_personal_original_cents') + 50000), brl(b('two_shared_original_cents') + 10000), brl(b('two_credited_cents') + 10000), brl(b('two_original_cents') + 60000), brl(b('two_remaining_cents') + 50000)]);
   await expect(page.locator('.cgo-person')).toHaveCount(2);

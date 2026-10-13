@@ -77,3 +77,6 @@ Não retomar automaticamente após renovação. Retomar somente mediante novo co
 Todos os backups ARL, manifests e evidências de recuperação ficam exclusivamente em C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\APP ARL\BACKUPS APP, fora do servidor e do Git. Preservar absolutamente TERRAPLAN, seus arquivos, configurações e banco.
 
 Pasta oficial de desenvolvimento: C:\Users\Allan\OneDrive\Programacao APP\www\arlinformatica. Usar Laragon e bancos descartáveis para testes, sem DDEV. A publicação do novo pacote consolidado aguarda confirmação expressa após os testes. O domínio/certificado fica para o proprietário, conforme comando de 13/10/2026.
+
+## Regra prioritária atualizada pelo proprietário — 13/10/2026
+Retomada e publicação do pacote final autorizadas expressamente após concluir correções e testes. Não executar migrations, seed, restauração ou transferência de banco de teste para produção. TERRAPLAN intocável. Backups novos vão diretamente à máquina, exclusivamente em C:/Users/Allan/OneDrive/Programacao APP/App Arl Informatica/Backups, em subpasta 01 - dd-MM-yy - HH-mm (Brasília); não deixar backups ou releases inutilizadas na KingHost. Esta localização substitui a anterior para backups novos, sem mover/apagar os existentes. A regra de parada aos 8% permanece. Credenciais SSH locais nunca entram no Git, pacote, logs ou relatórios.

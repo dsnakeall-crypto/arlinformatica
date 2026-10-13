@@ -29,24 +29,13 @@ export async function monthlyInvoiceFlow(page: Page, mobile: boolean) {
   await expect(page.locator('.cg-invoice-card').filter({ hasText: loan.name })).toContainText('Quitada — R$ 0,00 pendente');
   await page.getByRole('button', { name: 'Ver total a pagar no mês', exact: true }).click();
   const popup = page.getByRole('dialog', { name: 'Total a pagar no mês', exact: true });
-  const amounts = popup.locator('.cg-exclusive-totals dd');
+  const amounts = popup.locator('.cg-exclusive-totals dd>span');
   await expect(amounts).toHaveText(['R$ 123,45', 'R$ 234,56', 'R$ 100,01', 'R$ 458,02']);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
-  for (const button of await popup.locator('.cg-person-quick-pay').all()) {
-    if (await button.evaluate(el => getComputedStyle(el).color) !== 'rgb(25, 132, 70)') {
-      const diagnostic = await button.evaluate(el => {
-        const matched: { selector: string; color: string; priority: string }[] = [];
-        const read = (rules: CSSRuleList) => { for (const rule of Array.from(rules)) {
-          if (rule instanceof CSSStyleRule && rule.style.color && el.matches(rule.selectorText)) matched.push({ selector: rule.selectorText, color: rule.style.color, priority: rule.style.getPropertyPriority('color') });
-          else if ('cssRules' in rule) read((rule as CSSGroupingRule).cssRules);
-        } };
-        for (const sheet of Array.from(document.styleSheets)) read(sheet.cssRules);
-        return { root: Array.from(document.documentElement.attributes).map(a => [a.name, a.value]), inline: el.getAttribute('style'), matched };
-      });
-      console.log('COLOR_DIAGNOSTIC=' + JSON.stringify(diagnostic));
-    }
-    await expect(button).toHaveCSS('color', 'rgb(25, 132, 70)');
-    const bounds = await button.boundingBox(); expect(bounds?.width).toBeGreaterThanOrEqual(44); expect(bounds?.height).toBeGreaterThanOrEqual(44);
+  for (const button of await popup.locator('.cg-payment-dollar').all()) {
+    await expect(button.locator('span')).toHaveCSS('color', 'rgb(0, 0, 0)');
+    await expect(button).toHaveCSS('border-radius', '50%');
+    const bounds = await button.boundingBox(); expect(bounds?.width).toBeGreaterThanOrEqual(30); expect(bounds?.height).toBeGreaterThanOrEqual(30);
   }
   for (const row of await popup.locator('.cg-exclusive-totals > div:not([data-category="month"])').all()) {
     const rowBox = await row.boundingBox(); const buttonBox = await row.locator('button').boundingBox();

@@ -12,7 +12,7 @@ test('Controle de Gastos: resumo, projeção, pagamentos, instituições e quita
  await expect(page.getByRole('navigation',{name:'Menu do Controle de Gastos'})).toBeVisible();
  const pageRoot=page.locator('.cg-page.cg-mobile');
  await expect(pageRoot).toBeVisible();
- await expect(pageRoot.locator('.cgo-indicators>.cgo-indicator')).toHaveCount(5);
+ await expect(pageRoot.locator('.cgo-indicators>.cgo-indicator')).toHaveCount(4);
  await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
  const grid=await pageRoot.locator('.cgo-indicators').evaluate(n=>({
   cols:getComputedStyle(n).gridTemplateColumns,
@@ -20,7 +20,7 @@ test('Controle de Gastos: resumo, projeção, pagamentos, instituições e quita
   month:n.querySelector('.cgo-month')!.getBoundingClientRect().width,
   row:n.querySelector('.cgo-one')!.getBoundingClientRect().width
  }));
- expect(grid.month).toBeGreaterThan(grid.row*1.6);
+ expect(Math.abs(grid.month-grid.row)).toBeLessThanOrEqual(1);
  await page.screenshot({path:out+'/01-resumo-topo-390.png',fullPage:true});
  const bar=page.getByRole('navigation',{name:'Menu do Controle de Gastos'});
  await bar.getByRole('button',{name:'Projeção'}).click();
