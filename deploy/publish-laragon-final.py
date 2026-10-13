@@ -219,9 +219,30 @@ def cleanup(client, out, report):
     print('PASS: release antiga removida após backup local conferido; TERRAPLAN/privados intactos.')
 
 
+def organize_backups(client, out, report):
+    events = json.loads((out / 'RESULTADO-PUBLICACAO.json').read_text(encoding='utf-8'))
+    check(any(e['event'] == 'PUBLISHED' and e['release'] == report['release'] for e in events), 'SUCCESSFUL_PUBLICATION_REQUIRED')
+    copies = json.loads((out / 'BACKUPS-ANTERIORES-VERIFICADOS.json').read_text(encoding='utf-8'))
+    check(len(copies) == 4, 'FOUR_VERIFIED_BACKUPS_REQUIRED')
+    expected = {}
+    for copy in copies:
+        check(copy['zip_crc'] == 'PASS' and copy['all_payload_hashes'] == 'PASS' and sha_file(copy['local']) == copy['sha256'], 'LOCAL_BACKUP_CHANGED')
+        name = pathlib.PurePosixPath(copy['remote']).name
+        check(copy['remote'] == 'arl-private/storage/app/private/backups/' + name, 'UNEXPECTED_BACKUP_PATH')
+        expected[name] = copy['sha256']
+    source = (ROOT / 'deploy/organize-automatic-backups.php').read_text(encoding='utf-8').removeprefix('<?php')
+    stdin, stdout, stderr = client.exec_command(php_command(source), timeout=180)
+    stdin.write(json.dumps(expected)); stdin.flush(); stdin.channel.shutdown_write()
+    data = stdout.read(); stderr.read()
+    result = json.loads(data)
+    save(out / 'RESULTADO-BACKUPARL.json', result)
+    check(stdout.channel.recv_exit_status() == 0 and result['status'] == 'BACKUPARL_READY', 'BACKUP_ORGANIZATION_BLOCKED')
+    print('PASS: quatro backups preservados em BACKUPARL; banco e TERRAPLAN intactos.')
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=['backup', 'publish', 'validate', 'cleanup'])
+    parser.add_argument('mode', choices=['backup', 'publish', 'validate', 'cleanup', 'organize-backups'])
     parser.add_argument('--backup-dir', required=True)
     parser.add_argument('--report')
     parser.add_argument('--authorize-publication', action='store_true')
@@ -236,7 +257,7 @@ def main():
     if args.mode == 'validate':
         check(report is not None, 'PACKAGE_REPORT_REQUIRED')
         print('PASS: pacote conferido; nenhuma conexão SSH.'); return
-    check(args.mode not in ('publish', 'cleanup') or args.authorize_publication, 'OWNER_AUTHORIZATION_REQUIRED')
+    check(args.mode not in ('publish', 'cleanup', 'organize-backups') or args.authorize_publication, 'OWNER_AUTHORIZATION_REQUIRED')
     client = connect()
     try:
         if args.mode == 'backup':
@@ -244,6 +265,9 @@ def main():
         elif args.mode == 'publish':
             check(report is not None, 'PACKAGE_REPORT_REQUIRED')
             publish(client, out, report)
+        elif args.mode == 'organize-backups':
+            check(report is not None, 'PACKAGE_REPORT_REQUIRED')
+            organize_backups(client, out, report)
         else:
             check(report is not None, 'PACKAGE_REPORT_REQUIRED')
             cleanup(client, out, report)

@@ -33,6 +33,7 @@ jobs:
           php deploy/test-final-publication-integration.php
           php deploy/test-laragon-publication-integration.php
           php deploy/test-retired-cleanup.php
+          php deploy/test-organize-automatic-backups.php
       - name: Validate production PHP dependencies
         run: |
           composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress

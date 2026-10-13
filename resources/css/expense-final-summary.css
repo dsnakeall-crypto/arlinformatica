@@ -32,7 +32,7 @@ html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-e
 .cgo-view-person svg{width:14px;height:14px}
 @media(max-width:760px){html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-indicators.cgo-final-summary{grid-template-columns:minmax(0,1fr)!important}}
 html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) button.cg-payment-dollar {
-  background:linear-gradient(160deg,#42df7b,#18ad4c)!important;color:#000!important;
+  background:var(--cg-dollar-surface)!important;box-shadow:var(--cg-dollar-relief)!important;color:#000!important;
   border:1px solid #172b1d!important;border-radius:50%!important;width:36px!important;height:36px!important;min-height:36px!important;padding:0!important;
 }
 html body .shell:is(.layout-mobile,.layout-desktop) .cg-page:is(.cg-mobile,.cg-expense-web-mirror) .cg-mobile-summary>.cgo-final-summary>.cgo-indicator:not(.cgo-month) .cgo-card-content{grid-template-columns:minmax(70px,.85fr) minmax(100px,1.15fr)!important}

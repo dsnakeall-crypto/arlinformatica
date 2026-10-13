@@ -40,7 +40,7 @@ export function SummaryIndicators({ totals, people, portraits, onExport, onNext,
         {key !== 'month' && <p className="cgo-remaining cgo-original-second"><span>Falta pagar</span><b>{money(remaining)}</b></p>}
       </>}
       {key === 'month' && <button type="button" className="cgo-next-inline" onClick={onNext} disabled={!due}>Próximo vencimento: {due || 'nenhum pendente'}</button>}
-      <ExpensePaymentButton aria-label={key === 'month' ? 'Pagar fatura do mês' : key === 'shared' ? 'Pagamento rápido do Casal' : 'Pagamento rápido de ' + (key === 'one' ? one : two)} id={key === 'one' || key === 'two' ? 'cg-person-pay-' + key : 'cg-summary-pay-' + key} onClick={() => key === 'month' ? onMonth?.() : key === 'shared' ? onSharedPay?.() : onPay?.(key)} disabled={remaining <= 0} />
+      {key !== 'month' && <ExpensePaymentButton aria-label={key === 'shared' ? 'Pagamento rápido do Casal' : 'Pagamento rápido de ' + (key === 'one' ? one : two)} id={key === 'one' || key === 'two' ? 'cg-person-pay-' + key : 'cg-summary-pay-' + key} onClick={() => key === 'shared' ? onSharedPay?.() : onPay?.(key)} />}
     </article>;
   return <section className="cgo-indicators cgo-final-summary" aria-label="Indicadores do mês">
     {card('month', 'Total a pagar no mês', cents(totals, 'remaining_cents'), cents(totals, 'remaining_cents'), <Wallet />)}

@@ -25,6 +25,7 @@ test('resumo final: cards detalhados preservados, popup mensal por modalidade e 
     await expect(page.locator('.cgo-person-one')).toContainText('Valor pessoal');
     await expect(page.locator('.cgo-person-two')).toContainText('Pago / abatido');
     const compact = page.locator('.cgo-final-summary');
+    await expect(compact.locator('.cgo-month .cg-payment-dollar')).toHaveCount(0);
     await expect(compact).not.toContainText('Ver gastos');
     const geometry = await compact.evaluate(root => {
       const card = root.querySelector('.cgo-month')!;
@@ -57,4 +58,35 @@ test('resumo final: cards detalhados preservados, popup mensal por modalidade e 
     await page.screenshot({ path: 'output/final-financeiro-20261013/resumo-restaurado-' + width + '.png', fullPage: true });
   }
   expect(posts).toBe(0);
+});
+
+test('cifrões abrem os pagamentos com saldo zero sem gravar e total mensal não tem cifrão', async ({ page }) => {
+  await login(page);
+  let writes = 0;
+  page.on('request', request => { if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method()) && new URL(request.url()).pathname.startsWith('/api/expense-control/')) writes++; });
+  for (const [mode, width] of [['desktop', 1440], ['mobile', 390]] as const) {
+    await page.evaluate(mode => localStorage.setItem('arl-layout-mode', mode), mode);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/expense-control');
+    await page.getByRole('button', { name: 'Selecionar mês do Controle de Gasto', exact: true }).click();
+    await page.getByLabel('Ano do controle', { exact: true }).selectOption('2000');
+    await page.getByRole('button', { name: 'Janeiro de 2000', exact: true }).click();
+    await expect(page.locator('.cgo-month .cgo-original')).toHaveText('R$ 0,00');
+    await expect(page.locator('.cgo-month .cg-payment-dollar')).toHaveCount(0);
+    for (const person of ['Allan', 'Carol']) {
+      await page.getByRole('button', { name: 'Pagamento rápido de ' + person, exact: true }).click();
+      const popup = page.getByRole('dialog', { name: 'Pagamento rápido de ' + person, exact: true });
+      await expect(popup).toContainText('Nenhuma dívida pendente deste responsável.');
+      await expect(popup.getByRole('button', { name: 'Confirmar pagamento', exact: true })).toHaveCount(0);
+      await popup.getByRole('button', { name: 'Fechar pagamento rápido', exact: true }).click();
+    }
+    await page.getByRole('button', { name: 'Pagamento rápido do Casal', exact: true }).click();
+    const choice = page.getByRole('dialog', { name: 'Qual parte do casal será paga?', exact: true });
+    await choice.getByRole('button', { name: /Parte do Allan/ }).click();
+    const popup = page.getByRole('dialog', { name: 'Pagamento rápido de Allan', exact: true });
+    await expect(popup).toContainText('Nenhuma dívida pendente deste responsável.');
+    await popup.getByRole('button', { name: 'Fechar pagamento rápido', exact: true }).click();
+    await page.getByRole('button', { name: 'Fechar total do mês', exact: true }).click();
+  }
+  expect(writes).toBe(0);
 });

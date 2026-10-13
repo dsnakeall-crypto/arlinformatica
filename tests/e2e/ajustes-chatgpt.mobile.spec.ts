@@ -20,8 +20,7 @@ test('barra inferior abre drawer mobile transparente e fecha ao tocar fora', asy
   expect(appearance.background).toContain('linear-gradient');
   expect(appearance.width).toBeLessThan(72);
   await backdrop.click({ position: { x: 390, y: 460 } });
-  await expect(drawer).toBeVisible();
-  await expect(drawer).toBeHidden({ timeout: 3300 });
+  await expect(drawer).toBeHidden({ timeout: 500 });
   await expect(menu).toBeVisible();
 });
 

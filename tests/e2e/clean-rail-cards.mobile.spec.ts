@@ -4,10 +4,12 @@ import { mkdirSync } from 'node:fs';
 
 const folder = 'output/clean-rail-20261009';
 
-test('barra inferior abre trilho estreito, fecha após 2s e cancela o fechamento ao voltar a tocar', async ({page}) => {
+test('barra inferior abre trilho estreito, fecha após 3s de inatividade e reinicia o prazo ao interagir', async ({page}) => {
   mkdirSync(folder, {recursive:true});
   await login(page);
   await page.setViewportSize({width:390,height:844});
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now()+500));
   await page.getByRole('button',{name:'Abrir menu'}).click();
   const rail = page.getByRole('navigation',{name:'Menu lateral compacto'});
   await expect(rail).toBeVisible();
@@ -17,14 +19,18 @@ test('barra inferior abre trilho estreito, fecha após 2s e cancela o fechamento
   for (const name of ['Painel','Ordens','Clientes','Configurações']) await expect(rail.getByRole('button',{name})).toBeVisible();
   await rail.screenshot({path:`${folder}/rail-390px.png`});
   const overlay = page.getByRole('button',{name:'Fechar menu lateral'});
-  await overlay.click({position:{x:350,y:380}});
-  await page.waitForTimeout(1000);
+  await rail.locator('.arl-rail-brand').click();
+  await page.clock.runFor(1700);
   await expect(rail).toBeVisible();
-  await rail.locator('.arl-rail-brand').click(); // toque dentro do trilho cancela o fechamento
-  await page.waitForTimeout(1400);
+  await rail.locator('.arl-rail-brand').click(); // interação reinicia os três segundos
+  await page.clock.runFor(2999);
+  await expect(rail).toBeVisible();
+  await page.clock.runFor(1);
+  await expect(rail).toBeHidden({timeout:500});
+  await page.getByRole('button',{name:'Abrir menu'}).click();
   await expect(rail).toBeVisible();
   await overlay.click({position:{x:350,y:380}});
-  await expect(rail).toBeHidden({timeout:3300});
+  await expect(rail).toBeHidden({timeout:500});
   await page.getByRole('button',{name:'Abrir menu'}).click();
   await expect(rail).toBeVisible();
   await rail.getByRole('button',{name:'Configurações'}).click();
