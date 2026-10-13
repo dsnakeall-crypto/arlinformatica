@@ -35,3 +35,4 @@ Reabrir: pwsh -NoProfile -File deploy/INICIAR-LARAGON-HOMOLOGACAO.ps1
 Não recria dados existentes e não modifica .env. Nenhum dado oficial importado.
 
 Backup da pasta anterior e histórico Git validado: APP ARL/BACKUPS APP/LARAGON-SINCRONIZACAO-20261013/PASTA-OFICIAL-ANTES.tar.gz,4047arquivos, SHA2568392520295812ea3f714fa2c0b0c480e2de405c063303d4209dd70de46c930fd. Vendor/node_modules regeneráveis preservados em disco e excluídos do arquivo. Stash documental anterior preservado; arquivos não rastreados não removidos nem enviados indiscriminadamente ao GitHub.
+PAUSA8%: regressão ampla ainda não verde; dois cenários mobile reprovados (expense-control-mobile.spec.ts31/120), causa pendente. CI89252d1 estava em andamento. Ver RETOMADA-CODEX.md. Não publicado.
