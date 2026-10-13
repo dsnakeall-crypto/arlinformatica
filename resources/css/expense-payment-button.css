@@ -1,5 +1,5 @@
 .cg-workspace button.cg-payment-dollar,.cg-payment-dollar {
-  --cg-dollar-surface:radial-gradient(ellipse at 30% 15%,#ffffffb3 0,transparent 48%),linear-gradient(155deg,#62ed95 0%,#29c762 52%,#109640 100%);
+  --cg-dollar-surface:radial-gradient(ellipse at 30% 15%,#ffffffb3 0,transparent 48%),linear-gradient(155deg,#62ed95 0%,#42df7b 52%,#18ad4c 100%);
   --cg-dollar-relief:0 3px 0 #08732e,0 5px 8px #13382042,inset 0 2px 2px #ffffffb3,inset 0 -2px 3px #075a2b66;
   display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
   width:36px;height:36px;min-width:36px;min-height:36px;padding:0;
