@@ -65,3 +65,15 @@ A fase de design do Web Original, Web Clean e Mobile está aprovada: **não alte
 ## Limite de uso — regra prioritária do proprietário (12/10/2026)
 Ao atingir 8% restante da janela de cinco horas (92% consumido), ou houver risco de interrupção, finalizar somente escritas em andamento, preservar todas as alterações na cópia isolada e criar commit local de checkpoint, incluindo trabalho incompleto e registro dos testes, pendências, branch e comandos de retomada. Parar imediatamente novas implementações, auditorias e testes longos. Não modificar o original nem acessar produção.
 Retomar somente quando houver 100% de uso disponível na janela E novo comando explícito do proprietário para reiniciar. A renovação do limite sozinha não autoriza retomada. Não criar automação de reinício. Consultar o uso real quando possível; nunca inventar percentual. Checkpoints periódicos locais continuam autorizados. A publicação e o SSH permanecem bloqueados até confirmação explícita.
+
+
+## Especialistas ARL (11/10/2026)
+Para trabalhos especializados, consultar o perfil pertinente em `.agents/roles/` e as instrucoes em `.agents/README.md`. Os perfis sao checklists de delegacao, nao permissoes extras. Nenhum agente pode fazer merge, deploy, alterar ambiente KingHost, dados reais ou configuracoes globais sem autorizacao expressa. Para PR #59, comecar por `testes-ci`, `seguranca` e `publicacao`, sempre com leitura e diagnostico antes de propor mudancas.
+
+## Regra permanente prioritária — limite de uso (13/10/2026)
+Ao atingir 8% ou menos disponível na janela de cinco horas, interromper imediatamente novas tarefas, testes demorados e publicações. Em operação crítica, concluir somente o necessário para deixar o sistema seguro. Salvar os arquivos modificados, registrar progresso, pendências, testes e resultados, criar checkpoint Git local sem segredos e atualizar RETOMADA-CODEX.md com branch, hash e próximo passo exato.
+Informar exatamente: "PAUSADO — LIMITE DE 8% ATINGIDO. Progresso preservado. Aguardando autorização para continuar."
+Não retomar automaticamente após renovação. Retomar somente mediante novo comando explícito do proprietário; antes, ler RETOMADA-CODEX.md e conferir Git, sem repetir trabalho concluído. Consultar percentual real ao longo da execução quando disponível. Se indisponível, informar a limitação e solicitar leitura do indicador; nunca inventar percentuais. Nunca iniciar publicação com 8% ou menos disponível.
+Todos os backups ARL, manifests e evidências de recuperação ficam exclusivamente em C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\APP ARL\BACKUPS APP, fora do servidor e do Git. Preservar absolutamente TERRAPLAN, seus arquivos, configurações e banco.
+
+Pasta oficial de desenvolvimento: C:\Users\Allan\OneDrive\Programacao APP\www\arlinformatica. Usar Laragon e bancos descartáveis para testes, sem DDEV. A publicação do novo pacote consolidado aguarda confirmação expressa após os testes. O domínio/certificado fica para o proprietário, conforme comando de 13/10/2026.

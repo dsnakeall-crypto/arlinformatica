@@ -89,9 +89,11 @@ Antes de aceitar a publicação real, configure a logomarca oficial em Configura
 
 ## Estado
 
-A `main` é a base estável e a Etapa 10 está na PR #11, branch `codex/implementar-etapa-10-do-projeto`. Não fazer merge automaticamente.
+A `main` é a base estável. A atualização em validação de 11/10/2026 está na PR #59, branch `prepublicacao/mobile-ci-20261011`; evidências e limites estão em [`docs/RELATORIO_FINAL_ATUALIZACAO_ARL_20261011.md`](docs/RELATORIO_FINAL_ATUALIZACAO_ARL_20261011.md). Não fazer merge automaticamente.
 
-O último head **técnico** validado antes do fechamento documental é `cdffc543df5c147b64b9c87f14a20831145d962a`, com a **CI #356 integralmente verde**: backend SQLite, backend MySQL 8, frontend e Playwright E2E normal. O Playwright executou 26 testes, todos aprovados.
+Registro histórico: a Etapa 10 foi desenvolvida na PR #11, branch `codex/implementar-etapa-10-do-projeto`.
+
+Registro técnico histórico da Etapa 10: head `cdffc543df5c147b64b9c87f14a20831145d962a`, com a **CI #356 integralmente verde**: backend SQLite, backend MySQL 8, frontend e Playwright E2E normal. O Playwright executou 26 testes, todos aprovados. A validação atual da PR #59 está no relatório acima.
 
 As oito referências visuais oficiais foram reenviadas em 04/09/2026 e estão catalogadas por nome/SHA-256 em [`docs/REFERENCIAS_VISUAIS.md`](docs/REFERENCIAS_VISUAIS.md). A homologação encontrou e corrigiu overflow das ações de Clientes no desktop e quebra inadequada de telefone no mobile; a regressão agora é validada geometricamente pelo E2E.
 

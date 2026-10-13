@@ -1152,3 +1152,16 @@ As pendências históricas de SSH/ativação/smoke acima estão resolvidas por e
 [OK] Checkpoint/push e evidências financeiras/visuais direcionadas preservados.
 [PENDENTE] CI38300164183 completa, revisão/compactação restante e novo pacote com rollback9a.
 [PENDENTE] Nova autorização expressa para ativação. Trabalho parado preventivamente por limite de uso; retomada somente após renovação100% e comando humano.
+
+## PR #59 — corrida do E2E Gastos Web corrigida em 11/10/2026
+
+- [OK] Causa reproduzida: referência ao indicador desconectada quando a configuração remonta o resumo; estilo vazio contado como uma coluna. Screenshot original da CI mostra quatro colunas.
+- [OK] Somente o E2E foi corrigido para aguardar respostas reais e conclusão do carregamento; asserção de colunas mantida. React/CSS/backend/layouts aprovados intactos.
+- [OK] Backup externo com 4030 arquivos conferidos por SHA-256 e bundle Git validado: C:/Users/Allan/ARL-backups/pr59-ci-fix-20261011-124840.
+- [OK] Teste afetado, lint, TypeScript, build, 51 testes frontend e 56 PHP/837 assertions aprovados em ambiente isolado.
+- [OK] Regressão de 42 cenários executada: 41 passaram no lote; o restante passou duas vezes isoladamente. Teste corrigido também passou duas vezes com respostas atrasadas e CPU reduzida.
+- [PENDENTE] E2E integral verde em lote único. Falha adicional local de preload CSS registrada no lote, sem retries ou supressão de erro; os retestes não substituem a suíte integral.
+- [OK] Revisão de segurança: autorização/CSRF/regras financeiras preservadas; nenhum banco de uso ou servidor oficial acessado; alterações anteriores preservadas.
+- [PENDENTE] Autorização para commit/push e nova CI dos quatro jobs. Nenhum commit/push/merge/deploy/publicação realizado nesta tarefa.
+
+Relatório e evidências: docs/AUDITORIA_PR59_CI_CORRECAO_20261011.md.
