@@ -1165,3 +1165,9 @@ As pendências históricas de SSH/ativação/smoke acima estão resolvidas por e
 - [PENDENTE] Autorização para commit/push e nova CI dos quatro jobs. Nenhum commit/push/merge/deploy/publicação realizado nesta tarefa.
 
 Relatório e evidências: docs/AUDITORIA_PR59_CI_CORRECAO_20261011.md.
+
+## Encerramento da publicação — 13/10/2026
+CI38437826536 integralmente verde da fonte01dcd015ec4cc0bc529ee1823086afabcbd276f1:400/7439SQLite,400/7439MySQL,frontend e E2Eaprovados. Publicação concluída: HTTPSlogin/root200 com releaseexata;4JS/CSS idênticos porSHA256;APIs401;cron403. Sem migrations/seed/import/restore ou pagamentos oficiais.
+BACKUPARL em /home/arlinfocg/BACKUPARL, permissão0700,4ZIPs preservados e vínculo antigo privado mantido; automático habilitado/configurações SQL intactas, retenção nativa4. NÃO executar helper antigo que apagava essesZIPs. Futuras atualizações precisam incluir BACKUPARL no inventário/download externo, pois o vínculo não duplica conteúdo.
+Release anterior5c removida após arquivo local/manifesto validado; pacote temporário e probe ausentes.125privados antes/depois iguais porSHA256;env/storage permanentes. Raiz contém somente releaseARL01,arl-current,arl-private eBACKUPARL entre itensARL; TERRAPLAN/sistema preservados. HOMEdu297092KiB(~290,13MiB). Relatório .agents/PUBLICACAO_FINAL_LARAGON_20261013.md; evidências e backups em Backups/01 - 13-10-26 - 12-54.
+Código runtime publicado é01dcd01; checkpoint final apenas documental posterior, sem mudança de runtime. GitHub/local sincronizados na branch codex/final-financeiro-laragon-20261013, sem merge/main. Recuperação futura exige reidratar apenas código5c do TAR local e aliases/ponteiro; jamais SQL/env/storage. Domínio/SSL fica para proprietário. Desenvolvimento encerrado; nova tarefa somente mediante comando humano.
