@@ -4,10 +4,18 @@ import json
 import pathlib
 import subprocess
 import zipfile
+import tarfile
+import argparse
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-BASE = ROOT / 'output' / 'releases' / 'ARL-OITO-MELHORIAS-9a90223304d4.zip'
-BASE_SHA = '6c824132b1dc808ddd3ac2999c052108fb4f3f3a5d70c306ab53efc93b4dc676'
+parser=argparse.ArgumentParser()
+parser.add_argument('--production-backup',required=True)
+args=parser.parse_args()
+record=json.loads(pathlib.Path(args.production_backup).read_text(encoding='utf-8'))
+BASE=pathlib.Path(record['archive'])
+BASE_SHA=record['sha256']
+if record['release']!='5c8885f6cf50757255938a39e1325bb9e91037cc' or record['all_files_verified'] is not True:
+    raise RuntimeError('Verified production backup required')
 
 def git(*args):
     return subprocess.check_output(['git', '-C', str(ROOT), *args])
@@ -37,18 +45,24 @@ for name in tracked:
         if local.replace(b'\r\n', b'\n') != committed.replace(b'\r\n', b'\n'):
             raise RuntimeError(f'Uncommitted runtime source: {name}')
         files[name] = committed
-with zipfile.ZipFile(BASE) as old:
-    for item in old.infolist():
-        if item.is_dir():
+base_prefix='arl-oito-5c8885f6cf50757255938a39e1325bb9e91037cc/ARL-5c8885f6cf50757255938a39e1325bb9e91037cc/'
+with tarfile.open(BASE,'r:gz') as old:
+    for item in old:
+        if not item.isfile() or not item.name.startswith(base_prefix):
             continue
-        name = '/'.join(item.filename.split('/')[1:])
-        if not allowed(name):
-            continue
-        if name.startswith(('vendor/', 'public/')) and not name.startswith('public/build/') and name not in files:
-            files[name] = old.read(item)
-    installed = json.loads(files['vendor/composer/installed.json'])
-    if not isinstance(installed, dict) or installed.get('dev') is not False:
-        raise RuntimeError('Vendor must match the validated production base without dev dependencies')
+        name=item.name[len(base_prefix):]
+        if name=='.release.json':
+            prior=json.loads(old.extractfile(item).read())
+            if prior['release']!='5c8885f6cf50757255938a39e1325bb9e91037cc':
+                raise RuntimeError('Archive contains a different production release')
+        if allowed(name) and name.startswith(('vendor/','public/')) and not name.startswith('public/build/') and name not in files:
+            data=old.extractfile(item).read()
+            if digest(data)!=record['entries'][item.name]['sha256']:
+                raise RuntimeError('Backup member hash mismatch')
+            files[name]=data
+    installed=json.loads(files['vendor/composer/installed.json'])
+    if not isinstance(installed,dict) or installed.get('dev') is not False:
+        raise RuntimeError('Vendor must be the verified production version without dev dependencies')
 for folder in ('public/build', 'public/arl-assets/expense-ocr'):
     for file in (ROOT / folder).rglob('*'):
         if file.is_file():
@@ -61,7 +75,7 @@ for entry in manifest.values():
         if f'public/build/{asset}' not in files:
             raise RuntimeError(f'Missing compiled asset: {asset}')
 metadata = {'release': version, 'branch': branch, 'published_base': '5c8885f6cf50757255938a39e1325bb9e91037cc',
-            'base_package_sha256': BASE_SHA, 'schema_changes': False, 'production_activation': 'REQUIRES_EXPLICIT_OWNER_AUTHORIZATION',
+            'verified_production_backup_sha256': BASE_SHA, 'schema_changes': False, 'production_activation': 'REQUIRES_EXPLICIT_OWNER_AUTHORIZATION',
             'files': {name: digest(data) for name, data in sorted(files.items())}}
 files['.release.json'] = json.dumps(metadata, ensure_ascii=False, indent=2).encode('utf-8')
 out = ROOT / 'output' / 'releases' / f'ARL-OITO-MELHORIAS-{version[:12]}.zip'
