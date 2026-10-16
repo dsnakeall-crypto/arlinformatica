@@ -1,0 +1,253 @@
+/* ARL FINANCEIRO · padrão perolado/dourado aprovado · 15-10-2026
+   Somente aparência da versão desktop Original; dados/cálculos preservados. */
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero){
+ --fin-gold:#c88c2c;--fin-line:#edcf9c;--fin-shadow:0 10px 22px #6e4b1a17;
+ background:linear-gradient(132deg,#fffdfa 0%,#fbf7f0 56%,#fffdfb 100%)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .arl-page-header{
+ margin-bottom:14px!important;padding-top:7px!important;padding-bottom:16px!important;
+ border-bottom:1px solid #e8d5b7!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .arl-page-header-icon{
+ color:#a36e19!important;border:1px solid #f0c47c!important;
+ background:linear-gradient(135deg,#fff,#ffe3aa)!important;
+ box-shadow:0 5px 10px #b8874525!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .arl-eyebrow{
+ color:#a57630!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .arl-page-header-actions{
+ display:flex;align-items:flex-end;gap:10px!important;flex-wrap:wrap;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-period{
+ display:flex;flex-direction:column;align-items:flex-start;gap:6px;color:#936b39;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-period input{
+ height:39px;min-width:175px;max-width:200px;
+ border-radius:11px!important;border:1px solid #e9cc99!important;
+ background:linear-gradient(180deg,#fff,#fffaf2)!important;
+ color:#1f2330;box-shadow:0 3px 8px #a071251c!important;
+ padding:7px 12px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-action,
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-chart-subhead .primary{
+ border:1px solid #b98931!important;border-radius:12px!important;
+ background:linear-gradient(180deg,#3b3529,#0b0a09 82%)!important;
+ color:#ffdb82!important;box-shadow:inset 0 1px #ffe9b25d,0 5px 13px #91713e45!important;
+ min-height:38px;white-space:nowrap;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-main-hero{
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+ position:relative;gap:0!important;padding:15px 16px 22px!important;
+ margin:0 0 12px!important;border:1px solid #efc783!important;
+ border-radius:17px!important;background:linear-gradient(130deg,#fffefb,#faf6ee 65%,#fff)!important;
+ box-shadow:var(--fin-shadow)!important;min-width:0;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-main-hero article{
+ padding:4px 18px!important;min-width:0;border:0!important;background:transparent!important;
+ box-shadow:none!important;border-radius:0!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-main-hero article+article{
+ border-left:1px solid #eadccd!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-main-hero small{
+ text-transform:uppercase;letter-spacing:.7px;color:#755f47;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-main-hero strong{
+ color:#132034!important;letter-spacing:-.3px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-main-hero article:nth-child(3) strong{
+ color:#b9152b!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-main-hero>span{
+ position:absolute;right:14px;bottom:6px;color:#79726c;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) > .finance-tabs{
+ display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;
+ gap:5px!important;margin:0 0 14px!important;padding:0!important;border:0!important;
+ overflow-x:auto!important;scrollbar-width:thin;background:transparent!important;
+ box-shadow:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) > .finance-tabs button{
+ min-height:45px!important;padding:8px 8px!important;min-width:0;
+ border:1px solid #f0cd91!important;border-radius:12px!important;
+ color:#27252a!important;
+ background:linear-gradient(145deg,#fffefc,#faf7f2)!important;
+ box-shadow:0 3px 8px #87632c1b!important;
+ display:flex;gap:7px;align-items:center;justify-content:center;
+ white-space:nowrap;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) > .finance-tabs button svg{
+ flex:0 0 17px;color:#d29018!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) > .finance-tabs button.active{
+ color:#ffdf83!important;border-color:#c48e33!important;
+ background:linear-gradient(180deg,#3a342a,#090909 83%)!important;
+ box-shadow:inset 0 1px #fff4ce75,0 5px 12px #aa75343e!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) > .finance-tabs button.active svg{
+ color:#ffd467!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero)
+:is(.panel,.report-summary>article,.finance-total-cards>article,.finance-cards>article){
+ border:1px solid #f1d8ae!important;border-radius:17px!important;
+ background:linear-gradient(130deg,#fffefc,#fffaf3 86%,#f9f5ed)!important;
+ box-shadow:var(--fin-shadow)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero)
+:is(.payment-method-section,.origin-section,.finance-overview-movements,.finance-daily,.finance-movements,.finance-receivables,.finance-monthly,.revenue-panel,.finance-expenses){
+ padding:17px 18px!important;margin-bottom:14px!important;min-width:0;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero)
+:is(.payment-method-grid,.finance-total-cards,.report-summary,.finance-cards){
+ gap:12px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .payment-method-grid{
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;margin-top:12px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .payment-method-grid article{
+ display:flex!important;align-items:flex-start!important;gap:12px!important;
+ min-height:112px!important;min-width:0!important;padding:12px 14px!important;
+ border:1px solid #f0ce96!important;border-radius:13px!important;
+ background:linear-gradient(145deg,#fff,#fffcf9)!important;
+ box-shadow:0 3px 9px #8e61371c!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .payment-method-grid article>div:last-child{
+ display:flex;min-width:0;flex:1;flex-direction:column;gap:3px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .method-icon{
+ flex:0 0 40px!important;width:40px!important;height:40px!important;
+ display:grid;place-items:center;border-radius:12px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .method-icon svg{width:20px;height:20px}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .payment-method-grid :is(.amount-positive,.amount-negative){white-space:normal}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .percent-track{
+ overflow:hidden;border-radius:99px;background:#ecebe8!important;height:7px;margin-top:3px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .percent-track i{
+ display:block;height:100%;background:linear-gradient(90deg,#0db061,#087541)!important;border-radius:99px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .origin-section article{
+ padding:11px 12px!important;border:1px solid #efcf9e!important;border-radius:12px;
+ background:linear-gradient(135deg,#fffefc,#fdfaf6)!important;margin-top:8px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .origin-track{
+ height:9px;background:#eeece7!important;border-radius:99px;overflow:hidden;margin-top:5px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .origin-track i{
+ height:100%;display:block;border-radius:99px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .origin-track i.orders{background:#07874c!important}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .origin-track i.quick{background:#28323b!important}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-total-cards{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 14px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-total-cards article{
+ padding:15px 18px!important;gap:6px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero)
+:is(.finance-total-cards article button,.refund-total button,.finance-open-order-icon){
+ width:max-content;border:1px solid #dca64e!important;border-radius:10px!important;
+ background:linear-gradient(180deg,#fffefa,#fdf4e5)!important;
+ box-shadow:0 3px 7px #a47c3730!important;color:#1b2633!important;
+ padding:8px 15px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero)
+:is(.finance-overview-movements,.finance-daily,.finance-movements,.finance-receivables,.finance-monthly,.revenue-panel,.finance-expenses)
+>.transaction,
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero)
+:is(.finance-overview-movements,.finance-daily,.finance-movements,.finance-receivables,.finance-monthly,.revenue-panel,.finance-expenses)
+>article.transaction {
+ padding:12px 13px!important;border-bottom:1px solid #e8d9c5!important;
+ background:linear-gradient(90deg,#fff,#fefbf6)!important;gap:12px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero)
+:is(.finance-overview-movements,.finance-daily,.finance-movements,.finance-receivables)>.transaction:nth-of-type(even){
+ background:#fcfaf6!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-movement-filters{
+ display:flex!important;gap:8px!important;background:transparent!important;border:0!important;
+ padding:0!important;margin-top:10px;margin-bottom:12px;flex-wrap:wrap!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-movement-filters button{
+ border:1px solid #edce9f!important;border-radius:999px!important;
+ background:#fffefa!important;color:#242329!important;padding:8px 17px!important;
+ box-shadow:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-movement-filters button.active{
+ background:linear-gradient(#332e26,#0b0a09)!important;color:#ffe293!important;
+ border-color:#c99b4c!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-receivables .finance-cards{
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-monthly .finance-cards{
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) :is(.finance-monthly,.finance-receivables) .finance-cards article{
+ padding:15px 17px!important;min-height:86px;gap:6px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-month-items{
+ border:1px solid #ecd09d;border-radius:12px;padding:14px;margin-top:12px;background:#fffefa;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-month-table{
+ border-collapse:collapse;width:100%;table-layout:auto;margin-top:10px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-month-table th{
+ text-align:left;background:#f8f4ed;padding:10px 12px;border-bottom:1px solid #e4d1b2;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-month-table td{
+ padding:10px 12px;border-bottom:1px solid #ece6da;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-month-table :is(th,td):not(:first-child){text-align:right}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .report-summary{
+ grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;margin:0 0 14px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .report-summary article{
+ padding:16px!important;min-height:118px;gap:9px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .revenue-panel .revenue-chart{
+ background:linear-gradient(180deg,#fffefa,#fffdfb)!important;border:1px solid #f0dec0;
+ border-radius:12px;min-width:0;overflow-x:auto;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-expenses .finance-table-wrap{
+ border:1px solid #e8d5b9;border-radius:12px;overflow-x:auto;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-expenses .finance-table th{
+ background:#f8f4ee!important;border-bottom:1px solid #e5d1b3;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-expenses .finance-table td{
+ border-bottom:1px solid #efe5d9;padding-block:12px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .modal-card.quick-entry{
+ border:1px solid #dfb26c;border-radius:17px;background:linear-gradient(135deg,#fffefa,#fef8ed);
+}
+@media(max-width:1180px){
+ html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) > .finance-tabs{
+  grid-template-columns:repeat(7,minmax(125px,1fr))!important;
+ }
+ html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .payment-method-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+}
+@media(max-width:840px){
+ html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-main-hero{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+ html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .finance-main-hero article:nth-child(3){border-left:0!important}
+ html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero)
+ :is(.finance-total-cards,.finance-monthly .finance-cards,.report-summary){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:580px){
+ html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .payment-method-grid,
+ html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) :is(.finance-total-cards,.finance-monthly .finance-cards,.report-summary,.finance-receivables .finance-cards){
+  grid-template-columns:1fr!important;
+ }
+}
+/* Revisão visual final: remover a linha vermelha antiga, sem alterar a fonte. */
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero) .arl-page-header::after{
+ background:linear-gradient(90deg,#e5d2b3,#f6eee3,transparent)!important;
+ box-shadow:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(.finance-main-hero)
+.finance-month-table-scroll{overflow-x:auto;scrollbar-width:thin}

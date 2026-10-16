@@ -1,0 +1,29 @@
+/* Fundo dourado único/contínuo restaurado do backup original. Não embutir textos/menus na imagem. */
+@media screen and (min-width:801px) {
+ html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar {
+   background-color:#080807;
+   background-image:url('/arl-assets/arl-gold-sidebar-photo-continuous-20261014.webp')!important;
+   background-position:center center!important;
+   background-repeat:no-repeat!important;
+   background-size:100% 941px!important;
+   border-right:2px solid #bd8424;
+   box-shadow:inset -2px 0 3px #ffd46b20,4px 0 13px #0004;
+ }
+ html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar::before,html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar::after {content:none!important;display:none!important}
+ html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar .sidebar-brand {
+   position:relative;z-index:1;
+ }
+ html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar .new-order-shortcut,html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar nav,html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar .sidebar-footer {
+   position:relative;z-index:1;
+ }
+ html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar nav .nav-group {
+   background:linear-gradient(90deg,#0a0908aa,#11100cbc);
+   border-radius:11px;
+ }
+ html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar nav .nav-group button {
+   background:linear-gradient(110deg,#262521e6,#151514e9 75%,#221d16e3)!important;
+ }
+ html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar nav .nav-group button.active {
+   background:linear-gradient(180deg,#33250ce3,#080808e9 70%,#21190ee9)!important;
+ }
+}

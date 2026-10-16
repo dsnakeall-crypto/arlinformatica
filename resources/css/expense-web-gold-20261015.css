@@ -1,0 +1,400 @@
+/* ARL Controle de Gasto WEB — visual perolado/dourado 15-10-2026.
+   SOMENTE layout-desktop e .cg-expense-web-mirror. Mobile 100% inalterado. */
+html body .shell.layout-desktop main[data-arl-expense-control-react="1"]{
+ background:linear-gradient(135deg,#fffefa,#fbf7f0 56%,#fffdfb)!important;
+ min-width:0!important;
+}
+html body .shell.layout-desktop main[data-arl-expense-control-react="1"]::before{
+ display:none!important;content:none!important;background-image:none!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror{
+ --cg-ref-ink:#1d202b;--cg-ref-blue:#ab7b2b;--cg-ref-border:#efd6af;--cg-ref-muted:#787079;
+ --cg-gold:#c89138;--cg-gold-dark:#815312;
+ color:#20212c!important;
+ background:transparent!important;padding:13px clamp(13px,1.5vw,24px) 24px!important;
+ min-width:0!important;max-width:none!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .arl-page-header{
+ margin:0 0 10px!important;padding:5px 0 16px!important;
+ border-bottom:1px solid #e8d4b5!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .arl-page-header::after{
+ background:linear-gradient(90deg,#e2c696,transparent)!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .arl-page-header-icon{
+ background:linear-gradient(145deg,#fffdf9,#ffe0a4)!important;
+ border:1px solid #ebb76d!important;color:#8d5615!important;
+ border-radius:14px!important;box-shadow:0 4px 10px #aa7a382a!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .arl-page-header h1,
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-section-heading h2,.cg-panel h2,.cg-panel h3){
+ color:#1c2231!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-eyebrow,.arl-page-header-eyebrow){
+ color:#a46c27!important;letter-spacing:.12em!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-muted,.cg-section-heading p,.cg-panel small){color:#77737b!important}
+html body .shell.layout-desktop .cg-expense-web-mirror .arl-page-header-actions{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-month-trigger,
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-create-action:not(.primary){
+ min-height:40px!important;background:linear-gradient(#fffefb,#fff8ed)!important;
+ border:1px solid #ddae6b!important;border-radius:11px!important;
+ color:#593716!important;box-shadow:0 4px 8px #a3773825!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-create-action.primary,
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-primary,
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs button:is(.active,[aria-selected="true"]){
+ background:linear-gradient(180deg,#3a342a,#080807 85%)!important;
+ border:1px solid #ce9a3b!important;color:#ffdc83!important;
+ box-shadow:inset 0 1px #ffedb852,0 5px 11px #8e6b3550!important;
+ text-shadow:none!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-navigation{
+ margin:10px 0 15px!important;padding:0!important;border:0!important;
+ border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs{
+ grid-template-columns:repeat(8,minmax(0,1fr))!important;display:grid!important;
+ gap:8px!important;overflow-x:auto!important;border:0!important;border-radius:13px!important;
+ padding:0 0 3px!important;scrollbar-width:thin;background:transparent!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs button{
+ min-height:45px!important;width:100%!important;min-width:0!important;
+ border:1px solid #ead0aa!important;border-radius:12px!important;
+ background:linear-gradient(150deg,#fffdfa,#faf5ec)!important;
+ color:#47331b!important;font-weight:700!important;
+ box-shadow:0 3px 9px #a9834420,inset 0 1px #fff!important;
+ display:flex;align-items:center;justify-content:center;gap:7px!important;
+ padding:8px 8px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs button svg{
+ color:#94601c!important;width:17px;height:17px;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs button:is(.active,[aria-selected="true"]) :is(svg,span){
+ color:#ffdd83!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-panel,.cg-institution,.cg-person-card,.cg-filters,.cg-bank-list-row,.cg-type-grid .cg-panel,.cg-projection-grid .cg-panel,.cgo-person,.cgo-indicator,.cgm-monthly-invoices,.cg-monthly-invoices){
+ border:1px solid #ead0a8!important;border-radius:17px!important;
+ background:linear-gradient(140deg,#fffefd,#fffaf3)!important;
+ box-shadow:0 7px 18px #8b66351e,inset 0 1px #fff!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-filters,.cg-history-filters,.cg-projection-sections,.cg-view-bar){
+ border:1px solid #ebd7b9!important;background:linear-gradient(#fffefa,#faf6f0)!important;
+ border-radius:13px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-filters input,.cg-filters select,.cg-form input,.cg-form select,.cg-form textarea,.cg-search input,.cg-history-filters input,.cg-history-filters select){
+ background:linear-gradient(#fff,#fdfaf5)!important;
+ border:1px solid #dfd0b9!important;border-radius:10px!important;color:#302b26!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-filters input,.cg-form input,.cg-form select,.cg-form textarea):focus-visible{
+ outline:2px solid #d1a14e!important;outline-offset:1px;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-section-heading{
+ gap:9px!important;margin:11px 0 13px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-section-heading h2{font-size:19px!important}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-section-heading p{
+ line-height:1.42;margin-top:4px!important;
+}
+/* Resumo: destaque mensal e três indicadores na mesma linha como a arte. */
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-indicators{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ grid-template-rows:auto auto!important;gap:12px!important;
+ margin-bottom:12px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-indicators>.cgo-month{
+ grid-column:1/-1!important;grid-row:1!important;
+ display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+ min-height:84px!important;padding:14px 17px!important;align-items:center;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-indicators>.cgo-month .cgo-card-content{
+ display:flex;align-items:center;flex-wrap:wrap;gap:13px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-indicators>.cgo-month .cgo-original{
+ color:#302117!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-indicators>:not(.cgo-month){
+ min-height:103px!important;gap:8px!important;
+ padding:12px 16px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-indicators .cgo-icon,
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-people .cg-avatar{
+ background:linear-gradient(140deg,#fffefb,#ffe1b1)!important;
+ border:1px solid #edd3a9!important;
+ box-shadow:0 3px 7px #8d64342c!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-indicators .cgo-original{
+ color:#251d17!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-people{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:13px!important;margin:0 0 15px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-people .cgo-person{
+ padding:13px 17px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-person header{
+ border-bottom:1px solid #ebdfcf!important;padding:8px 0 10px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-person dl>div{
+ border-bottom:1px solid #f0e5d8!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cgo-person>button{
+ border:1px solid #e8b774!important;border-radius:11px!important;
+ background:linear-gradient(180deg,#fffaf0,#f5e5cb)!important;
+ box-shadow:0 3px 7px #8b623226!important;
+ color:#59340e!important;
+}
+/* Gastos: sete instituições desktop em uma linha sem criar cards artificiais. */
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid{
+ display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;
+ gap:9px!important;align-items:stretch!important;justify-content:stretch!important;
+ padding:0!important;width:100%!important;min-width:0!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid>.cg-institution{
+ display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+ min-width:0!important;max-width:none!important;width:100%!important;
+ padding:10px 11px!important;border:1px solid #edcf9b!important;
+ border-radius:14px!important;
+ background:linear-gradient(150deg,#fffefd,#fdf8ef)!important;
+ box-shadow:0 6px 12px #9a723425!important;
+ overflow:hidden!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-bank-grid>.cg-institution>.cg-eyebrow{
+ color:#956e3e!important;white-space:normal;font-size:9px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-bank-grid .cg-card-art{
+ width:min(100%,135px)!important;max-width:135px!important;
+ margin:8px 0 9px!important;aspect-ratio:1.65!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-bank-grid .cg-card-art :is(img,svg){
+ object-fit:cover!important;max-width:100%;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-bank-grid>.cg-institution h3{
+ font-size:13px!important;margin:0 0 5px!important;color:#262333!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-bank-grid>.cg-institution>span:not(.cg-eyebrow){
+ font-size:10px!important;line-height:1.4!important;color:#665f65!important;
+ overflow-wrap:anywhere;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-bank-grid .cg-institution-counts{
+ padding-top:9px!important;margin-top:9px!important;border-top:1px solid #ede2d3!important;
+ gap:6px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-bank-grid .cg-institution-counts>div{
+ gap:4px!important;min-width:0;font-size:10px!important;color:#403d40!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-bank-grid .cg-institution-counts b{
+ background:#f5e4c6!important;color:#6a451f!important;
+ border-radius:8px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-bank-grid>.cg-institution footer{
+ margin-top:auto!important;padding-top:10px!important;border-color:#eaddc5!important;
+ color:#9e6421!important;
+}
+/* Instituições: listas, formulário, controles e artes seguem o mesmo padrão. */
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-bank-row,.cg-debt-row,.cg-log,.cg-entry,.cg-projection-grid .cg-panel,.cg-bank-list-row){
+ border-color:#eddfcc!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-debt-row,.cg-log,.cg-entry){
+ border-bottom:1px solid #ede1d2!important;
+ background:linear-gradient(90deg,#fffdfb,#fffaf5)!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-type-grid{
+ gap:10px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-type-grid>.cg-panel{
+ border:1px solid #e9d0aa!important;border-radius:13px!important;
+ background:linear-gradient(145deg,#fffefa,#fff5e9)!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-projection-grid{
+ gap:12px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-projection-grid>.cg-panel{
+ border:1px solid #ecd0a6!important;border-radius:14px!important;
+ background:linear-gradient(135deg,#fffdfa,#fdf6ea)!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-projection-grid>.cg-panel strong{
+ color:#503214!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-table-wrap{
+ border:1px solid #e9d3b1!important;border-radius:13px!important;
+ background:#fffefa;overflow-x:auto!important;scrollbar-width:thin;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-table-wrap th{
+ background:linear-gradient(#f7f3ec,#efe8df)!important;
+ border-bottom:1px solid #e5d1b3!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-table-wrap td{
+ border-bottom:1px solid #eee3d5!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-monthly-invoices,.cg-invoice-card,.cg-month-invoice){
+ border-color:#eace9d!important;border-radius:14px!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-status,.cg-type-count,.cg-due-row){
+ border-color:#ecd8b6!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror .cg-view-toggle button[aria-pressed="true"]{
+ border-color:#c89643!important;color:#8a581b!important;
+ background:linear-gradient(#fffaf0,#f6e4c8)!important;
+}
+html body .shell.layout-desktop .cg-expense-web-mirror :is(.cg-actions button,.cg-dialog-footer button,.cg-back,.cg-pagination button):not(.cg-primary){
+ border:1px solid #e3c99d!important;border-radius:10px!important;
+ background:linear-gradient(#fffefa,#f9f0e1)!important;color:#53391b!important;
+}
+/* Os modais são internos da ARL, sem dialogs do navegador e escopados ao WEB. */
+html body:has(.shell.layout-desktop .cg-expense-web-mirror) :is(.cg-dialog,.cg-dialog-body,.cg-dialog-footer,.cg-type-popup){
+ --cg-ref-border:#ead1ad;
+}
+html body:has(.shell.layout-desktop .cg-expense-web-mirror) .cg-dialog{
+ background:linear-gradient(140deg,#fffefa,#fff7e9)!important;color:#29232a!important;
+}
+html body:has(.shell.layout-desktop .cg-expense-web-mirror) .cg-dialog-footer{
+ border-top:1px solid #e8d4b6!important;background:#fff9f0!important;
+}
+html body:has(.shell.layout-desktop .cg-expense-web-mirror) .cg-dialog .cg-primary{
+ border-color:#c59442!important;background:linear-gradient(180deg,#38322a,#0b0a09)!important;
+ color:#ffde86!important;box-shadow:0 4px 10px #8c652e36!important;
+}
+html body:has(.shell.layout-desktop .cg-expense-web-mirror) :is(.cg-dialog input,.cg-dialog select,.cg-dialog textarea){
+ border-color:#e6d0ad!important;background:#fffdfa!important;
+}
+@container (max-width:1300px){
+ html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+ }
+}
+@container (max-width:1130px){
+ html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+ }
+}
+@container (max-width:950px){
+ html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+ }
+}
+@container (max-width:760px){
+ html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ }
+ html body .shell.layout-desktop .cg-expense-web-mirror .cg-tabs{
+  grid-template-columns:repeat(8,minmax(118px,1fr))!important;
+ }
+ html body .shell.layout-desktop .cg-expense-web-mirror .cgo-indicators,
+ html body .shell.layout-desktop .cg-expense-web-mirror .cgo-people{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+}
+@container (max-width:560px){
+ html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+ html body .shell.layout-desktop .cg-expense-web-mirror .cgo-indicators,
+ html body .shell.layout-desktop .cg-expense-web-mirror .cgo-people{
+  grid-template-columns:1fr!important;
+ }
+}
+
+/* Corrige limitação residual de 1100px do layout azul anterior.
+   Sete slots no desktop largo, sem deixar Fixos de Casa isolado. */
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror .cg-bank-grid{
+ max-width:none!important;
+ justify-content:stretch!important;
+}
+
+/* Prioridade absoluta do novo WEB sobre grades antigas 4/5 colunas.
+   A classe extra eleva a especificidade sem atingir a versão mobile. */
+@media(min-width:1600px){
+ html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements .cg-bank-grid{
+  grid-template-columns:repeat(7,minmax(0,1fr))!important;
+ }
+}
+@media(min-width:1301px) and (max-width:1599px){
+ html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements .cg-bank-grid{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+ }
+}
+@media(min-width:1021px) and (max-width:1300px){
+ html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements .cg-bank-grid{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+ }
+}
+@media(max-width:1020px){
+ html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements .cg-bank-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ }
+}
+@media(max-width:720px){
+ html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements .cg-bank-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+}
+
+/* Resumo: precedência sobre a personalização azul carregada anteriormente.
+   Apenas a experiência WEB, preservando retratos e botões verdes de pagamento. */
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+.cgo-indicators>.cgo-indicator{
+ border:1px solid #ebcb98!important;
+ background:linear-gradient(145deg,#fffefa,#fcf4e8)!important;
+ box-shadow:0 7px 15px #8a61301e,inset 0 1px #fff!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+.cgo-indicators>.cgo-month{
+ border-color:#e6be81!important;
+ background:linear-gradient(115deg,#fffefa,#fff9ed 70%,#f9e8c7)!important;
+ box-shadow:0 6px 13px #9a6e2a27!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+.cgo-indicators .cgo-month::before,
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+.cgo-indicators .cgo-month::after{
+ background:none!important;opacity:0!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+.cgo-people>.cgo-person{
+ border:1px solid #e8cb9d!important;
+ background:linear-gradient(145deg,#fffefd,#fffaf3)!important;
+ box-shadow:0 7px 16px #8a62321d!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+.cgo-person>button{
+ border:1px solid #dfac62!important;border-radius:11px!important;
+ color:#533a1a!important;
+ background:linear-gradient(145deg,#fffaf1,#f7ead5)!important;
+ box-shadow:0 4px 7px #94682d20!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+.cgo-person :is(dt,dd,h3,.cgo-total-row dt){
+ color:#29242c!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+.cgo-person header small{
+ color:#ac7d34!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+.cgo-person .cgo-due-row :is(dt,dd){
+ color:#bf142b!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+.cg-institution-register-heading>button{
+ border:1px solid #c89034!important;color:#ffdd83!important;
+ background:linear-gradient(180deg,#3a342a,#080807)!important;
+ box-shadow:0 5px 12px #865b2542!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+:is(.cg-institution footer button,.cg-type-manager button,.cg-type-popup button,.cg-catalog button){
+ border-color:#e2b970!important;color:#60401a!important;
+ background:linear-gradient(180deg,#fffefb,#faedda)!important;
+ box-shadow:0 2px 5px #84632a1c!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+:is(.cg-type-grid button,.cg-bank-grid .cg-institution-counts b){
+ border-color:#e7c697!important;
+}
+html body .shell.layout-desktop .cg-page.cg-expense-web-mirror.cg-clean-only.cg-eight-improvements
+:is(.cg-institution-register-heading button,.cg-type-manager button,.cg-type-grid button):focus-visible{
+ outline:2px solid #c58d2a!important;outline-offset:2px;
+}

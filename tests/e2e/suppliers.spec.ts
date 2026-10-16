@@ -83,6 +83,8 @@ test("falha ao anexar nota permite repetir sem duplicar compra ou estoque", asyn
     products.find((p: any) => p.id === productResult.body.id).stock_quantity,
   ).toBe(1);
   await page.reload();
+  // O sino global foi aprovado somente no Painel; navegar antes de conferir a parcela.
+  await page.getByRole("button", { name: "Painel", exact: true }).click();
   await page.getByRole("button", { name: "Notificações", exact: true }).click();
   await page
     .locator(".notification-wrap button")

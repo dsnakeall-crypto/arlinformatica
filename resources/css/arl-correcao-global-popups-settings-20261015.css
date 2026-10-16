@@ -1,0 +1,506 @@
+/* ARL — rodada 10 correções visuais, 15/10/2026.
+   ESCOPOS: tema Original Desktop. Nenhuma mudança nos dados, fontes globais, mobile ou lógica.
+   Para rollback isolado, remova apenas esta importação de main.tsx. */
+
+/* (8) REMOVER EXCLUSIVAMENTE A ARTE DESFOCADA DO TOPO.
+   Nunca selecionar tabela, card, título nem barra de ações do Painel/Ordens. */
+html[data-arl-appearance="original"] body .shell.layout-desktop>main[data-arl-dashboard-react="1"]::before,
+html[data-arl-appearance="original"] body .shell.layout-desktop>main[data-arl-orders-react="1"]::before{
+ content:none!important;display:none!important;background:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop>main[data-arl-dashboard-react="1"],
+html[data-arl-appearance="original"] body .shell.layout-desktop>main[data-arl-orders-react="1"]{
+ background-image:linear-gradient(130deg,#fffdf9 0%,#faf7f1 59%,#fffefb 100%)!important;
+}
+/* (3 e 5) EVITAR CLARÃO DA BUSCA. Apenas Serviços e Produtos. */
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-search{
+ position:relative!important;display:flex!important;align-items:center!important;
+ border:1px solid #e8d3af!important;border-radius:11px!important;
+ background:linear-gradient(180deg,#fffefa,#fdf9f3)!important;
+ box-shadow:0 2px 7px #72542914!important;
+ overflow:hidden!important;isolation:isolate;min-width:0;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-search :is(input,input:focus,input:hover){
+ flex:1 1 auto!important;min-width:0!important;width:100%!important;
+ background:transparent!important;background-image:none!important;
+ box-shadow:none!important;filter:none!important;outline:0!important;
+ border:0!important;border-radius:0!important;
+ -webkit-box-shadow:none!important;appearance:none;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-search:focus-within{
+ border-color:#c89138!important;background:#fffefa!important;
+ box-shadow:0 0 0 2px #dfb9783d!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-search::before,
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-search::after{
+ background:none!important;box-shadow:none!important;opacity:0!important;
+}
+/* (6) Configurações: card claro, navegação preta/dourada e consistência. */
+html[data-arl-appearance="original"] body .shell.layout-desktop>main[data-arl-settings-react="1"]{
+ background-image:linear-gradient(125deg,#fffefa,#fbf6ee 65%,#fffcf9)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop>main[data-arl-settings-react="1"]::before{
+ content:none!important;display:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"] .arl-page-header{
+ margin-bottom:16px!important;border-bottom:1px solid #e7d1b2!important;padding-bottom:15px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"] .arl-page-header-icon{
+ border:1px solid #edbe78!important;color:#91611e!important;border-radius:14px!important;
+ background:linear-gradient(140deg,#fffefb,#ffdfaa)!important;box-shadow:0 4px 10px #9f71352d!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"] .arl-eyebrow{color:#a16c25!important}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"] :is(.arl-settings-tabs,.arl-document-subtabs,.settings-system-tabs){
+ display:flex!important;align-items:stretch;gap:8px!important;overflow-x:auto!important;
+ background:transparent!important;border:0!important;
+ padding:3px 1px 7px!important;margin-bottom:15px!important;
+ border-radius:0!important;box-shadow:none!important;scrollbar-width:thin;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"]
+:is(.arl-settings-tab,.settings-system-tabs button,.arl-document-subtab){
+ min-height:43px!important;flex:1 0 auto!important;border-radius:12px!important;
+ padding:10px 14px!important;color:#423224!important;white-space:nowrap;
+ background:linear-gradient(150deg,#fffefa,#f9f2e7)!important;
+ border:1px solid #e5c797!important;box-shadow:0 3px 8px #9c783726!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"]
+:is(.arl-settings-tab.active,.settings-system-tabs button.active,.arl-document-subtab.active){
+ background:linear-gradient(180deg,#393229,#090807 86%)!important;
+ color:#ffe08b!important;border-color:#c59035!important;
+ box-shadow:inset 0 1px #f5d79978,0 5px 11px #7c5b2e45!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"]
+:is(.settings-form,.settings-subcard,.settings-message-options,.company-pdf-notice,.company-secondary-fields,
+    .client-import-card,.settings-form>[data-arl-document-panel],.backup-config,.backup-summary,.push-settings,
+    .infra-grid .form-card,.health-list>div){
+ border:1px solid #e8d0aa!important;border-radius:16px!important;
+ background:linear-gradient(140deg,#fffefd,#fffaf3)!important;
+ box-shadow:0 7px 16px #8562361e,inset 0 1px #fff!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"] .settings-form{
+ padding:20px clamp(14px,2vw,26px)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"]
+:is(.settings-form input:not([type="checkbox"]),.settings-form select,.settings-form textarea,.settings-subcard textarea){
+ border:1px solid #dec9a9!important;border-radius:10px!important;
+ background:#fffefa!important;color:#26252a!important;
+ box-shadow:inset 0 1px #fff!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"]
+:is(.settings-form input,.settings-form select,.settings-form textarea):focus{
+ outline:2px solid #e2bb78!important;outline-offset:0;box-shadow:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"] .settings-form>.actions{
+ display:flex!important;justify-content:flex-end!important;gap:10px!important;
+ padding-top:13px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"]
+:is(.settings-form .actions .primary,.settings-subcard button:not(.arl-document-subtab),.company-secondary-fields button.primary){
+ border-radius:12px!important;border:1px solid #c99b44!important;
+ background:linear-gradient(180deg,#39332b,#0a0909 88%)!important;color:#ffde87!important;
+ box-shadow:inset 0 1px #ffebaa55,0 5px 12px #8a652b40!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"]
+:is(.settings-form button:not(.primary),.settings-subcard button.arl-document-subtab){
+ border-radius:11px!important;border:1px solid #debd83!important;
+ background:linear-gradient(#fffefa,#f9efdd)!important;color:#5b421d!important;
+}
+/* (2) Novo Cliente e Editar Cliente — modal nativo do aplicativo. */
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal{
+ background:#20170e7a!important;backdrop-filter:blur(4px);
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-card{
+ border:1px solid #dabb81!important;border-radius:20px!important;
+ background:linear-gradient(135deg,#fffefa,#fcf6ec)!important;
+ box-shadow:0 20px 60px #261c1566!important;
+ overflow:auto!important;max-height:calc(100dvh - 36px)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-form{
+ background:transparent!important;box-shadow:none!important;border:0!important;
+ padding:20px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-form h2{
+ display:flex;align-items:center;gap:12px!important;margin-bottom:18px!important;
+ color:#1e2530!important;padding:0 50px 13px 0!important;
+ border-bottom:1px solid #ead5b7!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-form h2>svg{
+ box-sizing:border-box;width:43px!important;height:43px!important;padding:11px!important;
+ border:1px solid #edc17b;border-radius:13px;
+ background:linear-gradient(140deg,#fffefa,#ffda99)!important;color:#91611c!important;
+ box-shadow:0 4px 9px #93663325!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-form .field input,
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-form .field select{
+ border:1px solid #e0ceb0!important;border-radius:11px!important;
+ background:#fffefa!important;box-shadow:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-form .field input:focus{
+ outline:2px solid #d7aa66!important;outline-offset:0;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-actions{
+ display:flex!important;justify-content:flex-end!important;gap:12px!important;margin-top:19px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-actions button{
+ border-radius:12px!important;min-height:42px!important;padding:10px 19px!important;
+ border:1px solid #dfb87c!important;color:#5c401e!important;
+ background:linear-gradient(180deg,#fffefa,#fbefd9)!important;
+ box-shadow:0 4px 10px #8c66321d!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-actions button.primary{
+ color:#ffdd82!important;border-color:#c19137!important;
+ background:linear-gradient(180deg,#3d362d,#080808)!important;
+ box-shadow:0 5px 12px #8f662e45!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-modal-close{
+ display:grid!important;place-items:center!important;
+ width:37px!important;height:37px!important;border-radius:50%!important;
+ color:#704c1d!important;border:1px solid #d9b77b!important;
+ background:linear-gradient(#fffefa,#faedda)!important;
+ box-shadow:0 3px 7px #8b692736!important;
+}
+/* (1) TODOS OS POP-UPS do Controle de Gasto WEB são PORTALS: escopo via :has.
+   Os pop-ups do mobile NÃO recebem este acabamento. */
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .arl-3d-popup.cg-popup-blue{
+ border:2px solid #d8b777!important;border-radius:22px!important;
+ background:linear-gradient(145deg,#fffdf9,#fbf5eb)!important;
+ color:#24242a!important;box-shadow:0 18px 52px #17130d66!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue .arl-3d-header{
+ border-bottom:1px solid #ead4b4!important;background:linear-gradient(125deg,#fffdfa,#faf3e8)!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue .arl-eyebrow{color:#a06b22!important}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue .arl-3d-heading-icon{
+ border:1px solid #e7c28a!important;border-radius:14px!important;
+ background:linear-gradient(145deg,#fff,#ffdda5)!important;color:#9f631c!important;
+ box-shadow:0 4px 10px #ad763125!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue .arl-3d-heading-icon svg{color:#986118!important}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue .arl-3d-close{
+ border-radius:50%!important;border:1px solid #e1c18d!important;
+ background:linear-gradient(#fff,#fff0d9)!important;color:#74521e!important;
+ box-shadow:0 3px 8px #76572926!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue :is(.cg-dialog-body,.cg-type-popup,.cg-dialog-footer,.cg-pdf-confirm){
+ background:transparent!important;color:#2b2930!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue :is(button,.cg-primary,.cg-dialog-footer button,.cg-type-popup button,.cg-actions button){
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;
+ border:1px solid #e2c393!important;border-radius:11px!important;
+ background:linear-gradient(#fffefb,#faefdb)!important;
+ color:#64471b!important;box-shadow:0 3px 8px #88653021!important;
+ min-height:36px;padding:7px 13px!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue :is(.cg-primary,.cg-pdf-confirm .cg-primary,.cg-dialog-footer .cg-primary,.cg-type-popup .cg-primary){
+ border-color:#bc8d36!important;color:#ffe098!important;
+ background:linear-gradient(#3b342a,#070706 82%)!important;
+ box-shadow:inset 0 1px #ffe7ac66,0 5px 11px #7e581d3b!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue .cg-dialog-footer{
+ border-top:1px solid #eddcc6!important;background:#fffaf2!important;
+ padding:15px 22px!important;gap:10px!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue :is(.cg-type-popup-row,.cg-person-month-row,.cg-person-pay-group,.cg-person-pay-item,.cg-purchase-choice){
+ border-color:#eadcc9!important;border-radius:10px!important;
+ background:linear-gradient(145deg,#fffefa,#fcf8f1)!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue :is(.cg-type-popup-row,.cg-person-month-row){
+ display:flex;align-items:center;gap:10px;padding:8px 10px!important;
+ border-bottom:1px solid #e9dfd0!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue :is(.cg-payment-modes button,.cg-purchase-choice,.cg-quick-payment-popup button:not(.arl-3d-close)):not(.cg-primary){
+ border-color:#e1c38e!important;background:linear-gradient(#fffefa,#f7eddd)!important;
+ color:#634722!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue :is(.cg-payment-modes button[aria-pressed="true"],.cg-artwork-modes button[aria-pressed="true"]){
+ border-color:#be9048!important;background:linear-gradient(#fff9eb,#f9e6be)!important;
+ color:#83551d!important;box-shadow:0 0 0 2px #d19d4338!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue :is(input,select,textarea){
+ border:1px solid #e0c9a4!important;border-radius:10px!important;
+ background:#fffefa!important;box-shadow:none!important;color:#262731!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue :is(input,select,textarea):focus{
+ border-color:#c09343!important;outline:2px solid #e6c184!important;outline-offset:0;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue .cg-type-popup-row>span:first-child{flex:1;min-width:0}
+/* (4) Cifrão: acabamento preto/dourado 3D SOMENTE no Controle de Gasto WEB. */
+html[data-arl-appearance="original"] body .shell.layout-desktop .cg-expense-web-mirror button.cg-payment-dollar,
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue button.cg-payment-dollar{
+ --cg-dollar-surface:radial-gradient(circle at 35% 18%,#77715d88,transparent 42%),linear-gradient(145deg,#4d4436 0%,#191714 42%,#050505 100%);
+ --cg-dollar-relief:0 3px 0 #815114,0 5px 10px #8b5e2180,inset 0 2px 2px #f6d98369,inset 0 -2px 3px #050404;
+ border:1px solid #ddad50!important;
+ background:var(--cg-dollar-surface)!important;
+ box-shadow:var(--cg-dollar-relief)!important;
+ color:#ffdb6f!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .cg-expense-web-mirror button.cg-payment-dollar>span,
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue button.cg-payment-dollar>span{
+ color:#ffd86b!important;text-shadow:0 1px 0 #3a290e,0 -1px #fff4bc6d!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .cg-expense-web-mirror button.cg-payment-dollar:focus-visible{
+ outline:2px solid #c9983d!important;outline-offset:3px;
+}
+/* (9) Área de busca de Serviço/Produto dentro de OS e Orçamento. */
+html[data-arl-appearance="original"] body .shell.layout-desktop .arl-service-product-search .services-search,
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-service-product-search .services-search{
+ border:1px solid #dfc69e!important;border-radius:11px!important;
+ background:#fffefa!important;box-shadow:0 2px 5px #5a401617!important;
+ overflow:hidden!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .arl-service-product-search .services-search input,
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-service-product-search .services-search input{
+ background:transparent!important;background-image:none!important;
+ border:0!important;border-radius:0!important;
+ box-shadow:none!important;outline:0!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .arl-service-product-search .services-search:focus-within,
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-service-product-search .services-search:focus-within{
+ border-color:#c39042!important;box-shadow:0 0 0 2px #e9c99652!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .arl-service-product-results,
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-service-product-results{
+ background:#fffefa!important;border:1px solid #e4d0b2!important;
+ border-radius:12px!important;overflow-y:auto!important;
+ max-height:min(360px,42vh)!important;box-shadow:0 7px 16px #78604726!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .arl-service-product-results .arl-service-product-result,
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-service-product-results .arl-service-product-result{
+ border:0!important;border-bottom:1px solid #eee1d0!important;
+ border-radius:0!important;text-align:left!important;
+ background:#fffefa!important;color:#24242e!important;box-shadow:none!important;
+ outline:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .arl-service-product-results .arl-service-product-result:nth-child(even),
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-service-product-results .arl-service-product-result:nth-child(even){
+ background:#faf6ef!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .arl-service-product-results .arl-service-product-result:hover,
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-service-product-results .arl-service-product-result:hover{
+ background:#fff1d5!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .arl-service-product-results .arl-service-product-result:focus-visible,
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-service-product-results .arl-service-product-result:focus-visible{
+ background:#fbeacc!important;outline:2px solid #d2a55a!important;outline-offset:-2px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .arl-service-product-results .arl-service-product-result :is(.services-type-icon,.services-type-icon svg),
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-service-product-results .arl-service-product-result .services-type-icon{
+ color:#9d701c!important;
+}
+html[data-arl-appearance="original"] body .arl-catalog-picker{
+ border:1px solid #e6c48d!important;
+ background:linear-gradient(125deg,#fffefc,#faf5ea)!important;
+}
+html[data-arl-appearance="original"] body .arl-catalog-picker header,
+html[data-arl-appearance="original"] body .arl-catalog-picker-column article{
+ border-color:#e7d6ba!important;
+}
+html[data-arl-appearance="original"] body .arl-catalog-picker-column article>button{
+ background:linear-gradient(#393127,#080808)!important;
+ border-color:#c19542!important;color:#ffdd81!important;
+}
+/* (10) Pop-up Gerar Orçamento: respiro IGUAL entre título/ícone e campo. */
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-3d-budget .arl-3d-panel.arl-3d-field{
+ gap:9px!important;
+ padding-top:11px!important;padding-bottom:11px!important;
+}
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-3d-budget .arl-3d-panel.arl-3d-field>.arl-3d-field-heading{
+ display:flex!important;align-items:center!important;
+ margin-bottom:10px!important;
+}
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-3d-budget .arl-3d-panel.arl-3d-field>textarea,
+html[data-arl-appearance="original"] body .arl-3d-overlay .arl-3d-budget .arl-3d-panel.arl-3d-field>input{
+ margin-top:0!important;position:relative!important;
+}
+@media(max-height:800px) and (min-width:761px){
+ html[data-arl-appearance="original"] body .arl-3d-overlay .arl-3d-budget .arl-3d-panel.arl-3d-field>.arl-3d-field-heading{
+  margin-bottom:7px!important;
+ }
+}
+@media(max-width:760px){
+ html[data-arl-appearance="original"] body .arl-3d-overlay .arl-3d-budget .arl-3d-panel.arl-3d-field>.arl-3d-field-heading{
+  margin-bottom:8px!important;
+ }
+}
+
+/* Acabamento final da rodada: evitar linha residual vermelha no cabeçalho. */
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"] .arl-page-header::after{
+ background:linear-gradient(90deg,#e2c38f,#f0dfc2,transparent)!important;
+ box-shadow:none!important;
+}
+/* Tipos de dívida: manter botão Fechar ao final, independente de quantidade de linhas. */
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue .cg-type-popup{
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;
+ gap:10px!important;padding:18px 22px 22px!important;min-height:0;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue .cg-type-popup>.cg-primary{
+ align-self:flex-start!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay .cg-popup-blue .cg-type-popup>button:last-child:not(.cg-primary){
+ align-self:flex-end!important;margin-top:5px!important;
+}
+/* Ícones das abas de configurações em dourado sem tocar em fontes. */
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"]
+.arl-settings-tab>span:first-child{color:#b27924!important}
+html[data-arl-appearance="original"] body .shell.layout-desktop main[data-arl-settings-react="1"]
+.arl-settings-tab.active>span:first-child{color:#ffd66e!important}
+
+/* PADRÃO PERMANENTE DOS OUTROS MODAIS NATIVOS DO APP.
+   Só desktop/tema original. Não substitui validação, foco, handlers nem mensagens. */
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop) .modal>.modal-card,
+html[data-arl-appearance="original"] body .shell.layout-desktop .modal>.modal-card{
+ border:1px solid #d7b57d!important;border-radius:18px!important;
+ background:linear-gradient(145deg,#fffefb,#fbf5eb)!important;
+ box-shadow:0 20px 56px #21190f5e!important;
+ color:#242631!important;overflow:auto;max-height:calc(100dvh - 30px);
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop)
+.modal>.modal-card> :is(h1,h2,h3){
+ color:#232632!important;
+ border-bottom:1px solid #ecd7b6!important;
+ padding-bottom:12px!important;margin-bottom:14px!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop)
+.modal>.modal-card .modal-close{
+ border:1px solid #e0bd82!important;border-radius:50%!important;
+ background:linear-gradient(#fff,#f9eddb)!important;color:#75501a!important;
+ box-shadow:0 3px 8px #88622933!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop)
+.modal>.modal-card .actions button:not(.primary){
+ border:1px solid #e0bd83!important;border-radius:10px!important;
+ background:linear-gradient(#fffefa,#f9efdf)!important;color:#5c421d!important;
+ box-shadow:0 3px 7px #815f2e22!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop)
+.modal>.modal-card .actions button.primary{
+ border:1px solid #c39542!important;border-radius:10px!important;
+ background:linear-gradient(#383126,#070707)!important;color:#ffda81!important;
+ box-shadow:0 4px 10px #86591e36!important;
+}
+
+
+/* 15/10 — Pagamento Rápido, somente Original WEB. O modal é montado em Portal.
+   Não altera outros pop-ups, React, regras financeiras nem versão Mobile. */
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-quick-payment-popup .cg-person-payment-body{
+  padding:14px 17px!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-person-payment-group{
+  min-width:0;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-person-debt-choice{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) max-content!important;
+  align-items:center!important;justify-content:stretch!important;justify-items:stretch!important;
+  column-gap:14px!important;row-gap:5px!important;
+  width:100%!important;min-width:0!important;
+  padding:11px 15px!important;text-align:left!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-person-debt-choice>span{
+  display:block!important;min-width:0!important;max-width:100%;
+  text-align:left!important;overflow-wrap:anywhere;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-person-debt-choice>span b{
+  display:block;font-size:12px!important;line-height:1.35!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-person-debt-choice>span small{
+  display:block;font-size:10.5px!important;line-height:1.4!important;
+  text-align:left!important;white-space:normal!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-person-debt-choice>strong{
+  display:block!important;min-width:0!important;
+  justify-self:end!important;align-self:center!important;
+  text-align:right!important;white-space:nowrap!important;
+  font-size:12px!important;line-height:1.35!important;
+  color:#a82332!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-institution-group-title{
+  min-width:0;gap:9px!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-institution-group-title h3{
+  flex:1;min-width:0;padding-left:2px;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-institution-group-title button.cg-payment-dollar{
+  position:relative!important;flex:0 0 33px!important;
+  width:33px!important;min-width:33px!important;max-width:33px!important;
+  height:33px!important;min-height:33px!important;max-height:33px!important;
+  padding:0!important;border-radius:50%!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-institution-group-title button.cg-payment-dollar>span{
+  font-size:19px!important;line-height:1!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .cg-institution-group-title button.cg-payment-dollar::after{
+  content:"";position:absolute;inset:-6px;border-radius:50%;
+}
+@media(max-width:420px){
+  html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+  .arl-3d-overlay:has(.cg-quick-payment-popup) .cg-quick-payment-popup .cg-person-payment-body{
+    padding:11px 12px!important;
+  }
+  html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+  .arl-3d-overlay:has(.cg-quick-payment-popup) .cg-person-debt-choice{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+  .arl-3d-overlay:has(.cg-quick-payment-popup) .cg-person-debt-choice>strong{
+    justify-self:end!important;
+  }
+}
+
+/* Precedência sobre a regra geral dos botões do modal: o cifrão continua preto/dourado. */
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .arl-3d-popup.cg-popup-blue.cg-quick-payment-popup
+.cg-institution-group-title button.cg-payment-dollar{
+  background:radial-gradient(circle at 35% 18%,#8c7b5870,transparent 43%),
+             linear-gradient(145deg,#40392d,#171513 53%,#060605)!important;
+  border:1px solid #ddad50!important;
+  box-shadow:0 3px 0 #815114,0 5px 10px #8b5e2180,inset 0 2px 2px #f6d98369,inset 0 -2px 3px #050404!important;
+  color:#ffda6e!important;
+}
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .arl-3d-popup.cg-popup-blue.cg-quick-payment-popup
+.cg-institution-group-title button.cg-payment-dollar>span{
+  color:#ffda6e!important;
+  text-shadow:0 1px 0 #3a290e,0 -1px #fff4bc6d!important;
+}
+/* Priorizar o padding da linha sobre os botões genéricos. */
+html[data-arl-appearance="original"] body:has(.shell.layout-desktop .cg-expense-web-mirror)
+.arl-3d-overlay:has(.cg-quick-payment-popup) .arl-3d-popup.cg-popup-blue.cg-quick-payment-popup
+button.cg-person-debt-choice{
+  padding:11px 15px!important;
+}

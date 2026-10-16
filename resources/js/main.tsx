@@ -1,6 +1,7 @@
 import './appearance';
 import '../css/sidebar-new-order.css';
 import '../css/open-orders-warning.css';
+import { appAlert, appPrompt } from './app-native-dialog';
 import "./session-security";
 import "../css/session-security.css";
 import "../css/app.css";
@@ -9,7 +10,7 @@ import "../css/desktop-adaptive.css";
 import "../css/arl-ui-system.css";
 import "../css/action-icons.css";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Bell, Box, ClipboardList, LayoutDashboard, Plus, Settings, Users, Wallet, Phone, Menu, X, PackageSearch, Pin, LogOut, CircleDollarSign, Truck } from "lucide-react";
+import { Box, ClipboardList, LayoutDashboard, Plus, Settings, Users, Wallet, Phone, Menu, X, PackageSearch, Pin, LogOut, CircleDollarSign, Truck } from "lucide-react";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
 import { OrderPaymentFigures } from "./finance-refund-summary";
 import { connectCacheTabs, clearSessionCache } from './cache-requests';
@@ -35,6 +36,18 @@ import '../css/web-clean-final-polish-20261010.css';
 import '../css/web-clean-action-icons-unified-20261010.css';
 import '../css/mobile-modal-nav-click-safety-20261011.css';
 import '../css/arl-eight-improvements-20261012.css';
+import '../css/orders-reference-gold-20261014.css';
+import '../css/sidebar-gold-continuous-20261014.css';
+import '../css/dashboard-reference-gold-20261014.css';
+import '../css/arl-layout-gold-repair-20261014.css';
+import '../css/order-detail-gold-reference-20261014.css';
+import '../css/app-native-dialog.css';
+import '../css/four-sectors-reference-gold-20261015.css';
+import '../css/ajustes-layout-itens-01-05-20261015.css';
+import '../css/financeiro-gold-reference-20261015.css';
+import '../css/nova-os-gold-reference-20261015.css';
+import '../css/tabelas-topo-gold-refino-20261015.css';
+import '../css/arl-correcao-global-popups-settings-20261015.css';
 
 function ClientForm({ onSaved, onCancel, client }: any) {
   const [data, setData] = useState<any>(client || emptyClient);
@@ -1197,8 +1210,8 @@ function ReportTemplateSettings() {
               </small>
             </div>
             <button
-              onClick={() => {
-                const body = window.prompt(
+              onClick={async () => {
+                const body = await appPrompt(
                   "Edite a orientação do modelo:",
                   t.body,
                 );
@@ -1533,7 +1546,7 @@ function NotificationBell({ go }: any) {
         aria-label="Notificações"
         onClick={() => setOpen(!open)}
       >
-        <Bell />
+        <img className="arl-notification-official-icon" src="/arl-assets/bell-3d-gold-official-20261015.webp" alt="" decoding="async" />
         {data.unread > 0 && <i>{data.unread}</i>}
       </button>
       {open && (
@@ -1736,8 +1749,8 @@ function CatalogAdmin({ catalog, title }: any) {
                     warranty_term: x.warranty_term || 30,
                     warranty_unit: x.warranty_unit || "days",
                   })
-                : (() => {
-                    const next = prompt("Nome", x.name);
+                : (async () => {
+                    const next = await appPrompt("Nome", x.name);
                     if (next)
                       api(`/catalogs/${catalog}/${x.id}`, {
                         method: "PATCH",
@@ -2010,7 +2023,7 @@ function App() {
       setSidebarPinned(Boolean(saved.sidebar_pinned));
     } catch (error: any) {
       setSidebarPinned(!next);
-      window.alert(error.message || "Não foi possível salvar a preferência do menu.");
+      void appAlert(error.message || "Não foi possível salvar a preferência do menu.");
     }
   };
   const orderPath = location.pathname.match(/^\/orders\/(\d+)$/),
@@ -2416,7 +2429,7 @@ function App() {
               </button>
             </div>
           )}
-          <NotificationBell go={go} />
+          {page === "dashboard" && !detail && <NotificationBell go={go} />}
         </header>}
         {detail && openingFallback?.id === detail && <div className="notice" role="status">A OS foi criada. O navegador não abriu o WhatsApp. <a href={openingFallback.url} target="_blank" rel="noreferrer" onClick={() => setOpeningFallback(undefined)}>Abrir mensagem de abertura no WhatsApp</a> <button type="button" onClick={() => setOpeningFallback(undefined)}>Dispensar</button></div>}
         {!me ? <p role="status">Carregando sessão…</p> : expenseOnly || page === "expense-control" ? (

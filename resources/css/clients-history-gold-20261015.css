@@ -1,0 +1,90 @@
+/* Histórico do cliente — Original WEB, sem alterar listagem, modal de cadastro ou mobile.
+   Apenas estrutura, superfícies e controles; tipografia atual é preservada. */
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page{
+  width:100%;max-width:none;min-width:0;
+  gap:16px;
+}
+/* Visual idêntico ao botão "← Voltar" da OS (order-detail-gold-reference). */
+.clients-history-page .clients-back-original{
+  display:inline-flex;align-items:center;gap:6px;
+}
+.clients-history-page .clients-back-reference{display:none}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-back{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:max-content;max-width:100%;min-height:40px!important;
+  padding:9px 16px!important;gap:6px;
+  border:1px solid #f2d8a8!important;border-radius:999px!important;
+  background:linear-gradient(180deg,#fff,#f8ecd7)!important;
+  color:#322514!important;box-shadow:0 3px 8px #986b2c26!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-back-original{display:none}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-back-reference{display:inline}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-title{
+  padding:17px 20px;
+  border:1px solid #e7cfaa;border-radius:16px;
+  background:linear-gradient(125deg,#fffefa,#fcf6ec);
+  box-shadow:0 8px 20px #8e6b3c1b,inset 0 1px #fff;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-data{
+  padding:18px 20px!important;
+  border:1px solid #e7d4b6!important;border-radius:16px!important;
+  background:linear-gradient(140deg,#fffefa,#fbf7f0)!important;
+  box-shadow:0 6px 16px #9e7a4420!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .client-history{
+  display:grid;gap:14px;min-width:0;
+  padding:18px!important;
+  border:1px solid #e7d3b5;border-radius:17px;
+  background:linear-gradient(140deg,#fffefd,#faf6f0);
+  box-shadow:0 9px 22px #98764b24;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-head{
+  padding:0 2px 13px!important;
+  border-bottom:1px solid #ead8bc!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-grid{
+  gap:14px;min-width:0;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-grid .clients-history-order{
+  min-width:0;
+  padding:16px!important;
+  border:1px solid #e5cda7!important;
+  border-radius:15px!important;
+  background:linear-gradient(145deg,#fffefa,#fdfaf5)!important;
+  box-shadow:0 5px 12px #88683a1b,inset 0 1px #fff!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-order-main{
+  min-width:0;overflow-wrap:anywhere;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-order-actions{
+  min-width:0;
+  padding-top:11px;
+  border-top:1px solid #eee1cf;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-pdfs{
+  min-width:0;gap:8px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-pdfs a{
+  width:max-content;max-width:100%;
+  overflow-wrap:anywhere;
+  border-radius:8px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-pdfs a:hover,
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-pdfs a:focus-visible{
+  background:#fff0d6!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-order-actions>button{
+  min-height:41px;
+  border:1px solid #c8a057!important;
+  background:linear-gradient(180deg,#38312a,#090909)!important;
+  box-shadow:inset 0 1px #fff2b15c,0 4px 9px #7c57352f!important;
+}
+@media(max-width:760px){
+  html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .client-history{
+    padding:12px!important;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-title,
+  html[data-arl-appearance="original"] body .shell.layout-desktop .clients-history-page .clients-history-data{
+    padding:13px 14px!important;
+  }
+}

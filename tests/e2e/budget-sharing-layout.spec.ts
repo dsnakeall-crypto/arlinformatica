@@ -44,7 +44,17 @@ test('orçamento usa link protegido, download e confirmação humana de envio', 
   await page.screenshot({ path: 'output/popups-3d/orcamento-referencia.png' });
   for (const viewport of [{ width: 1366, height: 768 }, { width: 1280, height: 720 }]) {
     await page.setViewportSize(viewport);
-    expect(await form.locator('.arl-3d-budget-body').evaluate(element => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
+    // O layout aprovado admite rolagem interna, mantendo o rodapé fixo e os campos acessíveis.
+    const bounds = await form.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport.width + 1);
+    expect(bounds!.y).toBeGreaterThanOrEqual(0);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport.height + 1);
+    const note = form.getByLabel('Observação (opcional)');
+    await note.scrollIntoViewIfNeeded();
+    await expect(note).toBeInViewport();
+    await expect(form.getByRole('button', { name: 'Salvar e gerar PDF' })).toBeInViewport();
   }
   await page.screenshot({ path: 'output/popups-compactos/orcamento-720.png' });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -68,7 +78,9 @@ test('orçamento usa link protegido, download e confirmação humana de envio', 
   await expect(saveButton).toBeVisible();
   const saveBounds = await saveButton.boundingBox();
   expect(saveBounds!.y + saveBounds!.height).toBeLessThanOrEqual(720);
-  expect(await form.locator('.arl-3d-budget-body').evaluate(element => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
+  await form.getByLabel('Observação (opcional)').scrollIntoViewIfNeeded();
+  await expect(form.getByLabel('Observação (opcional)')).toBeInViewport();
+  await expect(saveButton).toBeInViewport();
   await page.screenshot({ path: 'output/ficha-orcamento/modal-orcamento-720.png' });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({ path: 'output/ficha-orcamento/modal-orcamento.png' });

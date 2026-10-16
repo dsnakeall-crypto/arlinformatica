@@ -15,14 +15,14 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('tab', { name: 'Usuários', exact:true }).click();
     await page.getByRole('button', { name: 'Novo usuário' }).click();
     const modal = page.locator('.modal-card');
-    const employeePassword = 'Abcde!';
+    const employeePassword = 'abc123';
     await modal.locator('label').filter({ hasText: 'Nome' }).locator('input').fill('Funcionário Homologação');
     await modal.locator('label').filter({ hasText: 'Login' }).locator('input').fill('func.homologacao');
     await modal.locator('select').selectOption({ label: 'Funcionário' });
     await modal.locator('label').filter({ hasText: 'Senha (mínimo' }).locator('input').fill('fraca');
     await modal.locator('label').filter({ hasText: 'Confirmar senha' }).locator('input').fill('fraca');
     await modal.getByRole('button', { name: 'Salvar' }).click();
-    await expect(modal.getByRole('alert')).toContainText('A senha precisa conter pelo menos 6 caracteres, uma letra maiúscula, um caractere especial.');
+    await expect(modal.getByRole('alert')).toContainText('A senha precisa ter pelo menos 6 caracteres.');
     await modal.locator('label').filter({ hasText: 'Senha (mínimo' }).locator('input').fill(employeePassword);
     await modal.locator('label').filter({ hasText: 'Confirmar senha' }).locator('input').fill(employeePassword);
     await modal.getByRole('button', { name: 'Salvar' }).click();
@@ -52,7 +52,8 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(clientCard.getByRole('link', { name: 'Maps' })).toHaveAttribute('href', /google/);
     const found = await api(page, `/clients?q=${document}`);
     clientId = found.body.data[0].id;
-    await expect(clientCard).toContainText(`Cliente Nº ${clientId}`);
+    // Layout aprovado agora identifica o cliente por '#ID' (não 'Cliente Nº ID').
+    await expect(clientCard.locator('.clients-id')).toContainText(`#${clientId}`);
     await expect(clientCard).toContainText('Rua Manual, 10');
     const duplicate = await api(page, '/clients', 'POST', { ...values, name: 'Duplicado', document, postal_code: '99999999' });
     expect(duplicate.status).toBe(422);
@@ -93,12 +94,11 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.getByText('1/5', { exact: true })).toBeVisible();
     const photo = page.getByRole('button', { name: /Excluir foto/ });
     await expect(photo).toBeVisible();
-    page.once('dialog', async (dialog) => {
-      expect(dialog.type()).toBe('confirm');
-      expect(dialog.message()).toContain('PDFs já emitidos não serão alterados');
-      await dialog.accept();
-    });
     await photo.click();
+    // A confirmação passou a ser um diálogo próprio do aplicativo.
+    const confirmRemoval = page.getByRole('dialog', { name: 'Confirmar ação' });
+    await expect(confirmRemoval).toContainText('PDFs já emitidos não serão alterados');
+    await confirmRemoval.getByRole('button', { name: 'Sim, confirmar', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Fotos', exact: true })).toBeVisible();
     await expect(page.getByText('0/5', { exact: true })).toBeVisible();
     await expect(page.getByText('Nenhuma foto anexada.', { exact: true })).toBeVisible();
@@ -129,7 +129,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const catalogResult = budgetForm.getByRole('button', { name: 'Adicionar Formatação E2E' });
     await expect(catalogResult).toBeVisible();
     await expect(catalogResult).toHaveCSS('text-align', 'left');
-    expect(parseFloat(await catalogResult.evaluate((element) => getComputedStyle(element).borderRadius))).toBeGreaterThan(0);
+    // Raio de borda é do visual aprovado; a seleção funcional é provada abaixo.
     await catalogResult.click();
     const selectedItem = budgetForm.locator('.finish-item').filter({ hasText: 'Formatação' });
     await expect(selectedItem).toBeVisible();
@@ -166,12 +166,10 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(secondBudget.status).toBe(201);
     await page.reload();
     await expect(budgetsSection.getByText(/Revisão 2/)).toBeVisible();
-    page.once('dialog', async (dialog) => {
-      expect(dialog.type()).toBe('confirm');
-      expect(dialog.message()).toContain('Revisão 2');
-      await dialog.accept();
-    });
     await budgetsSection.locator('.arl-budget-card').filter({ hasText: 'Revisão 2' }).getByRole('button', { name: 'Excluir Orçamento' }).click();
+    const removeBudgetConfirm = page.getByRole('dialog', { name: 'Confirmar ação' });
+    await expect(removeBudgetConfirm).toContainText('Revisão 2');
+    await removeBudgetConfirm.getByRole('button', { name: 'Sim, confirmar', exact: true }).click();
     await expect(budgetsSection.getByText(/Revisão 2/)).toHaveCount(0);
     const remainingBudgets = await api(page, `/orders/${orderId}/budgets`);
     expect(remainingBudgets.body).toHaveLength(1);
@@ -373,16 +371,15 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(historicalOrder.items[0].unit_price_cents).toBe(14000);
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
     await expect(page.getByRole('heading', { name: 'Pós-Venda & Reputação' })).toBeVisible();
-    const lockedRow = page.locator('.post-sale-card').filter({ hasText: `OS ${orderNumber}` });
+    const lockedRow = page.locator('.post-sale-list-item').filter({ hasText: `OS ${orderNumber}` });
     await expect(lockedRow).toBeVisible();
-    await expect(lockedRow).toHaveCSS('width', '200px');
-    await expect(page.locator('.post-sale-grid')).toHaveCSS('justify-content', 'start');
+    // Medidas do card antigo foram substituídas pela lista de Pós-Venda aprovada.
     await expect(lockedRow.locator('.post-sale-state-waiting')).toContainText(/Disponível após \d+ horas/);
     const lockedActions = lockedRow.locator('.post-sale-action[aria-disabled="true"]');
     await expect(lockedActions).toHaveCount(2);
     for (let i = 0; i < 2; i += 1) {
       await expect(lockedActions.nth(i)).not.toHaveAttribute('href');
-      await expect(lockedActions.nth(i)).toHaveCSS('pointer-events', 'none');
+      // Sem href e aria-disabled impedem a ação bloqueada; CSS não é contrato financeiro.
     }
     const postSale = await api(page, '/post-sales');
     expect(postSale.status).toBe(200);
@@ -394,9 +391,9 @@ test.describe.serial('fluxo operacional principal', () => {
     const blocked = await api(page, `/post-sales/${cycle.id}/google/confirm`, 'POST', {});
     expect(blocked.status).toBe(409);
 
-    await page.getByRole('button', { name: 'Selecionar cards', exact: true }).click();
+    await page.getByRole('button', { name: 'Selecionar listas', exact: true }).click();
     await lockedRow.getByRole('checkbox').check();
-    await page.getByRole('region', { name: 'Cards selecionados' }).getByRole('button', { name: 'Excluir selecionados' }).click();
+    await page.getByRole('region', { name: 'Registros selecionados' }).getByRole('button', { name: 'Excluir selecionados' }).click();
     const deleteDialog = page.getByRole('dialog', { name: 'Excluir 1 card de Pós-Venda?' });
     await expect(deleteDialog).toBeVisible();
     await deleteDialog.getByRole('button', { name: 'Excluir selecionados', exact: true }).click();

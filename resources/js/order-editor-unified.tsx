@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { FileText, Save, X, CalendarDays, Clock3, Wrench, Box, Tag, LockKeyhole, ClipboardList, Info, WandSparkles, ChevronDown } from 'lucide-react';
 import TextImprovement from './text-improvement';
 import OrderPopup from './order-popup';
+import { appConfirm } from './app-native-dialog';
 import { completedRequest } from './cache-requests';
 
 type Props = {
@@ -87,8 +88,8 @@ export default function UnifiedOrderEditor({ orderId, onClose, onSaved, onDirtyC
   }, [orderId]);
 
   const markDirty = () => setDirty(true);
-  const close = () => {
-    if (dirty && !window.confirm(UNSAVED_MESSAGE)) return;
+  const close = async () => {
+    if (dirty && !(await appConfirm(UNSAVED_MESSAGE))) return;
     setDirty(false);
     onDirtyChange?.(false);
     onClose();

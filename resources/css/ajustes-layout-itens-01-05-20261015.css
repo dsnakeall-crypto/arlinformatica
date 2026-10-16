@@ -1,0 +1,150 @@
+/* ARL — Rodada aprovada 1–5, 15/10/2026.
+   CSS de correção isolada, após os demais layouts aprovados.
+   Não muda tipografia nem lógica de negócios. */
+
+/* 1. Uniformizar OS, data e hora, no mesmo preto em Painel e Ordens. */
+html[data-arl-appearance="original"] body .shell.layout-desktop
+:is(main[data-arl-orders-react="1"],main[data-arl-dashboard-react="1"])
+:is(.orders-order-list,.dashboard-order-list)
+:is(.arl-order-number b,.arl-order-opened-at) {
+ color:#18191d!important;
+}
+/* Painel: as linhas devem ter o respiro das linhas da aba Ordens. */
+html[data-arl-appearance="original"] body .shell.layout-desktop
+main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list tbody tr {
+ height:57px!important;
+ min-height:57px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list tbody td {
+ box-sizing:border-box;
+ height:57px!important;
+ padding:10px 12px!important;
+ line-height:1.42!important;
+ vertical-align:middle!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list .order-client-report {
+ line-height:1.4!important;
+}
+/* 2. Notificações em um único local do Painel, na posição marcada. */
+html[data-arl-appearance="original"] body .shell.layout-desktop
+> main[data-arl-dashboard-react="1"] > .app-head {
+ position:relative!important;top:auto!important;right:auto!important;
+ height:0!important;min-height:0!important;max-height:0!important;
+ padding:0!important;margin:0!important;border:0!important;
+ overflow:visible!important;z-index:60!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+> main[data-arl-dashboard-react="1"] > .app-head .notification-wrap {
+ position:absolute!important;
+ top:23px!important;
+ left:50%!important;
+ right:auto!important;
+ transform:translateX(-50%)!important;
+ pointer-events:auto;
+ z-index:65!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+> main:not([data-arl-dashboard-react="1"]) > .app-head {
+ height:0!important;min-height:0!important;max-height:0!important;
+ padding:0!important;margin:0!important;border:0!important;
+ overflow:visible!important;
+}
+/* O sino 3D é uma imagem única de origem, sem moldura SVG extra.
+   Use imagem mais nítida em retina (arquivo atualizado separadamente). */
+html body .notification-wrap>.bell,
+html body .bell>.arl-notification-official-icon {
+ width:49px!important;height:49px!important;min-width:49px!important;min-height:49px!important;
+}
+html body .bell>.arl-notification-official-icon{
+ object-fit:contain!important;
+ image-rendering:auto!important;
+}
+/* 3/4. Garantias: campos pequenos e próximos da descrição, em ambos os catálogos. */
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page .services-warranty-row {
+ display:flex!important;
+ align-items:flex-end!important;
+ justify-content:flex-start!important;
+ flex-wrap:wrap!important;
+ gap:10px 16px!important;
+ padding-top:9px!important;
+ margin-top:9px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page .services-warranty-row>.services-warranty-toggle {
+ flex:0 0 auto!important;
+ grid-column:auto!important;
+ min-width:260px!important;
+ margin:0 4px 0 0!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page .services-warranty-row>.services-field {
+ display:flex!important;
+ flex-direction:column!important;
+ flex:0 0 94px!important;
+ width:94px!important;
+ min-width:0!important;
+ max-width:94px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page .services-warranty-row>.services-field:last-child {
+ flex-basis:108px!important;
+ width:108px!important;
+ max-width:108px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page .services-warranty-row>.services-field :is(input,select){
+ width:100%!important;
+ min-width:0!important;
+ height:34px!important;min-height:34px!important;
+ box-sizing:border-box!important;
+ padding-inline:8px!important;
+}
+/* 5. Ar entre títulos/descrições/cards e entre produtos e serviços. */
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page :is(.services-most-used,.services-list-card) .services-list-heading{
+ padding-bottom:8px!important;
+ margin-bottom:6px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page :is(.services-most-used,.services-list-card) .services-list-heading h2{
+ margin-bottom:6px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page :is(.services-most-used,.services-list-card) .services-list-heading p{
+ margin-top:0!important;
+ line-height:1.5!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page .services-most-used-grid{
+ margin-top:11px!important;
+ gap:10px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page .services-list{
+ gap:4px!important;
+ padding:3px 4px 6px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page .services-row{
+ min-height:43px!important;
+ padding-top:8px!important;
+ padding-bottom:8px!important;
+ border:1px solid #eee4d6!important;
+ border-radius:8px!important;
+ box-shadow:0 1px 3px #5a3c1a0d!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+.services-page .services-list-card .services-table-head {
+ margin-top:0!important;
+}
+@media(max-width:700px){
+ html[data-arl-appearance="original"] body .shell.layout-desktop
+ .services-page .services-warranty-row>.services-warranty-toggle{min-width:min(260px,100%)!important;}
+ html[data-arl-appearance="original"] body .shell.layout-desktop
+ .services-page .services-warranty-row>.services-field{flex-basis:90px!important;width:90px!important;}
+ html[data-arl-appearance="original"] body .shell.layout-desktop
+ .services-page .services-warranty-row>.services-field:last-child{flex-basis:105px!important;width:105px!important;}
+}

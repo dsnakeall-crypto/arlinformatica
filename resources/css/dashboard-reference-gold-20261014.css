@@ -1,0 +1,167 @@
+/* ARL 14/10/2026. Painel dourado somente no desktop Original. Sem mudar logica, fontes ou dados. */
+@media screen and (min-width:1px) {
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] {
+    min-width:0!important;min-height:100vh;
+    background:
+      radial-gradient(ellipse at 94% 5%,#f6e9d785,transparent 37%),
+      radial-gradient(ellipse at 2% 7%,#fcf7eb,transparent 27%),
+      linear-gradient(135deg,#faf9f6 0%,#fffdfb 34%,#f6f2ed 100%);
+    position:relative;overflow-x:clip;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"]::before {
+    content:"";position:absolute;top:0;right:0;width:min(45vw,570px);height:116px;
+    pointer-events:none;z-index:0;opacity:.83;
+    background:
+      linear-gradient(90deg,#fffbf400 10%,#f9f4e770 89%),
+      url('/arl-assets/orders-gold-corner-20261014.webp') center top / cover no-repeat;
+    mask-image:linear-gradient(to bottom,#000 40%,transparent);
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] > *{position:relative;z-index:1}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .app-head {height:54px;margin-bottom:0}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .app-head .notification-wrap {
+    position:relative;z-index:4;top:-24px!important;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .arl-page-header {
+    margin:-47px 0 13px!important;
+    padding:3px 0 14px!important;min-height:73px!important;
+    border-bottom:1px solid #e8ddcd;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .arl-page-header::after {
+    height:1px;background:linear-gradient(90deg,#e8c47e91,#e8ddca 55%,transparent 96%);
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .arl-eyebrow {color:#a87520;letter-spacing:2px}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .arl-page-header-icon {
+    background:linear-gradient(150deg,#fffcf2,#fff2d7 50%,#f2bd63);
+    color:#8f5814;border:1px solid #f5cc7b;
+    box-shadow:inset 0 2px 1px #fff7ec,0 4px 7px #c593405e;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .arl-page-header-actions .primary {
+    border:1px solid #d7a633!important;
+    border-radius:999px!important;
+    background:linear-gradient(180deg,#28241d,#070707 75%,#1b1207)!important;
+    color:#ffe3a0!important;
+    min-height:40px!important;padding:8px 17px!important;
+    box-shadow:0 4px 10px #68430b36,inset 0 1px 0 #fff4b93d!important;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .arl-page-header-actions .primary svg {width:17px;height:17px;color:#ffdf82}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-cards.status-cards {
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:14px;margin:0 0 17px;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .status-cards article {
+    min-height:73px!important;padding:11px 15px!important;
+    grid-template-columns:52px minmax(0,1fr) 17px!important;
+    gap:2px 14px!important;border:1px solid #fff!important;
+    border-radius:16px!important;
+    background:linear-gradient(145deg,#fff 8%,#fefcf9 80%,#f8f5f0)!important;
+    box-shadow:0 8px 18px #9d79552b,inset 0 1px #fff!important;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .status-cards article span {width:49px;height:49px;grid-row:1/3;border-radius:15px!important}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .status-cards article span svg {width:25px;height:25px}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .status-cards article strong {grid-column:2;align-self:end}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .status-cards article small {grid-column:2;align-self:start}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .status-cards article::after {
+    content:"";grid-column:3;grid-row:1/3;justify-self:center;
+    width:8px;height:8px;border-right:2px solid #9b5d1b;border-top:2px solid #9b5d1b;
+    transform:rotate(45deg);pointer-events:none;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders {
+    margin:0;border:1px solid #f2ddbb!important;
+    border-radius:18px!important;
+    background:linear-gradient(148deg,#fffefa,#fffdfb 75%,#f8f5ef)!important;
+    box-shadow:0 10px 24px #a1815326,inset 0 1px #fff!important;
+    overflow:hidden;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-list-head {
+    padding:11px 18px 10px;border-bottom:none;
+    min-height:64px;align-items:center;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-list-head h2 {margin:0 0 3px;gap:11px}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-list-head h2::before {
+    content:"▤";width:36px;height:36px;flex:0 0 36px;
+    display:grid;place-items:center;border-radius:11px;
+    background:linear-gradient(150deg,#fff9ee,#ffe6b0 55%,#ffcc66);
+    border:1px solid #fbd48a;color:#895212;
+    box-shadow:0 2px 5px #b98b3b2e;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-list-head p {margin:0 0 0 47px}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-list-head button {
+    min-height:36px;padding:7px 14px;
+    border:1px solid #e5b34d!important;
+    border-radius:10px;background:linear-gradient(180deg,#fff,#f9f7f1)!important;
+    color:#192137;box-shadow:0 4px 10px #a374322a;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list {
+    margin:0 8px 6px!important;overflow-x:auto;
+    border:1px solid #eee5d7!important;border-radius:13px;
+    background:#fff;box-shadow:0 2px 5px #977a4920;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list table {
+    width:100%;table-layout:fixed;border-collapse:collapse;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list col:nth-child(1){width:12%!important}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list col:nth-child(2){width:19%!important}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list col:nth-child(3){width:15%!important}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list col:nth-child(4){width:18%!important}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list col:nth-child(5){width:23%!important}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list col:nth-child(6){width:13%!important}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list thead th {
+    height:29px;padding:7px 8px!important;
+    background:linear-gradient(180deg,#f7f4ef,#f0ece5)!important;
+    border-bottom:1px solid #e9e1d6;color:#585459;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list tbody tr{
+    background:linear-gradient(90deg,#fff,#fffdfb)!important;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list tbody tr:nth-child(2n){background:#fcf8f6!important}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list tbody td {
+    height:40px;padding:5px 8px!important;
+    border-bottom:1px solid #eee7df;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list tbody tr:last-child td{border-bottom:0}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list .arl-order-number b{color:#e00020}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list .arl-order-opened-at{color:#038047}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list .order-device{color:#086df1}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list .order-client-report {
+    overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+    -webkit-line-clamp:2;-webkit-box-orient:vertical;
+    white-space:normal;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list .row-status {
+    max-width:185px;margin:auto;min-height:28px;
+    box-shadow:none!important;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list .row-status select{padding-top:6px;padding-bottom:6px}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list .order-actions {
+    justify-content:flex-end;gap:4px;flex-wrap:nowrap;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list .order-actions > :is(a,button) {
+    width:24px!important;min-width:0!important;max-width:24px!important;flex:0 0 24px!important;height:27px!important;min-height:0!important;padding:0!important;
+    border:0!important;border-radius:0!important;
+    background:transparent!important;box-shadow:none!important;
+  }
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list .order-actions :is(svg,img){width:16px;height:16px}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-section-divider{height:0;margin:16px 0;border:0;background:none}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-closed-orders {margin-top:0}
+}
+@media screen and (min-width:801px) and (max-width:1200px){
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .status-cards article{padding:8px!important;gap:2px 8px!important;grid-template-columns:42px minmax(0,1fr) 11px!important}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .status-cards article span{width:41px;height:41px}
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders .dashboard-order-list table{min-width:920px}
+}
+@media (prefers-reduced-motion:reduce){
+  html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .dashboard-orders *,html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .status-cards article{transition:none!important}
+}
+
+
+/* 15/10 — Exceção tipográfica solicitada: textos das linhas inferiores iguais
+   às legendas dos cards de status (baseline computada: 11,6667px).
+   Não alcança títulos, cabeçalhos, selects, ações ou outros menus. */
+html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"]
+.dashboard-orders .dashboard-order-list tbody td{
+  font-size:11.6667px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"]
+.dashboard-orders .dashboard-order-list tbody td :is(.arl-order-number b,.arl-order-opened-at,.order-device,.order-client-report){
+  font-size:11.6667px!important;
+}

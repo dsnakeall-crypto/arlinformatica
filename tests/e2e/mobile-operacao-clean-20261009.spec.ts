@@ -176,6 +176,6 @@ test('web/PC mantém Original opcional, Pós-Venda e controles de cliente',async
   const sidebar=page.getByRole('navigation',{name:'Menu principal'});
   await expect(sidebar.getByRole('button',{name:'Pós-Venda'})).toBeVisible();
   await sidebar.getByRole('button',{name:'Clientes'}).click();
-  await expect(page.getByRole('combobox',{name:'Clientes por página'})).toBeVisible();
-  await expect(page.getByRole('combobox',{name:'Ordenar clientes'})).toBeVisible();
+  await expect(page.locator('.clients-list-panel .clients-page-size select')).toBeVisible();
+  await expect(page.locator('.clients-list-panel .clients-sort select')).toBeVisible();
 });

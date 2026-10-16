@@ -1,0 +1,23 @@
+/* ARL native dialogs: design compartilhado para alertas/confirmações/prompt.
+ * São elementos DOM acessíveis, nunca janelas de confirmação do navegador. */
+.arl-app-dialog-overlay {
+  position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
+  padding:16px;background:rgba(22,17,9,.64);backdrop-filter:blur(6px);
+}
+.arl-app-dialog-card {
+  width:min(470px,100%);max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box;
+  border:1px solid #dfb26a;border-radius:18px;
+  background:linear-gradient(145deg,#fffefa,#fffaf3 86%,#f9f0e3);
+  box-shadow:0 25px 68px #1e160e70,0 0 0 3px #fff8e785;
+  padding:26px 25px 23px;color:#242222;
+}
+.arl-app-dialog-eyebrow {display:block;color:#a7752b;font-size:10px;font-weight:800;letter-spacing:2px}
+.arl-app-dialog-card h2{font-size:20px;line-height:1.3;margin:8px 0 13px;font-weight:800;color:#161821}
+.arl-app-dialog-body {white-space:pre-line;font-size:13px;line-height:1.6;color:#4f4b47;margin:0 0 17px}
+.arl-app-dialog-input {box-sizing:border-box;display:block;width:100%;min-height:41px;padding:9px 12px;border:1px solid #e5d4b7;border-radius:10px;background:#fff;color:#222;font:inherit;font-size:13px}
+.arl-app-dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}
+.arl-app-dialog-actions button{min-height:40px;padding:9px 18px;border-radius:11px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.arl-app-dialog-cancel{border:1px solid #e6dac7;background:linear-gradient(180deg,#fff,#f8f4ef);color:#2a2826}
+.arl-app-dialog-confirm{border:1px solid #c99436;background:linear-gradient(180deg,#37332d,#090909 75%);color:#ffdb80;box-shadow:inset 0 1px #fff8c942,0 5px 11px #76532140}
+.arl-app-dialog-card :is(button,input):focus-visible{outline:2px solid #bf8934;outline-offset:3px}
+@media(max-width:600px){.arl-app-dialog-card{padding:20px 17px;border-radius:14px}.arl-app-dialog-actions button{flex:1}}

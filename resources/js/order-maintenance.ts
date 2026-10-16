@@ -1,3 +1,4 @@
+import { appAlert } from "./app-native-dialog";
 import { reactPageActive } from './react-ownership';
 export {};
 
@@ -89,7 +90,7 @@ function openEdit(order: OrderRow, row: HTMLElement) {
       overlay.remove();
     } catch (error) {
       button.disabled = false; button.textContent = 'Salvar';
-      alert(error instanceof Error ? error.message : 'Não foi possível salvar.');
+      void appAlert(error instanceof Error ? error.message : 'Não foi possível salvar.');
     }
   });
 }

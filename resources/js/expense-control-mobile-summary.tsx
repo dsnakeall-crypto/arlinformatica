@@ -5,7 +5,8 @@ import { personNames, PersonBalanceCards, SummaryIndicators, type SummaryScope }
 import '../css/expense-control-mobile.css';
 
 type Scope = 'all' | 'one' | 'two' | 'shared';
-const money = (value = 0) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value / 100);
+const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const money = (value = 0) => currencyFormatter.format(value / 100);
 
 export default function ExpenseMobileSummary({ summary, config, portraits, onInstitution, onDebt, onInvoice, onPerson, onCompactPerson, onPay, onSharedPay, onExport, onNext, onMonth }: {
   summary?: Summary; config: Configuration; month: string; portraits: ReactNode[];

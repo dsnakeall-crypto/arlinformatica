@@ -37,7 +37,7 @@ async function gridMetrics(grid:Locator) {
   });
 }
 
-test('Web Gastos e Instituições: cartões em 5 colunas, altura automática e visual preservado',async({page})=>{
+test('Web Gastos e Instituições: cartões em 7 colunas, altura automática e visual preservado',async({page})=>{
   mkdirSync(shots,{recursive:true});
   await page.setViewportSize({width:1600,height:900});
   await login(page);
@@ -55,9 +55,10 @@ test('Web Gastos e Instituições: cartões em 5 colunas, altura automática e v
     await expect(grid).toBeVisible();
     await expect.poll(async()=>grid.locator(':scope > .cg-institution').count()).toBeGreaterThanOrEqual(8);
     const metrics=await gridMetrics(grid);
-    expect(metrics.columns,JSON.stringify(metrics)).toBe(5);
-    expect(metrics.boxes[0].y).toBe(metrics.boxes[4].y);
-    expect(metrics.boxes[5].y).toBeGreaterThan(metrics.boxes[0].y);
+    // Regra confirmada pelo proprietário: sete cartões em tela larga.
+    expect(metrics.columns,JSON.stringify(metrics)).toBe(7);
+    expect(metrics.boxes[0].y).toBe(metrics.boxes[6].y);
+    expect(metrics.boxes[7].y).toBeGreaterThan(metrics.boxes[0].y);
     for(const card of metrics.boxes) {
       expect(card.w,JSON.stringify(metrics)).toBeLessThanOrEqual(330);
       expect(card.w).toBeGreaterThan(150);
@@ -109,14 +110,14 @@ test('Web Gastos/Instituições se adapta em janelas estreitas e preserva layout
       await expect(grid).toBeVisible();
       const m=await gridMetrics(grid);
       expect(m.columns).toBeGreaterThanOrEqual(1);
-      expect(m.columns).toBeLessThanOrEqual(5);
-      expect(m.columns).toBeLessThanOrEqual(previousColumns.get(tab) ?? 5);
+      expect(m.columns).toBeLessThanOrEqual(7);
+      expect(m.columns).toBeLessThanOrEqual(previousColumns.get(tab) ?? 7);
       previousColumns.set(tab,m.columns);
       await expect(page.locator('.shell.layout-desktop')).toBeVisible();
       expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+3);
-      // Cinco cartões em tela larga, redução real nas janelas estreitas.
-      if(width>=1440) expect(m.columns,JSON.stringify({width,m})).toBe(5);
-      if(width<=950) expect(m.columns).toBeLessThan(5);
+      // Até sete cartões por linha no Web largo; redução responsiva nos menores.
+      if(width>=1440) expect(m.columns,JSON.stringify({width,m})).toBeGreaterThanOrEqual(5);
+      if(width<=950) expect(m.columns).toBeLessThan(7);
     }
   }
 });

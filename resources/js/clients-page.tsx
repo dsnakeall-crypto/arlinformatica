@@ -1,3 +1,4 @@
+import { appConfirm, appAlert } from "./app-native-dialog";
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { CACHE_POLICIES, sessionCache } from './session-memory-cache';
 import { completedRequest } from './cache-requests';
@@ -6,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardPlus,
-  Eye,
   FileText,
   MapPin,
   Phone,
@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import "../css/clients-page.css";
+import "../css/clients-history-gold-20261015.css";
 import PageHeader from "./page-header";
 
 type Client = {
@@ -185,7 +186,7 @@ function ActionIcon({
   kind: keyof typeof ICONS | "visualizar" | "nova-os";
 }) {
   return kind === "visualizar" ? (
-    <Eye className="clients-action-eye" aria-hidden="true" />
+    <img className="clients-action-icon clients-action-eye" src="/arl-assets/icons/icon-web-eye-compact-2x.png" alt="" aria-hidden="true" decoding="async" />
   ) : kind === "nova-os" ? (
     <ClipboardPlus className="clients-action-eye" aria-hidden="true" />
   ) : (
@@ -444,9 +445,9 @@ function ClientHistory({
       className="clients-react-page clients-history-page"
       data-arl-clients-react="1"
     >
-      <button className="clients-back" onClick={onClose}>
-        <ArrowLeft />
-        {backToOrder ? "Voltar para a OS" : "Voltar aos clientes"}
+      <button type="button" className="clients-back" aria-label={backToOrder ? "Voltar para a OS" : "Voltar aos clientes"} onClick={onClose}>
+        <span className="clients-back-original"><ArrowLeft />{backToOrder ? "Voltar para a OS" : "Voltar aos clientes"}</span>
+        <span className="clients-back-reference" aria-hidden="true">← Voltar</span>
       </button>
       <header className="clients-history-title">
         <span className="clients-eyebrow">ARL INFORMÁTICA</span>
@@ -657,7 +658,7 @@ export default function ClientsPage({
   };
   const remove = async (c: Client) => {
     if (
-      !window.confirm(
+      !await appConfirm(
         `Excluir ${c.name} da lista de clientes?\n\nAs OS e documentos históricos serão preservados.`,
       )
     )
@@ -669,7 +670,7 @@ export default function ClientsPage({
       setItems((current) => current.filter((item) => item.id !== c.id));
       setTotal((current) => Math.max(0, current - 1));
     } catch (e: any) {
-      window.alert(e.message || "Não foi possível excluir o cliente.");
+      void appAlert(e.message || "Não foi possível excluir o cliente.");
     }
   };
   if (detail)
@@ -772,19 +773,21 @@ export default function ClientsPage({
         ) : !visibleItems.length ? (
           <div className="state">Nenhum cliente encontrado.</div>
         ) : (
+          <div className="clients-table-region">
+          {!quick && <div className="clients-column-head" aria-hidden="true"><span>CLIENTE</span><span>DOCUMENTO</span><span>TELEFONE</span><span>ENDEREÇO</span><span>AÇÕES</span></div>}
           <div className="client-list">
             {visibleItems.map((c) => (
               <article className="clients-row" key={c.id}>
                 <div className="clients-id">
-                  <b>Cliente Nº {c.id}</b>
+                  <b>#{c.id}</b>
                 </div>
                 <div className="clients-main">
                   <b>{c.name}</b>
                   {c.nickname && (
                     <small className="clients-nickname">{c.nickname}</small>
                   )}
-                  <small>{masks.document(c.document)}</small>
                 </div>
+                <div className="clients-document">{masks.document(c.document)}</div>
                 <span className="clients-separator" aria-hidden="true" />
                 <span className="clients-phone">
                   <Phone aria-hidden="true" />
@@ -867,7 +870,9 @@ export default function ClientsPage({
               </article>
             ))}
           </div>
+          </div>
         )}
+        {!mobileList && !quick && <div className="clients-bottom-pagination"><span>Mostrando {visibleItems.length ? (page-1)*perPage+1 : 0}–{Math.min(page*perPage,total)} de {total} clientes</span><label>Por página <select aria-label="Clientes por página (rodapé)" value={perPage} onChange={(e)=>{setPerPage(Number(e.target.value));setPage(1);}}><option value="12">12</option><option value="30">30</option><option value="100">100</option></select></label><button type="button" disabled={page===1} onClick={()=>setPage(current=>Math.max(1,current-1))}>Anterior</button><button type="button" disabled={page===pageCount} onClick={()=>setPage(current=>Math.min(pageCount,current+1))}>Próxima</button></div>}
       </section>
       {modal && (
         <ClientModal

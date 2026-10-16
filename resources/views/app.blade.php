@@ -37,6 +37,15 @@
             .login-field{display:grid;gap:7px;margin-bottom:16px;font-size:13px;font-weight:700}
             .login-field input{width:100%;height:46px;border:1px solid #dedde1;border-radius:10px;padding:0 13px;font:inherit;font-weight:500;outline:none;background:#fff}
             .login-field input:focus{border-color:#c9001c;box-shadow:0 0 0 3px rgba(201,0,28,.10)}
+            .login-password-wrap{position:relative;display:block}
+            .login-field .login-password-wrap input{padding-right:57px}
+            .login-password-toggle{position:absolute;right:3px;top:2px;width:44px;height:42px;display:grid;place-items:center;border:0;border-radius:8px;background:transparent;color:#555b67;cursor:pointer}
+            .login-password-toggle:hover{background:#f7f5f6;color:#a9001a}
+            .login-password-toggle:focus-visible{outline:2px solid #c9001c;outline-offset:1px}
+            .login-password-toggle svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+            .login-password-toggle .icon-password-hide{display:none}
+            .login-password-toggle[aria-pressed="true"] .icon-password-show{display:none}
+            .login-password-toggle[aria-pressed="true"] .icon-password-hide{display:block}
             .login-remember{display:flex;align-items:center;gap:9px;margin:2px 0 20px;color:#555b67;font-size:13px}
             .login-button{width:100%;height:47px;border:0;border-radius:10px;background:linear-gradient(180deg,#e40b2e,#980018);color:#fff;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 21px rgba(196,0,27,.22)}
             .login-button:disabled{opacity:.65;cursor:wait}
@@ -61,9 +70,16 @@
                 <label class="login-field">Login
                     <input id="login" name="login" autocomplete="username" required autofocus>
                 </label>
-                <label class="login-field">Senha
-                    <input id="password" name="password" type="password" autocomplete="current-password" required>
-                </label>
+                <div class="login-field">
+                    <label for="password">Senha</label>
+                    <span class="login-password-wrap">
+                        <input id="password" name="password" type="password" autocomplete="current-password" required>
+                        <button type="button" class="login-password-toggle" id="login-password-toggle" aria-label="Mostrar senha" aria-pressed="false" aria-controls="password" title="Mostrar senha">
+                            <svg class="icon-password-show" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-password-hide" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.1A11 11 0 0 1 12 4.9c4.4 0 8.1 2.7 9.9 7.1a11 11 0 0 1-3 4.2"/><path d="M6.6 6.6A11 11 0 0 0 2 12c1.8 4.3 5.5 7 10 7 1.2 0 2.5-.2 3.6-.7"/></svg>
+                        </button>
+                    </span>
+                </div>
                 <label class="login-remember"><input id="remember" type="checkbox"> Permanecer conectado</label>
                 <button class="login-button" id="login-button" type="submit">Entrar</button>
                 <div class="login-note">ARL Informática · acesso administrativo</div>
@@ -75,6 +91,15 @@
             const form = document.getElementById('login-form');
             const button = document.getElementById('login-button');
             const errorBox = document.getElementById('login-error');
+            const passwordInput = document.getElementById('password');
+            const passwordToggle = document.getElementById('login-password-toggle');
+            passwordToggle.addEventListener('click', () => {
+                const showing = passwordInput.type === 'password';
+                passwordInput.type = showing ? 'text' : 'password';
+                passwordToggle.setAttribute('aria-pressed', String(showing));
+                passwordToggle.setAttribute('aria-label', showing ? 'Ocultar senha' : 'Mostrar senha');
+                passwordToggle.title = showing ? 'Ocultar senha' : 'Mostrar senha';
+            });
             const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
             form.addEventListener('submit', async (event) => {

@@ -23,11 +23,16 @@ test('Configurações organiza cartões e Sistema; clientes alinham colunas em r
       Array.from(row.querySelectorAll('.clients-separator, .clients-phone, .clients-address')).map(el => {
         const r = el.getBoundingClientRect();
         const parent = row.getBoundingClientRect();
-        return { x: r.x, centerY: r.y + r.height / 2 - parent.y - parent.height / 2 };
+        return { x: r.x, centerY: r.y + r.height / 2 - parent.y - parent.height / 2,
+          visible: getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0 };
       }),
     ));
+    console.log('E11_CLIENT_COLUMNS', JSON.stringify({width,columns}));
     expect(columns[0].length).toBe(5);
     columns[0].forEach((column, index) => {
+      // Separadores ocultos têm retângulo (0,0) e não podem validar alinhamento.
+      expect(column.visible).toBe(columns[1][index].visible);
+      if (!column.visible) return;
       expect(Math.abs(column.x - columns[1][index].x)).toBeLessThan(1);
       expect(Math.abs(column.centerY)).toBeLessThan(1);
     });

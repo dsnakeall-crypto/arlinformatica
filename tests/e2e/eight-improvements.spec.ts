@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { api, login, openExpenseSection } from './helpers';
 
-test('instituições: cinco colunas, altura automática e navegação sem faixa branca', async ({ page }) => {
+test('instituições: grade aprovada, altura automática e navegação sem faixa branca', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 1000 });
   await login(page);
   for (let i = 0; i < 6; i++) expect((await api(page, '/expense-control/catalogs/institutions', 'POST', { name: `Layout ${Date.now()} ${i}`, active: true, due_day: 12, color: '#123456' })).status).toBe(200);
@@ -13,7 +13,7 @@ test('instituições: cinco colunas, altura automática e navegação sem faixa 
     const style = getComputedStyle(element);
     return { columns: style.gridTemplateColumns.split(' ').length, cards: Array.from(element.children).map(card => ({ height: card.getBoundingClientRect().height, top: card.getBoundingClientRect().top })) };
   });
-  expect(layout.columns).toBe(5);
+  expect(layout.columns).toBe(7);
   const firstRow = layout.cards.filter(card => card.top === layout.cards[0].top);
   expect(new Set(firstRow.map(card => card.height)).size).toBe(1);
   for (const selector of ['.cg-navigation', '.cg-tabs']) {

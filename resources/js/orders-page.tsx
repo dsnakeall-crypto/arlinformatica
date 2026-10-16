@@ -1,8 +1,9 @@
+import { appConfirm } from "./app-native-dialog";
 import { useEffect, useRef, useState } from "react";
 import { CACHE_POLICIES, sessionCache } from './session-memory-cache';
 import { orderListPresentation } from './cache-requests';
 import PageHeader from "./page-header";
-import { ClipboardList, Plus, Search } from "lucide-react";
+import { ClipboardList, Plus, Search, Clock3, Hourglass, CheckSquare, PauseCircle, List } from "lucide-react";
 import { Order, api } from './app-shared';
 import { OrderTable, InterruptionModal, StatusPaymentModal } from './order-list-components';
 
@@ -108,7 +109,7 @@ export function Orders({ open, role, initialTab, onCountersChanged }: any) {
       return;
     }
     if (
-      !confirm(
+      !await appConfirm(
         `Excluir a OS #${o.number} das listagens? O histórico será preservado.`,
       )
     )
@@ -145,7 +146,7 @@ export function Orders({ open, role, initialTab, onCountersChanged }: any) {
               setPage(1);
             }}
           >
-            Em Andamento <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.progress ?? 0}</small>
+            <Clock3 className="arl-gold-tab-icon" aria-hidden="true" /> Em Andamento <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.progress ?? 0}</small>
           </button>
           <button
             className={tab === "awaiting_payment" ? "active" : ""}
@@ -154,7 +155,7 @@ export function Orders({ open, role, initialTab, onCountersChanged }: any) {
               setPage(1);
             }}
           >
-            <span className="order-awaiting-full">Aguardando PGTO</span><span className="order-awaiting-short">AGU. PGTO</span> <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.awaiting_payment ?? 0}</small>
+            <Hourglass className="arl-gold-tab-icon" aria-hidden="true" /> <span className="order-awaiting-full">Aguardando PGTO</span><span className="order-awaiting-short">AGU. PGTO</span> <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.awaiting_payment ?? 0}</small>
           </button>
           <button
             className={tab === "finalized" ? "active" : ""}
@@ -163,7 +164,7 @@ export function Orders({ open, role, initialTab, onCountersChanged }: any) {
               setPage(1);
             }}
           >
-            Finalizadas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.finalized ?? 0}</small>
+            <CheckSquare className="arl-gold-tab-icon" aria-hidden="true" /> Finalizadas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.finalized ?? 0}</small>
           </button>
           <button
             className={tab === "interrupted" ? "active" : ""}
@@ -172,7 +173,7 @@ export function Orders({ open, role, initialTab, onCountersChanged }: any) {
               setPage(1);
             }}
           >
-            Interrompidas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.interrupted ?? 0}</small>
+            <PauseCircle className="arl-gold-tab-icon" aria-hidden="true" /> Interrompidas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.interrupted ?? 0}</small>
           </button>
           <button
             className={tab === "all" ? "active" : ""}
@@ -181,7 +182,7 @@ export function Orders({ open, role, initialTab, onCountersChanged }: any) {
               setPage(1);
             }}
           >
-            Todas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.all ?? 0}</small>
+            <List className="arl-gold-tab-icon" aria-hidden="true" /> Todas <small className="order-tab-count" aria-hidden="true">{meta.tab_counts?.all ?? 0}</small>
           </button>
         </div>
         <div className="filters">
