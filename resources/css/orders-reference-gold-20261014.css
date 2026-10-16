@@ -17,7 +17,10 @@
 html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar .sidebar-brand {min-height:147px;height:147px;margin:0}
   html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar .sidebar-brand .logo {height:147px;align-content:start}
   html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar .brand-logo img {
-    height:74px;max-height:74px;transform:scale(1.55);transform-origin:center top;
+    /* Não deixar a ampliação 3D de 155% ultrapassar o menu de 240px. */
+    width:calc(100% / 1.55);max-width:calc(100% / 1.55);
+    height:74px;max-height:74px;object-fit:contain;
+    transform:scale(1.55);transform-origin:center top;
     filter:drop-shadow(0 3px 7px #0009) drop-shadow(0 0 3px #e6ac3855);
   }
   html[data-arl-appearance="original"] body .shell.layout-desktop.sidebar-pinned > #arl-main-sidebar .new-order-shortcut {

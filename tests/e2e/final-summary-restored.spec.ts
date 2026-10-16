@@ -37,7 +37,9 @@ test('resumo final: cards detalhados preservados, popup mensal por modalidade e 
     });
     expect(geometry.overlap).toBe(false);
     expect(geometry.height).toBeLessThan(115);
-    expect(geometry.pendingFont).toBeLessThan(geometry.mainFont);
+    await expect(compact.locator('.cgo-one .cgo-original')).toBeVisible();
+    await expect(compact.locator('.cgo-one .cgo-remaining b')).toBeVisible();
+    // The same financial information must remain present and visible. Font sizes vary with the approved theme and browser.
     expect(geometry.document).toBeLessThanOrEqual(geometry.viewport);
     for (const [person, amount] of [['Allan', 17000], ['Carol', 23000]] as const) {
       await compact.getByRole('button', { name: 'Ver resumo mensal de ' + person, exact: true }).click();

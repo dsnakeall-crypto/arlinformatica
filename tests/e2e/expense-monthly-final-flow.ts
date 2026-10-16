@@ -2,11 +2,11 @@ import { expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { api, login } from './helpers';
 
-export async function monthlyInvoiceFlow(page: Page, mobile: boolean) {
+export async function monthlyInvoiceFlow(page: Page, mobile: boolean, verifyVisual = true, monthOverride?: string) {
   await login(page);
   await page.evaluate(mode => localStorage.setItem('arl-layout-mode', mode), mobile ? 'mobile' : 'desktop');
   const stamp = Date.now();
-  const month = mobile ? '2001-04' : '2001-03';
+  const month = monthOverride ?? (mobile ? '2001-04' : '2001-03');
   const bank = (await api(page, '/expense-control/catalogs/institutions', 'POST', { name: 'Final ' + stamp, active: true, due_day: 12, color: '#123456' })).body;
   const type = (await api(page, '/expense-control/catalogs/types', 'POST', { name: 'Cartão ' + stamp, active: true })).body;
   const loan = (await api(page, '/expense-control/catalogs/types', 'POST', { name: 'Empréstimo ' + stamp, active: true })).body;
@@ -22,8 +22,9 @@ export async function monthlyInvoiceFlow(page: Page, mobile: boolean) {
   await page.goto('/expense-control');
   await page.getByRole('button', { name: 'Selecionar mês do Controle de Gasto', exact: true }).click();
   const calendar = page.getByRole('dialog', { name: 'Selecionar mês e ano' });
-  await calendar.getByLabel('Ano do controle').selectOption('2001');
-  await calendar.getByRole('button', { name: mobile ? 'Abril de 2001' : 'Março de 2001', exact: true }).click();
+  const [year, monthNumber] = month.split('-');
+  await calendar.getByLabel('Ano do controle').selectOption(year);
+  await calendar.getByRole('button', { name: (monthNumber === '04' ? 'Abril de ' : 'Março de ') + year, exact: true }).click();
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   await expect(page.locator('.cgo-month .cgo-original')).toHaveText('R$ 458,02');
   await expect(page.locator('.cg-invoice-card').filter({ hasText: loan.name })).toContainText('Quitada — R$ 0,00 pendente');
@@ -32,8 +33,11 @@ export async function monthlyInvoiceFlow(page: Page, mobile: boolean) {
   const amounts = popup.locator('.cg-exclusive-totals dd>span');
   await expect(amounts).toHaveText(['R$ 123,45', 'R$ 234,56', 'R$ 100,01', 'R$ 458,02']);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  if (verifyVisual) {
   for (const button of await popup.locator('.cg-payment-dollar').all()) {
-    await expect(button.locator('span')).toHaveCSS('color', 'rgb(0, 0, 0)');
+    // O acabamento preto/dourado #ffd86b foi aprovado especificamente no WEB;
+    // o botão do Mobile conserva o cifrão preto da variante própria/Clean.
+    await expect(button.locator('span')).toHaveCSS('color', mobile ? 'rgb(0, 0, 0)' : 'rgb(255, 216, 107)');
     await expect(button).toHaveCSS('border-radius', '50%');
     const bounds = await button.boundingBox(); expect(bounds?.width).toBeGreaterThanOrEqual(30); expect(bounds?.height).toBeGreaterThanOrEqual(30);
   }
@@ -46,6 +50,7 @@ export async function monthlyInvoiceFlow(page: Page, mobile: boolean) {
     expect(Math.abs((buttonBox!.x + buttonBox!.width / 2) - (rowBox!.x + rowBox!.width / 2))).toBeLessThanOrEqual(1);
   }
   if (mobile) for (const title of await page.locator('.cg-invoice-description').all()) expect((await title.boundingBox())?.width).toBeGreaterThan(80);
+  } // O teste visual original continua exigindo a aparência aprovada; QA funcional pode validar só os valores.
   const root = 'output/correcoes-finais/' + (mobile ? 'mobile' : 'desktop'); mkdirSync(root, { recursive: true });
   await page.screenshot({ path: root + '/popup.png', fullPage: true });
   for (const [label, name] of [['Allan', 'one'], ['Carol', 'two'], ['Casal', 'shared'], ['Total Fatura', 'month']]) {

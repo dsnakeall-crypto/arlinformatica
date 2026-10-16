@@ -141,14 +141,16 @@ test('rascunhos avisam saída e o Laudo Final é persistido antes da finalizaç�
   await editor.getByLabel('Sem senha').check();
   expect(await hasUnsavedGuard(page)).toBe(true);
 
-  let cancelMessage = '';
-  page.once('dialog', async (dialog) => { cancelMessage = dialog.message(); await dialog.dismiss(); });
+  // O aplicativo usa confirmação própria acessível, não mais window.confirm.
   await editor.getByRole('button', { name: 'Cancelar', exact: true }).click();
-  expect(cancelMessage).toContain('alterações não salvas');
+  const confirm = page.getByRole('dialog', { name: 'Confirmar ação' });
+  await expect(confirm).toContainText('alterações não salvas');
+  await confirm.getByRole('button', { name: 'Cancelar', exact: true }).click();
   await expect(editor).toBeVisible();
 
-  page.once('dialog', async (dialog) => { await dialog.accept(); });
   await editor.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(confirm).toContainText('alterações não salvas');
+  await confirm.getByRole('button', { name: 'Sim, confirmar', exact: true }).click();
   await expect(editor).toBeHidden();
   expect(await hasUnsavedGuard(page)).toBe(false);
 });

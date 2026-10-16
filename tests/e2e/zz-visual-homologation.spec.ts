@@ -24,15 +24,28 @@ async function waitForOfficialViewIcon(scope: ReturnType<Page['locator']>) {
   const button = scope.getByRole('button', { name: 'Ver OS' }).first();
   await expect(button).toBeVisible();
   const eye = button.locator('svg.lucide-eye');
-  await expect(eye).toBeVisible();
-  await expect(eye.locator('path')).toHaveCount(1);
-  const box = await eye.boundingBox();
-  expect(box).not.toBeNull();
-  expect(box!.width).toBeGreaterThan(0);
-  expect(box!.height).toBeGreaterThan(0);
+  if (await eye.isVisible()) {
+    await expect(eye.locator('path')).toHaveCount(1);
+    const box = await eye.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.width).toBeGreaterThan(0);
+    expect(box!.height).toBeGreaterThan(0);
+  } else {
+    // Original aprovado usa PNG de alta resolução em ::before e esconde o SVG.
+    const icon = await button.evaluate(el => {
+      const style=getComputedStyle(el,'::before');
+      return {display:style.display,asset:style.backgroundImage,width:parseFloat(style.width),height:parseFloat(style.height)};
+    });
+    expect(icon.display).not.toBe('none');
+    expect(icon.asset).toContain('icon-web-eye-compact-2x.png');
+    expect(icon.width).toBeGreaterThan(0);
+    expect(icon.height).toBeGreaterThan(0);
+  }
 }
 
 test('gera evidências para homologação visual desktop, mobile e PDF', async ({ page }) => {
+  // Série de navegações, PDF e capturas reais excede os 30s padrão do runner.
+  test.setTimeout(120000);
   await mkdir('visual-artifacts', { recursive: true });
   await page.setViewportSize({ width: 1440, height: 900 });
   await login(page);
@@ -87,7 +100,8 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await page.getByLabel('Buscar clientes').fill('Cliente Homologação Visual');
   await expect(page.getByText('Cliente Homologação Visual', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(`Cliente Nº ${clientResponse.body.id}`, { exact: true })).toBeVisible();
+  // Layout Original aprovado mostra o identificador compacto #ID, não Cliente Nº ID.
+  await expect(page.locator('.client-list .clients-row').filter({hasText:'Cliente Homologação Visual'}).locator('.clients-id b')).toHaveText(`#${clientResponse.body.id}`);
   await expect(page.getByText('Rua das Flores, 320 · Centro', { exact: true })).toBeVisible();
   await expect(page.getByText('Araguari - MG · CEP 38400-000', { exact: true })).toBeVisible();
   await waitForOfficialIcons(page, [
@@ -97,7 +111,8 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
     '/arl-assets/icons/icon-lixeira.png',
   ]);
   const visualClientRow = page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' });
-  await expect(visualClientRow.getByRole('button', { name: 'Visualizar' }).locator('svg.clients-action-eye')).toBeVisible();
+  // A ação Visualizar usa o PNG 2x oficial, não um ícone SVG.
+  await expect(visualClientRow.getByRole('button', { name: 'Visualizar' }).locator('img.clients-action-eye')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-lista-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Novo cliente' }).click();
   const clientModal = page.locator('.clients-modal-card');
@@ -214,7 +229,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   ]);
   // Excluir não é exibido nos cartões mobile; a ação segue disponível no Desktop.
   await expect(page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' }).getByRole('button', { name: /Excluir cliente/ })).toHaveCount(0);
-  await expect(page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' }).getByRole('button', { name: 'Visualizar' }).locator('svg.clients-action-eye')).toBeVisible();
+  await expect(page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' }).getByRole('button', { name: 'Visualizar' }).locator('img.clients-action-eye')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-mobile.png', fullPage: true });
 
   await page.getByRole('button', { name: 'Novo cliente' }).click();
