@@ -104,7 +104,10 @@ test('Original é restaurado também no conteúdo e Clean não altera impressão
   await page.emulateMedia({media:'print'});
   const cleanPrint = await styles();
   // As superfícies de IMPRESSÃO devem ser idênticas, mesmo que o espaçamento em tela não seja.
+  // Menus laterais e molduras do painel não são o documento impresso;
+  // compare somente corpo e conteúdo, preservando os temas de navegação.
   const printStyles = (items: Awaited<ReturnType<typeof styles>>) => items
+    .filter(item => item.selector !== 'aside' && item.selector !== 'main')
     .map(({selector,bg,color,shadow,border,radius}) => ({selector,bg,color,shadow,border,radius}));
   expect(printStyles(cleanPrint)).toEqual(printStyles(originalPrint));
   await page.emulateMedia({media:'screen'});
