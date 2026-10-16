@@ -41,3 +41,6 @@ npm-debug.log*
 /senhassh.*
 /docs/senhassh
 /docs/senhassh.*
+# Arquivo privado de acesso SSH local: nunca versionar.
+/docs/senhassh.txt
+/docs/senhassh.*
