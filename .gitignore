@@ -39,3 +39,5 @@ npm-debug.log*
 # Local SSH credentials: never commit or package.
 /senhassh
 /senhassh.*
+/docs/senhassh
+/docs/senhassh.*
