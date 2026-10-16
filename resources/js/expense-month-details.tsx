@@ -5,7 +5,8 @@ import OrderPopup from './order-popup';
 import { expenseControlApi as api } from './expense-control-api';
 
 export type MonthlyInvoice = { notes?: string | null; key: string; institution_id: number; institution_name: string; type_name: string; debt_id: number | null; name: string; due_on: string; remaining_cents: number; status?: 'open' | 'partial' | 'paid'; count: number };
-const money = (value = 0) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value / 100);
+const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const money = (value = 0) => currencyFormatter.format(value / 100);
 const date = (value: string) => value.slice(0, 10).split('-').reverse().join('/');
 
 export function MonthlyInvoices({ items = [], onOpen }: { items?: MonthlyInvoice[]; onOpen: (item: MonthlyInvoice) => void }) {

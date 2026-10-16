@@ -40,33 +40,33 @@ class StageSevenTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'user.created', 'subject_id' => $created->id]);
     }
 
-    public function test_password_policy_accepts_six_characters_and_requires_uppercase_and_symbol(): void
+    public function test_password_policy_requires_only_six_characters_without_complexity(): void
     {
         $this->actingAs($this->user('Master', 'password-master'));
         $payload = ['name' => 'Senha curta', 'login' => 'senha-curta', 'role_id' => Role::where('name', 'Funcionário')->value('id'), 'active' => true];
-        foreach (['Abcd!', 'abcde!', 'Abcdef', 'Abcde '] as $invalid) {
+        foreach (['Abcd!', '12345', 'abcde'] as $invalid) {
             $this->postJson('/api/users', [...$payload, 'password' => $invalid, 'password_confirmation' => $invalid])->assertUnprocessable()->assertJsonValidationErrors('password');
         }
-        $this->postJson('/api/users', [...$payload, 'password' => 'Abcde!', 'password_confirmation' => 'Different!'])->assertUnprocessable()->assertJsonValidationErrors('password');
-        $id = $this->postJson('/api/users', [...$payload, 'password' => 'Abcde!', 'password_confirmation' => 'Abcde!'])->assertCreated()->assertJsonMissingPath('password')->json('id');
-        $this->assertTrue(Hash::check('Abcde!', User::findOrFail($id)->password));
-        $this->putJson('/api/users/'.$id.'/password', ['password' => 'abcde!', 'password_confirmation' => 'abcde!'])->assertUnprocessable();
-        $this->assertTrue(Hash::check('Abcde!', User::findOrFail($id)->password));
-        $this->putJson('/api/users/'.$id.'/password', ['password' => 'ABCDE!', 'password_confirmation' => 'ABCDE!'])->assertOk();
-        $this->assertTrue(Hash::check('ABCDE!', User::findOrFail($id)->password));
-        $this->putJson('/api/users/'.$id.'/password', ['password' => 'Éabcd!', 'password_confirmation' => 'Éabcd!'])->assertOk();
-        $this->assertTrue(Hash::check('Éabcd!', User::findOrFail($id)->password));
+        $this->postJson('/api/users', [...$payload, 'password' => '123456', 'password_confirmation' => 'Different!'])->assertUnprocessable()->assertJsonValidationErrors('password');
+        $id = $this->postJson('/api/users', [...$payload, 'password' => '123456', 'password_confirmation' => '123456'])->assertCreated()->assertJsonMissingPath('password')->json('id');
+        $this->assertTrue(Hash::check('123456', User::findOrFail($id)->password));
+        $this->putJson('/api/users/'.$id.'/password', ['password' => 'abcde', 'password_confirmation' => 'abcde'])->assertUnprocessable()->assertJsonValidationErrors('password');
+        $this->assertTrue(Hash::check('123456', User::findOrFail($id)->password));
+        $this->putJson('/api/users/'.$id.'/password', ['password' => 'abcdef', 'password_confirmation' => 'abcdef'])->assertOk();
+        $this->assertTrue(Hash::check('abcdef', User::findOrFail($id)->password));
+        $this->putJson('/api/users/'.$id.'/password', ['password' => 'Éabcde', 'password_confirmation' => 'Éabcde'])->assertOk();
+        $this->assertTrue(Hash::check('Éabcde', User::findOrFail($id)->password));
     }
 
     public function test_first_master_installation_uses_the_same_six_character_password_policy(): void
     {
-        $question = 'Senha (mínimo 6 caracteres, uma letra maiúscula e um caractere especial)';
+        $question = 'Senha (mínimo 6 caracteres)';
         $this->artisan('arl:install', ['--name' => 'Primeiro', '--login' => 'first'])
-            ->expectsQuestion($question, 'abcde!')->assertFailed();
+            ->expectsQuestion($question, 'abcde')->assertFailed();
         $this->assertDatabaseCount('users', 0);
         $this->artisan('arl:install', ['--name' => 'Primeiro', '--login' => 'first'])
-            ->expectsQuestion($question, 'Abcde!')->assertSuccessful();
-        $this->assertTrue(Hash::check('Abcde!', User::where('login', 'first')->firstOrFail()->password));
+            ->expectsQuestion($question, 'abcdef')->assertSuccessful();
+        $this->assertTrue(Hash::check('abcdef', User::where('login', 'first')->firstOrFail()->password));
         $this->artisan('arl:install')->assertFailed();
     }
 

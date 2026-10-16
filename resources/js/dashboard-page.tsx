@@ -1,8 +1,9 @@
+import { appConfirm } from "./app-native-dialog";
 import { useEffect, useRef, useState } from "react";
 import { CACHE_POLICIES, sessionCache } from './session-memory-cache';
 import { orderListPresentation } from './cache-requests';
 import PageHeader from "./page-header";
-import { ClipboardList, LayoutDashboard, Plus, Search, Wallet, Wrench, CheckCircle2, PackageSearch } from "lucide-react";
+import { ClipboardList, LayoutDashboard, Plus, Search, Wallet, Wrench, CheckCircle2, PackageSearch, LockKeyholeOpen, LockKeyhole } from "lucide-react";
 import { Order, api, status } from './app-shared';
 import { OrderTable, InterruptionModal } from './order-list-components';
 import { QuickEntry } from './lazy-pages';
@@ -99,7 +100,7 @@ export function Dashboard({ go, desk = false, role, mobileLayout = false, onCoun
   const remove = async (o: Order) => {
     if (!["Master", "Administrador"].includes(role)) return;
     if (
-      confirm(
+      await appConfirm(
         `Excluir a OS #${o.number} das listagens? O histórico será preservado.`,
       )
     ) {
@@ -169,7 +170,7 @@ export function Dashboard({ go, desk = false, role, mobileLayout = false, onCoun
         {loadError && <p role="alert">{loadError}</p>}
         <div className="dashboard-list-head">
           <div>
-            <h2>Ordens em andamento</h2>
+            <h2><span className="dashboard-title-icon" aria-hidden="true"><LockKeyholeOpen /></span>Ordens em andamento</h2>
             <p>Atualize o status diretamente na linha.</p>
           </div>
         </div>
@@ -192,7 +193,7 @@ export function Dashboard({ go, desk = false, role, mobileLayout = false, onCoun
           <section className="panel dashboard-orders dashboard-closed-orders">
             <div className="dashboard-list-head">
               <div>
-                <h2>Fechadas recentemente</h2>
+                <h2><span className="dashboard-title-icon" aria-hidden="true"><LockKeyhole /></span>Fechadas recentemente</h2>
                 <p>OS concluídas e interrompidas desta semana.</p>
               </div>
               <button type="button" onClick={() => go("orders", undefined, undefined, "finalized")}>

@@ -1,14 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { login } from './helpers';
 
-test('barra acompanha viewport visual menor sem depender do viewport de layout', async ({ page }) => {
-  // Fixture de API: reproduce layout/visual viewports diferentes. Não é gesto nativo do iOS.
+test('barra não acompanha o teclado iOS e retorna ao rodapé ao fechar', async ({ page }) => {
+  // Fixture visualViewport: apenas simula as métricas do teclado. Aceite nativo já aprovado no iPhone.
   await page.addInitScript(() => {
-    const viewport = Object.assign(new EventTarget(), { height: 450, offsetTop: 0 });
+    const viewport = Object.assign(new EventTarget(), { height: window.innerHeight, offsetTop: 0 });
     Object.defineProperty(window, 'visualViewport', { configurable: true, value: viewport });
   });
   await login(page);
   const nav = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
+  await nav.getByRole('button', { name: 'Abrir OS' }).click();
+  const input = page.locator('main textarea').first();
+  await expect(input).toBeVisible();
+  await input.focus();
+  const baseline = await page.evaluate(() => window.innerHeight);
   for (const [height, offsetTop] of [[450, 0], [360, 70], [540, 0], [410, 35]]) {
     await page.evaluate(({ height, offsetTop }) => {
       const viewport = window.visualViewport!;
@@ -16,8 +21,21 @@ test('barra acompanha viewport visual menor sem depender do viewport de layout',
       viewport.dispatchEvent(new Event('resize'));
       viewport.dispatchEvent(new Event('scroll'));
     }, { height, offsetTop });
-    await expect.poll(async () => Math.abs((await nav.boundingBox())!.y + (await nav.boundingBox())!.height - height - offsetTop)).toBeLessThan(1.5);
+    await expect.poll(async () => nav.evaluate(element =>
+      Number.parseFloat(element.style.getPropertyValue('--arl-mobile-keyboard-offset')),
+    )).toBe(Math.max(0, baseline - height - offsetTop));
   }
+  await page.evaluate(height => {
+    Object.assign(window.visualViewport!, { height, offsetTop: 0 });
+    window.visualViewport!.dispatchEvent(new Event('resize'));
+  }, baseline);
+  await input.blur();
+  await expect.poll(async () => nav.evaluate(element =>
+    Number.parseFloat(element.style.getPropertyValue('--arl-mobile-keyboard-offset')),
+  )).toBe(0);
+  await expect.poll(async () => nav.evaluate(element =>
+    Math.abs(element.getBoundingClientRect().bottom - window.innerHeight),
+  )).toBeLessThan(1.5);
 });
 
 test('barra fixa: rolagens repetidas, rotas ARL, rotação, fim da página e visual 3D', async ({ page }) => {

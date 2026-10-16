@@ -1,5 +1,7 @@
-import SupplierProductDetails from "./supplier-product-details";
-import SupplierWorkspace from './supplier-workspace';
+import { appConfirm } from './app-native-dialog';
+import { lazy, Suspense } from "react";
+const SupplierProductDetails = lazy(() => import("./supplier-product-details"));
+const SupplierWorkspace = lazy(() => import("./supplier-workspace"));
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ArrowLeft,
@@ -21,7 +23,7 @@ import {
   X,
 } from "lucide-react";
 import PageHeader from "./page-header";
-import PurchasePayments from "./supplier-purchase-payments";
+const PurchasePayments = lazy(() => import("./supplier-purchase-payments"));
 import OrderPopup from "./order-popup";
 import { centsFromMoneyInput, maskMoneyInput } from "./money-input";
 import "../css/suppliers.css";
@@ -158,8 +160,9 @@ const documentMask = (value: string) => {
     .replace(/^(.{10})(.)/, "$1/$2")
     .replace(/^(.{15})(.)/, "$1-$2");
 };
+const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const money = (value = 0) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+  currencyFormatter.format(
     Number(value) / 100,
   );
 const today = () =>
@@ -342,11 +345,11 @@ function SupplierForm({
     };
   }, [cep]);
   const initialValue = useRef(JSON.stringify(initial));
-  const dismiss = () => {
+  const dismiss = async () => {
     if (
       !busy &&
       (JSON.stringify(draft) === initialValue.current ||
-        window.confirm("Descartar as alterações do fornecedor?"))
+        await appConfirm("Descartar as alterações do fornecedor?"))
     )
       close();
   };
@@ -647,10 +650,10 @@ function PurchaseForm({
       setRows([...rows, { product, quantity: 1, cost: "" }]);
     setQuery("");
   };
-  const dismiss = () => {
+  const dismiss = async () => {
     if (!busy && createdPurchase.current) {
       if (
-        window.confirm(
+        await appConfirm(
           "A compra já foi registrada. Fechar sem anexar a nota? Você pode anexá-la depois na ficha.",
         )
       )
@@ -660,7 +663,7 @@ function PurchaseForm({
     if (
       !busy &&
       (!(rows.length || reference || notes || newName) ||
-        window.confirm("Descartar esta compra ainda não registrada?"))
+        await appConfirm("Descartar esta compra ainda não registrada?"))
     )
       close();
   };
@@ -1834,7 +1837,7 @@ export default function SuppliersPage() {
                 </button>
                 {[["overview", "Visão geral"], ["commercial", "Dados comerciais"], ["offerings", "Produtos fornecidos"], ["finance", "Financeiro"], ["documents", "Documentos"], ["returns", "Devoluções"], ["history", "Ocorrências"], ["reports", "Relatórios"]].map(([key, label]) => <button key={key} role="tab" aria-selected={tab === key} onClick={() => { setTab(key); setPurchase(null); }}>{label}</button>)}
               </div>
-              {!["purchases", "products"].includes(tab) && <SupplierWorkspace key={selected + '-' + tab + '-' + revision} id={supplier.id} tab={tab} onPurchase={id => void openPurchase(id, tab === "finance" ? "payments" : "summary")} onChange={() => refresh("Fornecedor atualizado.")} />}
+              {!["purchases", "products"].includes(tab) && <Suspense fallback={null}><SupplierWorkspace key={selected + '-' + tab + '-' + revision} id={supplier.id} tab={tab} onPurchase={id => void openPurchase(id, tab === "finance" ? "payments" : "summary")} onChange={() => refresh("Fornecedor atualizado.")} /></Suspense>}
               {tab === "purchases" ? (
                 <section className="supplier-panel">
                   <div className="supplier-section-top">
@@ -1950,11 +1953,11 @@ export default function SuppliersPage() {
                     </div>
                   )}
                   </section>}
-                  {["payments", "documents"].includes(purchaseTab) && <PurchasePayments purchase={purchase} section={purchaseTab as "payments" | "documents"} refresh={async () => {
+                  {["payments", "documents"].includes(purchaseTab) && <Suspense fallback={null}><PurchasePayments purchase={purchase} section={purchaseTab as "payments" | "documents"} refresh={async () => {
                     await openPurchase(purchase.id);
                     if (selected) setDetail(await api(`/suppliers/${selected}?page=${historyPage}`));
                     setRevision(v => v + 1);
-                  }} />}
+                  }} /></Suspense>}
                   {purchaseTab === "receipts" && <section className="supplier-detail-section">
                   <h3>Recebimentos registrados</h3>
                   {purchase.receipts.length ? (
@@ -1990,7 +1993,7 @@ export default function SuppliersPage() {
                 </div><footer className="arl-3d-footer"><button onClick={() => setPurchase(null)}>Fechar compra</button></footer>
                 </OrderPopup>
               )}
-              {productDetails && supplier && <SupplierProductDetails supplierId={supplier.id} productId={productDetails} supplierName={supplier.name} close={() => setProductDetails(null)} onPurchase={id => { setProductDetails(null); void openPurchase(id, "summary"); }} />}
+              {productDetails && supplier && <Suspense fallback={null}><SupplierProductDetails supplierId={supplier.id} productId={productDetails} supplierName={supplier.name} close={() => setProductDetails(null)} onPurchase={id => { setProductDetails(null); void openPurchase(id, "summary"); }} /></Suspense>}
 
             </>
           )}

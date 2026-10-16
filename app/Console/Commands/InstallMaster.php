@@ -24,9 +24,9 @@ class InstallMaster extends Command
             return self::FAILURE;
         } $name = $this->option('name') ?: $this->ask('Nome do Master');
         $login = $this->option('login') ?: $this->ask('Login');
-        $password = $this->secret('Senha (mínimo 6 caracteres, uma letra maiúscula e um caractere especial)');
+        $password = $this->secret('Senha (mínimo 6 caracteres)');
         if (Validator::make(['password' => $password], ['password' => UserPasswordPolicy::rules()])->fails()) {
-            $this->error('A senha deve ter ao menos 6 caracteres, uma letra maiúscula e um caractere especial.');
+            $this->error('A senha deve ter pelo menos 6 caracteres.');
 
             return self::FAILURE;
         } DB::transaction(function () use ($name, $login, $password) {
