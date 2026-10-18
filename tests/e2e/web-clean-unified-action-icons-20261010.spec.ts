@@ -140,7 +140,14 @@ test('Web Original: estilo próprio não recebe regra Clean para Maps',async({pa
   await nav.getByRole('button',{name:'Ordens'}).click();
   const maps=page.locator('.orders-order-list .order-actions .order-maps').first();
   await expect(maps).toBeVisible();
-  // Original mantém regra histórica distinta de 0px/transparent.
-  const border=await maps.evaluate(el=>getComputedStyle(el).borderTopWidth);
-  expect(border).not.toBe('0px');
+  // A arte Original aprovada agora também usa Maps sem aro; o objetivo deste
+  // teste é não herdar dimensões/estilos errados do Clean.
+  const style = await maps.evaluate(el=>({
+    border:getComputedStyle(el).borderTopWidth,
+    w:el.getBoundingClientRect().width,
+    h:el.getBoundingClientRect().height,
+  }));
+  expect(style.border).toBe('0px');
+  expect(style.w).toBeGreaterThan(0);
+  expect(style.h).toBeGreaterThan(0);
 });

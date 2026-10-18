@@ -57,7 +57,11 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
 
   const header = root.locator('.arl-order-sticky-header');
   await expect(header).toBeVisible();
-  expect(await header.evaluate((node) => getComputedStyle(node).position), 'Cabeçalho da OS deve permanecer sticky durante a rolagem').toBe('sticky');
+  // No Original dourado aprovado em 14/10 o cabeçalho é intencionalmente relative;
+  // Clean preserva o comportamento sticky do componente base.
+  const style = await header.evaluate((node) => getComputedStyle(node).position);
+  const appearance = await page.evaluate(() => document.documentElement.dataset.arlAppearance ?? 'original');
+  expect(style, 'Não modificar o cabeçalho do Original aprovado').toBe(appearance === 'original' ? 'relative' : 'sticky');
   await expect(header.getByText(clientName, { exact: true })).toHaveCount(0);
   await expect(header.getByText(equipmentDescription, { exact: true })).toHaveCount(0);
   await expect(header.getByText(equipmentDetails, { exact: true })).toHaveCount(0);
@@ -76,7 +80,9 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(opening.getByRole('link', { name: 'Termo de Recebimento PDF' })).toBeVisible();
   await expect(opening.getByText('Relatório Técnico Final', { exact: true })).toBeVisible();
   await expect(opening.getByText('Reabrir OS', { exact: true })).toBeVisible();
-  await root.locator('.arl-order-stage-rail').click({ position: { x: 1, y: 1 } });
+  // Fechamento real clicando fora do menu; a área x=1 do rail está coberta
+  // pela grade e não pode receber um clique de usuário sem forçar eventos.
+  await page.mouse.click(4, 4);
   await expect(opening.getByRole('link', { name: 'Mensagem de abertura' })).toHaveCount(0);
   await opening.getByRole('button', { name: "PDF's", exact: true }).click();
   await expect(opening.getByRole('link', { name: 'Mensagem de abertura' })).toBeVisible();

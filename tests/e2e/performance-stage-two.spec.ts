@@ -40,7 +40,7 @@ test('Clientes volta imediatamente com pesquisa, ordenação, página e tamanho 
   await page.getByLabel('Buscar clientes').fill('Cache');
   await searched;
   await page.getByLabel('Ordenar clientes').selectOption('id');
-  await page.getByLabel('Clientes por página').selectOption('30');
+  await page.locator('.clients-list-panel .clients-page-size select').selectOption('30');
   const secondPageResponse=page.waitForResponse(resp=>new URL(resp.url()).pathname==='/api/clients' && new URL(resp.url()).searchParams.get('page')==='2' && resp.ok());
   await page.getByRole('button', { name: 'Próxima página', exact: true }).click();
   await secondPageResponse;
@@ -54,7 +54,7 @@ test('Clientes volta imediatamente com pesquisa, ordenação, página e tamanho 
   await expect(page.locator('.clients-row').first()).toHaveText(first!);
   await expect(page.getByLabel('Buscar clientes')).toHaveValue('Cache');
   await expect(page.getByLabel('Ordenar clientes')).toHaveValue('id');
-  await expect(page.getByLabel('Clientes por página')).toHaveValue('30');
+  await expect(page.locator('.clients-list-panel .clients-page-size select')).toHaveValue('30');
   await expect(page.getByText('Página 2 de 3', { exact: true })).toBeVisible();
   expect(calls).toBe(callsBeforeReturn);
   await page.screenshot({ path: test.info().outputPath('clientes-cache.png') });
@@ -97,7 +97,10 @@ test('Clientes confirma edição e exclusão, invalida e volta com resultado atu
   await page.getByRole('button', { name: 'Salvar cliente', exact: true }).click();
   await expect(page.locator('.clients-row')).toContainText('Cliente Editado Cache'); await expect.poll(() => calls).toBe(2);
   await nav(page, 'Painel'); await nav(page, 'Clientes'); await expect(page.locator('.clients-row')).toContainText('Cliente Editado Cache'); expect(calls).toBe(2);
-  page.once('dialog', d => d.accept()); await page.getByRole('button', { name: 'Excluir cliente Cliente Editado Cache', exact: true }).click();
+  await page.getByRole('button', { name: 'Excluir cliente Cliente Editado Cache', exact: true }).click();
+  const confirmRemove = page.getByRole('dialog', { name: 'Confirmar ação' });
+  await expect(confirmRemove).toContainText('Cliente Editado Cache');
+  await confirmRemove.getByRole('button', { name: 'Sim, confirmar', exact: true }).click();
   await expect.poll(() => calls).toBe(3); await expect(page.locator('.clients-row')).toHaveCount(0);
   await nav(page, 'Painel'); await nav(page, 'Clientes'); await expect(page.locator('.clients-row')).toHaveCount(0); expect(calls).toBe(3);
 });

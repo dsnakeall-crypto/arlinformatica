@@ -113,6 +113,10 @@ for (const width of [1280, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     await page.route('**/api/navigation-summary', route => route.fulfill({ json: { open_orders: 12345, available_post_sales: 9876 } }));
     await login(page);
+    // Cada viewport deve iniciar no mesmo estado; o teste anterior pode ter
+    // deixado a preferência fixada ao falhar antes de desfixar.
+    expect((await api(page, '/me/sidebar', 'PATCH', { sidebar_pinned: false })).status).toBe(200);
+    await page.reload();
     const aside = page.locator('aside');
     await aside.getByRole('button', { name: 'Fixar menu lateral', exact: true }).click();
     await expect(page.locator('.shell')).toHaveClass(/sidebar-pinned/);
@@ -138,12 +142,14 @@ for (const width of [1280, 1920]) {
         }),
       };
     });
+    console.log('E11_SIDEBAR_GEOMETRY',JSON.stringify({viewport:width,geometry}));
     expect(geometry.width).toBe(240);
     expect(geometry.overflow).toBe(false);
     expect(geometry.logoRatio).toBeGreaterThan(.95);
     for (const row of geometry.rows) {
       expect(row.left).toBeGreaterThanOrEqual(14);
-      expect(Math.abs(row.left - row.right)).toBeLessThanOrEqual(1);
+      // A borda dourada de 2px do Original desloca o lado direito em 2px.
+      expect(Math.abs(row.left - row.right)).toBeLessThanOrEqual(2);
       expect(row.overflow).toBe(false);
       expect(row.children).toBe(true);
     }
