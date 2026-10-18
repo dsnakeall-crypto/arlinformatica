@@ -1,0 +1,447 @@
+/* ARL 15-10-2026. Quatro setores em referência dourada, exclusivamente no Original desktop.
+   Componentes de dados, validações e tipografia continuam originais.
+   Imagens decorativas previamente otimizadas; nenhum request extra ao backend. */
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(:is(.clients-react-page,.services-page,.supplier-page)){
+  position:relative;isolation:isolate;min-width:0!important;
+  background:linear-gradient(130deg,#faf7f2,#fffdfb 36%,#f7f2eb 100%)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(:is(.clients-react-page,.services-page,.supplier-page))::before{
+  content:"";position:absolute;z-index:0;top:0;right:0;width:min(65%,790px);height:150px;
+  pointer-events:none;background:url('/arl-assets/orders-gold-corner-20261014.webp') center top/cover no-repeat;
+  opacity:.88;mask-image:linear-gradient(#000 55%,transparent 100%);
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(:is(.clients-react-page,.services-page,.supplier-page)) > *{
+  position:relative;z-index:1;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(:is(.clients-react-page,.services-page,.supplier-page)) .arl-page-header {
+  padding:5px 0 16px!important;margin:0 0 12px!important;
+  border-bottom:1px solid #e6d9c5;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(:is(.clients-react-page,.services-page,.supplier-page)) .arl-page-header::after{
+  background:linear-gradient(90deg,#ecd8b7,transparent 90%)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(:is(.clients-react-page,.services-page,.supplier-page)) .arl-page-header-icon{
+  color:#8d5515!important;border:1px solid #efc476!important;
+  background:linear-gradient(135deg,#fffefa,#fff0cb 57%,#ffcb65)!important;
+  box-shadow:inset 0 2px 1px #fff,0 4px 10px #a77c3533!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(:is(.clients-react-page,.services-page,.supplier-page)) .arl-eyebrow{
+  color:#a67530!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(:is(.clients-react-page,.services-page,.supplier-page)) .arl-page-header-actions :is(button,.supplier-primary):not(:disabled),
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-add:not(:disabled),
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-empty>.supplier-primary:not(:disabled) {
+  color:#ffda79!important;
+  background:linear-gradient(180deg,#342f27 0%,#070707 76%,#18130c 100%)!important;
+  border:1px solid #d6a640!important;border-radius:999px!important;
+  box-shadow:inset 0 1px #ffe8a844,0 4px 12px #a06e2f47!important;
+  text-shadow:none!important;
+}
+/* Sino oficial compartilhado: espaço próprio acima de qualquer título. */
+html body .notification-wrap>.bell {
+  display:grid!important;place-items:center!important;position:relative;
+  height:50px!important;width:50px!important;min-width:50px!important;min-height:50px!important;
+  padding:0!important;border:0!important;background:transparent!important;
+  border-radius:50%;box-shadow:none!important;overflow:visible;
+}
+html body .bell>.arl-notification-official-icon{
+  width:50px!important;height:50px!important;max-width:none!important;
+  display:block;object-fit:contain;filter:drop-shadow(0 3px 5px #88623337);
+}
+html body .notification-wrap>.bell>i{
+  position:absolute;top:-1px;right:-2px;z-index:2;pointer-events:none;
+  padding:2px 5px;background:#e70a2d!important;color:white!important;
+  border:2px solid white;border-radius:999px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main > .app-head{
+  position:relative!important;inset:auto!important;top:auto!important;right:auto!important;
+  width:auto!important;max-width:none;height:66px!important;min-height:66px!important;
+  padding:0!important;margin:0 0 6px!important;background:transparent!important;
+  border:0!important;transform:none!important;
+  display:flex!important;justify-content:flex-end!important;align-items:center!important;
+  z-index:35!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main > .app-head .notification-wrap{
+  position:relative!important;inset:auto!important;top:auto!important;
+  transform:none!important;right:auto!important;z-index:36;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main[data-arl-dashboard-react="1"] .arl-page-header{
+  margin:0 0 13px!important;padding:4px 0 14px!important;min-height:67px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop > main .notification-center{
+  top:54px!important;right:0!important;
+  border:1px solid #e3c998!important;border-radius:14px!important;
+  background:linear-gradient(140deg,#fffefa,#fffaf3)!important;
+  box-shadow:0 15px 35px #33211336!important;z-index:100!important;
+}
+/* Cartões dourados e superfície perolada iguais nos quatro setores. */
+html[data-arl-appearance="original"] body .shell.layout-desktop :is(.clients-list-panel,.services-create-card,.services-most-used,.services-list-card,.supplier-panel,.supplier-stats article){
+  border:1px solid #efe0c9!important;border-radius:17px!important;
+  background:linear-gradient(140deg,#fffefd 4%,#fffcf8 72%,#faf6ef)!important;
+  box-shadow:0 10px 25px #86683f23,inset 0 1px #fff!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop :is(.clients-react-page,.services-page,.supplier-page){
+  width:100%;max-width:none!important;min-width:0;gap:12px;
+}
+/* CLIENTES: busca, paginação e tabela como na arte, sem mudar ações originais. */
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel{
+  overflow:hidden!important;padding:10px 11px 6px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-search-head{display:none!important}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-toolbar{
+  display:grid!important;grid-template-columns:minmax(240px,1fr) auto auto auto!important;
+  gap:9px;align-items:center;border:0!important;background:transparent!important;
+  padding:0 3px 11px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-search,
+html[data-arl-appearance="original"] body .shell.layout-desktop :is(.services-search,.supplier-search){
+  background:linear-gradient(180deg,#fff,#fcfaf8)!important;border:1px solid #ded2c2!important;
+  border-radius:11px!important;box-shadow:0 2px 5px #70583a12!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-sort select,
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-page-size select,
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-bottom-pagination select,
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-toolbar select{
+  background:linear-gradient(180deg,#fff,#f9f7f3)!important;
+  border:1px solid #e3d6c6!important;border-radius:9px!important;
+  color:#292a30;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-column-head{
+  display:grid;grid-template-columns:minmax(220px,1.4fr) 160px 160px minmax(240px,1.65fr) 195px;
+  align-items:center;min-width:1090px;
+  background:linear-gradient(#f8f6f3,#efebe5);color:#48484b;
+  border-radius:10px 10px 0 0;height:32px;padding:0 12px;gap:9px;
+  text-align:center;font-size:10px;font-weight:800;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-table-region{
+  overflow-x:auto;border:1px solid #e9ded1;border-radius:12px;
+  background:white;scrollbar-width:thin;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .client-list{
+  gap:0!important;min-width:1090px;padding:0!important;display:grid!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .client-list article.clients-row{
+  display:grid!important;grid-template-columns:70px minmax(141px,1.4fr) 160px 160px minmax(240px,1.65fr) 195px!important;
+  min-width:0;gap:9px;align-items:center;min-height:43px!important;
+  border:0!important;border-bottom:1px solid #eee7e0!important;border-radius:0!important;
+  margin:0!important;padding:6px 12px!important;
+  background:linear-gradient(90deg,#fff,#fffdfb)!important;box-shadow:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-row:nth-child(even){
+  background:linear-gradient(90deg,#fffdfc,#faf7f4)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-row .clients-separator{display:none!important}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-id b{
+  white-space:nowrap;min-height:20px;padding:3px 7px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-main{
+  min-width:0;align-self:center;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-document{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#606576;
+  text-align:center;font-size:11px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-phone{
+  justify-content:center;font-size:11px;white-space:nowrap;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-address{
+  display:grid!important;grid-template-columns:16px minmax(0,1fr)!important;
+  gap:1px 5px;min-width:0;padding:0!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-address svg{
+  width:13px;height:13px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-address>span,
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-address>small{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-actions{
+  justify-content:flex-end!important;gap:7px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-actions :is(a,button):not(.clients-select){
+  min-height:26px!important;height:26px!important;
+  min-width:26px!important;width:26px!important;
+  border:0!important;background:transparent!important;
+  box-shadow:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-actions :is(img,svg){
+  width:19px!important;height:19px!important;object-fit:contain;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-bottom-pagination{
+  display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:10px 8px 4px;color:#67676b;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-bottom-pagination :is(button,select){
+  min-height:34px;border:1px solid #e7d7be;border-radius:9px;padding:6px 10px;
+  background:linear-gradient(180deg,#fff,#f8f5ef);color:#222;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-bottom-pagination button:last-child:not(:disabled){
+  background:linear-gradient(180deg,#ffe5ae,#f7bb58);color:#3c2509;border-color:#dba042;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-bottom-pagination button:disabled{opacity:.55}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-bottom-pagination label{display:flex;gap:8px;align-items:center}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-react-page .arl-page-header-counter{display:none!important}
+/* SERVIÇOS E PRODUTOS: formulários leves, rankings e listas/tabela. */
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page{
+  gap:11px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page :is(.services-create-card,.services-most-used,.services-list-card){
+  padding:12px 14px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-create-card{
+  overflow:hidden;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page :is(.services-heading-icon,.services-type-icon){
+  display:grid;place-items:center;color:#8a5413!important;
+  border:1px solid #f1d7a7!important;border-radius:12px!important;
+  background:linear-gradient(145deg,#fffef9,#ffdda0)!important;
+  box-shadow:inset 0 1px #fff,0 4px 8px #98753627!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-heading-icon{
+  width:34px;height:34px;flex:0 0 34px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-type-icon{
+  width:31px;height:31px;flex:0 0 31px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-type-icon svg{
+  width:17px;height:17px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page :is(.services-create-grid,.services-warranty-row){
+  margin-top:9px;gap:10px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-create-grid{
+  grid-template-columns:minmax(200px,2fr) minmax(120px,.7fr) minmax(120px,.8fr) minmax(120px,.5fr)!important;
+  justify-content:stretch!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-create-grid.is-service{
+  grid-template-columns:minmax(230px,2fr) minmax(135px,.7fr) minmax(130px,.7fr)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-field input,
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-money-input{
+  min-height:35px!important;height:35px!important;border:1px solid #dfd2c2!important;
+  border-radius:9px!important;background:linear-gradient(180deg,#fff,#fdfbf8)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-money-input input{
+  border:0!important;min-height:33px!important;height:33px!important;background:transparent!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-add{
+  min-height:36px!important;padding:5px 16px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page :is(.services-free-price-row,.services-warranty-row){
+  margin-top:6px;padding-top:6px;border-top:1px solid #ece0d1!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-warranty-toggle{
+  min-height:27px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-warranty-toggle svg{color:#e00928}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-most-used-grid{
+  gap:9px;margin-top:9px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-top-card{
+  background:linear-gradient(145deg,#fff,#fcf8f2)!important;
+  border:1px solid #f1e6d9!important;border-radius:12px;
+  padding:8px 10px!important;box-shadow:0 5px 10px #755b2b19!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-rank{
+  color:#c0802b!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-list-card{overflow:hidden;padding:10px!important}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-list-heading{
+  padding:0 4px 10px!important;border:0!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-search{
+  min-height:36px;height:36px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-list{
+  border-radius:10px;overflow-x:auto;scrollbar-width:thin;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-row{
+  min-height:34px;padding:5px 9px!important;gap:10px;
+  border-bottom:1px solid #eee8de!important;
+  background:linear-gradient(90deg,#fff,#fffdfb)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-row:nth-child(2n){
+  background:linear-gradient(90deg,#fffdfb,#faf7f3)!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-row-actions{
+  gap:6px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-row-actions button{
+  min-height:30px;padding:5px 9px;border-radius:9px!important;
+  border:1px solid #ddd6c9!important;background:#fffdfa!important;
+  color:#333641;box-shadow:0 2px 5px #85682f20!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-stock-entry,
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-history{
+  border-color:#c6d8f6!important;background:linear-gradient(180deg,#fff,#f3f7ff)!important;color:#25395e!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-disable{
+  border-color:#f3a7b7!important;color:#d30d2d!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-row-main small{color:#747780}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-table-head{
+  display:grid;grid-template-columns:minmax(225px,2fr) 75px 100px 60px 78px minmax(280px,1.55fr);
+  gap:9px;padding:9px 14px;min-width:1030px;
+  color:#4b4744;background:linear-gradient(#f9f7f3,#efeae3);border-radius:10px 10px 0 0;
+  font-size:10px;font-weight:800;text-align:center;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page:has(.services-table-head) .services-list{
+  border:1px solid #eee3d5;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page:has(.services-table-head) .services-row{
+  grid-template-columns:32px minmax(185px,2fr) 75px 100px 60px 78px minmax(280px,1.55fr)!important;
+  min-width:1030px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-col-status{
+  justify-self:center;border-radius:999px;padding:5px 12px;
+  background:#e0f8e8;color:#168246;font-weight:800;font-size:11px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-col-status.inactive{
+  background:#f2e8e8;color:#ac4450;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-col-price{
+  color:#d10e2b;font-weight:800;white-space:nowrap;text-align:center;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-col-stock{text-align:center}
+/* FORNECEDORES: três indicadores, barra de busca e estado vazio destacado. */
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-stats{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-stats article{
+  padding:12px 14px!important;min-height:74px;gap:12px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-stats article>svg{
+  width:46px;height:46px;padding:11px;box-sizing:border-box;flex:0 0 46px;
+  border-radius:14px;color:#985b0b!important;
+  background:linear-gradient(145deg,#fffdf3,#ffdf9e)!important;
+  box-shadow:0 4px 8px #c1964335!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-stats b{
+  color:#171c2b;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-panel{
+  min-height:350px;padding:14px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-toolbar{
+  display:grid;grid-template-columns:minmax(0,1fr) 126px;gap:10px;
+  padding:0 0 12px!important;background:transparent!important;border-bottom:0!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-toolbar .supplier-search{
+  min-height:37px;align-items:center;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-empty{
+  min-height:280px;margin:0;padding:30px 15px;
+  background:linear-gradient(130deg,#fff,#fffdf9 70%,#f8f4ed)!important;
+  border:1px solid #f4e9db!important;border-radius:14px!important;
+  box-shadow:0 6px 17px #91754c20!important;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-empty>svg{
+  width:75px;height:75px;padding:22px;box-sizing:border-box;
+  background:linear-gradient(145deg,#fffefd,#f9e9ce)!important;
+  color:#9d641d!important;border:1px solid #f5e5c8;border-radius:50%;
+  box-shadow:inset 0 2px #fff,0 3px 6px #99743a22;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-empty p{
+  max-width:400px;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-directory{
+  border:1px solid #eadfd1;border-radius:12px;overflow:hidden;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-directory-row{
+  border-color:#eee5d9;background:linear-gradient(90deg,#fff,#fdfbf8);
+}
+/* Modais destes setores seguem a regra dos pop-ups internos do aplicativo. */
+html[data-arl-appearance="original"] body :is(.clients-modal-card,.services-modal .modal-card,.supplier-page .arl-3d-popup){
+  border:1px solid #e5c48d!important;border-radius:16px!important;
+  background:linear-gradient(135deg,#fffefa,#fffaf2)!important;
+  box-shadow:0 20px 50px #41321c42!important;
+}
+html[data-arl-appearance="original"] body .clients-modal-card .primary:not(:disabled),
+html[data-arl-appearance="original"] body .services-modal .primary:not(:disabled){
+  border:1px solid #d2a245!important;color:#ffdc87!important;
+  background:linear-gradient(180deg,#352f26,#080808)!important;
+}
+/* Redimensionar navegador: preservar as tabelas com rolagem interna; no celular
+   mantém o layout mobile já existente e sua organização específica. */
+@media(max-width:1250px){
+ html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-table-region{overflow-x:auto!important}
+ html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-create-grid,
+ html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-create-grid.is-service{
+  grid-template-columns:minmax(190px,1fr) minmax(130px,.65fr) minmax(140px,.7fr)!important;
+ }
+ html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-add{grid-column:1/-1;justify-self:end}
+}
+@media(max-width:850px){
+ html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-toolbar{
+  grid-template-columns:minmax(180px,1fr) auto!important;
+ }
+ html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-page-size,
+ html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-sort{
+  grid-column:auto!important;
+ }
+ html[data-arl-appearance="original"] body .shell.layout-desktop .clients-bottom-pagination{flex-wrap:wrap;justify-content:center}
+ html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-most-used-grid,
+ html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-stats{grid-template-columns:1fr!important}
+}
+@media(max-width:650px){
+ html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-create-grid,
+ html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-create-grid.is-service{grid-template-columns:1fr!important}
+ html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-add{grid-column:auto;justify-self:stretch}
+ html[data-arl-appearance="original"] body .shell.layout-desktop .supplier-page .supplier-toolbar{grid-template-columns:1fr}
+}
+
+/* Acabamento da conferência visual das quatro artes. */
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(:is(.clients-react-page,.services-page,.supplier-page))::before{
+  background-image:url('/arl-assets/four-gold-header-highres-20261015.webp')!important;
+  background-size:cover!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-most-used .services-list-heading h2::before,
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-list-card .services-list-heading h2::before{
+  display:inline-grid;place-items:center;width:32px;height:32px;margin-right:10px;
+  border:1px solid #f2dcae;border-radius:11px;
+  background:linear-gradient(145deg,#fffefa,#ffdda4);
+  color:#8d5513;
+  box-shadow:0 3px 6px #a47a3524;
+  vertical-align:middle;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-most-used .services-list-heading h2::before{
+  content:"★";
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-list-card .services-list-heading h2::before{
+  content:"⬡";
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-row-actions{
+  flex-wrap:nowrap!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-row-actions button{
+  display:inline-flex!important;white-space:nowrap!important;
+  flex:0 0 auto!important;
+  gap:5px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page:has(.services-table-head) .services-row{
+  grid-template-columns:32px minmax(175px,2fr) 75px 95px 50px 70px minmax(385px,1.9fr)!important;
+  min-width:1120px!important;
+  padding:4px 9px!important;min-height:38px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-table-head{
+  grid-template-columns:minmax(220px,2fr) 75px 95px 50px 70px minmax(385px,1.9fr)!important;
+  min-width:1120px!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-list .services-type-icon.product{
+  background:linear-gradient(145deg,#fefcff,#eae0ff)!important;
+  border-color:#ece0ff!important;color:#7145bf!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page .services-list .services-type-icon.product svg{
+  color:#7145bf!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page:has(.services-table-head) .services-list{
+  overflow-x:auto!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .clients-list-panel .clients-row .clients-id b{
+  min-width:36px;justify-content:center;
+}
+
+/* Remover a faixa superior preta proveniente do recorte da arte. */
+html[data-arl-appearance="original"] body .shell.layout-desktop > main:has(:is(.clients-react-page,.services-page,.supplier-page))::before{
+ background-position:center -15px!important;
+}

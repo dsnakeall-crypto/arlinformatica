@@ -1,6 +1,11 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   Camera,
+  CircleAlert,
+  Database,
+  Laptop,
+  UserRound,
+  ClipboardList,
   Box,
   CalendarDays,
   Wrench,
@@ -25,6 +30,7 @@ import ServiceProductSearch, {
   type ServiceProductCatalogItem,
 } from "./service-product-search";
 import OrderPopup from "./order-popup";
+import { appConfirm, appAlert } from "./app-native-dialog";
 import OrderAuditHistory from "./order-audit-history";
 import OrderLabel from "./order-label";
 import "../css/order-detail-layout.css";
@@ -180,23 +186,33 @@ export function CameraModal({
   onFile: (file: File) => void;
 }) {
   const video = useRef<HTMLVideoElement>(null);
+  const nativeCamera = useRef<HTMLInputElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const [error, setError] = useState("");
+  const [useNativeCamera, setUseNativeCamera] = useState(false);
   useEffect(() => {
     let active = true;
-    void navigator.mediaDevices
-      ?.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
-        audio: false,
-      })
+    if (!navigator.mediaDevices?.getUserMedia) {
+      // Browsers require HTTPS for live video on a phone reached over LAN HTTP.
+      // A native file input with capture can still invoke the phone's camera.
+      setError("A câmera ao vivo exige HTTPS. Use a câmera nativa do celular.");
+      setUseNativeCamera(true);
+      return;
+    }
+    void navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false,
+    })
       .then((media) => {
         if (!active) return media.getTracks().forEach((track) => track.stop());
         stream.current = media;
         if (video.current) video.current.srcObject = media;
       })
-      .catch((reason) =>
-        setError(reason?.message || "Não foi possível acessar a câmera."),
-      );
+      .catch((reason) => {
+        if (!active) return;
+        setError(reason?.message || "Não foi possível acessar a câmera ao vivo.");
+        setUseNativeCamera(true);
+      });
     return () => {
       active = false;
       stream.current?.getTracks().forEach((track) => track.stop());
@@ -233,15 +249,36 @@ export function CameraModal({
         </button>
         <h2>Capturar foto</h2>
         <p>A imagem será anexada diretamente à ordem de serviço.</p>
-        <video ref={video} autoPlay playsInline muted />
-        <div className="arl-camera-error">{error}</div>
+        {!useNativeCamera && <video ref={video} autoPlay playsInline muted />}
+        <div className="arl-camera-error" role={error ? "status" : undefined}>{error}</div>
         <div className="arl-camera-actions">
           <button type="button" onClick={onClose}>
             Cancelar
           </button>
-          <button type="button" onClick={shot}>
-            ◉ Tirar foto
-          </button>
+          {useNativeCamera ? (
+            <>
+              <input
+                ref={nativeCamera}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                aria-label="Imagem da câmera nativa"
+                style={{ display: "none" }}
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  event.currentTarget.value = "";
+                  if (file) onFile(file);
+                }}
+              />
+              <button type="button" onClick={() => nativeCamera.current?.click()}>
+                ◉ Tirar foto no celular
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={shot}>
+              ◉ Tirar foto
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -635,7 +672,7 @@ function ServicesPanel({ order, reload, pendingSaveRef, onDirtyChange }: any) {
   };
   return (
     <section className="wide arl-od-services">
-      <h2>Serviços / Produtos</h2>
+      <h2><span className="arl-os-section-icon" aria-hidden="true"><Box /></span>Serviços / Produtos</h2>
       <p>
         Independente do orçamento: registre o que realmente foi feito e a
         quantidade.
@@ -758,7 +795,7 @@ function FinalReportPanel({
   };
   return (
     <section className="wide arl-od-report">
-      <h2>Laudo Final</h2>
+      <h2><span className="arl-os-section-icon" aria-hidden="true"><FileText /></span>Laudo Final</h2>
       <p>
         O que foi feito, pontos de atenção e recomendações. Este texto sai no
         PDF final.
@@ -903,7 +940,7 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
   };
   const remove = async (budget: any) => {
     if (
-      !window.confirm(
+      !await appConfirm(
         `Excluir o orçamento Revisão ${budget.revision}? O PDF já emitido continuará preservado.`,
       )
     )
@@ -966,7 +1003,7 @@ function BudgetBox({ order, role, openSignal = 0 }: any) {
   return (
     <section className="wide arl-budgets-section">
       <div className="section-title">
-        <h2>Orçamentos</h2>
+        <h2><span className="arl-os-section-icon" aria-hidden="true"><ReceiptText /></span>Orçamentos</h2>
         {!isFinalized && (
           <button
             className="primary"
@@ -1313,7 +1350,7 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
   if (order.status === "interrupted")
     return (
       <section className="wide arl-payment-empty">
-        <h2>Pagamento</h2>
+        <h2><span className="arl-os-section-icon" aria-hidden="true"><Wallet /></span>Pagamento</h2>
         <p>
           OS interrompida não gera pagamento, A Receber ou lançamento no Caixa.
         </p>
@@ -1322,7 +1359,7 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
   if (!summary)
     return (
       <section className="wide">
-        <h2>Pagamento</h2>
+        <h2><span className="arl-os-section-icon" aria-hidden="true"><Wallet /></span>Pagamento</h2>
         <p>Carregando situação do pagamento…</p>
       </section>
     );
@@ -1369,7 +1406,7 @@ function PaymentBox({ order, role, openSignal = 0, onSummary }: any) {
     >
       <div className="section-title">
         <div>
-          <h2>Pagamento</h2>
+          <h2><span className="arl-os-section-icon" aria-hidden="true"><Wallet /></span>Pagamento</h2>
           <p>Registro financeiro independente do status operacional.</p>
         </div>
         <div className="actions">
@@ -2400,7 +2437,7 @@ export default function OrderDetailPage({
     if (!files?.length) return;
     const available = Math.max(0, 5 - (order.photos?.length || 0));
     if (files.length > available)
-      window.alert(
+      appAlert(
         "Cada OS aceita no máximo 5 fotos. As fotos excedentes não serão enviadas.",
       );
     if (available === 0) return;
@@ -2564,7 +2601,7 @@ export default function OrderDetailPage({
   const deletePhoto = async (photo: any) => {
     if (
       !canAdminister ||
-      !window.confirm(
+      !await appConfirm(
         "Excluir esta foto do equipamento? PDFs já emitidos não serão alterados.",
       )
     )
@@ -2585,7 +2622,7 @@ export default function OrderDetailPage({
   const shareFinalReport = async () => {
     const pdfWindow = window.open("", "_blank");
     if (!pdfWindow)
-      return window.alert(
+      return appAlert(
         "Permita a abertura de novas abas para visualizar o Relatório Técnico Final.",
       );
     pdfWindow.opener = null;
@@ -2596,14 +2633,14 @@ export default function OrderDetailPage({
         .sort((a: any, b: any) => b.revision - a.revision)[0];
       if (!final) {
         pdfWindow.close();
-        return window.alert("O Relatório Técnico Final ainda não foi gerado.");
+        return appAlert("O Relatório Técnico Final ainda não foi gerado.");
       }
       pdfWindow.location.replace(
         `/api/orders/${order.id}/final/${final.revision}/pdf`,
       );
     } catch (reason: any) {
       pdfWindow.close();
-      window.alert(
+      appAlert(
         reason.message || "Não foi possível abrir o Relatório Técnico Final.",
       );
     }
@@ -2611,7 +2648,7 @@ export default function OrderDetailPage({
   const sendFinalLink = async () => {
     const phone = digits(order.client?.phone || "");
     if (!phone)
-      return window.alert("O cliente não possui telefone para WhatsApp.");
+      return appAlert("O cliente não possui telefone para WhatsApp.");
     const target = window.open("about:blank", "_blank");
     setFinalLinkBusy(true);
     try {
@@ -2627,7 +2664,7 @@ export default function OrderDetailPage({
       else window.location.href = destination;
     } catch (reason: any) {
       target?.close();
-      window.alert(
+      appAlert(
         reason.message || "Não foi possível gerar o link do relatório.",
       );
     } finally {
@@ -2635,14 +2672,14 @@ export default function OrderDetailPage({
     }
   };
   const revokeFinalLinks = async () => {
-    if (!window.confirm("Revogar agora todos os links ativos deste relatório?"))
+    if (!await appConfirm("Revogar agora todos os links ativos deste relatório?"))
       return;
     setFinalLinkBusy(true);
     try {
       await api(`/orders/${order.id}/final-share`, { method: "DELETE" });
       setFinalLinkStatus({ active: false, expires_at: null, revision: null });
     } catch (reason: any) {
-      window.alert(reason.message || "Não foi possível revogar os links.");
+      appAlert(reason.message || "Não foi possível revogar os links.");
     } finally {
       setFinalLinkBusy(false);
     }
@@ -3110,6 +3147,7 @@ export default function OrderDetailPage({
         aria-labelledby="arl-intake-title"
       >
         <div className="section-title arl-intake-title">
+          <span className="arl-os-section-icon" aria-hidden="true"><ClipboardList /></span>
           <div>
             <span className="arl-eyebrow">ENTRADA</span>
             <h2 id="arl-intake-title">Ficha de entrada</h2>
@@ -3132,7 +3170,7 @@ export default function OrderDetailPage({
         </div>
         <div className="arl-intake-grid">
           <section className="arl-intake-field arl-intake-client-field">
-            <h3>Cliente</h3>
+            <h3><span className="arl-intake-mark" aria-hidden="true"><UserRound /></span>Cliente</h3>
             <div className="arl-intake-client-info">
               <p className="arl-intake-client-name">
                 <strong>{order.client.name}</strong>
@@ -3161,7 +3199,7 @@ export default function OrderDetailPage({
             </div>
           </section>
           <section className="arl-intake-field arl-intake-equipment-field">
-            <h3>Equipamento</h3>
+            <h3><span className="arl-intake-mark" aria-hidden="true"><Laptop /></span>Equipamento</h3>
             <div>
               <p className="arl-intake-equipment-name">
                 <strong>
@@ -3169,19 +3207,19 @@ export default function OrderDetailPage({
                 </strong>
               </p>
               <div className="arl-intake-equipment-details">
-                <h4>Fabricante / Modelo / Acessórios</h4>
+                <h4><span className="arl-intake-mark arl-intake-mark-sub" aria-hidden="true"><Wrench /></span>Fabricante / Modelo / Acessórios</h4>
                 <p>{order.equipment_details || "Não informado"}</p>
               </div>
             </div>
           </section>
           <section className="arl-intake-field">
-            <h3>Problema relatado</h3>
+            <h3><span className="arl-intake-mark" aria-hidden="true"><CircleAlert /></span>Problema relatado</h3>
             <p>{order.reported_problem}</p>
           </section>
           <section
             className={`arl-intake-field ${!order.intake_condition ? "arl-checklist-ok" : ""}`}
           >
-            <h3>Estado físico na entrada</h3>
+            <h3><span className="arl-intake-mark" aria-hidden="true"><Database /></span>Estado físico na entrada</h3>
             <p className={!order.intake_condition ? "ok" : undefined}>
               {order.intake_condition ||
                 "Equipamento aparentemente 100% sem avarias"}

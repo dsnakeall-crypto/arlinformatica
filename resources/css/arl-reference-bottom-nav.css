@@ -1,25 +1,29 @@
 /* ARL | Menu inferior referência 3D enviada pelo proprietário em 09/10/2026.
    SOMENTE modo Mobile > barra inferior. Preserve menu compacto, desktop e home de OS. */
 .layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five {
-  --nav-disc: clamp(42px, 11.7vw, 57px);
-  --nav-disc-feature: clamp(58px, 15.8vw, 78px);
+  --nav-disc: clamp(37px, 10vw, 49px);
+  --nav-disc-feature: clamp(52px, 14vw, 67px);
   position: fixed;
   z-index: 140;
-  top: calc(var(--arl-mobile-visible-bottom, 100dvh) - var(--arl-mobile-nav-height, 96px));
-  bottom: auto;
-  left: max(8px, env(safe-area-inset-left));
-  right: max(8px, env(safe-area-inset-right));
-  width: calc(100% - 16px);
-  max-width: 510px;
+  /* Barra inferior ancorada na tela durante a rolagem, inclusive no mobile. */
+  top: auto;
+  bottom: 0;
+  /* On iOS, the keyboard shrinks the visual viewport and raises fixed footers.
+     Compensate below the keyboard, without shifting the card into the form. */
+  transform: translate3d(0, var(--arl-mobile-keyboard-offset, 0px), 0);
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  width: calc(100% - 24px);
+  max-width: 452px;
   box-sizing: border-box;
   margin: 0 auto;
-  padding: 8px 6px calc(4px + env(safe-area-inset-bottom, 0px));
+  padding: 5px 5px calc(3px + env(safe-area-inset-bottom, 0px));
   gap: 1px;
   align-items: end;
   overflow: visible;
   isolation: isolate;
   border: 1px solid rgba(235, 227, 233, .96);
-  border-radius: 26px;
+  border-radius: 22px;
   background: linear-gradient(172deg, rgba(255,255,255,.97), rgba(248,246,250,.97) 65%, rgba(237,234,240,.97));
   box-shadow: 0 11px 32px rgba(39, 24, 34, .18), inset 0 2px 0 #fff, 0 1px 3px rgba(30,22,33,.1);
 }
@@ -28,12 +32,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 3px;
   min-width: 0;
-  min-height: 73px;
+  min-height: 62px;
   width: 100%;
   margin: 0;
-  padding: 3px 0 1px;
+  padding: 2px 0 1px;
   box-sizing: border-box;
   border: 0;
   border-radius: 18px;
@@ -81,11 +85,11 @@
   display: block;
   width: 100%;
   max-width: 100%;
-  min-height: 22px;
+  min-height: 19px;
   padding: 0 1px;
   color: #404049;
   text-align: center;
-  font-size: clamp(9px, 2.55vw, 11.5px);
+  font-size: clamp(9px, 2.45vw, 10.5px);
   font-weight: 850;
   line-height: 1.12;
   letter-spacing: -.25px;
@@ -111,7 +115,7 @@
   width: var(--nav-disc-feature);
   height: var(--nav-disc-feature);
   margin-top: calc((var(--nav-disc-feature) - var(--nav-disc)) * -1);
-  transform: translateY(-5px);
+  transform: translateY(-4px);
   border: 1px solid rgba(178,4,38,.56);
   background: radial-gradient(circle at 34% 11%, #ff8296 -15%, #ff375d 27%, #e5083b 68%, #a80028 100%);
   color: #fff;
@@ -138,13 +142,13 @@
 }
 .layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five > button.primary-shortcut:active .arl-nav-icon-disc { transform: translateY(-3px); }
 .layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) > main {
-  padding-bottom: max(calc(128px + env(safe-area-inset-bottom)), var(--arl-mobile-nav-clearance, 0px)) !important;
+  padding-bottom: max(calc(109px + env(safe-area-inset-bottom)), var(--arl-mobile-nav-clearance, 0px)) !important;
 }
 @media (max-width: 359px) {
   .layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace) .arl-global-mobile-nav.arl-mobile-five {
-    --nav-disc: 40px;
-    --nav-disc-feature: 56px;
-    padding: 8px 3px calc(4px + env(safe-area-inset-bottom, 0px));
+    --nav-disc: 36px;
+    --nav-disc-feature: 51px;
+    padding: 5px 3px calc(3px + env(safe-area-inset-bottom, 0px));
     gap: 0;
     border-radius: 23px;
   }

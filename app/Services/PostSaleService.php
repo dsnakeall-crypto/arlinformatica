@@ -27,30 +27,66 @@ class PostSaleService
             $created = 0;
             ServiceOrder::query()->with('client')->where('status', 'completed')->where('result', 'repair_completed')->whereNotNull('completed_at')
                 ->when($completedSince, fn ($query) => $query->where('completed_at', '>=', $completedSince))
+                // Um ciclo ainda ativo já foi processado. Não repetir bloqueios e
+                // consultas por OS a cada visita ao Pós-venda.
+                ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('post_sale_cycles as existing_cycles')
+                    ->whereColumn('existing_cycles.service_order_id', 'service_orders.id')
+                    ->where('existing_cycles.active', true))
                 ->orderBy('completed_at')->chunkById(100, function ($orders) use (&$created) {
                     foreach ($orders as $order) {
                         $created += $this->ensureCycle($order) ? 1 : 0;
                     }
                 });
 
-            DB::table('post_sale_cycles')->where('active', true)->where('eligible_at', '<=', now())->get()->each(function ($cycle) {
-                $pending = DB::table('post_sale_actions')
-                    ->where('cycle_id', $cycle->id)
-                    ->whereIn('type', self::ACTIONS)
-                    ->whereNull('confirmed_at')
-                    ->exists();
-                if (! $pending) {
-                    $this->notifications->resolve("post-sale:$cycle->id");
+            // Verificar os cartões vencidos em lotes, sem buscar ações e OS
+            // individualmente. Respeitar a regra existente de idempotência:
+            // notificar todos os usuários habilitados a cada verificação, pois
+            // novos usuários podem ter sido criados depois da última consulta.
+            DB::table('post_sale_cycles as cycles')
+                ->leftJoin('service_orders as orders', function ($join) {
+                    $join->on('orders.id', '=', 'cycles.service_order_id')
+                        ->whereNull('orders.deleted_at');
+                })
+                ->leftJoin('clients', 'clients.id', '=', 'orders.client_id')
+                ->where('cycles.active', true)
+                ->where('cycles.eligible_at', '<=', now())
+                ->select(
+                    'cycles.id',
+                    'orders.status as order_status',
+                    'orders.completed_at as order_completed_at',
+                    'orders.number as order_number',
+                    'clients.name as client_name',
+                )
+                ->chunkById(200, function ($cycles) {
+                    $pendingIds = DB::table('post_sale_actions')
+                        ->whereIn('cycle_id', $cycles->pluck('id'))
+                        ->whereIn('type', self::ACTIONS)
+                        ->whereNull('confirmed_at')
+                        ->distinct()
+                        ->pluck('cycle_id')
+                        ->all();
+                    $pending = array_fill_keys($pendingIds, true);
 
-                    return;
-                }
-                $order = ServiceOrder::with('client')->find($cycle->service_order_id);
-                if ($order && $order->status === 'completed' && $order->completed_at) {
-                    $this->notifications->notifyUsers('post_sale_due', 'Pós-Venda pendente', "OS {$order->number} — {$order->client->name}", '/post-sale', "post-sale:$cycle->id", ['cycle_id' => $cycle->id]);
-                } else {
-                    $this->notifications->resolve("post-sale:$cycle->id");
-                }
-            });
+                    foreach ($cycles as $cycle) {
+                        if (! isset($pending[$cycle->id])) {
+                            $this->notifications->resolve("post-sale:$cycle->id");
+
+                            continue;
+                        }
+                        if ($cycle->order_status === 'completed' && $cycle->order_completed_at && $cycle->client_name !== null) {
+                            $this->notifications->notifyUsers(
+                                'post_sale_due',
+                                'Pós-Venda pendente',
+                                "OS {$cycle->order_number} — {$cycle->client_name}",
+                                '/post-sale',
+                                "post-sale:$cycle->id",
+                                ['cycle_id' => $cycle->id],
+                            );
+                        } else {
+                            $this->notifications->resolve("post-sale:$cycle->id");
+                        }
+                    }
+                }, 'cycles.id', 'id');
 
             return $created;
         });

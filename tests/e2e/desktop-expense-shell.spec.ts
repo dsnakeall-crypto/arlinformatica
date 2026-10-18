@@ -20,7 +20,7 @@ test('Web/PC conserva shell ARL, menu à esquerda e Gastos no conteúdo à direi
  await expect(page.locator('#arl-main-sidebar')).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Menu principal'})).toBeVisible();
  await expect(page.locator('main .cg-page')).toBeVisible();
- await expect(page.locator('main .app-head')).toBeVisible();
+ await expect(page.locator('main .app-head')).toBeHidden();
  await expect(page.locator('main .arl-expense-own-header')).toHaveCount(0);
  const dims=await page.evaluate(()=>{
   const a=document.querySelector('#arl-main-sidebar')!.getBoundingClientRect();

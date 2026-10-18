@@ -22,7 +22,7 @@ export function quickPaymentScenario(mobile = false) {
     }, headers:{Accept:'application/json'} });
     expect(csrf.status()).toBe(419);
     await page.goto('/expense-control'); await openExpenseSection(page,'Resumo');
-    await expect(page.getByRole('button',{name:'Pagamento rápido de Allan',exact:true}).locator('span')).toHaveCSS('color','rgb(0, 0, 0)');
+    await expect(page.getByRole('button',{name:'Pagamento rápido de Allan',exact:true}).locator('span')).toHaveCSS('color', mobile ? 'rgb(0, 0, 0)' : 'rgb(255, 216, 107)');
     const dialog = page.getByRole('dialog',{name:'Pagamento rápido de Allan',exact:true});
     const open = async (owner: string) => {
       await page.getByRole('button',{name:'Pagamento rápido de Allan',exact:true}).click();

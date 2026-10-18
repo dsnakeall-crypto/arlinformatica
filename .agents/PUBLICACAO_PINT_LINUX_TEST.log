@@ -1,8 +1,0 @@
-
-  ⨯⨯
-
-  ──────────────────────────────────────────────────────────────────── Laravel  
-    FAIL   ........................................... 2 files, 2 style issues  
-  ⨯ deploy/publish-eight-improvements.php method_argument_space, unary_operat…  
-  ⨯ deploy/test-publication-helpers.php                  method_argument_space  
-

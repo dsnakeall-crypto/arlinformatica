@@ -15,14 +15,14 @@ test.describe.serial('fluxo operacional principal', () => {
     await page.getByRole('tab', { name: 'Usuários', exact:true }).click();
     await page.getByRole('button', { name: 'Novo usuário' }).click();
     const modal = page.locator('.modal-card');
-    const employeePassword = 'Abcde!';
+    const employeePassword = 'abc123';
     await modal.locator('label').filter({ hasText: 'Nome' }).locator('input').fill('Funcionário Homologação');
     await modal.locator('label').filter({ hasText: 'Login' }).locator('input').fill('func.homologacao');
     await modal.locator('select').selectOption({ label: 'Funcionário' });
     await modal.locator('label').filter({ hasText: 'Senha (mínimo' }).locator('input').fill('fraca');
     await modal.locator('label').filter({ hasText: 'Confirmar senha' }).locator('input').fill('fraca');
     await modal.getByRole('button', { name: 'Salvar' }).click();
-    await expect(modal.getByRole('alert')).toContainText('A senha precisa conter pelo menos 6 caracteres, uma letra maiúscula, um caractere especial.');
+    await expect(modal.getByRole('alert')).toContainText('A senha precisa ter pelo menos 6 caracteres.');
     await modal.locator('label').filter({ hasText: 'Senha (mínimo' }).locator('input').fill(employeePassword);
     await modal.locator('label').filter({ hasText: 'Confirmar senha' }).locator('input').fill(employeePassword);
     await modal.getByRole('button', { name: 'Salvar' }).click();

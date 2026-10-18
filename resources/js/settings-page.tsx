@@ -1,3 +1,4 @@
+import { appConfirm, appAlert, appPrompt } from './app-native-dialog';
 import { FormEvent, useEffect, useState } from "react";
 import PageHeader from "./page-header";
 import AppearanceSettings from './appearance-settings';
@@ -192,7 +193,7 @@ export function InfrastructureSettings({ section }: { section: string }) {
                 disabled={b.status !== "ready" || restoringId !== null}
                 onClick={async () => {
                   if (
-                    window.prompt("Digite RESTAURAR BACKUP para confirmar") !==
+                    await appPrompt("Digite RESTAURAR BACKUP para confirmar") !==
                     "RESTAURAR BACKUP"
                   )
                     return;
@@ -205,13 +206,13 @@ export function InfrastructureSettings({ section }: { section: string }) {
                     });
                     const success = "Restauração concluída; backup de segurança preservado.";
                     setMessage(success);
-                    window.alert(success);
+                    void appAlert(success);
                     load();
                   } catch (error) {
                     const detail = error instanceof Error ? error.message : "Resposta inesperada do servidor.";
                     const failure = `Não foi possível confirmar a restauração: ${detail} Confira o histórico antes de tentar novamente.`;
                     setMessage(failure);
-                    window.alert(failure);
+                    void appAlert(failure);
                   } finally {
                     setRestoringId(null);
                   }
@@ -222,7 +223,7 @@ export function InfrastructureSettings({ section }: { section: string }) {
               <button
                 disabled={b.protected || b.status === "creating"}
                 onClick={async () => {
-                  if (!window.confirm(`Apagar o backup ${b.filename}?`)) return;
+                  if (!await appConfirm(`Apagar o backup ${b.filename}?`)) return;
                   await api(`/backups/${b.id}`, { method: "DELETE" });
                   setMessage("Backup removido do servidor.");
                   load();
@@ -374,7 +375,7 @@ export function SettingsPage({ role, initialSection = "company", deviceLayout }:
     setData({ ...data, [e.target.name]: value });
   };
   const removeSignature = async () => {
-    if (!window.confirm("Remover a assinatura técnica cadastrada? Os PDFs futuros serão emitidos sem a imagem.")) return;
+    if (!await appConfirm("Remover a assinatura técnica cadastrada? Os PDFs futuros serão emitidos sem a imagem.")) return;
     setRemovingSignature(true);
     setMessage("");
     try {
@@ -636,9 +637,6 @@ export function SettingsPage({ role, initialSection = "company", deviceLayout }:
           </>}
           {message && <div className="notice">{message}</div>}
           <div className="actions">
-            <button type="button" onClick={() => window.print()}>
-              Visualizar prévia
-            </button>
             <button className="primary">Salvar configurações</button>
           </div>
         </form>
@@ -726,13 +724,8 @@ export function UsersAdmin() {
     e.preventDefault();
     setError("");
     if (!form.id) {
-      const missing = [
-        Array.from(form.password).length < 6 && "pelo menos 6 caracteres",
-        !/\p{Lu}/u.test(form.password) && "uma letra maiúscula",
-        !/[^\p{L}\p{N}\s]/u.test(form.password) && "um caractere especial",
-      ].filter(Boolean);
-      if (missing.length) {
-        setError(`A senha precisa conter ${missing.join(", ")}.`);
+      if (Array.from(form.password).length < 6) {
+        setError("A senha precisa ter pelo menos 6 caracteres.");
         return;
       }
       if (form.password !== form.password_confirmation) {
@@ -794,8 +787,8 @@ export function UsersAdmin() {
               Editar
             </button>
             <button
-              onClick={() => {
-                const p = prompt("Nova senha (mínimo 6 caracteres, uma letra maiúscula e um caractere especial)");
+              onClick={async () => {
+                const p = await appPrompt("Nova senha (mínimo 6 caracteres)");
                 if (p) {
                   setError("");
                   api(`/users/${u.id}/password`, {
@@ -857,7 +850,7 @@ export function UsersAdmin() {
             {!form.id && (
               <>
                 <Field
-                  label="Senha (mínimo 6 caracteres, maiúscula e caractere especial)"
+                  label="Senha (mínimo 6 caracteres)"
                   type="password"
                   value={form.password}
                   onChange={(e: any) =>
@@ -909,7 +902,7 @@ export function StorageAdmin({ role }: any) {
   const purge = async () => {
     const confirmation =
       filter === "all" ? "EXCLUIR TODAS AS FOTOS" : "EXCLUIR FOTOS";
-    if (prompt(`Digite ${confirmation}`) !== confirmation) return;
+    if ((await appPrompt(`Digite ${confirmation}`)) !== confirmation) return;
     await api("/storage/photos", {
       method: "DELETE",
       body: JSON.stringify({ filter, confirmation }),

@@ -1,3 +1,4 @@
+import { appAlert } from "./app-native-dialog";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import CacheBoundary from './cache-boundary';
 import { reserveOpeningWindow, openCreatedOrderMessage } from "./whatsapp-opening-flow";
@@ -103,7 +104,7 @@ export function NewOrder({ done, initialClient }: { done: (id: number, fallback?
     if (!files?.length) return;
     setPhotos((current) => {
       const available = Math.max(0, 5 - current.length);
-      if (files.length > available) window.alert("Cada OS aceita no máximo 5 fotos. As fotos excedentes não foram adicionadas.");
+      if (files.length > available) void appAlert("Cada OS aceita no máximo 5 fotos. As fotos excedentes não foram adicionadas.");
       return [...current, ...files.slice(0, available)];
     });
   };
@@ -190,7 +191,7 @@ export function NewOrder({ done, initialClient }: { done: (id: number, fallback?
     } catch (x: any) {
       conversation?.close();
       if (createdOrder) {
-        window.alert("A OS foi criada, mas não foi possível concluir os anexos ou abrir o WhatsApp. Confira a OS antes de tentar novamente.");
+        void appAlert("A OS foi criada, mas não foi possível concluir os anexos ou abrir o WhatsApp. Confira a OS antes de tentar novamente.");
         done(createdOrder.id, createdOrder.opening_whatsapp?.auto_open ? createdOrder.opening_whatsapp?.url : undefined);
         return;
       }

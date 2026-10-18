@@ -13,6 +13,10 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const port = process.env.E2E_PORT || '8011';
 const database = path.join(root, 'database', 'e2e.sqlite');
+// O SQLite é recriado em cada execução; os documentos privados precisam ter o mesmo isolamento.
+const testingStorage = path.join(root, 'storage', 'framework', 'testing');
+fs.mkdirSync(testingStorage, { recursive: true });
+const privateStorage = fs.mkdtempSync(path.join(testingStorage, 'e2e-private-'));
 
 function acceptsPhp(binary) {
   const result = spawnSync(binary, ['-v'], { encoding: 'utf8', windowsHide: true });
@@ -78,7 +82,7 @@ const environment = {
   MISTRAL_API_KEY: '',
   GEMINI_EXPENSE_PHOTO_ENABLED: 'false',
   GEMINI_API_KEY: '',
-  PRIVATE_STORAGE_PATH: path.join(root, 'storage', 'framework', 'testing', 'e2e-private'),
+  PRIVATE_STORAGE_PATH: privateStorage,
 };
 
 run(php, ['artisan', 'migrate', '--seed', '--force'], environment);
