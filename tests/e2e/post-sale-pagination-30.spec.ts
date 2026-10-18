@@ -16,7 +16,20 @@ test("Pós-venda lista 30 por página sem perder busca ou seleção em lote", as
   });
   await page.setViewportSize({ width: 1366, height: 850 });
   await login(page);
-  await page.route("**/api/post-sales", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(fixture) }));
+  await page.route(/\/api\/post-sales\?/, (route) => {
+    const url = new URL(route.request().url());
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const search = (url.searchParams.get("q") || "").toLocaleLowerCase("pt-BR");
+    const matching = fixture.filter((row) => (row.number + " " + row.name).toLocaleLowerCase("pt-BR").includes(search));
+    return route.fulfill({
+      status: 200, contentType: "application/json",
+      body: JSON.stringify({
+        data: matching.slice((requestedPage - 1) * 30, requestedPage * 30),
+        total: matching.length, current_page: requestedPage,
+        last_page: Math.max(1, Math.ceil(matching.length / 30)), per_page: 30,
+      }),
+    });
+  });
   await page.route("**/api/post-sales/bulk-delete", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ deleted: true }) }));
   await page.goto("/post-sale");
 
@@ -87,7 +100,7 @@ test("Pós-venda lista 30 por página sem perder busca ou seleção em lote", as
 });
 
 test("Pós-venda ajusta a última página depois de excluir registros fictícios", async ({ page }) => {
-  const fixture = Array.from({ length: 65 }, (_, index) => ({
+  let fixture = Array.from({ length: 65 }, (_, index) => ({
     id: index + 1,
     number: String(index + 1).padStart(6, "0"),
     name: `Cliente Exclusão ${index + 1}`,
@@ -97,10 +110,24 @@ test("Pós-venda ajusta a última página depois de excluir registros fictícios
     whatsapp: { google: "https://wa.me/5535999999999", instagram: "https://wa.me/5535999999999" },
   }));
   await login(page);
-  await page.route("**/api/post-sales", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(fixture) }));
+  await page.route(/\/api\/post-sales\?/, (route) => {
+    const url = new URL(route.request().url());
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const search = (url.searchParams.get("q") || "").toLocaleLowerCase("pt-BR");
+    const matching = fixture.filter((row) => (row.number + " " + row.name).toLocaleLowerCase("pt-BR").includes(search));
+    return route.fulfill({
+      status: 200, contentType: "application/json",
+      body: JSON.stringify({
+        data: matching.slice((requestedPage - 1) * 30, requestedPage * 30),
+        total: matching.length, current_page: requestedPage,
+        last_page: Math.max(1, Math.ceil(matching.length / 30)), per_page: 30,
+      }),
+    });
+  });
   let sentIds: number[] = [];
   await page.route("**/api/post-sales/bulk-delete", async route => {
     sentIds = (route.request().postDataJSON() as { ids: number[] }).ids;
+    fixture = fixture.filter((row) => !sentIds.includes(row.id));
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ deleted: true, ids: sentIds }) });
   });
   await page.goto("/post-sale");

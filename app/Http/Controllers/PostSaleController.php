@@ -8,6 +8,7 @@ use App\Services\PostSaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class PostSaleController extends Controller
@@ -21,8 +22,15 @@ class PostSaleController extends Controller
         'google' => "Olá!\nAgradecemos por escolher a Arl Informática.\nFoi um prazer atender você!\n\nSe puder, deixe sua avaliação no Google. Sua opinião é muito importante para nós:\nhttps://g.page/r/CSxkz5Y88MaJEBM/review\n\nEquipe Arl Informática",
     ];
 
-    public function index(PostSaleService $service): JsonResponse
+    public function index(Request $request, PostSaleService $service): JsonResponse
     {
+        // A interface paginada usa o caminho RÁPIDO: somente leitura, sem
+        // gerar ciclos/notificações e sem bloquear o primeiro carregamento.
+        // A consulta sem paginação preserva o contrato legado para integrações.
+        if ($request->hasAny(['page', 'per_page', 'q'])) {
+            return $this->paginatedList($request);
+        }
+
         // Recuperação recente interativa; o comando agendado mantém a varredura completa.
         $service->catchUp(false, now()->subDays(30));
         $rows = DB::table('post_sale_cycles as cycles')
@@ -35,9 +43,54 @@ class PostSaleController extends Controller
             ->select('cycles.id', 'cycles.eligible_at', 'orders.number', 'clients.name', 'clients.phone')
             ->orderBy('cycles.eligible_at')
             ->get();
+
+        return response()->json($this->presentRows($rows));
+    }
+
+    /**
+     * Apenas os 30 registros solicitados; paginação, contagem e busca no SQL.
+     * Não dispara catchUp, processamento de notificações ou alterações.
+     */
+    private function paginatedList(Request $request): JsonResponse
+    {
+        $valid = $request->validate([
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:30'],
+            'q' => ['sometimes', 'nullable', 'string', 'max:120'],
+        ]);
+        $page = (int) ($valid['page'] ?? 1);
+        $pageSize = (int) ($valid['per_page'] ?? 30);
+        $search = trim((string) ($valid['q'] ?? ''));
+
+        $query = DB::table('post_sale_cycles as cycles')
+            ->join('service_orders as orders', 'orders.id', '=', 'cycles.service_order_id')
+            ->join('clients', 'clients.id', '=', 'cycles.client_id')
+            ->where('cycles.active', true)
+            ->whereNull('orders.deleted_at')
+            ->where('orders.status', 'completed')
+            ->whereNotNull('orders.completed_at')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('clients.name', 'like', '%'.$search.'%')
+                        ->orWhere('orders.number', 'like', '%'.$search.'%');
+                });
+            })
+            ->select('cycles.id', 'cycles.eligible_at', 'orders.number', 'clients.name', 'clients.phone')
+            ->orderBy('cycles.eligible_at')
+            ->orderBy('cycles.id');
+
+        $paginator = $query->paginate($pageSize, ['*'], 'page', $page);
+        $paginator->setCollection($this->presentRows($paginator->getCollection()));
+
+        return response()->json($paginator);
+    }
+
+    /** Ações são consultadas em um único lote, nunca uma consulta por card. */
+    private function presentRows(Collection $rows): Collection
+    {
         $actions = DB::table('post_sale_actions')->whereIn('cycle_id', $rows->pluck('id'))->whereIn('type', PostSaleService::ACTIONS)->get()->groupBy('cycle_id');
 
-        return response()->json($rows->map(function ($row) use ($actions) {
+        return $rows->map(function ($row) use ($actions) {
             $eligibleAt = Carbon::parse($row->eligible_at, config('app.timezone'));
             $row->available = now()->greaterThanOrEqualTo($eligibleAt);
             // SQL datetime values have no timezone. Include the offset so browsers
@@ -49,7 +102,7 @@ class PostSaleController extends Controller
             $row->whatsapp = $row->available ? $links->all() : $links->map(fn () => null)->all();
 
             return $row;
-        }));
+        });
     }
 
     public function settings(): JsonResponse

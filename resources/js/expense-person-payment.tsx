@@ -7,6 +7,7 @@ import { expenseRequestId } from './expense-browser-crypto';
 import { centsFromMoneyInput, maskMoneyInput } from './money-input';
 import ExpensePaymentButton from './expense-payment-button';
 import ExpenseInstitutionSettlement from './expense-institution-settlement';
+import { pendingTotalInCents } from './expense-quick-payment-total';
 
 type Target = 'one' | 'two';
 type Action = 'month' | 'partial' | 'total';
@@ -98,6 +99,10 @@ export default function ExpensePersonPayment({ target, scope, month, config, bus
             {rows.map(debt => <button type="button" className="cg-person-debt-choice" key={debt.id} onClick={() => choose(debt)} disabled={loading}>
               <span><b>{debt.name}</b><small>{debt.type_name} · {debt.responsibility === 'shared' ? 'Sua parte do casal no mês' : 'Dívida pessoal no mês'}</small></span><strong>{money(debt.month_remaining_cents)}</strong>
             </button>)}
+            <div className="cg-person-payment-group-total" data-testid="cg-group-total" data-institution-group={key}>
+              <span>Total que falta pagar</span>
+              <strong>{money(pendingTotalInCents(rows))}</strong>
+            </div>
           </section>)}
           {!loading && !error && debts.length === 0 && <p>Nenhuma dívida pendente deste responsável.</p>}
           {!loading && error && <button type="button" onClick={() => setReload(n => n + 1)}>Tentar novamente</button>}

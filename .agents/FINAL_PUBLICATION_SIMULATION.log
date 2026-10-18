@@ -1,2 +1,0 @@
-PASS: launcher syntax, allowlist extension, atomic activation, e90 rollback hashes and symlink guard.
-Fixture: /output/releases/simulation-90b0785f7f39

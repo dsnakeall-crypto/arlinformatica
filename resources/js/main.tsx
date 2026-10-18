@@ -10,7 +10,7 @@ import "../css/desktop-adaptive.css";
 import "../css/arl-ui-system.css";
 import "../css/action-icons.css";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Box, ClipboardList, LayoutDashboard, Plus, Settings, Users, Wallet, Phone, Menu, X, PackageSearch, Pin, LogOut, CircleDollarSign, Truck } from "lucide-react";
+import { Box, ClipboardList, LayoutDashboard, Plus, Settings, Users, Wallet, Phone, Menu, X, PackageSearch, Pin, LogOut, CircleDollarSign, Truck, Bell } from "lucide-react";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
 import { OrderPaymentFigures } from "./finance-refund-summary";
 import { connectCacheTabs, clearSessionCache } from './cache-requests';
@@ -48,6 +48,9 @@ import '../css/financeiro-gold-reference-20261015.css';
 import '../css/nova-os-gold-reference-20261015.css';
 import '../css/tabelas-topo-gold-refino-20261015.css';
 import '../css/arl-correcao-global-popups-settings-20261015.css';
+import '../css/arl-mobile-web-gold-visual-20261017.css';
+import '../css/arl-mobile-floating-bottom-nav-20261018.css';
+import '../css/arl-mobile-bell-matching-nav-20261018.css';
 
 function ClientForm({ onSaved, onCancel, client }: any) {
   const [data, setData] = useState<any>(client || emptyClient);
@@ -1547,6 +1550,7 @@ function NotificationBell({ go }: any) {
         onClick={() => setOpen(!open)}
       >
         <img className="arl-notification-official-icon" src="/arl-assets/bell-3d-gold-official-20261015.webp" alt="" decoding="async" />
+        <Bell className="arl-notification-mobile-bell-icon" aria-hidden="true" />
         {data.unread > 0 && <i>{data.unread}</i>}
       </button>
       {open && (
@@ -1927,17 +1931,23 @@ function AdminCatalogs({ role }: any) {
 
 function MobileBottomBar({ go, page, canFinance, canExpenses }: { go: (page: Page) => void; page: Page; canFinance: boolean; canExpenses: boolean }) {
   const viewportRef = useMobileNavViewport();
-  const destinations: { page: Page; title: string; Icon: typeof Wallet }[] = [
-    { page: 'dashboard', title: 'Painel', Icon: LayoutDashboard },
-    { page: 'clients', title: 'Clientes', Icon: Users },
-    { page: 'new', title: 'Abrir OS', Icon: Plus },
-    ...(canFinance ? [{ page: 'finance' as Page, title: 'Financeiro', Icon: Wallet }] : []),
-    ...(canExpenses ? [{ page: 'expense-control' as Page, title: 'Gestor de Gasto', Icon: CircleDollarSign }] : []),
+  // Sempre cinco posições visíveis. Recursos não permitidos ficam desabilitados.
+  // A segurança da rota no backend continua intocada.
+  const destinations: { page: Page; title: string; Icon: typeof Wallet; enabled: boolean }[] = [
+    { page: 'dashboard', title: 'Painel', Icon: LayoutDashboard, enabled: true },
+    { page: 'clients', title: 'Clientes', Icon: Users, enabled: true },
+    { page: 'new', title: 'Abrir OS', Icon: Plus, enabled: true },
+    { page: 'finance', title: 'Financeiro', Icon: Wallet, enabled: canFinance },
+    { page: 'expense-control', title: 'Gestor de Gasto', Icon: CircleDollarSign, enabled: canExpenses },
   ];
-  return <nav ref={viewportRef} className="arl-global-mobile-nav arl-mobile-icon-nav arl-mobile-five" aria-label="Navegação Mobile / Tablet" style={{ gridTemplateColumns: `repeat(${destinations.length}, minmax(0, 1fr))` }}>
-    {destinations.map(({ page: destination, title, Icon }) => <button key={destination} type="button" aria-label={title} title={title}
+  return <nav ref={viewportRef} className="arl-global-mobile-nav arl-mobile-icon-nav arl-mobile-five" aria-label="Navegação Mobile / Tablet" style={{ gridTemplateColumns: 'repeat(5, minmax(0, 1fr))' }}>
+    {destinations.map(({ page: destination, title, Icon, enabled }) => <button key={destination} type="button"
+      aria-label={enabled ? title : title + ' — indisponível para este perfil'}
+      title={enabled ? title : title + ' — indisponível para este perfil'}
+      disabled={!enabled}
       className={'arl-nav-reference-button ' + (destination === 'new' ? 'primary-shortcut' : page === destination ? 'active' : '')}
-      aria-current={page === destination ? 'page' : undefined} onClick={() => go(destination)}>
+      aria-current={page === destination ? 'page' : undefined}
+      onClick={() => { if (enabled) go(destination); }}>
       <span className="arl-nav-icon-disc" aria-hidden="true"><Icon /></span>
       <span className="arl-nav-caption">{title}</span>
     </button>)}
@@ -2063,6 +2073,14 @@ function App() {
   const [newOrderClient, setNewOrderClient] = useState<Client>();
   const [openingFallback, setOpeningFallback] = useState<{ id: number; url: string }>();
   const [mobileMenu, setMobileMenu] = useState(false);
+  // A gaveta fecha com animação de 420 ms. Não remontar os botões
+  // até a transição terminar, para impedir sobreposição no fechamento.
+  const [mobileDrawerClosed, setMobileDrawerClosed] = useState(true);
+  useEffect(() => {
+    if (mobileMenu) { setMobileDrawerClosed(false); return; }
+    const timer = window.setTimeout(() => setMobileDrawerClosed(true), 440);
+    return () => window.clearTimeout(timer);
+  }, [mobileMenu]);
   const mobileDrawerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelMobileDrawerClose = () => {
     if (mobileDrawerTimer.current !== null) clearTimeout(mobileDrawerTimer.current);
@@ -2494,7 +2512,8 @@ function App() {
           <NewOrder initialClient={newOrderClient} done={(id: number, fallback?: string) => { setOpeningFallback(fallback ? { id, url: fallback } : undefined); countersChanged(); go("orders", id); }} />
         )}
       </main>
-      {mobileLayout && !expenseWorkspace && mobileNavMode === 'bottom' &&
+      {/* Ocultar de verdade a barra inferior enquanto o menu lateral está aberto. */}
+      {mobileLayout && !expenseWorkspace && mobileNavMode === 'bottom' && !mobileMenu && mobileDrawerClosed &&
         <MobileBottomBar go={go} page={page} canFinance={canAdminister} canExpenses={canExpenses} />}
       <QuickEntry
         open={mobileQuickEntry}

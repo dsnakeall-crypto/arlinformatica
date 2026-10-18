@@ -30,7 +30,9 @@ export function useMobileNavViewport() {
       // Keep the layout-viewport bottom from before focus, compensating only for the keyboard.
       if (!editing && !keyboardWasVisible) baselineBottom = window.innerHeight;
       const obscured = Math.max(0, baselineBottom - visibleBottom);
-      const keyboardVisible = obscured >= 130 && (editing || keyboardWasVisible);
+      // Histerese: o teclado pode encolher abaixo de 130px antes de fechar.
+      // Continuar compensando enquanto houver obstrução; zerar apenas ao voltar a zero.
+      const keyboardVisible = (obscured >= 130 && (editing || keyboardWasVisible)) || (keyboardWasVisible && obscured > 0);
       keyboardWasVisible = keyboardVisible;
       set(element, '--arl-mobile-keyboard-offset', keyboardVisible ? obscured : 0);
       set(element, '--arl-mobile-nav-height', height);

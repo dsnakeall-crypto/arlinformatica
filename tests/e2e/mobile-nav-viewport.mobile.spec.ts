@@ -23,7 +23,7 @@ test('barra não acompanha o teclado iOS e retorna ao rodapé ao fechar', async 
     }, { height, offsetTop });
     await expect.poll(async () => nav.evaluate(element =>
       Number.parseFloat(element.style.getPropertyValue('--arl-mobile-keyboard-offset')),
-    )).toBe((baseline - height - offsetTop) >= 130 ? baseline - height - offsetTop : 0);
+    )).toBe(Math.max(0, baseline - height - offsetTop));
   }
   await page.evaluate(height => {
     Object.assign(window.visualViewport!, { height, offsetTop: 0 });

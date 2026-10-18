@@ -1,7 +1,0 @@
-READY
-{"status":201,"result":{"id":13,"replayed":false}}
-READY
-READY
-{"status":422,"message":"O valor deve ser positivo e n\u00e3o pode superar o saldo deste respons\u00e1vel na d\u00edvida selecionada."}
-statuses=[201,422] credit_one=5000
-PASS: independent users overlap, one payment, stale preview rejected, no overpayment.

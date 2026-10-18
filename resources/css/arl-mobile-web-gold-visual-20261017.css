@@ -1,0 +1,294 @@
+/*
+ * ARL Softwares — APENAS APARÊNCIA mobile espelhando a identidade WEB.
+ * 17/10/2026 — ponto de restauração: Backups/PONTO-RESTAURACAO-ANTES-IDENTIDADE-WEB-NO-MOBILE-20261017.
+ * ALTERAR SOMENTE: tintas, degradês, bordas, raios, sombras e tipografia cromática.
+ * NÃO alterar display/grid/position/width/height/padding/margin/transform/font-size,
+ * eventos, rotas, conteúdo, status, navegação, ícones, cálculos ou toque.
+ * O estilo do desktop não é tocado; temas Clean não são sobrescritos.
+ */
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace) {
+  --arl-mobile-web-ink:#27251f;
+  --arl-mobile-web-gold:#c89138;
+  --arl-mobile-web-edge:#e6d2af;
+  --arl-mobile-web-paper:#fffcf7;
+}
+/* Fundo e cabeçalhos: mesmos materiais perolados do web. */
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)>main {
+  background-color:#fbf8f2!important;
+  background-image:linear-gradient(135deg,#fffdf9,#f8f3ea 57%,#fffdfa)!important;
+  color:var(--arl-mobile-web-ink);
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)
+  :is(.arl-page-header,.page-header,.dashboard-list-head) {
+  border-color:#e7d5b8!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)
+  :is(.arl-page-header-icon,.dashboard-title-icon) {
+  color:#8b591e!important;
+  border-color:#e8bb75!important;
+  background:linear-gradient(140deg,#fffefa,#ffedc9 65%,#f3c77c)!important;
+  box-shadow:inset 0 1px #fff,0 3px 9px #9d6a2428!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)
+  :is(.arl-page-header h1,.title h1,.arl-page-header-title,.dashboard-page h2,
+      .orders-panel h2,.clients-list-panel h2,.services-page h2,.supplier-page h2,
+      .finance-page h2,.post-sale-workspace h2,.settings-form h2) {
+  color:#292821!important;
+}
+/* Cartões, tabelas, seções e painéis: apenas acabamento, SEM modificar a composição. */
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)>main
+  :is(.panel,.form-card,.orders-panel,.arl-mobile-order-card,.order-card,
+      .clients-list-panel,.arl-client-card,.clients-detail-panel,
+      .services-list-card,.services-create-card,.services-most-used,
+      .supplier-panel,.supplier-stats article,.supplier-detail-section,
+      .products-catalog-page .panel,.services-catalog-page .panel,
+      .finance-total-cards article,.finance-cards article,.finance-panel,
+      .arl-order-detail,.arl-od-services,.arl-3d-panel,
+      .post-sale-workspace,.post-sale-list-workspace,
+      .settings-form,.settings-subcard,.arl-settings-readonly,.arl-layout-settings) {
+  border-color:#ead6b7!important;
+  border-radius:17px!important;
+  background:linear-gradient(143deg,#fffefd 0%,#fffaf3 87%,#fcf4e8)!important;
+  box-shadow:0 7px 18px #8561331d,inset 0 1px #fff!important;
+}
+/* Campos e busca: sem mexer em alvos, medidas, posição ou comportamento. */
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)>main
+  :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  border-color:#dcc9ad!important;
+  border-radius:10px!important;
+  background-color:#fffdfa!important;
+  color:#302820;
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)>main
+  :is(input,select,textarea):focus-visible {
+  outline-color:#c89138!important;
+  box-shadow:0 0 0 2px #d9a64e36!important;
+}
+/* Padrão WEB de botões pretos/dourados, sem substituir ações de perigo, WhatsApp ou atalho vermelho +OS. */
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)>main
+  :is(.primary,.arl-page-header-actions button,.services-add,.supplier-primary,.new-order-button)
+  :not(.danger):not(.arl-order-delete):not(.order-whatsapp):not(.new-order-shortcut):not(:disabled) {
+  color:#ffda83!important;
+  border-color:#c7953c!important;
+  border-radius:12px!important;
+  background:linear-gradient(180deg,#3a342b,#0b0a09 76%,#22180c)!important;
+  box-shadow:inset 0 1px #ffe7a24a,0 5px 12px #7953263b!important;
+  text-shadow:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)>main
+  :is(.arl-settings-tab,.arl-document-subtab,.settings-system-tabs button,.finance-tabs button,
+      .orders-pagination button,.clients-pagination button,.services-toolbar button,
+      .supplier-tabs button):not(.active):not([aria-selected="true"]):not(:disabled) {
+  color:#543d21!important;
+  border-color:#e1c59b!important;
+  border-radius:11px!important;
+  background:linear-gradient(160deg,#fffefa,#faf0df)!important;
+  box-shadow:0 3px 8px #9b722a20,inset 0 1px #fff!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)>main
+  :is(.arl-settings-tab.active,.arl-document-subtab.active,.settings-system-tabs button.active,
+      .finance-tabs button.active,.supplier-tabs button.active) {
+  color:#ffdf8c!important;
+  border-color:#c7953c!important;
+  background:linear-gradient(180deg,#332e27,#100e0a 87%)!important;
+  box-shadow:0 5px 12px #89632935!important;
+}
+/* Barra inferior: mesmo acabamento web sem alterar espaçamento, posicionamento ou tamanho de ícones.
+   O botão vermelho principal e a cor dos ícones de ação continuam sob regras próprias. */
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  .arl-global-mobile-nav.arl-mobile-five {
+  border-color:#e0cba9!important;
+  background:linear-gradient(160deg,#fffefa,#fff7ec 67%,#f7ecda)!important;
+  box-shadow:0 10px 27px #6c4b2833,inset 0 2px #fff!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  .arl-global-mobile-nav.arl-mobile-five >button:not(.primary-shortcut) .arl-nav-icon-disc {
+  border-color:#ead3ab!important;
+  background:radial-gradient(circle at 35% 17%,#fff 14%,#fff8ea 53%,#f0dfc4)!important;
+  color:#654720!important;
+  box-shadow:inset 0 2px #fff,0 4px 9px #84603026!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  .arl-global-mobile-nav.arl-mobile-five >button:is(.active,[aria-current="page"]):not(.primary-shortcut) .arl-nav-icon-disc {
+  border-color:#bb8735!important;
+  background:radial-gradient(circle at 33% 16%,#ffefc3,#dfad4f 78%,#ba812c)!important;
+  color:#302314!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  .arl-global-mobile-nav.arl-mobile-five >button:not(.primary-shortcut) .arl-nav-caption {
+  color:#5d4d3b!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  .arl-global-mobile-nav.arl-mobile-five >button:is(.active,[aria-current="page"]):not(.primary-shortcut) .arl-nav-caption {
+  color:#86561e!important;
+}
+/* Menu lateral compacto — conservar todos os posicionamentos, ícones e marcação do estado ativo. */
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)
+  .arl-mobile-rail-drawer {
+  border-color:#e2caa4!important;
+  background:linear-gradient(150deg,#fffefa,#f9f0e2)!important;
+  box-shadow:0 12px 31px #73533232,inset 0 1px #fff!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-mobile:not(.arl-expense-workspace)
+  .arl-mobile-rail-drawer .arl-rail-brand {
+  color:#90601f!important;
+}
+/* ========= CONTROLE DE GASTOS MOBILE =========
+ * Reaplicar SOMENTE acabamentos da referência Web #expense-web-gold.
+ * Manter cards, retratos, tamanho das barras, botões verdes de pagar e '+' vermelho.
+ */
+html body .shell.layout-mobile.arl-expense-workspace {
+  background-color:#faf6ed!important;
+  background-image:linear-gradient(135deg,#fffefa 0%,#faf4e9 48%,#fffdf9 100%)!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only {
+  --cg-ref-ink:#29251f;
+  --cg-ref-blue:#ab7b2b;
+  --cg-ref-border:#e5c99f;
+  --cg-ref-muted:#7b7065;
+  --cg-gold:#c89138;
+  --cg-gold-dark:#815312;
+  color:#2c261f!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cgm-header h1,.cg-section-heading h2,.cg-panel h2,.cg-panel h3,.cgm-institution-heading h2) {
+  color:#29241f!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cg-eyebrow,.cgm-header .cg-eyebrow) {
+  color:#a16b27!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cgm-total,.cgm-person,.cgm-institution,.cgm-partials,.cg-panel,.cg-institution,
+      .cg-person-card,.cg-bank-list-row,.cg-invoice-card,.cg-payment-bank,.cgo-indicator,
+      .cgo-person,.cgo-month,.cg-projection-sections article,.cg-type-manager-mobile,
+      .cg-monthly-invoices,.cg-person-payment-group) {
+  border-color:#e6cda7!important;
+  background:linear-gradient(145deg,#fffefd 0%,#fff9ee 82%,#fbf1e1)!important;
+  box-shadow:0 7px 17px #91682f25,inset 0 1px #fff!important;
+  color:#34291c!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cgm-total>strong,.cgm-person>strong,.cgm-institution-amount,
+      .cgm-split b,.cgm-person-paid b,.cg-institution h3,.cgo-original) {
+  color:#32271a!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cgm-total small,.cgm-total dt,.cgm-person>small,.cgm-person-paid,
+      .cgm-split>span,.cgm-note,.cg-muted,.cgm-institution-heading small) {
+  color:#74695e!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cgm-person[aria-pressed="true"],.cg-tabs button.active,.cg-tabs button[aria-selected="true"]) {
+  border-color:#c88d35!important;
+  box-shadow:inset 0 1px #fff,0 0 0 1px #d1a35a,0 5px 12px #ad792437!important;
+}
+/* Barras e abas: manter lista horizontal e conteúdo, recolorir apenas estados. */
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cg-navigation,.cg-subnav,.cg-filters,.cg-history-filters,.cg-view-bar) {
+  border-color:#e7d4b3!important;
+  background-color:#fff9f0!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cg-tabs button,.arl-expense-subnav button,.cg-month-trigger,.cg-create-action:not(.primary),
+      .cg-pagination button,.cg-view-toggle button,.cg-back,.cg-actions button):not(:disabled) {
+  border-color:#e0c197!important;
+  background:linear-gradient(150deg,#fffefa,#f9eedb)!important;
+  color:#57401f!important;
+  box-shadow:0 3px 8px #9768291b,inset 0 1px #fff!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cg-tabs button.active,.cg-tabs button[aria-selected="true"],
+      .cg-create-action.primary,.cg-primary):not(:disabled) {
+  border-color:#cf9c46!important;
+  background:linear-gradient(180deg,#3a342b,#0b0a09 84%)!important;
+  color:#ffdc83!important;
+  box-shadow:0 5px 11px #76502842,inset 0 1px #fff2!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cg-tabs button.active,.cg-tabs button[aria-selected="true"]) svg {
+  color:#ffdb84!important;
+}
+/* Cadastro e filtros: o mesmo acabamento creme da web; sem interferir em checkbox ou seleção. */
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cg-form input:not([type="checkbox"]):not([type="radio"]),.cg-form select,.cg-form textarea,
+      .cg-filters input,.cg-filters select,.cg-search input,.cg-history-filters input) {
+  border-color:#dfc9a9!important;
+  border-radius:10px!important;
+  background-color:#fffdfa!important;
+  color:#29231b!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(input,select,textarea):focus-visible {
+  outline-color:#c99646!important;
+}
+/* Cabeçalho, escolha do mês e cadastrar instituição: preto e dourado, mas não os botões de pagamento. */
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.arl-expense-own-header>button,.cgm-header-actions .cg-month-compact>button:not(:disabled),
+      .cg-institution-register-heading>button,.cg-type-manager-mobile .cg-section-heading>button) {
+  border-color:#d2a66b!important;
+  color:#493117!important;
+  background:linear-gradient(155deg,#fffefb,#f8ead1)!important;
+  box-shadow:inset 0 1px #fff,0 5px 11px #8657222f!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.arl-expense-own-header>button,.cgm-header-actions .cg-month-compact>button) svg {
+  color:#8a5c22!important;
+}
+/* Barra inferior Gastos: revestimento WEB, sem alterar sua geometria ou '+' vermelho. */
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .arl-expense-bottom.arl-expense-matched {
+  border-color:#e6cca2!important;
+  background:linear-gradient(145deg,#fffefa,#fff6e8 84%,#f5e9d7)!important;
+  box-shadow:0 12px 27px #74532a34,inset 0 2px #fff!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .arl-expense-bottom.arl-expense-matched>button:not(.arl-expense-add) .arl-nav-icon-disc {
+  border-color:#e4c89d!important;
+  background:radial-gradient(circle at 35% 17%,#fff,#fffaed 50%,#edddbf)!important;
+  color:#654820!important;
+  box-shadow:inset 0 2px #fff,0 5px 10px #73502d23!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .arl-expense-bottom.arl-expense-matched>button[aria-current="page"]:not(.arl-expense-add) .arl-nav-icon-disc {
+  border-color:#c18c3d!important;
+  background:radial-gradient(circle at 33% 15%,#ffeec5,#edc478 58%,#c99846)!important;
+  color:#3d2e1a!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .arl-expense-bottom.arl-expense-matched>button:not(.arl-expense-add) .arl-nav-caption {
+  color:#66513a!important;
+}
+/* Não sobrescrever estilos semânticos: vermelho para dívidas/vencimentos,
+ * verde para pagamento, status das OS, alertas, WhatsApp e botão central vermelho. */
+
+/* Legendas azuis herdadas dos cards mobile: harmonização com o texto dourado/escuro da WEB.
+   Preserva o vermelho de vencidos, o verde do pagamento e os avatares. */
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  :is(.cgo-card-heading,.cgo-person h3,.cgo-person dt,.cgo-person dd:not(.cgo-paid),
+      .cgo-person dl .cgo-total-row dt,.cgo-card-content .cgo-original) {
+  color:#35291d!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .cgo-person header small {
+  color:#a16d2f!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .cgo-person header {
+  border-color:#e7d1ae!important;
+  background:linear-gradient(155deg,#fffefa,#f9efdE)!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .cgo-person dl {
+  border-color:#e9d8b9!important;
+  background:linear-gradient(155deg,#fffefa,#fdf7eb)!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .cgo-person dl>div {
+  border-color:#f0e2cc!important;
+}
+html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .cgo-month .cgo-icon {
+  background:linear-gradient(145deg,#fffcf6,#fce4ba)!important;
+  color:#a06a1e!important;
+}
