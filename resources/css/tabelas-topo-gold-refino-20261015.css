@@ -1,0 +1,31 @@
+/* RESTAURACAO ISOLADA: Painel e Ordens voltaram ao visual da rodada anterior.
+   Este arquivo foi reduzido para conter SOMENTE refinamentos aprovados em
+   outros setores. NENHUMA regra de tabela/cabecalho/fundo/acoes de Painel
+   ou Ordens deve ser reintroduzida aqui.
+   Financeiro e Nova OS tem folhas independentes e foram preservados. */
+
+/* Remover banner de baixa definicao apenas de Clientes/Servicos/Produtos/Fornecedores.
+   Painel e Ordens voltam a usar exatamente suas folhas CSS anteriores. */
+html[data-arl-appearance="original"] body .shell.layout-desktop
+> main:has(:is(.clients-react-page,.services-page,.supplier-page))::before {
+  display:none!important;
+  content:none!important;
+  background-image:none!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop
+> main:has(:is(.clients-react-page,.services-page,.supplier-page)){
+  background-image:linear-gradient(132deg,#fffdfa,#faf7f1 64%,#fffdfa)!important;
+}
+
+/* Complemento aprovado para Garantia Adicional em Servicos e Produtos:
+   reduz somente a fonte dentro dos campos compactos, sem mexer nos cards. */
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page
+.services-warranty-row>.services-field :is(input,select){
+  font-size:11px!important;
+  line-height:1.2!important;
+}
+html[data-arl-appearance="original"] body .shell.layout-desktop .services-page
+.services-warranty-row>.services-field select{
+  padding-right:16px!important;
+  padding-left:6px!important;
+}

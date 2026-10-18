@@ -670,14 +670,19 @@ export function FinancePage({ role, openOrder, mobile = false }: any) {
           <div className="finance-month-items">
             <h2>Serviços e produtos</h2>
             {month?.items?.length ? (
-              month.items.map((i: any) => (
-                <p key={i.description}>
-                  {i.description}: {i.quantity} · {money(i.total_cents)}
-                </p>
-              ))
-            ) : (
-              <p>Nenhum item vinculado.</p>
-            )}
+  <div className="finance-month-table-scroll">
+    <table className="finance-month-table">
+      <thead><tr><th>Descrição</th><th>Quantidade</th><th>Valor total</th></tr></thead>
+      <tbody>{month.items.map((i: any) => (
+        <tr key={i.description}>
+          <td>{i.description}</td><td>{i.quantity}</td><td>{money(i.total_cents)}</td>
+        </tr>
+      ))}</tbody>
+    </table>
+  </div>
+) : (
+  <p>Nenhum item vinculado.</p>
+)}
           </div>
         </section>
       )}

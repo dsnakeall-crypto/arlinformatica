@@ -72,8 +72,8 @@ test('Gestão de Clientes pagina e pesquisa no servidor, ordena e preserva os í
 
   await page.getByLabel('Ordenar clientes').selectOption('id');
   await expect(rows.nth(0)).toContainText('Ordena E2E Zulu');
-  await expect(rows.nth(0)).toContainText(`Cliente Nº ${zulu.body.id}`);
-  await expect(rows.nth(1)).toContainText(`Cliente Nº ${alpha.body.id}`);
+  await expect(rows.nth(0).locator('.clients-id')).toHaveText(`#${zulu.body.id}`);
+  await expect(rows.nth(1).locator('.clients-id')).toHaveText(`#${alpha.body.id}`);
   expect(clientGets.some(value => value.includes('all=1'))).toBe(false);
 
   await search.fill('35988882222');
@@ -87,16 +87,13 @@ test('Gestão de Clientes pagina e pesquisa no servidor, ordena e preserva os í
   expect(actionSources).toEqual([
     '/arl-assets/icons/icon-whatsapp.png',
     '/arl-assets/icons/icon-maps.png',
+    '/arl-assets/icons/icon-web-eye-compact-2x.png',
     '/arl-assets/icons/icon-editar.png',
     '/arl-assets/icons/icon-lixeira.png',
   ]);
   const eye=rows.first().getByRole('button', { name: 'Visualizar' });
   await expect(eye).toBeVisible();
-  if (await page.locator('html').getAttribute('data-arl-appearance') === 'clean') {
-    expect(await eye.evaluate(el=>getComputedStyle(el).backgroundImage)).toContain('icon-web-eye-compact-2x.png');
-  } else {
-    await expect(eye.locator('svg.lucide-eye')).toBeVisible();
-  }
+  await expect(eye.locator('img[src="/arl-assets/icons/icon-web-eye-compact-2x.png"]')).toBeVisible();
 
   await search.fill('Pagina E2E');
   await expect(rows).toHaveCount(12);
@@ -105,7 +102,7 @@ test('Gestão de Clientes pagina e pesquisa no servidor, ordena e preserva os í
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText('Pagina E2E 13');
 
-  await page.getByLabel('Clientes por página').selectOption('30');
+  await page.getByLabel('Clientes por página', { exact: true }).selectOption('30');
   await expect(rows).toHaveCount(13);
   await expect(page.getByText('Página 1 de 1', { exact: true })).toBeVisible();
 

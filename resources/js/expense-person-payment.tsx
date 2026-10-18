@@ -7,12 +7,14 @@ import { expenseRequestId } from './expense-browser-crypto';
 import { centsFromMoneyInput, maskMoneyInput } from './money-input';
 import ExpensePaymentButton from './expense-payment-button';
 import ExpenseInstitutionSettlement from './expense-institution-settlement';
+import { pendingTotalInCents } from './expense-quick-payment-total';
 
 type Target = 'one' | 'two';
 type Action = 'month' | 'partial' | 'total';
 type Debt = { id: number; name: string; institution_id: number; institution_name: string; type_id: number; type_name: string; recurrence: string; responsibility: string; remaining_cents: number; month_remaining_cents: number };
 type Plan = { name: string; target: Target; action: Action; recurrence: string; balance_cents: number; total_cents: number; remaining_cents: number; preview_hash: string; allocations: { id: number; number: number; due_on: string; amount_cents: number; remaining_cents: number }[] };
-const money = (value = 0) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value / 100);
+const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const money = (value = 0) => currencyFormatter.format(value / 100);
 const today = () => new Date().toLocaleDateString('sv-SE');
 const date = (value: string) => value.slice(0, 10).split('-').reverse().join('/');
 const actions: Record<Action, string> = { month: 'Quitar a fatura do mês', partial: 'Pagar parte da fatura do mês', total: 'Quitar a dívida inteira' };
@@ -97,6 +99,10 @@ export default function ExpensePersonPayment({ target, scope, month, config, bus
             {rows.map(debt => <button type="button" className="cg-person-debt-choice" key={debt.id} onClick={() => choose(debt)} disabled={loading}>
               <span><b>{debt.name}</b><small>{debt.type_name} · {debt.responsibility === 'shared' ? 'Sua parte do casal no mês' : 'Dívida pessoal no mês'}</small></span><strong>{money(debt.month_remaining_cents)}</strong>
             </button>)}
+            <div className="cg-person-payment-group-total" data-testid="cg-group-total" data-institution-group={key}>
+              <span>Total que falta pagar</span>
+              <strong>{money(pendingTotalInCents(rows))}</strong>
+            </div>
           </section>)}
           {!loading && !error && debts.length === 0 && <p>Nenhuma dívida pendente deste responsável.</p>}
           {!loading && error && <button type="button" onClick={() => setReload(n => n + 1)}>Tentar novamente</button>}

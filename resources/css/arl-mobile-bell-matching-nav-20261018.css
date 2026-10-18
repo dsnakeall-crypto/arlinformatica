@@ -1,0 +1,82 @@
+/* ARL Informática • apenas MOBILE • sino no padrão dos círculos flutuantes.
+ * O ícone Web oficial não foi substituído no desktop.
+ * O sino e o contador de não lidas continuam no mesmo botão React.
+ * Sem alterar cabeçalho, posições, rotas, alertas e lógica de notificações.
+ */
+.arl-notification-mobile-bell-icon { display:none; }
+@media (max-width:1024px) {
+ html body .shell.layout-mobile:not(.arl-expense-workspace)
+  .notification-wrap>.bell {
+    position:relative!important;
+    display:grid!important;
+    place-items:center!important;
+    isolation:isolate!important;
+    box-sizing:border-box!important;
+    width:44px!important; min-width:44px!important;
+    height:44px!important; min-height:44px!important;
+    margin:0!important; padding:0!important;
+    border:0!important; border-radius:50%!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    color:#7d5426!important;
+    overflow:visible!important;
+    cursor:pointer;
+  }
+ html body .shell.layout-mobile:not(.arl-expense-workspace)
+  .notification-wrap>.bell::before {
+    content:"";
+    position:absolute;
+    z-index:0;
+    inset:3px;
+    pointer-events:none;
+    box-sizing:border-box;
+    border:1px solid #dab781!important;
+    border-radius:50%;
+    background:radial-gradient(circle at 34% 15%, #fff 7%, #fff9e7 43%, #eed09c 100%)!important;
+    box-shadow:inset 0 1px #fff, 0 3px 9px #916a3450!important;
+  }
+ html body .shell.layout-mobile:not(.arl-expense-workspace)
+  .bell>.arl-notification-official-icon {
+    display:none!important;
+  }
+ html body .shell.layout-mobile:not(.arl-expense-workspace)
+  .notification-wrap>.bell>.arl-notification-mobile-bell-icon {
+    position:relative!important;
+    z-index:1!important;
+    display:block!important;
+    box-sizing:border-box!important;
+    width:20px!important;
+    height:20px!important;
+    stroke:#876028!important;
+    stroke-width:2!important;
+    fill:none!important;
+    filter:drop-shadow(0 1px #ffffff91);
+  }
+ html body .shell.layout-mobile:not(.arl-expense-workspace)
+  .notification-wrap>.bell>i {
+    z-index:2!important;
+    top:-1px!important;right:-2px!important;
+    min-width:17px!important;min-height:17px!important;
+    display:grid!important;
+    place-items:center!important;
+    padding:2px 4px!important;
+    box-sizing:border-box;
+    border:1px solid #fff9ea!important;
+    border-radius:99px!important;
+    background:#cf153b!important;
+    color:#fff!important;
+    box-shadow:0 2px 5px #81122e53!important;
+    font-size:10px!important;
+    font-style:normal;
+  }
+ html body .shell.layout-mobile:not(.arl-expense-workspace)
+  .notification-wrap>.bell:focus-visible {
+    outline:2px solid #c39443!important;
+    outline-offset:1px!important;
+  }
+ html body .shell.layout-mobile:not(.arl-expense-workspace)
+  .notification-wrap>.bell:active::before {
+    filter:brightness(.97);
+    box-shadow:inset 0 2px 4px #9875412c,0 1px 4px #916a343f!important;
+  }
+}

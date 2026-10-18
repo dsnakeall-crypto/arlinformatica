@@ -1,3 +1,4 @@
+import { appAlert } from "./app-native-dialog";
 import { reactPageActive, reactOwnedSelector } from './react-ownership';
 export {};
 
@@ -145,7 +146,7 @@ function installFetchWorkflow() {
     if (!reactDetail && statusMatch && method === 'PATCH' && !response.ok && typeof init?.body === 'string') {
       const payload = JSON.parse(init.body || '{}');
       if (payload.status === 'paid') {
-        void response.clone().json().then((body) => alert(body?.message || 'Não foi possível marcar a OS como paga.')).catch(() => undefined);
+        void response.clone().json().then((body) => void appAlert(body?.message || 'Não foi possível marcar a OS como paga.')).catch(() => undefined);
       }
     }
 

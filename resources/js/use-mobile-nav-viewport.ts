@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 
-/** Fixed coordinates belong to the layout viewport; keep the bar in its visible part. */
+/** Keep the bottom bar anchored to the screen, never riding above the virtual keyboard. */
 export function useMobileNavViewport() {
   const ref = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
@@ -9,6 +9,8 @@ export function useMobileNavViewport() {
     const shell = element.closest<HTMLElement>('.shell');
     const viewport = window.visualViewport;
     let frame = 0;
+    let baselineBottom = window.innerHeight;
+    let keyboardWasVisible = false;
     const set = (target: HTMLElement, name: string, value: number) => {
       const css = value + 'px';
       if (target.style.getPropertyValue(name) !== css) target.style.setProperty(name, css);
@@ -19,7 +21,20 @@ export function useMobileNavViewport() {
       const visibleBottom = (viewport?.offsetTop ?? 0) + visibleHeight;
       const height = element.getBoundingClientRect().height;
       if (visibleHeight <= 0 || height <= 0 || !Number.isFinite(visibleBottom)) return;
-      set(element, '--arl-mobile-visible-bottom', visibleBottom);
+
+      const active = document.activeElement;
+      const editing = active instanceof HTMLElement && active.matches(
+        'input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="button"]):not([type="submit"]), textarea, select, [contenteditable="true"]',
+      );
+      // iOS Safari moves fixed footers up with the visual viewport when its keyboard opens.
+      // Keep the layout-viewport bottom from before focus, compensating only for the keyboard.
+      if (!editing && !keyboardWasVisible) baselineBottom = window.innerHeight;
+      const obscured = Math.max(0, baselineBottom - visibleBottom);
+      // Histerese: o teclado pode encolher abaixo de 130px antes de fechar.
+      // Continuar compensando enquanto houver obstrução; zerar apenas ao voltar a zero.
+      const keyboardVisible = (obscured >= 130 && (editing || keyboardWasVisible)) || (keyboardWasVisible && obscured > 0);
+      keyboardWasVisible = keyboardVisible;
+      set(element, '--arl-mobile-keyboard-offset', keyboardVisible ? obscured : 0);
       set(element, '--arl-mobile-nav-height', height);
       if (shell) set(shell, '--arl-mobile-nav-clearance', height + 12);
     };
@@ -32,6 +47,8 @@ export function useMobileNavViewport() {
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('pageshow', schedule);
     document.addEventListener('visibilitychange', schedule);
+    document.addEventListener('focusin', schedule);
+    document.addEventListener('focusout', schedule);
     update();
     return () => {
       cancelAnimationFrame(frame);
@@ -42,6 +59,9 @@ export function useMobileNavViewport() {
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('pageshow', schedule);
       document.removeEventListener('visibilitychange', schedule);
+      document.removeEventListener('focusin', schedule);
+      document.removeEventListener('focusout', schedule);
+      element.style.removeProperty('--arl-mobile-keyboard-offset');
       shell?.style.removeProperty('--arl-mobile-nav-clearance');
     };
   }, []);

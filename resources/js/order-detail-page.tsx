@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import OrderDetailReact from './order-detail-react';
 import UnifiedOrderEditor from './order-editor-unified';
+import { appConfirm } from './app-native-dialog';
 
 type Props = { authenticatedRole: string; onCountersChanged?: () => void; initialAction?: 'edit' | 'reopen'; id: number; back: () => void; readOnly?: boolean; onDirtyChange?: (dirty: boolean) => void; onOpenClientHistory?: (clientId: number) => void };
 
@@ -25,6 +26,7 @@ function cleanupDetachedOrderArtifacts() {
 
 export default function OrderDetailPage(props: Props) {
   const [editorOpen, setEditorOpen] = useState(false);
+  const navigationApproved = useRef(false);
   const [detailRevision, setDetailRevision] = useState(0);
   const [editorDirty, setEditorDirty] = useState(false);
   const [detailDirty, setDetailDirty] = useState(false);
@@ -58,26 +60,35 @@ export default function OrderDetailPage(props: Props) {
     if (!hasUnsavedChanges) return;
     const guardSidebarNavigation = (event: MouseEvent) => {
       const target = event.target;
-      if (!(target instanceof Element) || !target.closest('aside button')) return;
-      if (window.confirm(UNSAVED_MESSAGE)) return;
+      const button = target instanceof Element ? target.closest<HTMLButtonElement>('aside button') : null;
+      if (!button) return;
+      if (navigationApproved.current) { navigationApproved.current = false; return; }
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
+      void appConfirm(UNSAVED_MESSAGE).then((allowed) => {
+        if (!allowed || !button.isConnected) return;
+        navigationApproved.current = true;
+        setEditorDirty(false);
+        setDetailDirty(false);
+        props.onDirtyChange?.(false);
+        button.click();
+      });
     };
     document.addEventListener('click', guardSidebarNavigation, true);
     return () => document.removeEventListener('click', guardSidebarNavigation, true);
   }, [hasUnsavedChanges]);
 
-  const guardBack = () => {
-    if (hasUnsavedChanges && !window.confirm(UNSAVED_MESSAGE)) return;
+  const guardBack = async () => {
+    if (hasUnsavedChanges && !(await appConfirm(UNSAVED_MESSAGE))) return;
     setEditorDirty(false);
     setDetailDirty(false);
     props.onDirtyChange?.(false);
     props.back();
   };
 
-  const openEditor = useCallback(() => {
-    if (detailDirty && !window.confirm(UNSAVED_MESSAGE)) return;
+  const openEditor = useCallback(async () => {
+    if (detailDirty && !(await appConfirm(UNSAVED_MESSAGE))) return;
     if (detailDirty) setDetailRevision((current) => current + 1);
     setDetailDirty(false);
     setEditorOpen(true);

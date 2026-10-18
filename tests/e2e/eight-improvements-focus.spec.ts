@@ -6,7 +6,7 @@ test('foco: campos e status mantêm indicação de teclado suave e erros reais v
   await page.goto('/new');
   const equipmentInput = page.getByLabel('Equipamento *');
   await equipmentInput.focus();
-  await expect.poll(() => equipmentInput.evaluate(element => getComputedStyle(element).borderColor)).toBe('rgb(121, 137, 156)');
+  await expect.poll(() => equipmentInput.evaluate(element => getComputedStyle(element).borderColor)).toBe('rgb(200, 147, 59)');
   await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
   expect(await equipmentInput.evaluate(element => parseFloat(getComputedStyle(element).outlineWidth))).toBeGreaterThanOrEqual(2);
   const stamp = Date.now();

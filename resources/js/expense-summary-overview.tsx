@@ -8,7 +8,8 @@ type Totals = Record<string, number | string | null | undefined>;
 type Person = { id: number; name: string };
 export type SummaryScope = 'month' | 'one' | 'two' | 'shared';
 export type NextDue = { name?: string; institution_name?: string; due_on?: string; remaining_cents?: number; amount_cents?: number; number?: number } | undefined;
-const money = (value: unknown = 0) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0) / 100);
+const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const money = (value: unknown = 0) => currencyFormatter.format(Number(value || 0) / 100);
 const cents = (totals: Totals, key: string) => Number(totals[key] || 0);
 const date = (value: unknown) => typeof value === 'string' && value ? value.slice(0, 10).split('-').reverse().join('/') : '';
 

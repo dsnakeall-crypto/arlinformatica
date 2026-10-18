@@ -335,13 +335,15 @@ function CatalogPage({ kind }: { kind: CatalogKind }) {
         <label className="services-search"><Search aria-hidden="true" /><input aria-label={`Pesquisar ${plural}`} type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Pesquisar ${singular}`} /></label>
       </div>
 
+      {product && <div className="services-table-head" aria-hidden="true"><span>PRODUTO</span><span>STATUS</span><span>PREÇO</span><span>ESTOQUE</span><span>USO EM OS</span><span>AÇÕES</span></div>}
       {loading ? <div className="services-empty">Carregando catálogo…</div> : !visible.length ? <div className="services-empty">Nenhum item encontrado para esta pesquisa.</div> : <div className="services-list" data-testid="services-list">
         {visible.map((item) => <article className={`services-row${item.active ? '' : ' inactive'}`} key={item.id}>
           <span className={`services-type-icon ${product ? 'product' : 'service'}`}><TypeIcon category={product ? 'product' : 'service'} /></span>
           <div className="services-row-main">
             <b>{item.name}</b>
-            <small><span className={`services-state ${item.active ? 'active' : 'inactive'}`}>{item.active ? 'Ativo' : 'Inativo'}</span> · {item.free_price ? 'Preço livre' : money(item.price_cents)} · {product ? `Produto · Estoque: ${item.stock_quantity}` : 'Serviço'}{product && item.stock_quantity === 1 ? ' · Última unidade em estoque' : ''}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ''}</small>
+            <small>{!product && <><span className={`services-state ${item.active ? 'active' : 'inactive'}`}>{item.active ? 'Ativo' : 'Inativo'}</span> · {item.free_price ? 'Preço livre' : money(item.price_cents)} · </>}{product ? `Produto · Estoque: ${item.stock_quantity}` : 'Serviço'}{product && item.stock_quantity === 1 ? ' · Última unidade em estoque' : ''}{item.warranty_enabled ? ` · Garantia ${item.warranty_term} ${unitLabel(item.warranty_unit)}` : ''}</small>
           </div>
+          {product && <><span className={"services-col-status " + (item.active ? "active" : "inactive")}>{item.active ? "Ativo" : "Inativo"}</span><span className="services-col-price">{item.free_price ? "Preço livre" : money(item.price_cents)}</span><span className="services-col-stock">{item.stock_quantity}</span></>}
           <span className="services-usage"><b>{usage(item)}</b><small>uso em OS</small></span>
           <div className="services-row-actions">
             {product && <button type="button" className="services-stock-entry" onClick={() => setStockEntry({ item, quantity: 1, reason: '', origin: 'unspecified', cost: '', supplier_id: '', request_key: crypto.randomUUID() })}><PackagePlus aria-hidden="true" />Entrada de estoque</button>}

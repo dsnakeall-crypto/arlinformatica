@@ -4,7 +4,8 @@ import OrderPopup from './order-popup';
 import { expenseControlApi as api } from './expense-control-api';
 import { projectStatement, type StatementResponse } from './expense-statement-data';
 
-const money = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value / 100);
+const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const money = (value: number) => currencyFormatter.format(value / 100);
 
 /** Leitura do mês selecionado; inclui somente a participação do responsável. */
 export default function ExpensePersonMonthSummary({ target, name, month, onClose }: {

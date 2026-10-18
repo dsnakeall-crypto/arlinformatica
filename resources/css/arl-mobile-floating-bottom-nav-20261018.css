@@ -1,0 +1,352 @@
+/* ARL Informática — menu inferior flutuante, aprovado como direção visual 18/10/2026.
+ * APENAS estética, geometria compacta do dock e cor do menu lateral.
+ * Cinco destinos, handlers, status, gestos, permissões e fluxo permanecem em React.
+ * Desktop intocado; botão de Abrir OS / Adicionar permanece vermelho.
+ * Para desfazer: remover somente a importação deste arquivo de main.tsx.
+ */
+@media (max-width: 1024px) {
+  /* Dock invisível: os cinco alvos continuam FIXOS embaixo, apenas
+     os círculos com sombras parecem flutuar acima da tela. */
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five {
+    --nav-disc:clamp(34px,9.3vw,39px);
+    --nav-disc-feature:clamp(49px,13vw,54px);
+    position:fixed!important;
+    top:auto!important;
+    bottom:0!important;
+    left:max(6px,env(safe-area-inset-left,0px))!important;
+    right:max(6px,env(safe-area-inset-right,0px))!important;
+    width:calc(100% - 12px)!important;
+    max-width:410px!important;
+    padding:1px 4px calc(2px + env(safe-area-inset-bottom,0px))!important;
+    gap:0!important;
+    align-items:end!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    background-color:transparent!important;
+    box-shadow:none!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+    overflow:visible!important;
+    pointer-events:none;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five >button {
+    min-width:0!important;
+    min-height:59px!important;
+    padding:3px 1px 1px!important;
+    margin:0!important;
+    gap:2px!important;
+    border:0!important;
+    border-radius:14px!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    pointer-events:auto;
+    transform:none!important;
+    color:#4c3a25!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five .arl-nav-icon-disc {
+    width:var(--nav-disc)!important;
+    height:var(--nav-disc)!important;
+    border-width:1px!important;
+    border-style:solid!important;
+    border-radius:50%!important;
+    box-sizing:border-box!important;
+    transition:box-shadow .14s ease,filter .14s ease!important;
+    transform:none!important;
+  }
+  /* Cada função com cor própria, mantendo mesma posição e mesmo rótulo. */
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five >button:nth-child(1) .arl-nav-icon-disc {
+    color:#85551c!important;border-color:#d4a655!important;
+    background:radial-gradient(circle at 34% 15%,#fffefa 9%,#f8d78b 57%,#dba74b)!important;
+    box-shadow:inset 0 2px #fff9,0 3px 10px #a16b2850!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five >button:nth-child(2) .arl-nav-icon-disc {
+    color:#405b78!important;border-color:#b8c6d2!important;
+    background:radial-gradient(circle at 34% 15%,#fff 9%,#e2eaf2 55%,#adbecd)!important;
+    box-shadow:inset 0 2px #fff,0 3px 10px #435f7940!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five >button:nth-child(4) .arl-nav-icon-disc {
+    color:#815a2f!important;border-color:#d2b38b!important;
+    background:radial-gradient(circle at 34% 15%,#fff 9%,#f5e6ca 54%,#cfa874)!important;
+    box-shadow:inset 0 2px #fff,0 3px 10px #986a3e4a!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five >button:nth-child(5) .arl-nav-icon-disc {
+    color:#377366!important;border-color:#a1c8b9!important;
+    background:radial-gradient(circle at 34% 15%,#fff 9%,#e0f2eb 54%,#a6cebd)!important;
+    box-shadow:inset 0 2px #fff,0 3px 10px #47736343!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five >button.primary-shortcut .arl-nav-icon-disc {
+    width:var(--nav-disc-feature)!important;
+    height:var(--nav-disc-feature)!important;
+    border-color:#ae122e!important;
+    background:radial-gradient(circle at 33% 14%,#ff9aac -17%,#ff4163 26%,#e90035 66%,#9c0026 100%)!important;
+    color:#fff!important;
+    box-shadow:inset 0 2px #ffb7c2a6,0 5px 13px #a3003269,0 1px 3px #67001b50!important;
+    transform:translateY(-4px)!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five >button .arl-nav-caption {
+    font-size:clamp(8px,2.45vw,10px)!important;
+    min-height:17px!important;
+    line-height:1.12!important;
+    font-weight:800!important;
+    color:#554332!important;
+    text-shadow:0 1px #fff!important;
+    white-space:normal!important;
+    overflow-wrap:normal!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five >button.primary-shortcut .arl-nav-caption {color:#ba0530!important}
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five >button:is(.active,[aria-current="page"]):not(.primary-shortcut) .arl-nav-icon-disc {
+    outline:2px solid #ae8138!important;outline-offset:1px!important;
+    filter:saturate(1.2)!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five >button:focus-visible {
+    outline:2px solid #b88837!important;
+    outline-offset:-1px!important;
+  }
+  /* GASTOS PESSOAIS — segue o mesmo padrão flutuante sem mudar de aba/função. */
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched {
+    position:fixed!important;top:auto!important;bottom:0!important;
+    left:max(6px,env(safe-area-inset-left,0px))!important;
+    right:max(6px,env(safe-area-inset-right,0px))!important;
+    width:calc(100% - 12px)!important;max-width:410px!important;
+    margin:0 auto!important;
+    padding:1px 4px calc(2px + env(safe-area-inset-bottom,0px))!important;
+    gap:0!important;align-items:end!important;
+    border:0!important;border-radius:0!important;
+    background:transparent!important;box-shadow:none!important;
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+    overflow:visible!important;pointer-events:none;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button {
+    min-height:59px!important;min-width:0!important;
+    margin:0!important;padding:3px 1px 1px!important;gap:2px!important;
+    border:0!important;border-radius:14px!important;
+    background:transparent!important;box-shadow:none!important;
+    transform:none!important;pointer-events:auto;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button .arl-nav-icon-disc {
+    width:clamp(34px,9.3vw,39px)!important;height:clamp(34px,9.3vw,39px)!important;
+    box-sizing:border-box!important;border:1px solid #d6bb8e!important;
+    border-radius:50%!important;
+    background:radial-gradient(circle at 34% 15%,#fff,#f5e9d0 57%,#dfbd83)!important;
+    color:#735322!important;
+    box-shadow:inset 0 2px #fff,0 3px 10px #8661324d!important;
+    transform:none!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button:nth-child(2) .arl-nav-icon-disc {
+    background:radial-gradient(circle at 34% 15%,#fff,#e5edf5 54%,#aebfcf)!important;
+    border-color:#afc1d2!important;color:#4f647b!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button:nth-child(4) .arl-nav-icon-disc {
+    background:radial-gradient(circle at 34% 15%,#fff,#e2f1ee 54%,#a8c8c4)!important;
+    border-color:#a3c8c0!important;color:#3e726d!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button:nth-child(5) .arl-nav-icon-disc {
+    background:radial-gradient(circle at 34% 15%,#fff,#f5e2cf 54%,#d4ad88)!important;
+    border-color:#d6aa82!important;color:#8f5629!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button.arl-expense-add .arl-nav-icon-disc {
+    width:clamp(49px,13vw,54px)!important;height:clamp(49px,13vw,54px)!important;
+    background:radial-gradient(circle at 33% 14%,#ff99a7,#ff4163 30%,#e70036 67%,#990022)!important;
+    color:#fff!important;border-color:#b80b34!important;
+    box-shadow:inset 0 2px #ffc4cca1,0 5px 13px #ad053955!important;
+    transform:translateY(-4px)!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button .arl-nav-caption {
+    font-size:clamp(8px,2.45vw,10px)!important;
+    line-height:1.12!important;min-height:17px!important;
+    font-weight:800!important;color:#58452e!important;
+    text-shadow:0 1px #fff!important;white-space:normal!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button.arl-expense-add .arl-nav-caption {color:#b70a31!important}
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button[aria-current="page"]:not(.arl-expense-add) .arl-nav-icon-disc {
+    outline:2px solid #aa853e!important;outline-offset:1px!important;
+  }
+  /* Menu LATERAL mobile: já tinha o fundo dourado, mas os ícones eram azulados.
+     Agora os círculos, separadores e destaques também seguem o web ouro/preto. */
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-expense-workspace)
+    .arl-mobile-rail-drawer .arl-rail-separator {
+    background:linear-gradient(90deg,transparent,#d8b675,transparent)!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-expense-workspace)
+    .arl-mobile-rail-drawer .arl-rail-link .arl-rail-disc,
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile.arl-mobile-compact-mode
+    #arl-main-sidebar .nav-icon {
+    border-color:#dec39a!important;
+    background:radial-gradient(circle at 35% 16%,#fff 6%,#f9edda 52%,#e4c89c 100%)!important;
+    color:#69491f!important;
+    box-shadow:inset 0 2px #fff,0 4px 9px #79502337!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-expense-workspace)
+    .arl-mobile-rail-drawer .arl-rail-link.is-active .arl-rail-disc,
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile.arl-mobile-compact-mode
+    #arl-main-sidebar .nav-group button.active .nav-icon {
+    border-color:#be8f3c!important;
+    background:radial-gradient(circle at 32% 13%,#fff3cf 7%,#e9bd6a 65%,#b98535 100%)!important;
+    color:#332414!important;
+    box-shadow:inset 0 2px #fff9,0 4px 11px #a36c2a48!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-expense-workspace)
+    .arl-mobile-rail-drawer .arl-rail-close {
+    color:#5b4326!important;
+    background:radial-gradient(circle at 30% 12%,#fff,#f5e6c8)!important;
+    border-color:#d5b77c!important;
+    box-shadow:inset 0 1px #fff,0 3px 9px #9170353f!important;
+  }
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile.arl-mobile-compact-mode
+    >aside#arl-main-sidebar {
+    background:linear-gradient(155deg,#fffdfa,#f8edda)!important;
+    border-right-color:#dabe92!important;
+  }
+}
+@media(max-width:350px){
+  html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+    .arl-global-mobile-nav.arl-mobile-five .arl-nav-caption,
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button .arl-nav-caption {
+    font-size:8px!important;
+    letter-spacing:-.3px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .layout-mobile .arl-global-mobile-nav.arl-mobile-five .arl-nav-icon-disc,
+  .layout-mobile .arl-expense-bottom.arl-expense-matched .arl-nav-icon-disc {
+    transition:none!important;
+  }
+}
+
+/* Prioridade sobre arl-mobile-final-operations: aquele arquivo usa ID e
+   anulava todos os discos do menu lateral, mesmo com o fundo dourado. */
+@media(max-width:1024px){
+  html:root[data-layout="mobile"]:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body
+    .layout-mobile:not(.arl-expense-workspace)
+    #arl-mobile-clean-rail .arl-rail-link .arl-rail-disc,
+  html:root[data-layout="mobile"]:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body
+    .layout-mobile.arl-mobile-compact-mode:not(.arl-expense-workspace)
+    #arl-main-sidebar .nav-group button:not(.new-order-shortcut) .nav-icon {
+    border:1px solid #d5b486!important;
+    border-radius:50%!important;
+    outline:0!important;
+    background:radial-gradient(circle at 34% 16%,#fff 6%,#f8eedb 54%,#e4c797 100%)!important;
+    background-image:radial-gradient(circle at 34% 16%,#fff 6%,#f8eedb 54%,#e4c797 100%)!important;
+    color:#65471f!important;
+    box-shadow:inset 0 2px #fff,0 4px 9px #89602e35!important;
+  }
+  html:root[data-layout="mobile"]:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body
+    .layout-mobile:not(.arl-expense-workspace)
+    #arl-mobile-clean-rail .arl-rail-link.is-active .arl-rail-disc,
+  html:root[data-layout="mobile"]:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body
+    .layout-mobile.arl-mobile-compact-mode:not(.arl-expense-workspace)
+    #arl-main-sidebar .nav-group button.active .nav-icon {
+    border-color:#ad7e36!important;
+    outline:0!important;
+    background:radial-gradient(circle at 32% 16%,#fff4d3,#edc477 54%,#b88232)!important;
+    background-image:radial-gradient(circle at 32% 16%,#fff4d3,#edc477 54%,#b88232)!important;
+    color:#382615!important;
+    box-shadow:inset 0 2px #fff7,0 5px 11px #a26e2d4c!important;
+  }
+  html:root[data-layout="mobile"]:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body
+    .layout-mobile:not(.arl-expense-workspace)
+    #arl-mobile-clean-rail .arl-rail-link.is-active .arl-rail-disc svg,
+  html:root[data-layout="mobile"]:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body
+    .layout-mobile.arl-mobile-compact-mode:not(.arl-expense-workspace)
+    #arl-main-sidebar .nav-group button.active .nav-icon svg {
+    color:#382615!important;stroke:#382615!important;
+  }
+}
+
+/* Defesa adicional para o Gestor de Gastos em instalações que não carregaram
+   a folha antiga de navegação: manter cinco alvos uniformes e círculos reais. */
+@media(max-width:1024px){
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched {
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+    .arl-expense-bottom.arl-expense-matched >button .arl-nav-icon-disc {
+    display:grid!important;
+    place-items:center!important;
+    flex:none!important;
+  }
+}
+
+
+/* CORREÇÃO 18/10: contorno fino uniforme, sem aro duplo nos ícones ativos. */
+@media(max-width:1024px){
+ html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  .arl-global-mobile-nav.arl-mobile-five>button .arl-nav-icon-disc {
+    outline:0!important;outline-offset:0!important;border-width:1px!important;
+    box-shadow:inset 0 1px #fff9,0 3px 8px #80603b35!important;
+ }
+ html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  .arl-global-mobile-nav.arl-mobile-five>button:is(.active,[aria-current="page"]):not(.primary-shortcut) .arl-nav-icon-disc {
+    outline:0!important;outline-offset:0!important;
+    border:1px solid #be985d!important;
+    box-shadow:inset 0 1px #fff9,0 3px 9px #977b514c!important;
+    filter:saturate(1.08)!important;
+ }
+ html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  .arl-global-mobile-nav.arl-mobile-five>button.primary-shortcut .arl-nav-icon-disc {
+    outline:0!important;border:1px solid #af1233!important;
+    box-shadow:inset 0 1px #ffd5de9c,0 5px 12px #af063d59!important;
+ }
+ html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  .arl-global-mobile-nav.arl-mobile-five>button:disabled {
+    opacity:.62!important;cursor:not-allowed!important;pointer-events:none!important;
+ }
+ html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  .arl-global-mobile-nav.arl-mobile-five>button:focus-visible {
+    outline:1px solid #aa864c!important;outline-offset:-1px!important;
+ }
+ html:is([data-arl-appearance="original"],[data-arl-appearance="clean"]) body .shell.layout-mobile:has(>.arl-mobile-rail-drawer.is-open)
+  .arl-global-mobile-nav.arl-mobile-five {
+    visibility:hidden!important;pointer-events:none!important;
+ }
+ html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .arl-expense-bottom.arl-expense-matched>button .arl-nav-icon-disc {
+    outline:0!important;border-width:1px!important;
+ }
+ html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only
+  .arl-expense-bottom.arl-expense-matched>button[aria-current="page"]:not(.arl-expense-add) .arl-nav-icon-disc {
+    outline:0!important;border:1px solid #cba36a!important;
+    box-shadow:inset 0 1px #fff,0 3px 9px #9e7b484a!important;
+ }
+}
+
+/* Menu lateral real (também quando o mobile usa modo Clean automático):
+   revestimento creme/dourado no fundo, não apenas nos ícones. */
+@media(max-width:1024px) {
+ html body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  >.arl-mobile-rail-drawer {
+   background:linear-gradient(160deg,#fffefb 0%,#fcf6ea 55%,#f6ead6)!important;
+   border-color:#e5cda7!important;
+   box-shadow:inset 0 2px #fff,0 12px 28px #6c492930!important;
+ }
+ html body .shell.layout-mobile:not(.arl-mobile-compact-mode):not(.arl-expense-workspace)
+  >.arl-mobile-rail-drawer .arl-rail-brand {
+   color:#9a6525!important;
+ }
+}
