@@ -36,6 +36,46 @@ Validação inicial: 8 testes PHP / 65 assertions em PHP 8.3.33 Laragon, SQLite 
 
 ## Gates
 
+## Etapa 2 — diagnóstico e experimento do carregador
+
+Script reexecutável externo `navigation.cjs`, JSONs `navigation-baseline.json` e `navigation-depois.json`. PHP 8.3.33 Laragon, loopback 8061, Chromium 1440×900, mesmo SQLite descartável, sem throttling, três passagens por sete módulos. Contagem de APIs, tempos de recursos e heap registrados; feedback medido da captura do clique ao primeiro frame com botão ativo. Tela utilizável medida pelo heading correto, saída dos estados de carregamento observados, término das APIs e frames. Essa instrumentação inclui overhead do Playwright e não equivale a benchmark de CPU puro nem cobre todos os estados de negócio.
+
+Chunks da primeira navegação levaram 7–15 ms; montagens consumiram 330–364 ms. Código instalado em `react-dom-client.production.js` contém `globalMostRecentFallbackTime + 300 - now()` no caminho de revelação após fallback. Experimento alterou apenas `lazy-screen.tsx`: importação sob demanda compartilhada com commit direto do módulo resolvido, mantendo JSX do skeleton, tempo de exibição do aviso, error boundary, botão de tentativa, carregamento de diálogos somente quando abertos e descarte de atualizações após desmontagem. Não há preload geral, cache adicional de dados ou alteração de CSS/fluxos.
+
+| Módulo | Primeiro uso antes (ms) | Primeiro uso depois (ms) | Retornos depois (ms) |
+|---|---:|---:|---:|
+| Ordens | 563 | 264 | 65 / 65 |
+| Serviços | 564 | 233 | 230 / 229 |
+| Clientes | 580 | 271 | 62 / 62 |
+| Pós-venda | 580 | 298 | 280 / 263 |
+| Financeiro | 614 | 281 | 264 / 265 |
+| Controle de Gastos | 730 | 480 | 448 / 431 |
+| Painel (já aberto no login) | 224 | 231 | 230 / 230 |
+
+Feedback antes 12,8–14,8 ms; depois 12,5–15,5 ms. Ordens/Clientes aquecidos realizaram zero APIs por cache já existente. Serviços/Pós-venda/Financeiro continuam consultando dados; Gastos fez duas APIs por abertura. Não introduzido cache financeiro para reduzir esse custo. Estes resultados locais não garantem 100/300 ms em rede, dispositivo físico, base volumosa ou produção.
+
+OS após experimento: 992/970/923 ms até todas as consultas observadas terminarem, com detalhe seguido por catálogo, orçamentos e pagamentos; primeira visita também consulta configuração operacional. Servidor PHP embutido local atende em série: cada consulta individual ronda 175–190 ms, mas a última pode acumular 518–718 ms de fila. Duas visitas incluem consulta periódica de notificações. Falta baseline equivalente da abertura da OS anterior ao experimento; não declarar ganho específico de OS.
+
+Instrumentação PHP somente leitura `sql-readonly.php`, explicitamente bloqueada fora de testing/SQLite/e2e.sqlite: boot 240,37 ms; handler do agregado 0,49 ms / SQL 0,18 ms. EXPLAIN SQLite usou `service_orders_status_index`. Massa pequena dessa coleta não contém fechadas: consulta antiga fez só COUNT (1 query, SQL 0,34 ms, handler 51,72 ms incluindo primeiro aquecimento de classes). Não usar esses números como comparação de escala. Não há evidência que justifique novo índice; não alterar MySQL/produção por suposição. EXPLAIN MySQL e análise com volume representativo permanecem pendentes.
+
+Teste de regressão após experimento: **9 Playwright aprovados em 36,4 s**, incluindo lazy loading, download lento/erro, navegação durante espera, Dashboard e home Mobile; lint, build/typecheck e 66 frontend aprovados. Registros externos `e2e-lazy-regressao.log` e `build-lazy.log`. Revisão independente em andamento. Documentação React consultada porque Context7 não possui ferramenta disponível nesta sessão: https://react.dev/reference/react/useEffect e https://react.dev/reference/react/lazy.
+
+Limitações: sem celular físico, sem medição de rede de produção, sem React Profiler por commit e sem EXPLAIN MySQL nesta rodada. Mudança não declara auditoria ampla finalizada. Backend de OS ainda pode reduzir dependências, mas requer análise funcional e medições adicionais; não sacrificar atualização dos pagamentos.
+
+Os recursos da série de navegação têm transferSize zero em vários chunks, compatível com cache do navegador/service worker. Portanto, primeiro uso significa primeira montagem do módulo naquela sessão autenticada, **não rede totalmente fria**. O código do módulo ainda não estava montado, e a comparação da penalidade de revelação é válida nesse cenário; o resultado não mede download em conexão lenta.
+
+Revisão independente de `lazy-screen.tsx`: nenhum bloqueio identificado; cancelamento lógico, compartilhamento de código e boundary mantidos. Retry após falha do mesmo URL merece investigação específica porque o navegador/Vite podem conservar rejeição; limitação também existia anteriormente. Não alegar esse fluxo como homologado.
+
+Suíte PHP integral: 411 testes / 7.546 assertions PASS, 1 min 14,7 s, SQLite em memória/PHP Laragon 8.3.33. Benchmark existente de Pós-venda com 3.000 registros sintéticos registrou 9,30 ms e quatro SELECTs relevantes. Sem acesso a produção.
+
+## Etapa 3 — CI em correção
+
+Log oficial do job E2E recuperado pela API GitHub após duas falhas Transport closed no conector. Autenticação pelo helper Git local, capturada somente em memória e nunca exibida. Matriz oficial com as 65 falhas em `docs/MATRIZ_CI_E2E_20261020.md`; log bruto no backup externo. Última CI confirmada continua vermelha.
+
+Rodada integral local iniciada antes dos ajustes seguintes. As falhas já concluídas estão sendo corrigidas em lotes durante o diagnóstico; esta rodada não é a homologação final de um snapshot congelado. Será necessário reteste integral com a árvore final estável.
+
+Ajustes em progresso: teste legado adicional do Painel que ainda exigia closed_week; login do perfil financeiro validado pelo seu próprio cabeçalho, com ausência explícita do sino; caminhos atuais de Gastos por responsável/instituição; margem do dock aprovada de 8 px; testes de resize adaptados à regra autorizada em 19/10 (troca automática ao cruzar 1024 px). Teste de impressão passa a comparar o PDF real emitido antes/depois do tema em vez da moldura/sidebar da SPA no modo print. Pagamentos, valores, histórico, CSRF e permissões continuam exigidos.
+
 - Etapa 1: seis cenários de status/histórico/pagamento aprovados. Primeiro E2E do agregado falhou por capturar resposta do documento anterior ao reload (Protocol error Network.getResponseBody); sincronização corrigida aguardando tabela inicial. Reteste do agregado e diagnóstico legado: dois aprovados em 14,2 s, sem retries/timeouts extras. Trace da falha preservado externamente.
 - Etapa 2: diagnóstico amplo e otimizações ainda pendentes.
 - Etapa 3: CI integral ainda não corrigida/verificada.

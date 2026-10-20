@@ -4,6 +4,8 @@
 - [OK] Classificação das cinco condições operacionais, histórico e pagamento: seis cenários E2E aprovados; agregado/ausência da seção: dois cenários aprovados após corrigir corrida do teste com reload.
 - [OK] Oito testes PHP/65 assertions no PHP 8.3.33 Laragon + SQLite em memória; Pint, 66 testes frontend, lint, typecheck e build aprovados nesta etapa.
 - [OK] Textos remanescentes dos cards/tabela com computed styles idênticos antes/depois em 1280/1366/1920 px, incluindo resize na mesma sessão.
+- [OK] Experimento do carregador sob demanda reduziu o primeiro uso medido de Ordens/Serviços/Clientes/Financeiro para 233–281 ms no cenário local; nove E2E de carregamento/erro/mobile e 66 frontend aprovados. Limites detalhados no relatório.
+- [OK] Suíte PHP integral local no PHP 8.3.33 Laragon e SQLite em memória: 411 testes / 7.546 assertions aprovados.
 - [PENDENTE] Regressão ampliada desktop/mobile, desempenho geral antes/depois, testes integrais, revisão das alterações locais anteriores e quatro jobs verdes no HEAD final.
 - [PENDENTE] Commits/push desta missão; publicação KingHost proibida pelo escopo atual.
 

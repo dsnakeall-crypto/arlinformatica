@@ -1,4 +1,4 @@
-import { Component, Suspense, lazy, useEffect, useState, type ComponentType, type ReactNode } from 'react';
+import { Component, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import '../css/loading-skeleton.css';
 
 function LoadingSkeleton() {
@@ -38,14 +38,35 @@ export function lazyWhenOpen(load: () => Promise<{ default: ComponentType<any> }
 
 // Retry only the requested module. Never reload the entire app or discard another form.
 export default function lazyScreen(load: () => Promise<{ default: ComponentType<any> }>) {
-  let current = lazy(load);
+  let loaded: ComponentType<any> | undefined;
+  let pending: Promise<{ default: ComponentType<any> }> | undefined;
+  function Screen({ view, error, screenProps }: { view?: ComponentType<any>; error?: unknown; screenProps: any }) {
+    if (error) throw error;
+    const View = view;
+    return View ? <View {...screenProps} /> : <LoadingSkeleton />;
+  }
   return function DeferredScreen(props: any) {
     const [attempt, setAttempt] = useState(0);
-    const View = current;
-    return <LoadBoundary key={attempt} retry={() => { current = lazy(load); setAttempt(n => n + 1); }}>
-      <Suspense fallback={<LoadingSkeleton />}>
-        <View {...props} />
-      </Suspense>
+    const [result, setResult] = useState<{ view?: ComponentType<any>; error?: unknown }>(() => ({ view: loaded }));
+    useEffect(() => {
+      if (loaded) { setResult({ view: loaded }); return; }
+      let active = true;
+      // Module imports remain demand-only and shared. Commit the resolved screen
+      // directly, avoiding Suspense's extra fallback reveal delay on navigation.
+      pending ??= Promise.resolve().then(load).then(module => { loaded = module.default; return module; });
+      void pending.then(
+        module => { if (active) setResult({ view: module.default }); },
+        error => { if (active) setResult({ error }); },
+      );
+      return () => { active = false; };
+    }, [attempt]);
+    return <LoadBoundary key={attempt} retry={() => {
+      loaded = undefined;
+      pending = undefined;
+      setResult({});
+      setAttempt(n => n + 1);
+    }}>
+      <Screen view={result.view} error={result.error} screenProps={props} />
     </LoadBoundary>;
   };
 }
