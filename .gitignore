@@ -44,3 +44,8 @@ npm-debug.log*
 # Arquivo privado de acesso SSH local: nunca versionar.
 /docs/senhassh.txt
 /docs/senhassh.*
+
+# Artefatos de Python e diagnósticos temporários (recuperáveis no backup externo).
+**/__pycache__/
+*.pyc
+/tests/e2e/_mobile-audit-temp.mobile.spec.ts

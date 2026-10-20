@@ -92,6 +92,22 @@ class PostSaleService
         });
     }
 
+    /**
+     * Cria apenas o acompanhamento desta OS no fechamento, sem varrer
+     * outras ordens e sem gerar notificações. A tela continua read-only.
+     */
+    public function ensureForCompletedOrder(ServiceOrder $order): bool
+    {
+        if ($order->status !== 'completed'
+            || $order->result !== 'repair_completed'
+            || $order->completed_at === null
+            || $order->deleted_at !== null) {
+            return false;
+        }
+
+        return $this->ensureCycle($order);
+    }
+
     private function ensureCycle(ServiceOrder $order): bool
     {
         DB::table('clients')->where('id', $order->client_id)->lockForUpdate()->first();

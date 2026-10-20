@@ -1,0 +1,130 @@
+/* Carros: funcionalidade única no Web/PC e Mobile; sem alterar fluxo financeiro existente. */
+.cg-page .cgv-page{color:#171d2d;max-width:1160px;margin:0 auto;padding:6px 0 110px}
+.cg-page .cgv-heading{margin:5px 0 14px}
+.cg-page .cgv-heading h2{display:flex;align-items:center;gap:10px;font-size:clamp(22px,4.8vw,29px);letter-spacing:-.5px;margin:4px 0 6px}
+.cg-page .cgv-heading h2 svg{width:27px;height:27px;color:#a47727}
+.cg-page .cgv-heading p{margin:0;color:#63728a;font-size:13px}
+.cg-page .cgv-toolbar{display:flex;justify-content:flex-end;margin:10px 0}
+.cg-page .cgv-toolbar button,.cg-page .cgv-items>button{display:inline-flex;gap:7px;align-items:center;justify-content:center;min-height:42px;padding:9px 14px;border:1px solid #b5c8ef;border-radius:13px;color:#1d355b;background:linear-gradient(#fff,#f4f7ff);box-shadow:0 4px 9px #263e6730;font-size:13px;font-weight:700}
+.cg-page .cgv-toolbar svg,.cg-page .cgv-items>button svg{width:18px;height:18px}
+.cg-page .cgv-intro-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:13px 0 18px}
+.cg-page .cgv-intro-cards>button{display:flex;align-items:center;flex-direction:column;gap:6px;min-height:128px;padding:17px 12px;border-radius:19px;text-align:center;border:1px solid #f1dca5;background:linear-gradient(150deg,#fffefa,#fff7e3);box-shadow:inset 0 2px 2px #fff,0 4px 3px #fff,0 9px 20px #39455c26;color:#19243a}
+.cg-page .cgv-intro-cards>button:nth-child(2){border-color:#bbcbed;background:linear-gradient(150deg,#fff,#eef4fd)}
+.cg-page .cgv-intro-cards>button.selected{outline:2px solid #b88a29;outline-offset:2px}
+.cg-page .cgv-intro-cards strong{font-size:17px}
+.cg-page .cgv-intro-cards small{font-size:11px;color:#6f7c8f}
+.cg-page .cgv-icon{width:40px;height:41px;display:inline-grid;place-items:center;color:#966c17;border-radius:12px;background:linear-gradient(#fffae9,#ffdf91);box-shadow:inset 0 2px 2px #fff,0 3px 5px #b18a3342}
+.cg-page .cgv-icon.blue{background:linear-gradient(#fff,#d6edff);color:#4270a8}
+.cg-page .cgv-icon svg{width:24px;height:24px}
+.cg-page .cgv-form,.cg-page .cgv-event{margin:11px 0;border:1px solid #dae3f5;border-radius:20px;background:linear-gradient(155deg,#fff,#f7f9ff);box-shadow:inset 0 1px #fff,0 8px 18px #24364e23}
+.cg-page .cgv-form{padding:17px}
+.cg-page .cgv-form h3{font-size:19px;margin:0 0 12px}
+.cg-page .cgv-form-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+.cg-page .cgv-form-title h3{margin:0}
+.cg-page .cgv-form-title button{border:0;background:none;color:#5a6780;min-height:42px}
+.cg-page .cgv-form label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:750;color:#3f506a;margin-bottom:12px;min-width:0}
+.cg-page .cgv-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 13px}
+.cg-page .cgv-form input,.cg-page .cgv-form select,.cg-page .cgv-form textarea{
+  width:100%;max-width:100%;box-sizing:border-box;min-height:42px;padding:9px 11px;
+  font:inherit;font-size:14px;color:#19243a;border:1px solid #c6d6ee;border-radius:12px;
+  background:#fff;box-shadow:inset 0 1px 2px #58668512;outline-offset:2px
+}
+.cg-page .cgv-form input:focus-visible,.cg-page .cgv-form textarea:focus-visible,.cg-page .cgv-form select:focus-visible{outline:2px solid #e6b54a}
+.cg-page .cgv-form textarea{min-height:80px;resize:vertical}
+.cg-page .cgv-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;margin-top:13px}
+.cg-page .cgv-actions button{min-height:43px;padding:10px 14px;border-radius:12px;border:1px solid #bfcde5;background:#fff;color:#36475f;font-size:13px;font-weight:750}
+.cg-page .cgv-actions button.cgv-primary{background:linear-gradient(145deg,#242731,#13151b);color:#f8d083;border-color:#e4ba6b;box-shadow:0 4px 9px #17213135}
+.cg-page .cgv-actions button:disabled{opacity:.6;cursor:not-allowed}
+.cg-page .cgv-items{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid #e8e2d4;border-radius:15px;background:#fffdf8;margin:13px 0}
+.cg-page .cgv-items>strong{font-size:14px}.cg-page .cgv-items>small{color:#6d7889;font-size:11px}
+.cg-page .cgv-item{display:grid;grid-template-columns:minmax(0,1fr) minmax(75px,120px) 34px;gap:6px;align-items:center}
+.cg-page .cgv-item button{width:34px;height:40px;border:1px solid #efd4d5;border-radius:11px;background:#fff2f3;color:#b3294a;font-size:20px}
+.cg-page .cgv-items>button{align-self:flex-start}
+.cg-page .cgv-payment{padding:12px;background:#f0f5ff;border:1px solid #dfe8fc;border-radius:15px}
+.cg-page .cgv-payment h4{display:flex;align-items:center;gap:8px;margin:0 0 9px;font-size:15px}
+.cg-page .cgv-payment h4 svg{width:20px;color:#a0781b}
+.cg-page .cgv-split,.cg-page .cgv-hint{font-size:11px;color:#5d6f8a;line-height:1.5}
+.cg-page .cgv-history{margin-top:24px}
+.cg-page .cgv-history h3{font-size:18px;display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.cg-page .cgv-history h3 svg{color:#ac7c27}
+.cg-page .cgv-event{overflow:hidden}
+.cg-page .cgv-event>button{display:flex;align-items:center;gap:10px;min-height:70px;width:100%;border:0;background:transparent;text-align:left;padding:11px;cursor:pointer;color:inherit}
+.cg-page .cgv-event-head{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+.cg-page .cgv-event-head strong{font-size:13px}.cg-page .cgv-event-head small{font-size:10px;color:#657387;overflow-wrap:anywhere}
+.cg-page .cgv-event>button>b{font-size:13px;white-space:nowrap}.cg-page .cgv-event>button>svg{width:15px;flex-shrink:0}
+.cg-page .cgv-details{padding:13px 17px;border-top:1px solid #dee6f4;font-size:12px;line-height:1.5}
+.cg-page .cgv-details>p{display:flex;align-items:flex-start;gap:7px;margin:8px 0}.cg-page .cgv-details>p svg{width:17px;flex-shrink:0}
+.cg-page .cgv-history-item{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #eaeff4}
+.cg-page .cgv-history-item span{overflow-wrap:anywhere}.cg-page .cgv-history-item b{white-space:nowrap}
+@media(max-width:650px){
+ .cg-page .cgv-page{padding:3px 1px 93px}
+ .cg-page .cgv-form{padding:12px}
+ .cg-page .cgv-fields{grid-template-columns:1fr}
+ .cg-page .cgv-intro-cards{gap:9px}
+ .cg-page .cgv-intro-cards>button{min-height:112px;padding:12px 7px}
+ .cg-page .cgv-intro-cards strong{font-size:15px}
+ .cg-page .cgv-item{grid-template-columns:minmax(0,1fr) minmax(72px,98px) 30px}
+ .cg-page .cgv-item button{width:30px}
+}
+
+.cg-page .cgv-more{display:block;margin:15px auto;min-height:43px;padding:9px 16px;border:1px solid #b9ceeb;border-radius:12px;background:linear-gradient(#fff,#edf3ff);color:#223d69;font-weight:750;box-shadow:0 3px 8px #243c6225}
+
+/* 20/10 — Ficha de manutenção compacta: soma automática ou total manual opcional */
+.cg-page .cgv-total-card{
+  display:grid;gap:8px;padding:12px 14px;margin:8px 0 13px;
+  background:linear-gradient(150deg,#fffaf0,#f5f8ff);
+  border:1px solid #e6d8b7;border-radius:15px;
+  box-shadow:inset 0 1px 0 #fff,0 4px 12px #23304716;
+}
+.cg-page .cgv-total-card .cgv-total-checkbox{
+  display:flex;flex-direction:row;gap:10px;align-items:center;
+  font-size:13px;font-weight:800;margin:0;color:#263855;
+}
+.cg-page .cgv-total-checkbox input[type="checkbox"]{
+  width:18px!important;min-width:18px!important;height:18px!important;min-height:18px!important;
+  padding:0!important;margin:0!important;accent-color:#bf8b28;
+}
+.cg-page .cgv-total-card>label:not(.cgv-total-checkbox){margin:0;}
+.cg-page .cgv-total-output{
+  display:flex;align-items:center;min-height:43px;padding:8px 12px;
+  margin-top:5px;border:1px solid #cddcf2;border-radius:11px;
+  background:#f8fbff;color:#14233d;font-weight:850;font-size:20px;
+}
+.cg-page .cgv-total-card>small{font-size:11px;color:#677995;line-height:1.4;}
+.cg-page .cgv-item{
+  grid-template-columns:minmax(0,1fr) minmax(85px,120px) 35px auto;
+  gap:6px;
+}
+.cg-page .cgv-item-locked{
+  grid-template-columns:minmax(0,1fr) minmax(85px,120px) 35px;
+  background:linear-gradient(#fff,#f3f7ff);
+  border:1px solid #d8e2f1;border-radius:12px;padding:7px 6px 7px 12px;
+}
+.cg-page .cgv-item-name{font-size:13px;overflow-wrap:anywhere;font-weight:700;color:#25334b}
+.cg-page .cgv-item-value{font-size:13px;text-align:right;white-space:nowrap;color:#1e3553}
+.cg-page .cgv-item button{
+  width:35px;height:42px;display:grid;place-items:center;min-width:35px;
+  color:#385c87;background:linear-gradient(#fff,#e8f0fc);border:1px solid #b9cee9;
+}
+.cg-page .cgv-item button svg{height:17px;width:17px;}
+.cg-page .cgv-item button.cgv-item-remove{color:#a02d46;background:#fff6f7;border-color:#f2cdd3}
+.cg-page .cgv-item-error{color:#a02d46;font-size:12px;font-weight:700;margin:0}
+.cg-page .cgv-items-subtotal{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border-top:1px solid #e9e1d5;padding:11px 4px 1px;font-size:12px;color:#5e6b7b
+}
+.cg-page .cgv-items-subtotal strong{font-size:18px;color:#173453}
+.cg-page .cgv-work-notes{margin:9px 0 15px!important}
+.cg-page .cgv-reminders{
+  background:#fff8e7;border:1px solid #e8bd62;border-radius:14px;
+  padding:12px;margin-bottom:16px;box-shadow:0 4px 12px #b5852230
+}
+.cg-page .cgv-reminders h3{font-size:15px;margin:0 0 8px;color:#795411}
+.cg-page .cgv-reminders p{margin:6px 0;font-size:12px;line-height:1.5;color:#66502a}
+.cg-page .cgv-reminders small{display:block;margin-top:8px;color:#786e5c;font-size:11px}
+@media(max-width:650px){
+  .cg-page .cgv-item{grid-template-columns:minmax(0,1fr) minmax(70px,90px) 32px auto;}
+  .cg-page .cgv-item-locked{grid-template-columns:minmax(0,1fr) minmax(70px,95px) 32px;}
+  .cg-page .cgv-item button{height:40px;width:32px;min-width:32px;}
+  .cg-page .cgv-item .cgv-item-value{font-size:12px}
+}

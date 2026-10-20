@@ -53,7 +53,7 @@ test('Controle de Gastos mobile continua independente com o mesmo resumo aprovad
  await page.evaluate(()=>localStorage.setItem('arl-layout-mode','mobile'));
  await page.reload();
  const nav=page.getByRole('navigation',{name:'Navegação Mobile / Tablet'});
- await nav.getByRole('button',{name:'Gestor de Gasto'}).click();
+ await nav.getByRole('button',{name:'Gastos',exact:true}).click();
  await expect(page.locator('.shell.arl-expense-workspace')).toBeVisible();
  await expect(page.locator('.cg-page.cg-mobile:not(.cg-expense-web-mirror) .cg-mobile-summary')).toBeVisible();
  await expect(page.locator('.cg-mobile .cgo-indicators')).toBeVisible();

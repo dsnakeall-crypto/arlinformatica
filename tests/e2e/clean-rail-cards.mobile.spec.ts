@@ -52,8 +52,8 @@ test('menu lateral fixo utiliza os mesmos discos do trilho flutuante', async ({p
   const disc = fixed.locator('.nav-group .nav-icon').first();
   const values = await disc.evaluate(el=>({radius:getComputedStyle(el).borderRadius,background:getComputedStyle(el).backgroundImage,width:el.getBoundingClientRect().width}));
   expect(values.radius).toBe('50%');
-  // Ajuste final aprovado: ícones sem moldura/círculo gradiente, com alvo de toque preservado.
-  expect(values.background).toBe('none');
+  // Identidade web/dourada aprovada para o mobile: discos dourados, sem alterar ações.
+  expect(values.background).toContain('radial-gradient');
   expect(values.width).toBeGreaterThanOrEqual(38);
   await page.screenshot({path:`${folder}/lateral-compacto-390px.png`});
 });

@@ -228,13 +228,28 @@ class ExpenseControlController extends Controller
         $person = DB::table('cg_people')->where('user_id', $r->user()->id)->value('id');
         $personal = $items->filter(fn ($i) => $person && $i[$person === 1 ? 'remaining_one_cents' : 'remaining_two_cents'] > 0);
 
+        // Antecipações vinculadas às parcelas deste mês, independentemente da data em que foram pagas.
+        // O pagamento comum e o abatimento não são considerados antecipações.
+        $advances = DB::table('cg_entries as e')
+            ->join('cg_installments as i', 'i.id', '=', 'e.installment_id')
+            ->join('cg_debts as d', 'd.id', '=', 'i.debt_id')
+            ->whereNull('e.reversed_at')->whereNull('d.cancelled_at')
+            ->where('e.kind', 'advance')->where('i.month_on', $month->toDateString())
+            ->selectRaw('COALESCE(SUM(e.credit_one_cents), 0) as one_cents, COALESCE(SUM(e.credit_two_cents), 0) as two_cents')
+            ->selectRaw("COALESCE(SUM(CASE WHEN d.responsibility = 'shared' THEN e.amount_cents ELSE 0 END), 0) as shared_cents")
+            ->first();
+        $advanceTotals = [
+            'one' => (int) ($advances->one_cents ?? 0),
+            'two' => (int) ($advances->two_cents ?? 0),
+            'shared' => (int) ($advances->shared_cents ?? 0),
+        ];
         $views = [];
         foreach (['one', 'two', 'shared'] as $scope) {
             $rows = $items->filter(fn ($i) => $scope === 'shared' ? $i['responsibility'] === 'shared' : $i['share_'.$scope.'_cents'] > 0);
             $rows = $rows->map(fn ($i) => [...$i, 'scope_original' => $scope === 'shared' ? $i['amount_cents'] : $i['share_'.$scope.'_cents'], 'scope_paid' => $scope === 'shared' ? $i['paid_cents'] : $i['paid_'.$scope.'_cents'], 'remaining_cents' => $scope === 'shared' ? $i['remaining_cents'] : $i['remaining_'.$scope.'_cents']]);
             $views[$scope] = [
                 'due_institutions' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0)->groupBy('institution_id')->map(fn ($group) => ['id' => $group->first()['institution_id'], 'name' => $group->first()['institution_name'], 'due_on' => $group->min('due_on'), 'remaining_cents' => $group->sum('remaining_cents'), 'count' => $group->count()])->sortBy(fn ($row) => [in_array((int) $row['id'], $householdIds, true) ? 1 : 0, $row['due_on']])->values(),
-                'original_cents' => $rows->sum('scope_original'), 'paid_cents' => $rows->sum('scope_paid'), 'remaining_cents' => $rows->sum('remaining_cents'), 'count' => $rows->count(),
+                'original_cents' => $rows->sum('scope_original'), 'paid_cents' => $rows->sum('scope_paid'), 'advance_cents' => $advanceTotals[$scope], 'remaining_cents' => $rows->sum('remaining_cents'), 'count' => $rows->count(),
                 'next_due' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] >= today()->toDateString())->take(5)->values(),
                 'overdue' => $rows->filter(fn ($i) => $i['remaining_cents'] > 0 && $i['due_on'] < today()->toDateString())->take(5)->values(),
                 'institutions' => $sortInstitutions($rows->groupBy('institution_id')->map(fn ($group) => ['id' => $group->first()['institution_id'], 'name' => $group->first()['institution_name'], 'remaining_cents' => $group->sum('remaining_cents'), 'count' => $group->count()])->values()),

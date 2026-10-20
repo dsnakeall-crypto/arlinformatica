@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { ArrowRight, Check, Info, LayoutDashboard, Monitor, PanelLeft, Settings2, Smartphone } from "lucide-react";
+import { ArrowRight, Check, Info, LayoutDashboard, Monitor, Settings2, Smartphone } from "lucide-react";
 import PageHeader from "./page-header";
 import "../css/layouts-settings.css";
 import MobileReadOnlySettings from "./mobile-readonly-settings";
 import { isHandheldDevice } from "./layout-preference";
 import AppearanceSettings from "./appearance-settings";
 
-export type LayoutSelection = "desktop" | "bottom" | "compact";
+export type LayoutSelection = "desktop" | "premium";
 
 export type LayoutSettingsProps = {
   selected: LayoutSelection;
@@ -22,18 +22,11 @@ const options = [
     Icon: Monitor,
   },
   {
-    id: "bottom" as const,
-    title: "Mobile — barra inferior",
-    tag: "Celular / tablet",
-    description: "Atalhos Painel, Clientes, Abrir OS, Financeiro e Gestor de Gasto embaixo; menu lateral complementar para o restante.",
+    id: "premium" as const,
+    title: "Mobile Premium",
+    tag: "Layout mobile oficial",
+    description: "Painel, Clientes, + Abrir OS, Gastos e Menu flutuante. Este Ã© o Ãºnico layout mobile da ARL.",
     Icon: Smartphone,
-  },
-  {
-    id: "compact" as const,
-    title: "Mobile — menu lateral compacto",
-    tag: "Celular / tablet",
-    description: "Barra fina de ícones sempre visível à esquerda, sem menu inferior. Mais espaço vertical.",
-    Icon: PanelLeft,
   },
 ];
 
@@ -65,7 +58,7 @@ export default function LayoutsSettings({ selected, onChange }: LayoutSettingsPr
       <div className="arl-layout-settings-intro">
         <span className="arl-layout-settings-kicker"><Settings2 aria-hidden="true" /> PERSONALIZAÇÃO</span>
         <h2 id="arl-layout-title">Escolha o seu layout</h2>
-        <p>{isPhoneOrTablet ? 'No celular, escolha apenas entre a barra inferior e o menu lateral compacto. O visual Clean é fixo.' : 'Selecione a forma de navegar que combina com seu dispositivo. A alteração é aplicada na hora.'}</p>
+        <p>No aplicativo ARL vocÃª pode escolher entre Web / PC e Mobile Premium. O Controle de Gastos mantÃ©m seu prÃ³prio visual e todas as regras.</p>
       </div>
       <div className="arl-layout-options" role="group" aria-label="Opções de layout">
         {options.filter(option => !isPhoneOrTablet || option.id !== 'desktop').map(({ id, title, tag, description, Icon }) => {
@@ -100,7 +93,7 @@ export default function LayoutsSettings({ selected, onChange }: LayoutSettingsPr
           <AppearanceSettings />
         </section>
       )}
-      <p className="arl-layout-settings-note"><Info aria-hidden="true" /> A escolha fica salva neste navegador e não muda ao redimensionar, minimizar ou mover a janela entre monitores.</p>
+      <p className="arl-layout-settings-note"><Info aria-hidden="true" /> O Mobile Premium Ã© o Ãºnico visual mobile da ARL. O sistema muda automaticamente ao cruzar o tamanho de tela de celular; os dados permanecem os mesmos.</p>
     </section>
   );
 }

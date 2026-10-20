@@ -10,7 +10,7 @@ import "../css/desktop-adaptive.css";
 import "../css/arl-ui-system.css";
 import "../css/action-icons.css";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Box, ClipboardList, LayoutDashboard, Plus, Settings, Users, Wallet, Phone, Menu, X, PackageSearch, Pin, LogOut, CircleDollarSign, Truck, Bell } from "lucide-react";
+import { Box, ClipboardList, House, LayoutDashboard, Plus, Settings, Users, Wallet, Phone, Menu, X, PackageSearch, Pin, LogOut, CircleDollarSign, Truck, Bell, ChevronRight } from "lucide-react";
 import { centsFromMoneyInput, maskMoneyInput, moneyInputFromCents } from "./money-input";
 import { OrderPaymentFigures } from "./finance-refund-summary";
 import { connectCacheTabs, clearSessionCache } from './cache-requests';
@@ -51,6 +51,11 @@ import '../css/arl-correcao-global-popups-settings-20261015.css';
 import '../css/arl-mobile-web-gold-visual-20261017.css';
 import '../css/arl-mobile-floating-bottom-nav-20261018.css';
 import '../css/arl-mobile-bell-matching-nav-20261018.css';
+import '../css/arl-mobile-premium-20261019.css';
+import '../css/arl-premium-internal-pages-20261019.css';
+import '../css/arl-premium-right-drawer-3d-20261020.css';
+import '../css/arl-mobile-3d-reference-20261020.css';
+import '../css/arl-gastos-docks-unificados-20261020.css';
 
 function ClientForm({ onSaved, onCancel, client }: any) {
   const [data, setData] = useState<any>(client || emptyClient);
@@ -1929,25 +1934,30 @@ function AdminCatalogs({ role }: any) {
   );
 }
 
-function MobileBottomBar({ go, page, canFinance, canExpenses }: { go: (page: Page) => void; page: Page; canFinance: boolean; canExpenses: boolean }) {
+function MobileBottomBar({ go, page, onProfile, profileOpen, premium, canFinance, canExpenses }: { go: (page: Page) => void; page: Page; onProfile: () => void; profileOpen: boolean; premium: boolean; canFinance: boolean; canExpenses: boolean }) {
   const viewportRef = useMobileNavViewport();
-  // Sempre cinco posições visíveis. Recursos não permitidos ficam desabilitados.
-  // A segurança da rota no backend continua intocada.
-  const destinations: { page: Page; title: string; Icon: typeof Wallet; enabled: boolean }[] = [
+  // O Premium é experimental: o menu clássico continua disponível, sem perder atalhos.
+  const destinations: { page: Page; title: string; Icon: typeof Wallet; enabled: boolean }[] = premium ? [
+    { page: 'dashboard', title: 'Painel', Icon: House, enabled: true },
+    { page: 'clients', title: 'Clientes', Icon: Users, enabled: true },
+    { page: 'new', title: 'Abrir OS', Icon: Plus, enabled: true },
+    { page: 'expense-control', title: 'Gastos', Icon: CircleDollarSign, enabled: canExpenses },
+    { page: 'settings', title: 'Menu', Icon: Menu, enabled: true },
+  ] : [
     { page: 'dashboard', title: 'Painel', Icon: LayoutDashboard, enabled: true },
     { page: 'clients', title: 'Clientes', Icon: Users, enabled: true },
     { page: 'new', title: 'Abrir OS', Icon: Plus, enabled: true },
     { page: 'finance', title: 'Financeiro', Icon: Wallet, enabled: canFinance },
     { page: 'expense-control', title: 'Gestor de Gasto', Icon: CircleDollarSign, enabled: canExpenses },
   ];
-  return <nav ref={viewportRef} className="arl-global-mobile-nav arl-mobile-icon-nav arl-mobile-five" aria-label="Navegação Mobile / Tablet" style={{ gridTemplateColumns: 'repeat(5, minmax(0, 1fr))' }}>
+  return <nav ref={viewportRef} className={'arl-global-mobile-nav arl-mobile-icon-nav arl-mobile-five' + (premium ? ' arl-premium-mobile-nav' : '')} aria-label="Navegação Mobile / Tablet" style={{ gridTemplateColumns: 'repeat(5, minmax(0, 1fr))' }}>
     {destinations.map(({ page: destination, title, Icon, enabled }) => <button key={destination} type="button"
       aria-label={enabled ? title : title + ' — indisponível para este perfil'}
       title={enabled ? title : title + ' — indisponível para este perfil'}
       disabled={!enabled}
-      className={'arl-nav-reference-button ' + (destination === 'new' ? 'primary-shortcut' : page === destination ? 'active' : '')}
-      aria-current={page === destination ? 'page' : undefined}
-      onClick={() => { if (enabled) go(destination); }}>
+      className={'arl-nav-reference-button ' + (destination === 'new' ? 'primary-shortcut' : destination === 'settings' ? (profileOpen ? 'active' : '') : page === destination ? 'active' : '')}
+      aria-current={destination === 'settings' ? (profileOpen ? 'page' : undefined) : page === destination ? 'page' : undefined}
+      onClick={() => { if (enabled) { if (destination === 'settings') onProfile(); else go(destination); } }}>
       <span className="arl-nav-icon-disc" aria-hidden="true"><Icon /></span>
       <span className="arl-nav-caption">{title}</span>
     </button>)}
@@ -1960,8 +1970,18 @@ function App() {
     try { saved = localStorage.getItem(layoutStorageKey); } catch { /* Use automatic first-load default. */ }
     return resolveLayoutMode(saved, navigator.userAgent, window.matchMedia('(max-width: 1024px)').matches);
   });
-  // A preferência escolhida não é alterada quando a janela muda de tamanho
-  // nem quando é movida entre monitores. Somente uma escolha manual a altera.
+  // Adapta de Web para Mobile e vice-versa ao atravessar o breakpoint.
+  // A escolha manual continua valendo até a próxima alteração de largura.
+  // Usar matchMedia (layout viewport), nunca visualViewport: o teclado móvel
+  // não pode trocar a interface ao abrir ou fechar.
+  useEffect(() => {
+    const breakpoint = window.matchMedia('(max-width: 1024px)');
+    const syncOnDeviceChange = (event: MediaQueryListEvent) => {
+      setLayout(isHandheldDevice(navigator.userAgent) || event.matches ? 'mobile' : 'desktop');
+    };
+    breakpoint.addEventListener('change', syncOnDeviceChange);
+    return () => breakpoint.removeEventListener('change', syncOnDeviceChange);
+  }, []);
   const [sidebarPinned, setSidebarPinned] = useState(false);
   const [navSummary, setNavSummary] = useState({
     open_orders: 0,
@@ -2073,6 +2093,12 @@ function App() {
   const [newOrderClient, setNewOrderClient] = useState<Client>();
   const [openingFallback, setOpeningFallback] = useState<{ id: number; url: string }>();
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [premiumMenuOpen, setPremiumMenuOpen] = useState(false);
+  const premiumMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (premiumMenuOpen || !premiumMenuTriggerRef.current?.isConnected) return;
+    if (document.activeElement === document.body) premiumMenuTriggerRef.current.focus();
+  }, [premiumMenuOpen]);
   // A gaveta fecha com animação de 420 ms. Não remontar os botões
   // até a transição terminar, para impedir sobreposição no fechamento.
   const [mobileDrawerClosed, setMobileDrawerClosed] = useState(true);
@@ -2093,18 +2119,20 @@ function App() {
   }, []);
   const closeMobileDrawerOutside = closeMobileDrawer;
   useEffect(() => () => { if (mobileDrawerTimer.current !== null) clearTimeout(mobileDrawerTimer.current); }, []);
-  const [mobileNavMode, setMobileNavMode] = useState<'bottom' | 'compact'>('bottom');
+  const [mobileNavMode, setMobileNavMode] = useState<'bottom' | 'compact' | 'premium'>('premium');
   useEffect(() => {
     if (!me?.id) return;
-    try { setMobileNavMode(localStorage.getItem('arl-mobile-nav-' + me.id) === 'compact' ? 'compact' : 'bottom'); }
-    catch { setMobileNavMode('bottom'); }
+    try { localStorage.setItem('arl-mobile-nav-' + me.id, 'premium'); } catch { /* Preferência local opcional. */ }
+    // Migração automática dos usuários que tinham Bottom ou Compact salvos.
+    setMobileNavMode('premium');
   }, [me?.id]);
-  const updateMobileNav = (next: 'bottom' | 'compact') => {
+  const updateMobileNav = (next: 'bottom' | 'compact' | 'premium') => {
     setMobileNavMode(next);
     closeMobileDrawer();
+    setPremiumMenuOpen(false);
     if (me?.id) try { localStorage.setItem('arl-mobile-nav-' + me.id, next); } catch { /* Preferência local opcional. */ }
   };
-  const selectedDeviceLayout: LayoutSelection = layout === 'desktop' ? 'desktop' : mobileNavMode;
+  const selectedDeviceLayout: LayoutSelection = layout === 'desktop' ? 'desktop' : 'premium';
   const chooseDeviceLayout = (next: LayoutSelection) => {
     if (next === 'desktop' && isHandheldDevice(navigator.userAgent)) return;
     if (next === 'desktop') {
@@ -2119,7 +2147,7 @@ function App() {
   const [mobileLogoutBusy, setMobileLogoutBusy] = useState(false);
   const mobileLayout = layout === "mobile";
   useEffect(() => {
-    if (mobileLayout) closeMobileDrawer();
+    if (mobileLayout) { closeMobileDrawer(); setPremiumMenuOpen(false); }
   }, [mobileLayout]);
   const canAdminister = ['Master', 'Administrador', 'Administrador Simples'].includes(me?.role);
   const canExpenses = Boolean(me?.can_expense_control);
@@ -2170,6 +2198,7 @@ function App() {
     setPage(p);
     setDetail(id);
     closeMobileDrawer();
+    setPremiumMenuOpen(false);
     history.replaceState(
       null,
       "",
@@ -2188,6 +2217,18 @@ function App() {
     window.addEventListener("arl-open-order", openOrder);
     return () => window.removeEventListener("arl-open-order", openOrder);
   }, [mobileLayout]);
+  useEffect(() => {
+    const fromMobileHome = (event: Event) => {
+      const destination = (event as CustomEvent<string>).detail as Page;
+      // O menu principal e o backend continuam sendo as fontes de permissões.
+      const allowed = me?.role === 'Usuário local'
+        ? ['dashboard', 'orders', 'new', 'clients']
+        : ['dashboard', 'orders', 'new', 'clients', 'finance', 'products'];
+      if (allowed.includes(destination)) go(destination);
+    };
+    window.addEventListener('arl-mobile-go-page', fromMobileHome);
+    return () => window.removeEventListener('arl-mobile-go-page', fromMobileHome);
+  }, [mobileLayout, me?.role]);
   const expenseOnly = me?.role === "Controle de Gasto";
   const roleAllowed = (p: Page) =>
     expenseOnly ? p === "expense-control"
@@ -2208,8 +2249,23 @@ function App() {
   // Gestor de Gastos independente apenas no Mobile (ou no perfil dedicado,
   // que não tem permissão para navegar na ARL). No Web, mantém shell e sidebar da ARL.
   const expenseWorkspace = expenseOnly || (mobileLayout && page === 'expense-control');
+  useEffect(() => { if (expenseWorkspace || !mobileLayout || mobileNavMode !== 'premium') setPremiumMenuOpen(false); }, [expenseWorkspace, mobileLayout, mobileNavMode]);
   useEffect(() => {
-    if (mobileMenu && mobileLayout && mobileNavMode === 'bottom' && !expenseWorkspace) restartMobileDrawerClose();
+    if (!premiumMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [premiumMenuOpen]);
+  useEffect(() => {
+    if (!premiumMenuOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPremiumMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [premiumMenuOpen]);
+  useEffect(() => {
+    if (mobileMenu && mobileLayout && (mobileNavMode === 'bottom' || mobileNavMode === 'premium') && !expenseWorkspace) restartMobileDrawerClose();
     return () => { if (mobileDrawerTimer.current !== null) clearTimeout(mobileDrawerTimer.current); mobileDrawerTimer.current = null; };
   }, [mobileMenu, mobileLayout, mobileNavMode, expenseWorkspace, restartMobileDrawerClose]);
   const groups = [
@@ -2246,7 +2302,7 @@ function App() {
   ] as const;
   return (
     <div
-      className={`shell layout-${layout}${!mobileLayout && !sidebarPinned ? " sidebar-collapsed" : ""}${sidebarPinned ? " sidebar-pinned" : ""}${mobileLayout && mobileNavMode === 'compact' ? ' arl-mobile-compact-mode' : ''}${expenseWorkspace ? ' arl-expense-workspace' : ''}`}
+      className={`shell layout-${layout}${!mobileLayout && !sidebarPinned ? " sidebar-collapsed" : ""}${sidebarPinned ? " sidebar-pinned" : ""}${mobileLayout && mobileNavMode === 'compact' ? ' arl-mobile-compact-mode' : ''}${mobileLayout && mobileNavMode === 'premium' && !expenseWorkspace ? ' arl-mobile-premium-mode' : ''}${expenseWorkspace ? ' arl-expense-workspace' : ''}`}
     >
       {mobileLayout && mobileNavMode === 'bottom' && !expenseWorkspace && (
         <>
@@ -2293,6 +2349,36 @@ function App() {
               onClick={() => void logout()}><span className="arl-rail-disc"><LogOut aria-hidden="true" /></span></button>
           </nav>
         </>
+      )}
+      {mobileLayout && mobileNavMode === 'premium' && !expenseWorkspace && premiumMenuOpen && (
+        <div className="arl-premium-menu-layer">
+          <div className="arl-premium-menu-backdrop" aria-hidden="true" onClick={() => setPremiumMenuOpen(false)} />
+          <section className="arl-premium-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="arl-premium-menu-title" onKeyDown={(event) => { if (event.key !== 'Tab') return; const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not([disabled])')); if (!items.length) return; if (event.shiftKey && document.activeElement === items[0]) { event.preventDefault(); items[items.length - 1].focus(); } else if (!event.shiftKey && document.activeElement === items[items.length - 1]) { event.preventDefault(); items[0].focus(); } }}>
+            <header className="arl-premium-menu-header">
+              <div className="arl-premium-drawer-brand"><img src="/arl-assets/arl-red-gold-from-vector-20261019.svg" alt="ARL" width={102} height={48} /><span>INFORMÁTICA</span><small>Manutenção e Soluções Inteligentes</small><h2 id="arl-premium-menu-title">Menu</h2><p>Escolha onde deseja ir</p></div>
+              <button type="button" className="arl-premium-menu-close" aria-label="Fechar Menu" autoFocus onClick={() => setPremiumMenuOpen(false)}><X aria-hidden="true" /></button>
+            </header>
+            <div className="arl-premium-menu-scroll">
+              {groups.map(group => {
+                const links = group.items.filter(([, destination]) => roleAllowed(destination) && destination !== 'post-sale' && !['dashboard', 'clients', 'expense-control'].includes(destination));
+                return links.length > 0 ? <section className="arl-premium-menu-group" key={group.label}>
+                  <h3>{group.label}</h3>
+                  <div className="arl-premium-menu-grid">
+                    {links.map(([title, destination, Icon]) => (
+                      <button type="button" key={destination} onClick={() => go(destination)} aria-label={title} className="arl-premium-menu-item">
+                        <span className="arl-premium-menu-icon"><Icon aria-hidden="true" /></span>
+                        <span className="arl-premium-menu-item-text"><strong>{title}</strong><span>{destination === 'orders' ? 'Atendimentos e status' : destination === 'services' ? 'Catálogo de serviços' : destination === 'products' ? 'Peças e estoque' : destination === 'suppliers' ? 'Parceiros e compras' : destination === 'finance' ? 'Entradas e saídas' : destination === 'settings' ? 'Opções do aplicativo' : 'Abrir módulo'}</span></span>
+                        {destination === 'orders' && navSummary.open_orders > 0 && <small className="arl-premium-menu-count" aria-label={navSummary.open_orders + ' ordens abertas'}>{navSummary.open_orders}</small>}
+                        <ChevronRight className="arl-premium-menu-chevron" aria-hidden="true" />
+                      </button>
+                    ))}
+                  </div>
+                </section> : null;
+              })}
+            </div>
+            <footer className="arl-premium-menu-footer"><button type="button" className="arl-premium-menu-signout" onClick={() => void logout()}><LogOut aria-hidden="true" /> Sair da conta</button></footer>
+          </section>
+        </div>
       )}
       <aside
         id="arl-main-sidebar"
@@ -2395,6 +2481,10 @@ function App() {
         </div>
       </aside>
       <main
+        data-arl-mobile-variant={mobileLayout && mobileNavMode === "premium" && !expenseWorkspace ? "premium" : "classic"}
+        data-arl-section={detail ? 'order-detail' : page}
+        data-arl-user-name={me?.name || ""}
+        data-arl-user-role={me?.role || ""}
         data-arl-expense-control-react={page === "expense-control" || expenseOnly ? "1" : undefined}
         data-arl-orders-react={!detail && page === "orders" ? "1" : undefined}
         data-arl-new-order-react={!detail && page === "new" ? "1" : undefined}
@@ -2408,8 +2498,17 @@ function App() {
           !detail && page === "post-sale" ? "1" : undefined
         }
       >
+        {mobileLayout && mobileNavMode === 'premium' && !expenseWorkspace && page !== 'dashboard' && (
+          <header className="arl-premium-section-hero" aria-label="ARL Informática">
+            <div className="arl-premium-section-brand">
+              <img src="/arl-assets/arl-red-gold-from-vector-20261019.svg" alt="ARL" width={162} height={66} />
+              <strong>INFORMÁTICA</strong>
+              <small>Manutenção e Soluções Inteligentes</small>
+            </div>
+          </header>
+        )}
         {!expenseWorkspace && <header className="app-head">
-          {(!mobileLayout || mobileNavMode === 'bottom') && (
+          {(!mobileLayout || mobileNavMode !== 'premium') && (
             <button
               className="menu-toggle"
               aria-label="Abrir menu"
@@ -2513,8 +2612,8 @@ function App() {
         )}
       </main>
       {/* Ocultar de verdade a barra inferior enquanto o menu lateral está aberto. */}
-      {mobileLayout && !expenseWorkspace && mobileNavMode === 'bottom' && !mobileMenu && mobileDrawerClosed &&
-        <MobileBottomBar go={go} page={page} canFinance={canAdminister} canExpenses={canExpenses} />}
+      {mobileLayout && !expenseWorkspace && (mobileNavMode === 'bottom' || mobileNavMode === 'premium') && !mobileMenu && mobileDrawerClosed &&
+        <MobileBottomBar go={go} page={page} onProfile={() => { if (mobileNavMode !== 'premium') { setMobileMenu(true); return; } if (!premiumMenuOpen && document.activeElement instanceof HTMLButtonElement) premiumMenuTriggerRef.current = document.activeElement; setPremiumMenuOpen(open => !open); }} profileOpen={mobileNavMode === 'premium' ? premiumMenuOpen : mobileMenu} premium={mobileNavMode === 'premium'} canFinance={canAdminister} canExpenses={canExpenses} />}
       <QuickEntry
         open={mobileQuickEntry}
         onClose={() => setMobileQuickEntry(false)}

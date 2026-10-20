@@ -33,7 +33,7 @@ export async function monthlyInvoiceFlow(page: Page, mobile: boolean) {
   await expect(amounts).toHaveText(['R$ 123,45', 'R$ 234,56', 'R$ 100,01', 'R$ 458,02']);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   for (const button of await popup.locator('.cg-payment-dollar').all()) {
-    await expect(button.locator('span')).toHaveCSS('color', 'rgb(0, 0, 0)');
+    await expect(button.locator('span')).toHaveCSS('color', 'rgb(255, 216, 107)');
     await expect(button).toHaveCSS('border-radius', '50%');
     const bounds = await button.boundingBox(); expect(bounds?.width).toBeGreaterThanOrEqual(30); expect(bounds?.height).toBeGreaterThanOrEqual(30);
   }

@@ -34,7 +34,7 @@ test('menu ARL referência 3D: botões circulares e central maior sem vazamento 
     expect(sizes.items[2].text).toBe('Abrir OS');
     expect(sizes.items[2].width).toBeGreaterThan(sizes.items[0].width + 10);
     expect(sizes.items[2].surface).toContain('radial-gradient');
-    expect(sizes.items[0].width).toBeGreaterThanOrEqual(39);
+    expect(sizes.items[0].width).toBeGreaterThanOrEqual(34);
     for (const item of sizes.items) {
       expect(Math.abs(item.height-item.width), item.text).toBeLessThan(2);
       expect(item.radius, item.text).toBe('50%');

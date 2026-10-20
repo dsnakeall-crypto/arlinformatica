@@ -64,3 +64,31 @@
 @media (max-width:900px){ .arl-layout-options{ grid-template-columns:minmax(0,1fr); } .arl-layout-option{ grid-template-columns:120px minmax(0,1fr); grid-template-areas:"preview top" "preview title" "preview desc" "action action"; column-gap:12px; } .arl-layout-option>.arl-layout-preview{ grid-area:preview; height:100%; min-height:112px; } .arl-layout-option-top{ grid-area:top; } .arl-layout-option-title{ grid-area:title; } .arl-layout-option-desc{ grid-area:desc; } .arl-layout-option-action{ grid-area:action; } }
 @media (max-width:360px){ .arl-layout-settings{ padding:13px; } .arl-layout-option{ grid-template-columns:minmax(0,1fr); grid-template-areas:"top" "preview" "title" "desc" "action"; } .arl-layout-option>.arl-layout-preview{ min-height:0; height:110px; } }
 @media (prefers-reduced-motion:reduce){ .arl-layout-option{ transition:none; } .arl-layout-option:hover{ transform:none; } }
+
+/* 19/10/2026: quarto layout experimental, sem substituir Web ou os mobiles antigos. */
+@media (min-width:901px) {
+  .arl-layout-options {grid-template-columns:repeat(4,minmax(0,1fr));}
+}
+.arl-layout-preview-premium .arl-layout-preview-device {
+  width:62px;height:104px;border-radius:12px;grid-template-columns:1fr;
+  background:linear-gradient(#fff,#f8f9fa);
+}
+.arl-layout-preview-premium .arl-layout-preview-sidebar {display:none;}
+.arl-layout-preview-premium .arl-layout-preview-body {padding:0 5px 13px;gap:4px;}
+.arl-layout-preview-premium .arl-layout-preview-top {
+  height:30px;margin:0 -5px 3px;padding:5px;
+  background:linear-gradient(125deg,#161518,#473118,#c28c24);
+}
+.arl-layout-preview-premium .arl-layout-preview-top i {background:#f8e7ac;}
+.arl-layout-preview-premium .arl-layout-preview-heading {height:5px;width:65%;}
+.arl-layout-preview-premium .arl-layout-preview-panels {grid-template-columns:repeat(3,1fr);}
+.arl-layout-preview-premium .arl-layout-preview-panels i {height:13px;background:#fff3d2;box-shadow:none;}
+.arl-layout-preview-premium .arl-layout-preview-lines i {background:#d8dee3;}
+.arl-layout-preview-premium .arl-layout-preview-bar {
+  display:grid;left:3px;right:3px;bottom:4px;border:0;border-radius:14px;
+  padding:4px 3px;background:#fff;box-shadow:0 2px 8px #0002;
+}
+.arl-layout-preview-premium .arl-layout-preview-bar i {background:#1d2127;}
+.arl-layout-preview-premium .arl-layout-preview-bar i:nth-child(3) {
+  background:#b90f2f;border-radius:100%;transform:none;
+}

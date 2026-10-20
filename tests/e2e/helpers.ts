@@ -125,12 +125,16 @@ export async function openExpenseSection(page: Page, name: string) {
     await direct.click();
     return;
   }
-  if (name === 'Pagamentos' || name === 'Quitadas' || name === 'Histórico') {
-    await mobile.getByRole('button', { name: name === 'Histórico' ? 'Projeção' : 'Gastos', exact: true }).click();
-    await page.getByRole('button', { name: name === 'Histórico' ? 'Histórico de gastos' : name, exact: true }).click();
-    return;
+  // 20/10: a barra mobile tem Carros e Menu; as seções extras ficam
+  // na gaveta lateral direita, sem alterar a navegação da versão Web.
+  await mobile.getByRole('button', { name: 'Menu', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Menu' });
+  await expect(drawer).toBeVisible();
+  const target = name === 'Histórico' ? 'Projeção' : name;
+  await drawer.getByRole('button', { name: target, exact: true }).click();
+  if (name === 'Histórico') {
+    await page.getByRole('button', { name: 'Histórico de gastos', exact: true }).click();
   }
-  throw new Error('Seção de gastos indisponível no layout atual: ' + name);
 }
 
 /** Open the actual new-expense form, including the mobile manual/photo choice. */

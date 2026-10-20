@@ -12,6 +12,7 @@ use App\Http\Controllers\DiagnosticController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ExpenseControlController;
 use App\Http\Controllers\ExpensePhotoAiController;
+use App\Http\Controllers\ExpenseVehiclesController;
 use App\Http\Controllers\FinalizationController;
 use App\Http\Controllers\FinalShareController;
 use App\Http\Controllers\FinanceController;
@@ -47,6 +48,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/photo-ai', [ExpensePhotoAiController::class, 'configuration']);
         Route::post('/photo-ai/read', [ExpensePhotoAiController::class, 'read'])->middleware('throttle:5,1');
         Route::get('/institutions/{id}/image', [ExpenseControlController::class, 'image'])->whereNumber('id');
+        Route::get('/vehicles', [ExpenseVehiclesController::class, 'index']);
+        Route::post('/vehicles', [ExpenseVehiclesController::class, 'vehicle']);
+        Route::post('/vehicle-events', [ExpenseVehiclesController::class, 'event']);
         Route::get('/configuration', [ExpenseControlController::class, 'configuration']);
         Route::put('/people', [ExpenseControlController::class, 'people']);
         Route::post('/catalogs/{catalog}', [ExpenseControlController::class, 'catalog']);

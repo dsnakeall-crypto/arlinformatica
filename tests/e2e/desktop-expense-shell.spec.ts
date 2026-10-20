@@ -42,7 +42,7 @@ test('Mobile conserva Controle de Gastos em tela independente com navegação pr
  await page.evaluate(()=>localStorage.setItem('arl-layout-mode','mobile'));
  await page.reload();
  const nav=page.getByRole('navigation',{name:'Navegação Mobile / Tablet'});
- await nav.getByRole('button',{name:'Gestor de Gasto'}).click();
+ await nav.getByRole('button',{name:'Gastos',exact:true}).click();
  await expect(page.locator('.shell.arl-expense-workspace')).toBeVisible();
  await expect(page.locator('#arl-main-sidebar')).toBeHidden();
  await expect(page.getByRole('navigation',{name:'Menu do Controle de Gastos'})).toBeVisible();

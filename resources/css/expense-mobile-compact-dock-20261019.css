@@ -1,0 +1,101 @@
+/* Controle de Gastos: dock compacto e tocável no estilo Instagram.
+   Altera somente apresentação visual mobile; mantém todos os fluxos financeiros,
+   separação Allan/Carol/Casal, funções de pagamento e abas existentes. */
+@media(max-width:1024px) {
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched {
+    --expense-disc:23px;
+    --expense-main-disc:31px;
+    position:fixed!important;
+    top:auto!important;
+    bottom:max(8px,env(safe-area-inset-bottom,0px))!important;
+    left:max(8px,env(safe-area-inset-left,0px))!important;
+    right:max(8px,env(safe-area-inset-right,0px))!important;
+    width:calc(100% - 16px)!important;
+    max-width:410px!important;
+    min-height:0!important;
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    align-items:stretch!important;
+    gap:2px!important;
+    margin:0 auto!important;
+    padding:4px 5px!important;
+    border:1px solid #fff!important;
+    border-radius:999px!important;
+    background:rgba(255,255,255,.97)!important;
+    box-shadow:0 6px 23px #26323e2b,0 -1px 10px #ffffffaa!important;
+    backdrop-filter:blur(12px)!important;
+    overflow:visible!important;
+    pointer-events:auto!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button.arl-nav-reference-button:not(:disabled) {
+    display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;
+    min-height:49px!important;height:49px!important;max-height:49px!important;
+    min-width:0!important;width:100%!important;
+    gap:1px!important;margin:0!important;padding:3px 0!important;
+    border:0!important;border-radius:40px!important;
+    background:transparent!important;background-image:none!important;
+    box-shadow:none!important;transform:none!important;
+    pointer-events:auto!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button[aria-current="page"]:not(.arl-expense-add) {
+    background:#ffebba!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button .arl-nav-icon-disc {
+    width:23px!important;height:23px!important;min-width:23px!important;min-height:23px!important;
+    padding:0!important;margin:0!important;transform:none!important;
+    background:none!important;background-image:none!important;
+    box-shadow:none!important;outline:0!important;border:0!important;
+    border-radius:0!important;color:#171a20!important;
+    filter:none!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button .arl-nav-icon-disc >svg {
+    width:21px!important;height:21px!important;
+    fill:none!important;stroke:currentColor!important;stroke-width:2.4!important;
+    background:none!important;box-shadow:none!important;filter:none!important;
+    border:0!important;padding:0!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button.arl-expense-add .arl-nav-icon-disc {
+    width:31px!important;height:31px!important;min-width:31px!important;min-height:31px!important;
+    margin:0!important;transform:none!important;
+    background:#bc092b!important;background-image:none!important;
+    border:0!important;border-radius:50%!important;color:#fff!important;
+    box-shadow:0 3px 8px #920b2e3a!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button.arl-expense-add .arl-nav-icon-disc >svg {
+    width:21px!important;height:21px!important;color:#fff!important;
+    stroke-width:2.6!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button .arl-nav-caption {
+    width:100%!important;max-width:100%!important;
+    font-size:9px!important;line-height:11px!important;min-height:11px!important;
+    padding:0 1px!important;letter-spacing:0!important;
+    font-weight:600!important;color:#596171!important;
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+    text-shadow:none!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button.arl-expense-add .arl-nav-caption {
+    color:#b20b2d!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button:focus-visible {
+    outline:2px solid #ae8535!important;outline-offset:-3px!important;
+  }
+}
+
+/* Ação central mantém a MESMA altura também enquanto o carregamento desabilita o botão. */
+@media(max-width:1024px) {
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button.arl-nav-reference-button.arl-expense-add {
+    min-height:49px!important;
+    height:49px!important;
+    max-height:49px!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:3px 0!important;
+    gap:1px!important;
+    transform:none!important;
+  }
+  html body .shell.layout-mobile.arl-expense-workspace .cg-page.cg-mobile.cg-clean-only .arl-expense-bottom.arl-expense-matched >button.arl-nav-reference-button:disabled {
+    min-height:49px!important;height:49px!important;max-height:49px!important;
+    gap:1px!important;margin:0!important;padding:3px 0!important;
+    transform:none!important;
+  }
+}

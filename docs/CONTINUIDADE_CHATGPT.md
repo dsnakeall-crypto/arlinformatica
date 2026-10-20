@@ -1,5 +1,21 @@
 # Continuidade do projeto ARL Informática no ChatGPT
 
+
+## CHECKPOINT OPERACIONAL 18/10/2026 - CI DE INTEGRACAO
+
+ATENCAO: ESTADO ATUAL NA CONTINUIDADE MAIS RECENTE: docs/CONTINUIDADE-ARL-20261018-PRONTO-PARA-NOVO-CHAT.md
+PROMPT DE RETOMADA: docs/PROMPT-NOVO-CHAT-ARL-INFORMATICA-CI-20261018.txt
+DIAGNOSTICO: docs/CHECKPOINT-CI-GITHUB-ARL-20261018-EM-CORRECAO.md
+
+- Branch release/integracao-completa-20261018, HEAD 8903365. GitHub Actions #1321: backend/backend-mysql/frontend VERDES, E2E VERMELHO (254 PASS, 23 FAIL, 8 nao executados).
+- Correcoes E2E ainda locais e em progresso; nao declarar CI totalmente verde.
+- Git status tinha 377 entradas; NAO usar git add ponto, git clean, reset hard, force push ou apagar logs/backups.
+- Objetivo imediato: corrigir E2E e testar integralmente; push seletivo; confirmar os quatro jobs verdes no HEAD novo; so entao preparar KingHost preservando todo banco/dados reais.
+- A PR #11/CI #356 mencionada adiante e HISTORICA, nao representa o estado atual.
+
+---
+
+
 Este arquivo é o ponto de retomada do projeto em um novo chat. O GitHub é a fonte oficial; não reconstruir requisitos apenas por memória de conversa.
 
 ## Fonte oficial e estado atual
@@ -144,3 +160,35 @@ Backup automático é persistido/auditado. Restore usa staging e snapshot apenas
 ## Prompt curto para um novo chat
 
 > Continue a PR #11 de `dsnakeall-crypto/arlinformatica`, branch `codex/implementar-etapa-10-do-projeto`. Leia os sete documentos obrigatórios e confira head/CI antes de qualquer escrita. O último head técnico validado antes do fechamento documental foi `cdffc543df5c147b64b9c87f14a20831145d962a`, CI #356 com SQLite, MySQL, frontend e 26/26 Playwright verdes. As 8 referências visuais oficiais foram reenviadas em 04/09/2026 e seus nomes/SHA-256 estão em `docs/REFERENCIAS_VISUAIS.md`; se não estiverem anexadas, procure a Library antes de pedir reenvio. O Instagram oficial é `@allanluttembarck`. Capturas visuais prematuras e overflow de Clientes já foram corrigidos e protegidos por E2E. Playwright permanece `retries: 0`, sem force/clique JS/timeout artificial. Não faça merge automaticamente. Próximo gate: CI do head documental final, depois workflow manual `Preparar release`, KingHost real, logo/PDF físico e Web Push real.
+
+## 19/10/2026 — Prévia mobile com dados fictícios persistentes + layout Web/Mobile automático
+
+Retomada completa em `docs/RETOMADA-ARL-20261019-DEMO-E-LAYOUT-AUTOMATICO.md`.
+Ambiente de teste persistente `http://127.0.0.1:8012`; banco privado externo em `Backups/ARL-PREVIA-DADOS-20261019/preview-persistente.sqlite` (pasta `App Arl Informatica` no PC). Inicialização via `INICIAR-PREVIA-ARL.bat` da mesma pasta. Criados 20 fornecedores, 20 produtos, 20 serviços, 20 clientes e 20 OS abertas com orçamentos e estoque, sem dados oficiais. Verificações de integridade, navegação e API 200. Layout alterna automaticamente Web ↔ Mobile quando a largura cruza 1024px, teste E2E direcionado aprovado. **Não houve commit/push/deploy**. Próximo gate: atualizar testes E2E antigos incompatíveis com a nova alternância e validar CI integral, antes de considerar KingHost.
+
+## 19/10 — Quatro layouts mantidos para comparação
+Implementado `Configurações → Layouts`: Web / PC; Mobile barra inferior clássica; Mobile Premium (novo); Mobile menu lateral compacto. Premium condicionado por classe da shell, home e dock específicos; clássicos preservados, mesmo banco de dados. LocalStorage por usuário salva a escolha. Teste E2E quatro opções e fluxo Premium aprovado (4/4 direcionados). Conferir `docs/QUATRO-LAYOUTS-PARA-TESTE-20261019.md`; backup anterior em `Backups/QUATRO-LAYOUTS-20261019` fora do repo. Nenhum commit/push/deploy. CIs integrais ainda não verdes.
+
+## 19/10 — Menu flutuante premium e estudo visual das telas
+Dock Premium: Painel, Clientes, + Abrir OS, Gastos, Menu. Menu abre modal bottom sheet com grupos e permissões existentes; sidebar antiga preservada nos layouts clássicos. Typecheck/lint/build e Playwright focado 4/4 PASS. Estudo INTERATIVO APENAS VISUAL de 10 áreas em Backups/ESBOCOS-AREAS-PREMIUM-20261019/index.html. Detalhes em docs/MOBILE-PREMIUM-MENU-FLUTUANTE-E-ESBOCOS-20261019.md. Sem commits, push ou deploy.
+
+## 19/10 — Mobile Premium único + docks compactos ARL/Gastos
+Proprietário aprovou remover opções Mobile clássico e compacto (mantidas apenas em backup/histórico para reversão). Configurações -> Layouts: somente Web/PC e Mobile Premium. Preferências antigas bottom/compact são migradas por usuário para Premium. Dock ARL Painel|Clientes|+Abrir OS|Gastos|Menu; dock financeiro mantém Resumo|Instituições|Adicionar|Projeção|Gastos. Ambos agora medem 59 px no navegador (botões 49 px), com testes E2E direcionados 6/6 PASS, TypeScript/lint/build PASS. Reformulação visual interna dos módulos aplica CSS somente ao Premium, sem alterações funcionais. Detalhes em docs/RETOMADA-ARL-20261019-PREMIUM-UNICO-DOCK-COMPACTO.md; backup externo em Backups/MOBILE-PREMIUM-UNICO-DOCK-MENOR-20261019. KingHost intacta; sem commits/push. CIs integrais não verificadas verdes.
+
+## 20/10/2026 — Menu Mobile Premium: gaveta direita + 3D leve
+Implementado pelo Desktop Commander no projeto local (branch release/integracao-completa-20261018, HEAD 8903365). Menu Premium agora abre gaveta pela DIREITA em tela inteira (86vw, até 365px), mantendo os mesmos acessos e permissões; header vetorizado ARL, cartões verticais 3D suaves, botão X, Esc, backdrop, Tab e rolagem. O dock compacto permanece Painel|Clientes|+ Abrir OS|Gastos|Menu. Cards existentes dos módulos ARL recebem apenas efeitos 3D de CSS escopado ao Mobile Premium; Web/PC e Controle de Gastos permanecem inalterados em suas regras e estilos funcionais. CSS antigo do bottom-sheet removido de arl-mobile-premium-20261019.css; novo CSS arl-premium-right-drawer-3d-20261020.css importado em main.tsx. Backup externo SHA256 em Backups/01 - 20-10-26 - 03-50 - GAVETA-DIREITA-3D. TypeScript/lint/build PASS; E2E direcionado 8 PASS e teste dos 6 módulos carregados 1 PASS. Visual final aguardando aceite; regressão full/CI ainda pendentes; sem commit/push/KingHost. Mais em docs/layout-setores/menu-premium/.
+
+## 20/10/2026 — referência visual 3D oficial aplicada ao Mobile Premium ARL
+Proprietário autorizou executar com a última captura (1024x1536) como referência. Backup pré-alteração externo SHA256: `Backups/01 - 20-10-26 - 05-15 - ARL-MOBILE-3D-REFERENCIA`. Incrementos restritos à aparência mobile ARL: `resources/js/mobile-home.ts` recebeu 8 ícones metálicos SVG com gradiente; novo CSS `resources/css/arl-mobile-3d-reference-20261020.css` importado por último em `main.tsx` padroniza relevo da home/dock e dos cards nos módulos reais; novo SVG de curva luminosa `public/arl-assets/arl-mobile-premium-gold-ribbon-20261020.svg`; teste novo `tests/e2e/mobile-premium-3d-reference-20261020.spec.ts`. Cinco capturas de Painel 320/375/390/409/430, screenshot de Menu e Produtos no backup. Typecheck/lint/build PASS; E2E direcionados existentes 8 PASS e teste de contrato visual 2 PASS; captura de Playwright da prévia persistente: 20 OS, oito ícones, sem overflow. **Não afirmar fidelidade de 100% pixels**: renderização usa SVG/CSS e não o raster da referência; o proprietário pode solicitar refinamento adicional. Web/PC e Controle de Gastos intocados. HEAD inicial 8903365, não houve commit, push ou deploy. CIs integrais GitHub pendentes. Detalhes em `docs/MOBILE-3D-REFERENCIA-OFICIAL-20261020.md`.
+
+## 20/10/2026 — Controle de Gastos: Carros no Web e Mobile
+Autorizada e implementada localmente aba Carros (veículos, lavagem, manutenção com KM/revisão, itens livres e valor, instituição/tipo e responsável Allan/Carol/Casal), integrada à rotina original de dívidas e pagamentos com vínculo histórico independente e request_key idempotente. Mobile: dock Resumo|Instituições|Adicionar|Carros|Menu, gaveta direita com demais seções; botões de Instituições/tipos e popups compactados. Web: aba Carros e telas idênticas em funcionalidade. Migração aditiva apenas no SQLite persistente de DEMO, após backup íntegro externo; KingHost/MySQL oficial intocados. 4 testes PHP PASS (45 assertions), 2 Playwright novos PASS, typecheck/lint/build PASS. Registros e evidências em docs/CONTROLE-GASTOS-CARROS-WEB-MOBILE-20261020.md; backup em Backups/01 - 20-10-26 - 08-30 - CARROS-E-MENU-GASTOS. Não houve commit/push/deploy; CI integral não validada.
+
+## 20/10 — Controle de Gastos Carros Web/Mobile
+Na retomada foram identificados arquivos locais já implementados e não commitados para Carros. Preservados; inspecionados e testados. Typecheck/lint/build PASS; testes PHP de integração 4 PASS/45 asserts; E2E Web/Mobile 2 PASS. Carros suporta lavagem, manutenção detalhada, itens livres e dívida vinculada por Allan/Carol/Casal sem duplicar; mobile dock Carros/Menu abre menu com Projeção e outras abas, Web também tem aba Carros. Cópia de segurança externa em Backups/01 - 20-10-26 - 07-35 - CARROS-VALIDACAO. Estado e cuidados em docs/VALIDACAO-CARROS-CONTROLE-GASTOS-20261020.md. Nenhum commit/push/deploy; banco oficial intocado e CI integral pendente.
+
+## 20/10/2026 — manutenção Carros com soma automática e campo único
+Pedido de ajuste do proprietário executado localmente por Desktop Commander. Cadastro de manutenção agora possui checkbox Total manual desmarcado por padrão; soma automática exclusivamente dos itens confirmados. Itens fixos com lápis para editar e exclusão no modo edição; próxima revisão por KM e data opcional; aviso de revisão por data a até 30 dias, somente dentro de Carros, sem push. Campo único opcional O que foi feito / o que ficar atento após itens. Preservados Web/Mobile, dívidas Allan/Carol/Casal, pagamentos, histórico e dados do servidor. Backend passou a permitir work_notes null, esquema já era nullable. Backup antes em Backups/01 - 20-10-26 - MANUTENCAO-CARROS-AUTOSOMA; documentação detalhada em docs/CARROS-MANUTENCAO-AUTOSOMA-20261020.md. Typecheck/lint/build PASS, backend 5 testes e 55 asserts PASS, E2E 4 PASS total (Web e Mobile). Nenhum commit/push/KingHost. CI completa pendente.
+
+## 20/10/2026 — popular Controle de Gastos do demo e uniformizar docks
+A prévia real 127.0.0.1:8012 conecta a SQLite isolada em Backups/ARL-PREVIA-DADOS-20261019/preview-persistente.sqlite. Os 20 clientes, 20 fornecedores, 20 produtos, 20 serviços, 20 OS e 20 orçamentos fictícios foram **confirmados e preservados** (não recadastrar). CG estava zerado: criadas via API local 7 instituições, 7 tipos de dívida, 16 dívidas/faturas e 51 parcelas no mês 10/2026 e seguintes, distribuídas Allan/Carol/Casal. Nenhum banco oficial tocado. Backup SQLite integral antes (hash SHA256), scripts/resultado e screenshots em Backups/01 - 20-10-26 - 09-10 - DADOS-DEMO-GASTOS-DOCK. Novo CSS `resources/css/arl-gastos-docks-unificados-20261020.css`, importado ao final de main.tsx e expense-control-page.tsx. Barras inferiores de ambos módulos medidas 57 px; botão vermelho circular 30×30 com gap de 5 px para legenda; ações preservadas. Typecheck/lint/build PASS; documentação em docs/CHECKPOINT-DEMO-FINANCEIRO-DOCKS-20261020.md. Sem commit/push/KingHost. CIs integrais ainda não homologadas.

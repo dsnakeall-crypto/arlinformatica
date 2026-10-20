@@ -1,0 +1,283 @@
+/* ARL MOBILE 3D — visual aprovado em 20/10/2026.
+ * Referência: captura 1024×1536 do Painel (descontada a barra de janela).
+ * Esta folha vem POR ÚLTIMO na cascata e afeta SOMENTE o Mobile Premium ARL.
+ * NÃO altera componentes, dados, formulários, permissões nem Controle de Gastos.
+ */
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) {
+  --arl-3d-gold:#ffcc67;
+  --arl-3d-ink:#10152c;
+  --arl-3d-slate:#596b8b;
+  --arl-3d-blue:#92b5f2;
+  --arl-3d-emboss:inset 0 1px 0 #fffffff8,inset 0 -2px 2px #77829b24,0 3px 2px #fff9,0 8px 15px #1f2a3d32;
+  --arl-3d-soft:inset 0 1px 0 #fff,inset 0 -2px 2px #7786a11a,0 4px 3px #f9fcff,0 8px 16px #26324632;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace)>main {
+  background:linear-gradient(115deg,#fff 0%,#fcfcff 50%,#f4f5fa 100%)!important;
+  color:var(--arl-3d-ink)!important;
+}
+/* Hero — relevo metálico dourado, tecnologia escura e foto/asset do projeto. */
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-hero,
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace)>main>.arl-premium-section-hero {
+  height:clamp(145px,42vw,180px)!important;
+  border:2px solid #e4a62d!important;
+  border-radius:21px!important;
+  background:
+    radial-gradient(ellipse at 95% 3%,#ffde792e,transparent 50%),
+    linear-gradient(110deg,#0c0c10a8 0%,#0b0c0f72 52%,#321e0a1a 100%),
+    url('/arl-assets/arl-gold-sidebar-photo-continuous-20261014.webp') center center/cover no-repeat!important;
+  box-shadow:inset 0 0 0 1px #ffdf85b3,inset 0 -3px 2px #ffa60059,0 2px 1px #fff,
+    0 4px 8px #ac7d2a4a,0 10px 17px #40351c2d!important;
+  overflow:hidden!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-hero {
+  margin:6px -10px 0!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace)>main>.arl-premium-section-hero {
+  margin:6px -10px 15px!important;padding:38px 22px 12px!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace)>main>.arl-premium-section-hero::after {
+  display:none!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-brand {
+  top:clamp(40px,10.6vw,57px)!important;left:18px!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-brand img,
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-section-brand img {
+  width:clamp(112px,37vw,177px)!important;height:clamp(43px,14vw,70px)!important;
+  filter:drop-shadow(1px 2px 0 #360a02) drop-shadow(0 3px 4px #000c)!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-brand>span,
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-section-brand>strong {
+  font-size:clamp(10px,3.4vw,16px)!important;font-weight:850!important;
+  letter-spacing:clamp(2.2px,.65vw,4.6px)!important;text-shadow:0 2px 3px #000c!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-brand>small,
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-section-brand>small {
+  font-size:clamp(8px,2.3vw,11px)!important;letter-spacing:.22px!important;
+  white-space:normal;text-shadow:0 1px 3px #000!important;
+}
+/* Botões do header operacionais — carteirinha, logout e sino elevados. */
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) main[data-arl-mobile-home="1"]>.app-head {
+  top:14px!important;left:auto!important;right:17px!important;width:auto!important;
+  height:46px!important;display:flex;justify-content:flex-end;gap:7px;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) main[data-arl-mobile-home="1"]>.app-head .mobile-logo {display:none!important}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) main[data-arl-mobile-home="1"]>.app-head .mobile-header-actions {
+  gap:7px!important;display:flex!important;align-items:center!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) main[data-arl-mobile-home="1"]>.app-head .mobile-header-actions>button {
+  width:39px!important;height:39px!important;min-width:39px!important;min-height:39px!important;
+  padding:6px!important;border:1px solid #b4c8e5!important;border-radius:12px!important;
+  background:linear-gradient(145deg,#fff,#e6efff)!important;color:#22314a!important;
+  box-shadow:inset 0 2px 1px #fff,0 2px 1px #7c9fc4,0 5px 10px #0007!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) main[data-arl-mobile-home="1"]>.app-head .mobile-header-actions>button svg {
+  width:22px!important;height:22px!important;filter:drop-shadow(0 2px 1px #6678914d);
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) main[data-arl-mobile-home="1"]>.app-head button[aria-label*="notifica"] {
+  border-radius:50%!important;border-color:#ffde85!important;color:#b47710!important;
+  background:radial-gradient(circle at 27% 15%,#fffdfa,#ffe5a5 55%,#d9a132)!important;
+  box-shadow:inset 0 2px 2px #fff,0 2px 1px #b97b19,0 5px 10px #0008!important;
+}
+/* Título e bem-vindo — hierarquia igual à captura. */
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-welcome {
+  padding:17px 1px 8px!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-welcome>span {
+  color:#65738f!important;font-size:11px!important;font-weight:800!important;letter-spacing:1.2px!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-welcome>h1 {
+  color:#080e21!important;font-size:29px!important;font-weight:900!important;margin:3px 0 5px!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-welcome>p {
+  color:#60708f!important;font-size:12px!important;
+}
+/* KPIs: 4 colunas, bordas douradas/azuis, ícones metálicos em destaque. */
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-mobile-home-premium .arl-premium-kpis {
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important;margin:9px 0 0!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-kpis article {
+  min-width:0!important;min-height:119px!important;padding:12px 3px 10px!important;
+  border:1px solid #dbe6f4!important;border-radius:17px!important;
+  background:linear-gradient(146deg,#fff 0%,#f6f8fc 38%,#e4ebf4 100%)!important;
+  box-shadow:var(--arl-3d-emboss)!important;
+  text-align:center!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-kpis article:nth-child(odd) {
+  border-color:#ffdf93!important;
+  background:linear-gradient(145deg,#fffdf5,#fff6d9 61%,#ffe8b4)!important;
+  box-shadow:inset 0 2px 0 #fff,inset 0 -2px 2px #e3bc6e40,0 3px 2px #fff9,0 8px 16px #7a5d2938!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-stat-icon {
+  width:35px!important;height:35px!important;margin-bottom:4px!important;
+  display:grid!important;place-items:center!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-icon {
+  display:block!important;width:30px!important;height:30px!important;overflow:visible!important;
+  filter:drop-shadow(0 3px 1px #12192450) drop-shadow(0 5px 3px #10182123)!important;
+  background:none!important;box-shadow:none!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-kpis strong {
+  color:#060b1d!important;font-size:26px!important;font-weight:900!important;line-height:1.14!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-kpis small {
+  color:#364a6e!important;font-size:10px!important;line-height:1.18!important;letter-spacing:-.1px!important;
+}
+/* Atalhos: o mesmo cartão 3D do exemplo, 2 colunas com realce azul. */
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-title {
+  margin:21px 1px 11px!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-title h2 {
+  color:#0a1025!important;font-size:18px!important;font-weight:850!important;letter-spacing:-.45px!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-title>span,
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-title>small {
+  color:#647491!important;font-size:11px!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts {
+  gap:9px!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts button {
+  min-height:78px!important;min-width:0!important;padding:10px 8px!important;
+  grid-template-columns:42px minmax(0,1fr)!important;
+  gap:4px 9px!important;text-align:left!important;border-radius:15px!important;
+  border:1.5px solid #a7c4ff!important;
+  background:linear-gradient(145deg,#fff,#fbfdff 49%,#edf2ff 100%)!important;
+  box-shadow:inset 0 1px 0 #fff,0 3px 2px #e3ecff,0 7px 12px #2b477d3e!important;
+  transition:transform .15s ease,box-shadow .15s ease!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts button:active {
+  transform:translateY(2px)!important;box-shadow:inset 0 2px 5px #51648027,0 1px 2px #536b9a38!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts button>span[aria-hidden] {
+  grid-row:1 / 3!important;width:42px!important;height:48px!important;
+  border:1px solid #fff!important;border-radius:14px!important;
+  background:linear-gradient(145deg,#fffdef,#ffe7a8)!important;
+  box-shadow:inset 0 2px 2px #fff,0 3px 3px #c29c4b78,0 5px 8px #26304e36!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts button:nth-child(even)>span[aria-hidden] {
+  background:linear-gradient(145deg,#fff,#e3ebf7)!important;
+  box-shadow:inset 0 2px 2px #fff,0 3px 3px #7991b47d,0 5px 8px #26304e2b!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts button>span .arl-premium-icon {
+  width:27px!important;height:27px!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts button strong {
+  color:#10152e!important;font-size:12px!important;font-weight:850!important;line-height:1.2!important;
+  overflow-wrap:anywhere!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts button small {
+  color:#526586!important;font-size:10px!important;line-height:1.28!important;
+}
+/* Recentes — elementos completos, sem remover telefone/links e cliques. */
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-mobile-home-premium .arl-premium-order-title {
+  margin:21px 1px 11px!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-mobile-home-premium .arl-mobile-order-list {gap:8px!important;}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-mobile-home-premium .arl-mobile-order-card {
+  min-height:76px!important;padding:11px!important;
+  background:linear-gradient(145deg,#fff,#fffefa 60%,#fcfcff)!important;
+  border:1px solid #f7e7c5!important;border-radius:17px!important;
+  box-shadow:inset 0 2px 0 #fff,0 3px 2px #fff,0 7px 16px #26324631!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-mobile-home-premium .arl-mobile-order-info strong {
+  color:#10152d!important;font-size:12px!important;font-weight:800!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-mobile-home-premium .arl-mobile-order-info>span {
+  color:#53688a!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-mobile-home-premium .arl-mobile-order-action {
+  width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;
+  padding:6px!important;border-radius:12px!important;border:1px solid #91b5ed!important;
+  background:linear-gradient(145deg,#fff,#d7e9ff)!important;
+  box-shadow:inset 0 2px 1px #fff,0 3px 2px #adc8e6,0 5px 9px #1630543a!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-mobile-home-premium .arl-mobile-order-whatsapp {
+  background:linear-gradient(145deg,#90ffb2,#16c75d)!important;border-color:#5ee78a!important;
+  box-shadow:inset 0 2px 1px #c7ffe1,0 3px 2px #2787469c,0 5px 8px #13552f43!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-mobile-home-premium .arl-mobile-order-action img {
+  width:25px!important;height:25px!important;object-fit:contain!important;
+  filter:drop-shadow(0 2px 2px #0728433c)!important;
+}
+/* Barra inferior em relevo com botão + suspenso, dimensões compactas existentes. */
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace):not(.arl-mobile-compact-mode)
+ nav.arl-premium-mobile-nav.arl-mobile-five {
+  border:1px solid #f3dfbd!important;border-radius:999px!important;
+  background:linear-gradient(170deg,#fff,#fffdf9 45%,#f5f3f0)!important;
+  box-shadow:inset 0 2px 0 #fff,0 3px 2px #dbcbb3b3,0 8px 19px #2c2c2c47!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace):not(.arl-mobile-compact-mode)
+ nav.arl-premium-mobile-nav.arl-mobile-five>button:is(.active,[aria-current="page"]):not(.primary-shortcut) {
+  border:1px solid #fff3cb!important;
+  background:linear-gradient(145deg,#fff8dc,#ffe0a1 55%,#ffd16d)!important;
+  box-shadow:inset 0 2px 2px #fff,0 3px 2px #e7bb69,0 4px 9px #7654214b!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) nav.arl-premium-mobile-nav.arl-mobile-five>button.primary-shortcut .arl-nav-icon-disc {
+  background:radial-gradient(circle at 28% 17%,#ff506b,#e0002e 56%,#a70025)!important;
+  border:1px solid #ffb5bd!important;border-radius:50%!important;
+  box-shadow:inset 0 2px 1px #ffffff8a,inset 0 -3px 5px #7100179e,0 3px 2px #87001f8c,0 6px 11px #a900356e!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) nav.arl-premium-mobile-nav.arl-mobile-five .arl-nav-icon-disc>svg {
+  filter:drop-shadow(0 1px 1px #18223b4d)!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) nav.arl-premium-mobile-nav.arl-mobile-five>button.primary-shortcut .arl-nav-icon-disc>svg {
+  color:#fff!important;stroke:#fff!important;filter:drop-shadow(0 2px 2px #600019)!important;
+}
+/* Relevo padronizado das abas reais sem tocar no DOM dos componentes. */
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace)>main :is(
+  .panel,.form-card,.orders-panel,.clients-row,.services-create-card,.services-top-card,
+  .services-list-card,.services-catalog-card,.supplier-panel,.supplier-history-card,
+  .supplier-card,.supplier-product-open,.finance-monthly,.finance-total-cards>article,
+  .finance-cards>article,.os-items-panel,.arl-settings-mobile-card,.services-item,
+  .services-row,.supplier-purchase-card,.clients-history-page .panel,
+  .os-main,.selected-client-summary,.opening-item,.opening-total
+) {
+  background:linear-gradient(150deg,#fff,#fdfdff 56%,#f1f5fb)!important;
+  border:1px solid #acc6fa!important;border-radius:16px!important;
+  box-shadow:inset 0 2px 1px #fff,0 3px 2px #eff5ff,0 8px 16px #233c6b30!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace)>main :is(
+  .arl-page-header-icon,.services-heading-icon,.arl-settings-mobile-card .icon,
+  .supplier-card-icon
+) {
+  border:1px solid #fff7d3!important;border-radius:13px!important;
+  background:linear-gradient(140deg,#fff9e7,#ffe2a1)!important;
+  box-shadow:inset 0 2px 1px #fff,0 3px 3px #b187424a,0 5px 8px #273a5833!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace)>main :is(
+  button.primary,.supplier-primary,.arl-page-header-actions .primary
+) {
+  border:1px solid #ffd77f!important;border-radius:13px!important;
+  background:linear-gradient(155deg,#303139,#17181d 63%,#08080a)!important;
+  color:#f8c85e!important;
+  box-shadow:inset 0 1px 1px #ffffff45,0 3px 2px #05070b,0 6px 11px #15182243!important;
+}
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace)>main :is(
+  .order-tabs,.finance-tabs,.supplier-tabs,.supplier-detail-tabs,.arl-settings-tabs,.catalog-pills
+)>button:is(.active,[aria-selected="true"],[aria-pressed="true"],.chosen) {
+  background:linear-gradient(145deg,#fff8e2,#ffd27d)!important;
+  border-color:#efcb7f!important;
+  box-shadow:inset 0 2px 1px #fff,0 3px 3px #bd935835!important;
+}
+@media (max-width:360px){
+  html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-brand {left:13px!important;top:47px!important}
+  html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-kpis article {min-height:107px!important;padding:8px 2px!important}
+  html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-kpis strong {font-size:22px!important}
+  html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts button {grid-template-columns:34px minmax(0,1fr)!important;padding:8px 5px!important;gap:4px!important}
+  html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts button>span[aria-hidden] {width:34px!important;height:42px!important}
+  html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-shortcuts button strong {font-size:10px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode .arl-premium-shortcuts button {transition:none!important}
+}
+
+/* Fita dourada vetorial da referência: curvas luminosas sem imagem de tela achatada. */
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace) .arl-premium-hero,
+html:root[data-layout="mobile"] body .shell.layout-mobile.arl-mobile-premium-mode:not(.arl-expense-workspace)>main>.arl-premium-section-hero {
+  background:
+    linear-gradient(90deg,#0b0c10ee 0%,#090a0da1 42%,#0d0b0a24 100%),
+    url('/arl-assets/arl-mobile-premium-gold-ribbon-20261020.svg') right center/cover no-repeat,
+    linear-gradient(90deg,#08090c,#161311 65%,#332409),
+    url('/arl-assets/arl-gold-sidebar-photo-continuous-20261014.webp') center/cover no-repeat!important;
+}

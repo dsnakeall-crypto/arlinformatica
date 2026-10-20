@@ -19,8 +19,8 @@ const today = () => new Date().toLocaleDateString('sv-SE');
 const date = (value: string) => value.slice(0, 10).split('-').reverse().join('/');
 const actions: Record<Action, string> = { month: 'Quitar a fatura do mês', partial: 'Pagar parte da fatura do mês', total: 'Quitar a dívida inteira' };
 
-export default function ExpensePersonPayment({ target, scope, month, config, busy, saveError, onClose, onSave, onInstitutionSave }: {
-  target: Target; scope?: 'one' | 'two' | 'shared'; month: string; config: Configuration; busy: boolean; saveError: string;
+export default function ExpensePersonPayment({ target, scope, institutionId, month, config, busy, saveError, onClose, onSave, onInstitutionSave }: {
+  target: Target; scope?: 'one' | 'two' | 'shared'; institutionId?: number; month: string; config: Configuration; busy: boolean; saveError: string;
   onClose: () => void; onSave: (id: number, data: unknown) => Promise<boolean>;
   onInstitutionSave: (data: unknown) => Promise<boolean>;
 }) {
@@ -54,11 +54,11 @@ export default function ExpensePersonPayment({ target, scope, month, config, bus
     const controller = new AbortController();
     setLoading(true); setError('');
     void api<{ debts: Debt[] }>((scope ? '/invoice-balances?' : '/person-balances?') + new URLSearchParams({ target, month, ...(scope ? { scope } : {}) }), 'GET', undefined, controller.signal)
-      .then(result => { if (!controller.signal.aborted) setDebts(result.debts.filter(debt => debt.month_remaining_cents > 0)); })
+      .then(result => { if (!controller.signal.aborted) setDebts(result.debts.filter(debt => debt.month_remaining_cents > 0 && (institutionId === undefined || debt.institution_id === institutionId))); })
       .catch(cause => { if (!controller.signal.aborted) setError(cause.message); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => { controller.abort(); previewRequest.current?.abort(); };
-  }, [target, scope, month, reload]);
+  }, [target, scope, institutionId, month, reload]);
   const invalidate = () => { previewRequest.current?.abort(); setLoading(false); setPlan(undefined); setError(''); requestKey.current = expenseRequestId(); };
   const choose = (debt: Debt) => { invalidate(); setSelected(debt); setAction('month'); setValue('0,00'); setTotalConfirmed(false); };
   const preview = async () => {

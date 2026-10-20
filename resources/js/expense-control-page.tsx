@@ -1,15 +1,17 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft, Camera, ArrowDownLeft, CalendarDays, Check, ChevronLeft, ChevronRight, CircleDollarSign, History, Landmark, Pencil, Plus, Search, Settings, TrendingUp, LayoutGrid, List, Wallet, Trash2 } from 'lucide-react';
+import { ArrowLeft, Camera, ArrowDownLeft, CalendarDays, Check, ChevronLeft, ChevronRight, CircleDollarSign, History, Landmark, Pencil, Plus, Search, Settings, TrendingUp, LayoutGrid, List, Wallet, Trash2, CarFront, Menu, X } from 'lucide-react';
 import type { MonthlyInvoice } from './expense-month-details';
 import ExpenseSplitFields from './expense-split-fields';
 import PersonPortrait from './expense-person-portrait';
 import PageHeader from './page-header';
 import ExpenseMobileSummary from './expense-control-mobile-summary';
+import ExpenseGastosPeople from './expense-gastos-people';
 const ExpensePersonPayment = lazy(() => import('./expense-person-payment'));
 const ExpensePersonMonthSummary = lazy(() => import('./expense-person-month-summary'));
 import type { InvoiceScope, InvoiceTotals } from './expense-monthly-invoice';
 import { type SummaryScope } from './expense-summary-overview';
 const ExpenseSpendingHistory = lazy(() => import('./expense-spending-history'));
+const ExpenseVehiclesPage = lazy(() => import('./expense-vehicles-page'));
 const ProjectionMonth = lazy(() => import('./expense-month-details'));
 const ExpenseMonthlyInvoice = lazy(() => import('./expense-monthly-invoice'));
 import { FinanceDate } from './finance-date';
@@ -25,6 +27,9 @@ import '../css/expense-web-reference-compact-20261010.css';
 import '../css/expense-web-floating-invoices-20261010.css';
 import '../css/expense-final-summary.css';
 import '../css/expense-web-gold-20261015.css';
+import '../css/expense-mobile-compact-dock-20261019.css';
+import '../css/expense-compact-menus-20261020.css';
+import '../css/arl-gastos-docks-unificados-20261020.css';
 import CardArtworkPicker, { CardArtworkView, type CardArtwork } from './expense-card-artwork';
 
 type Person = { id: number; name: string; user_id: number | null; default_percent: number };
@@ -36,12 +41,12 @@ type Installment = { purchase_notes?: string | null; id: number; number: number;
 type Entry = { operation_id?: number; id: number; installment_id: number; name: string; institution_name: string; number: number; kind: string; paid_by: number | null; occurred_on: string; amount_cents: number; credit_one_cents: number; credit_two_cents: number; reversed_at: string | null; reversal_reason: string | null; notes: string | null; recorded_by: string | null };
 type Detail = { debt: Debt; installments: Installment[]; entries: Entry[]; financial_locked: boolean };
 type Pager<T> = { institution_balances?: { institution_id: number; remaining_cents: number }[]; catalog_counts?: { institution_id: number; type_id: number; count: number; remaining_cents?: number }[]; data: T[]; current_page: number; last_page: number; total: number };
-type ScopeSummary = { due_institutions?: { id: number; name: string; due_on: string; remaining_cents: number; count: number }[]; original_cents: number; paid_cents: number; remaining_cents: number; count: number; next_due: Installment[]; overdue: Installment[]; institutions: { id: number; name: string; remaining_cents: number; count: number }[] };
+type ScopeSummary = { advance_cents?: number; due_institutions?: { id: number; name: string; due_on: string; remaining_cents: number; count: number }[]; original_cents: number; paid_cents: number; remaining_cents: number; count: number; next_due: Installment[]; overdue: Installment[]; institutions: { id: number; name: string; remaining_cents: number; count: number }[] };
 export type Summary = { invoice_totals?: InvoiceTotals; monthly_invoices?: MonthlyInvoice[]; views?: Record<'one' | 'two' | 'shared', ScopeSummary>; partial_installments?: Installment[]; count: number; totals: Record<string, number>; institutions: { id: number; name: string; remaining_cents: number; original_cents: number; count: number }[]; next_due: Installment[]; overdue: Installment[]; personal_next_due: Installment[]; personal_overdue: Installment[] };
 type Projection = { month: string; remaining_cents: number; one_cents: number; two_cents: number; shared_cents: number; count: number };
-type Tab = 'summary' | 'debts' | 'institutions' | 'advances' | 'projection' | 'settled' | 'settings' | 'activity';
+type Tab = 'summary' | 'debts' | 'institutions' | 'advances' | 'projection' | 'settled' | 'settings' | 'activity' | 'cars';
 type Dialog = { kind: 'debt'; debt?: Debt } | { kind: 'catalog'; catalog: 'institutions' | 'types'; item?: Institution | Kind } | { kind: 'operation'; items: Installment[] } | { kind: 'installment'; item: Installment; responsibility: string } | { kind: 'reason'; action: 'cancel' | 'reverse'; id: number } | { kind: 'end'; id: number };
-const tabs = [['summary', 'Resumo', Wallet], ['debts', 'Gastos', CircleDollarSign], ['institutions', 'Instituições', Landmark], ['advances', 'Pagamentos', ArrowDownLeft], ['projection', 'Projeção', TrendingUp], ['settled', 'Quitadas', Check], ['settings', 'Ajustes', Settings], ['activity', 'Histórico', History]] as const;
+const tabs = [['summary', 'Resumo', Wallet], ['debts', 'Gastos', CircleDollarSign], ['institutions', 'Instituições', Landmark], ['advances', 'Pagamentos', ArrowDownLeft], ['projection', 'Projeção', TrendingUp], ['cars', 'Carros', CarFront], ['settled', 'Quitadas', Check], ['settings', 'Ajustes', Settings], ['activity', 'Histórico', History]] as const;
 const emptyConfig: Configuration = { account_id: 0, card_artworks: [], people: [], institutions: [], types: [], my_person_id: null, can_assign_users: false, accounts: [] };
 const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const money = (value = 0) => currencyFormatter.format(Number(value) / 100);
@@ -61,10 +66,17 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
   const [statementScope, setStatementScope] = useState<SummaryScope | null>(null);
   const [nextPaymentOpen, setNextPaymentOpen] = useState(false);
   const [typeManagerOpen, setTypeManagerOpen] = useState(false);
+  const [expenseMenuOpen, setExpenseMenuOpen] = useState(false);
   const [statementBusy, setStatementBusy] = useState(false);
   const [newDebtChoice, setNewDebtChoice] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [projectionSection, setProjectionSection] = useState<'future' | 'history'>('future');
+  useEffect(() => {
+    if (!expenseMenuOpen) return;
+    const onKey=(e:KeyboardEvent)=>{if(e.key==='Escape')setExpenseMenuOpen(false)};
+    document.addEventListener('keydown',onKey);
+    return ()=>document.removeEventListener('keydown',onKey);
+  },[expenseMenuOpen]);
   const [projectionView, setProjectionView] = useState<'cards' | 'list'>('list');
   const [view, setView] = useState<'cards' | 'list'>('cards');
   const preferenceAccount = useRef<number | null>(null);
@@ -79,9 +91,9 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
   const [institutionPayment, setInstitutionPayment] = useState(false);
   const [purchaseSettlement, setPurchaseSettlement] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
-  const [invoicePay, setInvoicePay] = useState<{ scope: InvoiceScope; target?: 'one' | 'two'; totals?: InvoiceTotals }>();
+  const [invoicePay, setInvoicePay] = useState<{ scope: InvoiceScope; target?: 'one' | 'two'; totals?: InvoiceTotals; institutionId?: number; fromGastos?: boolean }>();
   const [returnConfirm, setReturnConfirm] = useState(false);
-  const [quickPerson, setQuickPerson] = useState<'one' | 'two'>();
+  const [quickPerson, setQuickPerson] = useState<{ target: 'one' | 'two'; institutionId?: number }>();
   const [summaryPerson, setSummaryPerson] = useState<'one' | 'two'>();
   const [lastReceipt, setLastReceipt] = useState<number>();
   const mutating = useRef(false);
@@ -143,7 +155,7 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
     } catch (e: any) { if (request === detailRequest.current) setError(e.message); }
     finally { if (request === detailRequest.current && !directFromSummary) setLoading(false); }
   }, []);
-  const navigate = (next: Tab, preserveFilters = false) => { if (next === 'debts' && !preserveFilters) { setQ(''); setQuery(''); setBank(''); setType(''); setPerson(''); setStatus('active'); setSort('newest'); } ++detailRequest.current; setTab(next); if (next === 'projection') { setProjectionView('list'); setProjectionSection('future'); } setFiltersOpen(false); setDetail(undefined); setSelected([]); setPage(1); setNotice(''); };
+  const navigate = (next: Tab, preserveFilters = false) => { if (next === 'debts' && !preserveFilters) { setQ(''); setQuery(''); setBank(''); setType(''); setPerson(''); setStatus('active'); setSort('newest'); } ++detailRequest.current; setTab(next); if (next === 'projection') { setProjectionView('list'); setProjectionSection('future'); } setFiltersOpen(false); setDetail(undefined); setSelected([]); setPage(1); setNotice(''); setExpenseMenuOpen(false); };
   const openDialog = (next: Dialog) => { setError(''); setDialog(next); };
   const mutate = async (path: string, method: string, body: unknown) => {
     if (busy || mutating.current) return false;
@@ -199,8 +211,13 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
       </nav>}
     <div className="cg-navigation"><div className="cg-tabs" role="tablist" aria-label="Seções do Controle de Gasto">{tabs.filter(([id]) => !mobile || id !== 'activity').map(([id, label, Icon]) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => navigate(id)} className={tab === id ? 'active' : ''}><Icon /><span>{label}</span></button>)}</div></div>
     {error && !dialog && <p className="cg-alert" role="alert">{error}</p>}{lastReceipt && <ReceiptDownload operation={lastReceipt} />}{notice && <p className="cg-notice" role="status"><Check /> {notice}</p>}{loading && <p className="cg-loading" role="status">Atualizando informações…</p>}
-    {tab === 'summary' && !detail && <ExpenseMobileSummary onCompactPerson={setSummaryPerson} onSharedPay={() => setInvoicePay({ scope: 'shared', totals: summary?.invoice_totals })} onMonth={() => setInvoiceOpen(true)} onPay={key => { setError(''); setQuickPerson(key); }} onExport={setStatementScope} onNext={() => setNextPaymentOpen(true)} key={config.account_id + "-" + config.my_person_id} summary={summary} config={config} month={month} portraits={[<PersonPortrait key="one" kind="man" />, <PersonPortrait key="two" kind="woman" />, <PersonPortrait key="shared" kind="couple" />]} onInstitution={(id, selectedScope) => { setPerson(selectedScope === 'all' ? '' : selectedScope); goBank(id); }} onDebt={id => { void showDetail(id, true); }} onInvoice={openMonthlyInvoice} onPerson={key => { setPerson(key); setBank(''); navigate('debts', true); }} />}
+    {tab === 'summary' && !detail && <ExpenseMobileSummary onCompactPerson={setSummaryPerson} onSharedPay={() => setInvoicePay({ scope: 'shared', totals: summary?.invoice_totals })} onMonth={() => setInvoiceOpen(true)} onPay={key => { setError(''); setQuickPerson({ target: key }); }} onExport={setStatementScope} onNext={() => setNextPaymentOpen(true)} key={config.account_id + "-" + config.my_person_id} summary={summary} config={config} month={month} portraits={[<PersonPortrait key="one" kind="man" />, <PersonPortrait key="two" kind="woman" />, <PersonPortrait key="shared" kind="couple" />]} onInstitution={(id, selectedScope) => { setPerson(selectedScope === 'all' ? '' : selectedScope); goBank(id); }} onDebt={id => { void showDetail(id, true); }} onInvoice={openMonthlyInvoice} onPerson={key => { setPerson(key); setBank(''); navigate('debts', true); }} />}
     {(tab === 'debts' || tab === 'settled') && !detail && <>
+      {mobile && tab === 'debts' && !bank && !query && status === 'active' && <ExpenseGastosPeople
+        summary={summary} config={config} month={month} loading={loading}
+        onPay={(scope, target, institutionId) => { setError(''); if (scope === 'shared') setInvoicePay({ scope: 'shared', target, institutionId, fromGastos: true }); else setQuickPerson({ target, institutionId }); }}
+        onInstitution={(scope, id) => { setPerson(scope); goBank(id); }} />}
+
       <div className="cg-section-heading"><div><span className="cg-eyebrow">{tab === 'settled' ? 'HISTÓRICO PRESERVADO' : 'GESTÃO DE COMPROMISSOS'}</span><h2>{tab === 'settled' ? 'Dívidas quitadas' : 'Gastos e parcelas'}</h2><p>{tab === 'settled' ? 'Compras encerradas continuam disponíveis para consulta.' : 'Escolha a instituição e o tipo para abrir as compras.'}</p></div></div>
       {mobile && tab !== 'debts' && <button className="cgm-filter-toggle" aria-expanded={filtersOpen} aria-controls="cg-debt-filters" onClick={() => setFiltersOpen(!filtersOpen)}><Search /> {filtersOpen ? 'Fechar filtros' : 'Pesquisar e filtrar'}{(q || bank || type || person || status !== 'active' || sort !== 'newest') && <span>Filtros ativos</span>}</button>}
       {(!mobile || tab !== 'debts') && <div id="cg-debt-filters" className="cg-filters" hidden={mobile && !filtersOpen}><label className="cg-search"><Search /><input placeholder="Pesquisar compra ou instituição" aria-label="Pesquisar compra ou instituição" value={q} onChange={e => setQ(e.target.value)} /></label><label>Responsável<select aria-label="Filtrar por responsável" value={person} onChange={e => { setPerson(e.target.value); setPage(1); }}><option value="">Todos</option><option value="one">{name(1)}</option><option value="two">{name(2)}</option><option value="shared">Casal</option></select></label>{tab === 'debts' && <label>Mês<input aria-label="Mês dos gastos" type="month" min="2000-01" max="2099-12" value={month} onChange={e => { if (/^\d{4}-\d{2}$/.test(e.target.value)) { setMonth(e.target.value); setPage(1); } }} /></label>}<label>Instituição<select value={bank} onChange={e => { setBank(e.target.value); setType(''); setPage(1); }}><option value="">Todas</option>{config.institutions.map(i => <option value={i.id} key={i.id}>{i.name}</option>)}</select></label><label>Tipo<select value={type} onChange={e => { setType(e.target.value); setPage(1); }}><option value="">Todos</option>{config.types.map(i => <option value={i.id} key={i.id}>{i.name}</option>)}</select></label><label>Ordenar<select value={sort} onChange={e => setSort(e.target.value)}><option value="newest">Mais recentes</option><option value="oldest">Mais antigas</option><option value="name">Nome</option><option value="value">Maior saldo</option></select></label><button onClick={() => { setQ(''); setBank(''); setType(''); setPerson(''); setSort('newest'); setStatus('active'); setPage(1); }}>Limpar</button></div>}
@@ -221,15 +238,35 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
       <div className="cg-section-heading cg-institution-register-heading"><div><span className="cg-eyebrow">CADASTROS FINANCEIROS</span><h2>Instituições e tipos de dívida</h2><p>Organize seus cartões, bancos e despesas sem misturar com as contas da empresa.</p></div><button className="cg-primary" onClick={() => openDialog({ kind: 'catalog', catalog: 'institutions' })}><Plus /> Cadastrar instituição</button></div><div className="cg-bank-grid">{config.institutions.map(i => <article className={'cg-institution' + (!i.active ? ' inactive' : '')} style={{ '--cg-bank-color': i.color } as React.CSSProperties} key={i.id}><span className="cg-eyebrow">{i.active ? 'INSTITUIÇÃO ATIVA' : 'INATIVA'}</span><CardArtworkView card={i} artworks={config.card_artworks} /><h3>{i.name}</h3><span>Vencimento padrão · dia {i.due_day}</span><footer><button aria-label={'Ver gastos de ' + i.name} onClick={() => goBank(i.id)}>{mobile ? <CircleDollarSign /> : 'Ver gastos'}</button><button aria-label={'Editar instituição ' + i.name} onClick={() => openDialog({ kind: 'catalog', catalog: 'institutions', item: i })}><Pencil /></button><button aria-label={'Excluir instituição ' + i.name} onClick={() => { setError(''); setCatalogRemoval({ catalog: 'institutions', item: i }); }}><Trash2 /></button></footer></article>)}</div><section className={'cg-panel cg-type-manager' + (mobile ? ' cg-type-manager-mobile' : '')}><div className="cg-section-heading"><div><span className="cg-eyebrow">CLASSIFICAÇÃO</span><h2>Tipos de dívida</h2></div><button onClick={() => setTypeManagerOpen(true)}><Plus /> Cadastrar tipo de dívida</button></div><div className="cg-type-chips">{config.types.map(t => <div className="cg-type-actions" key={t.id}><button onClick={() => openDialog({ kind: 'catalog', catalog: 'types', item: t })}>{t.name}{!t.active && ' · inativo'} <Pencil /></button><button aria-label={'Excluir tipo ' + t.name} onClick={() => { setError(''); setCatalogRemoval({ catalog: 'types', item: t }); }}><Trash2 /></button></div>)}</div>{!config.types.length && <p className="cg-muted">Exemplos: cartão de crédito, empréstimo, financiamento e despesas de casa.</p>}</section>
     </>}
     {tab === 'projection' && <><div className="cg-projection-sections" aria-label="Seções da projeção"><button aria-pressed={projectionSection === 'future'} onClick={() => setProjectionSection('future')}>Projeção futura</button><button aria-pressed={projectionSection === 'history'} onClick={() => setProjectionSection('history')}>Histórico de gastos</button></div>{projectionSection === 'history' ? <Suspense fallback={null}><ExpenseSpendingHistory month={month} people={config.people} /></Suspense> : <><div className="cg-section-heading"><div><span className="cg-eyebrow">PRÓXIMOS 12 MESES</span><h2>Compromissos futuros</h2><p>Saldo a pagar, considerando pagamentos e abatimentos já registrados.</p></div></div>{projectionButtons}<div className={"cg-projection-grid" + (projectionView === 'list' ? ' cg-projection-list' : '')}>{projection.map(p => <article className="cg-panel" key={p.month}><span className="cg-eyebrow">{monthLabel(p.month)}</span><strong>{money(p.remaining_cents)}</strong><p>{p.count} cobranças pendentes</p><dl><div><dt><PersonPortrait kind="man" />{name(1)}</dt><dd>{money(p.one_cents)}</dd></div><div><dt><PersonPortrait kind="woman" />{name(2)}</dt><dd>{money(p.two_cents)}</dd></div><div><dt><PersonPortrait kind="couple" />Despesas compartilhadas</dt><dd>{money(p.shared_cents)}</dd></div></dl><button onClick={() => setProjectionMonth(p.month)}>Ver mês <ChevronRight /></button></article>)}</div></>}</>}    {tab === 'advances' && <PaymentInstitutions key={month + '-' + revision} month={month} config={config} name={name} mobile={mobile} onReverse={id => openDialog({ kind: 'reason', action: 'reverse', id })} /> }
+    {tab === 'cars' && <Suspense fallback={<p role="status">Carregando controle de carros…</p>}><ExpenseVehiclesPage config={config} onSaved={() => setRevision(v=>v+1)} /></Suspense>}
     {tab === 'settings' && <><PeopleSettings key={revision + '-' + config.people.map(p => p.name + p.user_id).join(',')} config={config} busy={busy} onSave={data => mutate('/people', 'PUT', data)} /></>}
     {tab === 'activity' && <section className="cg-panel"><div className="cg-section-heading"><div><span className="cg-eyebrow">EXCLUSÕES DO MÓDULO</span><h2>Dívidas excluídas</h2></div></div>{activity?.data.map(a => <div className="cg-log" key={a.id}><History /><span><b>{a.debt_name}</b><p>Motivo: {a.reason}</p><small>{a.user_name || 'Conta removida'} · <FinanceDate value={a.created_at} /></small></span></div>)}{!loading && !activity?.data.length && <Empty title="Nenhuma atividade registrada" text="Somente dívidas excluídas aparecem aqui, com o motivo e quem excluiu." />}<Pagination current={activity?.current_page || 1} last={activity?.last_page || 1} onChange={setPage} /></section>}
     {mobile && <nav className="arl-expense-bottom arl-expense-matched" aria-label="Menu do Controle de Gastos">
       <button className="arl-nav-reference-button" aria-label="Resumo" aria-current={tab === 'summary' ? 'page' : undefined} onClick={() => navigate('summary')}><span className="arl-nav-icon-disc" aria-hidden="true"><Wallet /></span><span className="arl-nav-caption">Resumo</span></button>
       <button className="arl-nav-reference-button" aria-label="Instituições" aria-current={tab === 'institutions' ? 'page' : undefined} onClick={() => navigate('institutions')}><span className="arl-nav-icon-disc" aria-hidden="true"><Landmark /></span><span className="arl-nav-caption">Instituições</span></button>
       <button className="arl-nav-reference-button primary-shortcut arl-expense-add" aria-label="Adicionar dívida" disabled={loading} onClick={() => setNewDebtChoice(true)}><span className="arl-nav-icon-disc" aria-hidden="true"><Plus /></span><span className="arl-nav-caption">Adicionar</span></button>
-      <button className="arl-nav-reference-button" aria-label="Projeção" aria-current={tab === 'projection' || tab === 'advances' ? 'page' : undefined} onClick={() => navigate('projection')}><span className="arl-nav-icon-disc" aria-hidden="true"><TrendingUp /></span><span className="arl-nav-caption">Projeção</span></button>
-      <button className="arl-nav-reference-button" aria-label="Gastos" aria-current={tab === 'debts' || tab === 'settled' ? 'page' : undefined} onClick={() => navigate('debts')}><span className="arl-nav-icon-disc" aria-hidden="true"><CircleDollarSign /></span><span className="arl-nav-caption">Gastos</span></button>
+      <button className="arl-nav-reference-button" aria-label="Carros" aria-current={tab === 'cars' ? 'page' : undefined} onClick={() => navigate('cars')}><span className="arl-nav-icon-disc" aria-hidden="true"><CarFront /></span><span className="arl-nav-caption">Carros</span></button>
+      <button className="arl-nav-reference-button" aria-label="Menu" aria-expanded={expenseMenuOpen} onClick={() => setExpenseMenuOpen(open=>!open)}><span className="arl-nav-icon-disc" aria-hidden="true"><Menu /></span><span className="arl-nav-caption">Menu</span></button>
     </nav>}
+    {mobile&&expenseMenuOpen&&<div className="cg-expense-menu-layer">
+      <div className="cg-expense-menu-backdrop" onClick={()=>setExpenseMenuOpen(false)} aria-hidden="true"/>
+      <section className="cg-expense-menu-panel" role="dialog" aria-modal="true" aria-labelledby="cg-expense-menu-heading" onKeyDown={e=>{
+        if(e.key!=='Tab')return;
+        const items=Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+        if(!items.length)return;
+        if(e.shiftKey&&document.activeElement===items[0]){e.preventDefault();items[items.length-1].focus()}
+        if(!e.shiftKey&&document.activeElement===items[items.length-1]){e.preventDefault();items[0].focus()}
+      }}>
+        <header className="cg-expense-menu-heading"><div><span className="cg-eyebrow">CONTROLE DE GASTOS</span><h2 id="cg-expense-menu-heading">Menu</h2><p>Escolha uma área</p></div><button type="button" autoFocus aria-label="Fechar Menu" onClick={()=>setExpenseMenuOpen(false)}><X/></button></header>
+        <div className="cg-expense-menu-scroll">
+          <h3>Despesas e pagamentos</h3>
+          {tabs.filter(([id])=>!['summary','institutions','cars','settings'].includes(id)).map(([id,label,Icon])=>
+            <button type="button" key={id} aria-label={label} className={tab===id?'active':''} onClick={()=>navigate(id)}><span className="cg-expense-menu-icon"><Icon/></span><span><strong>{label}</strong><small>{id==='debts'?'Lançamentos e faturas':id==='projection'?'Previsão e histórico':id==='advances'?'Pagamentos e antecipações':id==='settled'?'Contas quitadas':'Registros do módulo'}</small></span><ChevronRight/></button>)}
+          <h3>Preferências e cadastros</h3>
+          <button type="button" aria-label="Ajustes" onClick={()=>navigate('settings')}><span className="cg-expense-menu-icon"><Settings/></span><span><strong>Ajustes</strong><small>Divisão do casal e preferências</small></span><ChevronRight/></button>
+        </div>
+      </section>
+    </div>}
     {typeManagerOpen && <OrderPopup title="Tipos de dívida" eyebrow="CLASSIFICAÇÃO"
       description="Cadastre, edite ou exclua os tipos sem sair de Instituições."
       icon={CircleDollarSign} variant="budget" theme="expense"
@@ -287,8 +324,8 @@ export default function ExpenseControlPage({ mobile = false, onBack }: { mobile?
     {invoicePay?.scope === 'shared' && !invoicePay.target && <OrderPopup title="Qual parte do casal será paga?" eyebrow="CONTROLE DE GASTO" description="Escolha uma parte. A outra permanece preservada." icon={Wallet} variant="budget" theme="expense" onClose={() => setInvoicePay(undefined)}>
       <div className="cg-dialog-body cg-invoice-part-choice">{(['one', 'two'] as const).map(target => <button key={target} type="button" onClick={() => setInvoicePay({ ...invoicePay, target })}>{target === 'two' ? 'Parte da ' : 'Parte do '}{name(target === 'one' ? 1 : 2)} · {money(invoicePay.totals?.[target === 'one' ? 'shared_one_cents' : 'shared_two_cents'] || 0)}</button>)}</div>
     </OrderPopup>}
-    {invoicePay?.target && <Suspense fallback={null}><ExpensePersonPayment key={invoicePay.scope + invoicePay.target + month} scope={invoicePay.scope === 'shared' ? 'shared' : undefined} target={invoicePay.target} month={month} config={config} busy={busy} saveError={error} onInstitutionSave={data => mutate('/institution-payments', 'POST', data)} onClose={() => { if (!busy) { setInvoicePay(undefined); setError(''); setInvoiceOpen(true); } }} onSave={(id, data) => mutate('/debts/' + id + (invoicePay.scope === 'shared' ? '/invoice-payment' : '/person-payment'), 'POST', data)} /></Suspense>}
-    {quickPerson && <Suspense fallback={null}><ExpensePersonPayment key={quickPerson + month} target={quickPerson} month={month} config={config} busy={busy} saveError={error} onInstitutionSave={data => mutate('/institution-payments', 'POST', data)} onClose={() => { if (!busy) { setQuickPerson(undefined); setError(''); } }} onSave={(id, data) => mutate('/debts/' + id + '/person-payment', 'POST', data)} /></Suspense>}
+    {invoicePay?.target && <Suspense fallback={null}><ExpensePersonPayment key={invoicePay.scope + invoicePay.target + month} scope={invoicePay.scope === 'shared' ? 'shared' : undefined} target={invoicePay.target} institutionId={invoicePay.institutionId} month={month} config={config} busy={busy} saveError={error} onInstitutionSave={data => mutate('/institution-payments', 'POST', data)} onClose={() => { if (!busy) { setInvoicePay(undefined); setError(''); if (!invoicePay.fromGastos) setInvoiceOpen(true); } }} onSave={(id, data) => mutate('/debts/' + id + (invoicePay.scope === 'shared' ? '/invoice-payment' : '/person-payment'), 'POST', data)} /></Suspense>}
+    {quickPerson && <Suspense fallback={null}><ExpensePersonPayment key={quickPerson.target + (quickPerson.institutionId ?? '') + month} target={quickPerson.target} institutionId={quickPerson.institutionId} month={month} config={config} busy={busy} saveError={error} onInstitutionSave={data => mutate('/institution-payments', 'POST', data)} onClose={() => { if (!busy) { setQuickPerson(undefined); setError(''); } }} onSave={(id, data) => mutate('/debts/' + id + '/person-payment', 'POST', data)} /></Suspense>}
     {newDebtChoice && <OrderPopup title="Nova dívida" eyebrow="CONTROLE DE GASTO" description="Escolha como deseja cadastrar." icon={Plus} variant="budget" theme="expense" closeLabel="Fechar opções de cadastro" onClose={() => setNewDebtChoice(false)}><div className="cg-dialog-body cgm-debt-choice"><button onClick={() => { setNewDebtChoice(false); openDialog({ kind: 'debt' }); }}><Pencil /><span><b>Cadastro manual</b><small>Informe a compra, parcelas e responsável.</small></span><ChevronRight /></button><button disabled={loading} onClick={() => { setNewDebtChoice(false); setPhotoOpen(true); }}><Camera /><span><b>Cadastrar por foto</b><small>Leia a fatura com IA e confira as compras.</small></span><ChevronRight /></button></div></OrderPopup>}
     {photoOpen && <Suspense fallback={<p role="status">Preparando cadastro por foto…</p>}><PhotoImport config={config} month={month} institution={bank} onClose={() => setPhotoOpen(false)} onSaved={(count, id) => { setPhotoOpen(false); goBank(id); setNotice(count + " compras cadastradas por foto."); setRevision(n => n + 1); }} /></Suspense>}
     {purchaseSettlement && <PurchaseSettlement bank={Number(bank)} busy={busy} saveError={error} onClose={() => { if (!busy) setPurchaseSettlement(false); }} onSave={async (id, data) => { const ok = await mutate('/debts/' + id + '/settlement', 'POST', data); if (ok) setPurchaseSettlement(false); return ok; }} />}

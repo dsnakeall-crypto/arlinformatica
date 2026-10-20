@@ -1173,3 +1173,24 @@ Release anterior5c removida após arquivo local/manifesto validado; pacote tempo
 Código runtime publicado é01dcd01; checkpoint final apenas documental posterior, sem mudança de runtime. GitHub/local sincronizados na branch codex/final-financeiro-laragon-20261013, sem merge/main. Recuperação futura exige reidratar apenas código5c do TAR local e aliases/ponteiro; jamais SQL/env/storage. Domínio/SSL fica para proprietário. Desenvolvimento encerrado; nova tarefa somente mediante comando humano.
 
 [OK] Barra mobile:51regressões/2WebKit/2Chromium/61unitários/lint/types/build;fonte601 publicada sem novo backup ou mudançasSQL;ZIP/probe removidos. [PENDENTE] iPhone físico e conclusãoCI38470708536. Ver relatório BARRA_INFERIOR_IOS_RESULTADO_20261013.md.
+
+## 20/10/2026 — Gaveta direita Premium Mobile e profundidade dos cards (checklist restrito)
+- [x] Backup externo dos arquivos antes da edição, com SHA256 e diff localizado.
+- [x] Alterações visuais somente no Mobile Premium ARL, sem banco/API/KingHost.
+- [x] Menu direito: 390×844 (x54,6, largura335,4, altura844) e 320×568 (x32, largura288, rolagem interna).
+- [x] Tipagem/lint/build e 9 testes Playwright direcionados aprovados (8 gerais + 1 de módulos reais).
+- [x] Menu acessível via X/Esc/clique fora, navegação e permissões atuais preservadas.
+- [ ] Aceite visual final do proprietário, após teste no navegador local.
+- [ ] CI integral (backend/backend-mysql/frontend/E2E) e regressões gerais verdes.
+- [ ] Métrica antes/depois de desempenho frio/quente reproduzível registrada; sem afirmar rapidez homologada.
+- [ ] Publicação KingHost (não autorizada por esta etapa).
+
+## 20/10/2026 — Mobile Premium visual 3D (referência 1024×1536)
+- [x] Salvar backup dos arquivos afetados e status Git com hashes SHA256 fora do repositório.
+- [x] Aplicar curvas douradas ao header com SVG vetorial, botões 3D e oito ícones metálicos nos cards reais do Painel.
+- [x] Aplicar superfícies 3D em listas/formulários dos módulos existentes com CSS isolado na ARL mobile.
+- [x] Verificar 320/375/390/409/430 px sem overflow e com dados da prévia persistente.
+- [x] TypeScript, lint, build e 10 testes Playwright direcionados aprovados.
+- [ ] Homologação visual pixel a pixel: ícones e brilhos ainda são aproximações vetoriais; confirmar com o proprietário após abrir a prévia.
+- [ ] Suite E2E integral + todas CIs do GitHub verdes (não executado nesta rodada).
+- [ ] Autorizar separadamente eventual push e deploy KingHost (não executados).

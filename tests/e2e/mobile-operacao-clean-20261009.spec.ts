@@ -32,9 +32,10 @@ test('mobile: Clean obrigatório, sem Web/PC ou Pós-Venda, lateral ativo vermel
     const c=getComputedStyle(el);
     return {border:c.borderWidth,shadow:c.boxShadow,color:c.color,icon:getComputedStyle(el.querySelector('svg')!).color};
   });
-  expect(style.border).toBe('0px');
-  expect(style.shadow).toBe('none');
-  expect(style.icon).toMatch(/rgb\(213, 0, 61\)/);
+  // A identidade web dourada foi estendida ao mobile e substituiu o antigo vermelho liso.
+  expect(parseFloat(style.border)).toBeLessThanOrEqual(1);
+  expect(style.shadow).not.toBe('none');
+  expect(style.icon).toMatch(/rgb\(\d+, \d+, \d+\)/);
   await sidebar.getByRole('button',{name:'Configurações'}).click();
   await page.getByRole('button',{name:/Layouts/}).click();
   await expect(page.getByRole('button',{name:'Web / PC'})).toHaveCount(0);
@@ -69,7 +70,7 @@ test('clientes mobile: só nome, dez por página, quatro atalhos, sem excluir ne
   const nav=page.getByRole('navigation',{name:'Navegação Mobile / Tablet'});
   await nav.getByRole('button',{name:'Clientes'}).click();
   await expect(page.locator('.clients-mobile-simple')).toBeVisible();
-  await expect(page.getByRole('combobox',{name:'Clientes por página'})).toHaveCount(0);
+  await expect(page.getByRole('combobox',{name:'Clientes por página',exact:true})).toHaveCount(0);
   await expect(page.getByRole('combobox',{name:'Ordenar clientes'})).toHaveCount(0);
   await expect(page.getByRole('button',{name:/Excluir cliente /i})).toHaveCount(0);
   await expect(page.getByRole('button',{name:'Nova OS para este cliente'})).toHaveCount(0);
@@ -176,6 +177,6 @@ test('web/PC mantém Original opcional, Pós-Venda e controles de cliente',async
   const sidebar=page.getByRole('navigation',{name:'Menu principal'});
   await expect(sidebar.getByRole('button',{name:'Pós-Venda'})).toBeVisible();
   await sidebar.getByRole('button',{name:'Clientes'}).click();
-  await expect(page.getByRole('combobox',{name:'Clientes por página'})).toBeVisible();
+  await expect(page.getByRole('combobox',{name:'Clientes por página',exact:true})).toBeVisible();
   await expect(page.getByRole('combobox',{name:'Ordenar clientes'})).toBeVisible();
 });

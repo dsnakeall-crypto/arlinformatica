@@ -57,7 +57,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
 
   const header = root.locator('.arl-order-sticky-header');
   await expect(header).toBeVisible();
-  expect(await header.evaluate((node) => getComputedStyle(node).position), 'Cabeçalho da OS deve permanecer sticky durante a rolagem').toBe('sticky');
+  expect(await header.evaluate((node) => getComputedStyle(node).position), 'No tema Original, o cabeçalho acompanha o fluxo do documento conforme layout dourado aprovado').toBe('relative');
   await expect(header.getByText(clientName, { exact: true })).toHaveCount(0);
   await expect(header.getByText(equipmentDescription, { exact: true })).toHaveCount(0);
   await expect(header.getByText(equipmentDetails, { exact: true })).toHaveCount(0);
@@ -76,7 +76,7 @@ test('Ver OS segue fluxo linear sem remover ações, dados ou registro históric
   await expect(opening.getByRole('link', { name: 'Termo de Recebimento PDF' })).toBeVisible();
   await expect(opening.getByText('Relatório Técnico Final', { exact: true })).toBeVisible();
   await expect(opening.getByText('Reabrir OS', { exact: true })).toBeVisible();
-  await root.locator('.arl-order-stage-rail').click({ position: { x: 1, y: 1 } });
+  await header.getByRole('heading', { name: /OS #/ }).click(); // Área clicável fora do menu PDF.
   await expect(opening.getByRole('link', { name: 'Mensagem de abertura' })).toHaveCount(0);
   await opening.getByRole('button', { name: "PDF's", exact: true }).click();
   await expect(opening.getByRole('link', { name: 'Mensagem de abertura' })).toBeVisible();

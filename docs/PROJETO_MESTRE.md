@@ -1,5 +1,21 @@
 # ARL Informática — Projeto Mestre
 
+
+## CHECKPOINT OPERACIONAL 18/10/2026 - CI DE INTEGRACAO
+
+ATENCAO: ESTADO ATUAL NA CONTINUIDADE MAIS RECENTE: docs/CONTINUIDADE-ARL-20261018-PRONTO-PARA-NOVO-CHAT.md
+PROMPT DE RETOMADA: docs/PROMPT-NOVO-CHAT-ARL-INFORMATICA-CI-20261018.txt
+DIAGNOSTICO: docs/CHECKPOINT-CI-GITHUB-ARL-20261018-EM-CORRECAO.md
+
+- Branch release/integracao-completa-20261018, HEAD 8903365. GitHub Actions #1321: backend/backend-mysql/frontend VERDES, E2E VERMELHO (254 PASS, 23 FAIL, 8 nao executados).
+- Correcoes E2E ainda locais e em progresso; nao declarar CI totalmente verde.
+- Git status tinha 377 entradas; NAO usar git add ponto, git clean, reset hard, force push ou apagar logs/backups.
+- Objetivo imediato: corrigir E2E e testar integralmente; push seletivo; confirmar os quatro jobs verdes no HEAD novo; so entao preparar KingHost preservando todo banco/dados reais.
+- A PR #11/CI #356 mencionada adiante e HISTORICA, nao representa o estado atual.
+
+---
+
+
 ## Atualização autorizada — 09/10/2026 (reforma mobile e permissões)
 
 - No Mobile/Tablet, a home principal apresenta apenas os cartões de OS abertas; listas e totais de status do desktop não são renderizados nesse modo. Web/PC conserva sua composição anterior.

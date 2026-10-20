@@ -176,6 +176,15 @@ async function loadOrders(home: HTMLElement) {
     const orders = (await response.json()) as MobileOrder[];
     if (!home.isConnected) return;
     count.textContent = `${orders.length} ${orders.length === 1 ? 'OS aberta' : 'OS abertas'}`;
+    const values: Record<string, number> = {
+      all: orders.length,
+      analysis: orders.filter(order => order.status === 'analysis').length,
+      service: orders.filter(order => order.status === 'in_service').length,
+      waiting: orders.filter(order => order.status === 'waiting_part').length,
+    };
+    home.querySelectorAll<HTMLElement>('[data-mobile-stat]').forEach(element => {
+      element.textContent = String(values[element.dataset.mobileStat || 'all']);
+    });
     renderOrders(list, orders);
   } catch (error) {
     if (!home.isConnected) return;
@@ -188,18 +197,81 @@ async function loadOrders(home: HTMLElement) {
   }
 }
 
-function buildHome() {
+const premiumIconPaths = {
+  clipboard: '<rect x="5" y="4" width="14" height="18" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 11h6M9 15h6"/>',
+  search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>',
+  wrench: '<path d="M14.7 6.3a6 6 0 0 0-7.7 7.7l-4.5 4.5a2.1 2.1 0 0 0 3 3l4.5-4.5a6 6 0 0 0 7.7-7.7l-4.2 4.1-3.3-3.3z"/>',
+  package: '<path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/>',
+  users: '<circle cx="9" cy="8" r="3"/><path d="M2 20v-2a6 6 0 0 1 12 0v2zM17 5.5a3 3 0 0 1 0 5.8M15.8 14a5 5 0 0 1 6.2 5v1h-5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  chart: '<path d="M3 3v18h18"/><rect x="6" y="12" width="3" height="6" rx=".5"/><rect x="11" y="8" width="3" height="10" rx=".5"/><rect x="16" y="5" width="3" height="13" rx=".5"/>',
+} as const;
+
+let premiumIconSequence = 0;
+function premiumIcon(name: keyof typeof premiumIconPaths): string {
+  // SVG metálico próprio: realces, sombra e contorno em camadas, sem PNG
+  // de interface ou dependência de serviço externo. IDs únicos por instância.
+  const id = 'arl-3d-' + name + '-' + ++premiumIconSequence;
+  const blue = name === 'search' || name === 'package' || name === 'users' || name === 'chart';
+  const stops = blue
+    ? '<stop offset="0" stop-color="#f0f9ff"/><stop offset=".24" stop-color="#9cb9d7"/><stop offset=".49" stop-color="#234a70"/><stop offset=".72" stop-color="#071a31"/><stop offset="1" stop-color="#7895b0"/>'
+    : '<stop offset="0" stop-color="#fff6c9"/><stop offset=".25" stop-color="#ffd962"/><stop offset=".5" stop-color="#bd7e13"/><stop offset=".72" stop-color="#754403"/><stop offset="1" stop-color="#f9c14b"/>';
+  const outline = blue ? '#101d30' : '#754006';
+  const paths = premiumIconPaths[name];
+  return '<svg class="arl-premium-icon arl-premium-icon-' + name + '" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">'
+    + '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1">' + stops + '</linearGradient></defs>'
+    + '<g transform="translate(.25 .65)" stroke="' + outline + '" stroke-width="3.8" opacity=".9">' + paths + '</g>'
+    + '<g stroke="url(#' + id + ')" stroke-width="2.8">' + paths + '</g>'
+    + '<g transform="translate(-.3 -.48)" stroke="#fff9e7" stroke-width=".65" opacity=".88">' + paths + '</g></svg>';
+}
+
+function buildHome(main: HTMLElement) {
   const home = document.createElement('section');
-  home.className = 'arl-mobile-home';
-  home.setAttribute('aria-label', 'Início mobile com Ordens de Serviço abertas');
+  const premium = main.dataset.arlMobileVariant === 'premium';
+  home.className = premium ? 'arl-mobile-home arl-mobile-home-premium' : 'arl-mobile-home arl-mobile-home-classic';
+  home.dataset.variant = premium ? 'premium' : 'classic';
+  home.setAttribute('aria-label', premium ? 'Painel mobile ARL Informática' : 'OS abertas — mobile clássico');
+  if (!premium) {
+    home.innerHTML = `<div class="arl-mobile-home-section-title"><h2>OS abertas</h2><small data-mobile-count>Carregando…</small></div><div class="arl-mobile-order-list" data-mobile-orders></div>`;
+    return home;
+  }
   home.innerHTML = `
-    <div class="arl-mobile-home-section-title">
-      <h2>OS abertas</h2>
-      <small data-mobile-count>Carregando…</small>
+    <div class="arl-premium-hero">
+      <div class="arl-premium-brand">
+        <img src="/arl-assets/arl-red-gold-from-vector-20261019.svg" alt="ARL" width="178" height="72" />
+        <span>INFORMÁTICA</span>
+        <small>Manutenção e Soluções Inteligentes</small>
+      </div>
     </div>
+    <div class="arl-premium-welcome">
+      <span>BEM-VINDO,</span>
+      <h1 data-mobile-user>ARL Informática</h1>
+      <p>Aqui está o resumo dos atendimentos.</p>
+    </div>
+    <div class="arl-premium-kpis" aria-label="Indicadores operacionais">
+      <article><span class="arl-premium-stat-icon">${premiumIcon('clipboard')}</span><strong data-mobile-stat="all">—</strong><small>OS abertas</small></article>
+      <article><span class="arl-premium-stat-icon">${premiumIcon('search')}</span><strong data-mobile-stat="analysis">—</strong><small>Em análise</small></article>
+      <article><span class="arl-premium-stat-icon">${premiumIcon('wrench')}</span><strong data-mobile-stat="service">—</strong><small>Em serviço</small></article>
+      <article><span class="arl-premium-stat-icon">${premiumIcon('package')}</span><strong data-mobile-stat="waiting">—</strong><small>Aguardando peça</small></article>
+    </div>
+    <div class="arl-premium-title"><h2>Acesso rápido</h2><span>Atalhos</span></div>
+    <div class="arl-premium-shortcuts">
+      <button type="button" data-mobile-dest="orders"><span aria-hidden="true">${premiumIcon('wrench')}</span><strong>Ordens de Serviço</strong><small>Atendimentos e prazos</small></button>
+      <button type="button" data-mobile-dest="clients"><span aria-hidden="true">${premiumIcon('users')}</span><strong>Clientes</strong><small>Cadastro e histórico</small></button>
+      <button type="button" data-mobile-dest="new"><span aria-hidden="true">${premiumIcon('plus')}</span><strong>Abrir OS</strong><small>Novo atendimento</small></button>
+      <button type="button" data-mobile-dest="finance" data-mobile-admin><span aria-hidden="true">${premiumIcon('chart')}</span><strong>Financeiro</strong><small>Para administradores</small></button>
+    </div>
+    <div class="arl-premium-title arl-premium-order-title"><h2>Ordens de Serviço recentes</h2><small data-mobile-count>Carregando…</small></div>
     <div class="arl-mobile-order-list" data-mobile-orders></div>`;
-
-
+  const firstName = main.dataset.arlUserName?.trim().split(/\s+/)[0];
+  home.querySelector<HTMLElement>('[data-mobile-user]')!.textContent = firstName ? firstName + ' 👋' : 'ARL Informática';
+  if (main.dataset.arlUserRole === 'Usuário local') {
+    home.querySelector<HTMLElement>('[data-mobile-admin]')?.remove();
+  }
+  home.addEventListener('click', (event) => {
+    const destination = (event.target as Element).closest<HTMLElement>('[data-mobile-dest]')?.dataset.mobileDest;
+    if (destination) window.dispatchEvent(new CustomEvent('arl-mobile-go-page', { detail: destination }));
+  });
   return home;
 }
 
@@ -219,9 +291,19 @@ function syncMobileHome() {
 
   main.dataset.arlMobileHome = '1';
   let home = main.querySelector<HTMLElement>(':scope > .arl-mobile-home');
-  if (home) return;
+  if (home && home.dataset.variant !== main.dataset.arlMobileVariant) {
+    clearMobileHome(main);
+    main.dataset.arlMobileHome = '1';
+    home = null;
+  }
+  if (home) {
+    const firstName = main.dataset.arlUserName?.trim().split(/\s+/)[0];
+    const title = home.querySelector<HTMLElement>('[data-mobile-user]');
+    if (title && firstName) title.textContent = firstName + ' 👋';
+    return;
+  }
 
-  home = buildHome();
+  home = buildHome(main);
   const header = main.querySelector<HTMLElement>(':scope > .app-head');
   header?.insertAdjacentElement('afterend', home);
   if (!header) main.prepend(home);
@@ -242,7 +324,7 @@ observer.observe(document.documentElement, {
   childList: true,
   subtree: true,
   attributes: true,
-  attributeFilter: ['data-layout'],
+  attributeFilter: ['data-layout', 'data-arl-user-name', 'data-arl-mobile-variant'],
 });
 document.addEventListener('DOMContentLoaded', scheduleSync);
 scheduleSync();

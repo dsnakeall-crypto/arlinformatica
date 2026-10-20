@@ -1,0 +1,68 @@
+/* Controle de Gastos — menus menores e gaveta direita; Web e mobile preservam dados. */
+.cg-page.cg-mobile .cg-navigation,
+.cg-page.cg-mobile>.arl-expense-subnav{display:none!important}
+.cg-page.cg-mobile .cg-institution-register-heading{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important}
+.cg-page.cg-mobile .cg-institution-register-heading>button,
+.cg-page.cg-mobile .cg-type-manager-mobile .cg-section-heading>button{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;
+  align-self:flex-end!important;flex:0 0 auto!important;width:auto!important;max-width:100%!important;
+  min-height:40px!important;height:auto!important;padding:8px 11px!important;
+  font-size:11px!important;line-height:1.25!important;font-weight:750!important;
+  border-radius:12px!important;white-space:normal!important;text-align:center!important;
+  box-shadow:0 3px 9px #22365125!important;
+}
+.cg-page.cg-mobile .cg-institution-register-heading>button svg,
+.cg-page.cg-mobile .cg-type-manager-mobile .cg-section-heading>button svg{width:16px!important;height:16px!important;flex:0 0 16px}
+.cg-page.cg-mobile .cg-type-manager-mobile .cg-section-heading{
+  flex-wrap:wrap!important;gap:8px!important;align-items:start!important;
+}
+.cg-page.cg-mobile .cg-type-manager-mobile{padding:12px!important;margin-top:15px!important;min-width:0!important}
+.cg-page.cg-mobile .cg-type-manager-mobile .cg-section-heading h2{font-size:16px!important}
+.cg-page.cg-mobile .cg-type-manager-mobile .cg-section-heading p{font-size:11px!important}
+.cg-page .cg-type-popup>button.cg-primary{display:inline-flex!important;width:auto!important;max-width:100%!important;
+  align-items:center!important;gap:6px!important;min-height:42px!important;padding:9px 12px!important;
+  font-size:12px!important;border-radius:12px!important}
+.cg-page .cg-type-popup>button.cg-primary svg{width:17px!important;height:17px!important}
+/* Popup de tipos também é portal no body; seletor sem ancestral .cg-page. */
+html body .cg-type-popup>button.cg-primary{min-height:41px!important;width:auto!important;max-width:100%!important;
+  padding:9px 12px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  gap:6px!important;font-size:12px!important;font-weight:750!important;border-radius:12px!important;white-space:normal!important}
+html body .cg-type-popup>button.cg-primary svg{width:17px!important;height:17px!important}
+html body .cg-type-popup .cg-type-popup-row{gap:8px;min-width:0}
+html body .cg-type-popup .cg-type-popup-row button{width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;padding:9px!important}
+html body .cg-type-popup .cg-type-popup-row button svg{width:19px!important;height:19px!important}
+.cg-page.cg-mobile .cgm-header-actions button,
+.cg-page.cg-mobile .cg-month-picker button,
+.cg-page.cg-mobile .cgm-filter-toggle {min-height:43px!important}
+.cg-page.cg-mobile .cg-section-heading>button:not(.cg-primary){min-height:40px!important;border-radius:12px!important;max-width:100%!important}
+.cg-expense-menu-layer{position:fixed;inset:0;z-index:13000;pointer-events:none;height:100dvh}
+.cg-expense-menu-backdrop{position:absolute;inset:0;background:#10182788;backdrop-filter:blur(3px);pointer-events:auto}
+.cg-expense-menu-panel{position:absolute;top:0;right:0;bottom:0;left:auto;height:100dvh;
+  width:min(86vw,365px);max-width:100%;display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;
+  background:linear-gradient(145deg,#fff9ed,#f6f8fc 44%,#fff);color:#18243a;
+  border:1px solid #e2c88d;border-right:0;border-radius:26px 0 0 26px;
+  box-shadow:-11px 0 30px #06111a66,inset 1px 0 #fff;
+  animation:cg-expense-drawer-appear .21s ease-out both}
+@keyframes cg-expense-drawer-appear{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.cg-expense-menu-heading{display:flex;justify-content:space-between;align-items:start;gap:10px;
+  padding:calc(18px + env(safe-area-inset-top,0px)) 15px 18px;border-bottom:1px solid #debc68;
+  background:linear-gradient(115deg,#151719,#24211a 64%,#74531b);color:white}
+.cg-expense-menu-heading .cg-eyebrow{color:#ffcf7e!important;letter-spacing:1.3px;font-weight:800;font-size:10px}
+.cg-expense-menu-heading h2{font-size:24px;margin:7px 0 4px;color:white}
+.cg-expense-menu-heading p{margin:0;color:#e5d4ac;font-size:11px}
+.cg-expense-menu-heading>button{display:grid;place-items:center;flex:0 0 41px;width:41px;height:41px;border-radius:50%;color:white;border:1px solid #ebd6a76b;background:#22262c}
+.cg-expense-menu-heading>button svg{width:20px;height:20px}
+.cg-expense-menu-scroll{flex:1;overflow:auto;padding:12px 13px 25px;overscroll-behavior:contain}
+.cg-expense-menu-scroll h3{font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:1px;color:#956c27;margin:15px 2px 8px}
+.cg-expense-menu-scroll>button{display:flex;align-items:center;gap:11px;width:100%;min-height:62px;padding:9px;
+  background:linear-gradient(155deg,#fff,#f8faff);border:1px solid #e0e5f0;border-radius:15px;
+  color:#182338;text-align:left;box-shadow:inset 0 1px #fff,0 5px 12px #1b2a4020;margin:0 0 9px}
+.cg-expense-menu-scroll>button.active{border-color:#e5ba65;background:linear-gradient(#fffbef,#fff0c9)}
+.cg-expense-menu-icon{display:grid;place-items:center;flex:0 0 39px;height:40px;background:linear-gradient(#fff9e3,#ffe3ad);color:#997019;border-radius:12px;box-shadow:inset 0 2px #fff,0 3px 6px #9272372a}
+.cg-expense-menu-icon svg{width:21px;height:21px}
+.cg-expense-menu-scroll>button>span:nth-child(2){display:flex;flex-direction:column;flex:1;min-width:0;gap:3px}
+.cg-expense-menu-scroll strong{font-size:13px}.cg-expense-menu-scroll small{font-size:10px;color:#6d7b91}
+.cg-expense-menu-scroll>button>svg{width:15px;height:15px;color:#8090ac}
+.cg-expense-menu-scroll button:focus-visible,.cg-expense-menu-heading button:focus-visible{outline:3px solid #deb14e;outline-offset:2px}
+@media(max-width:360px){.cg-expense-menu-panel{width:90vw}}
+@media(prefers-reduced-motion:reduce){.cg-expense-menu-panel{animation:none!important}}

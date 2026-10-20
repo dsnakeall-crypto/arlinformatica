@@ -16,6 +16,9 @@ test('Mobile: barra inferior não intercepta salvar Entrada Rápida em popup',as
   await modal.getByRole('button',{name:'Registrar entrada avulsa'}).click({timeout:7000});
   expect((await reply).status()).toBe(201);
   await expect(modal).toHaveCount(0);
-  await expect(nav).toHaveCSS('pointer-events','auto');
+  // Dock transparente não captura cliques fora dos ícones. Os botões
+  // mantêm seus próprios alvos de toque após o popup fechar.
+  await expect(nav).toHaveCSS('pointer-events','none');
+  await expect(nav.getByRole('button', { name:'Painel' })).toHaveCSS('pointer-events','auto');
   await expect(nav.getByRole('button')).toHaveCount(5);
 });

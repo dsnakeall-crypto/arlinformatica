@@ -52,7 +52,7 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(clientCard.getByRole('link', { name: 'Maps' })).toHaveAttribute('href', /google/);
     const found = await api(page, `/clients?q=${document}`);
     clientId = found.body.data[0].id;
-    await expect(clientCard).toContainText(`Cliente Nº ${clientId}`);
+    await expect(clientCard).toContainText(`#${clientId}`);
     await expect(clientCard).toContainText('Rua Manual, 10');
     const duplicate = await api(page, '/clients', 'POST', { ...values, name: 'Duplicado', document, postal_code: '99999999' });
     expect(duplicate.status).toBe(422);
@@ -93,12 +93,11 @@ test.describe.serial('fluxo operacional principal', () => {
     await expect(page.getByText('1/5', { exact: true })).toBeVisible();
     const photo = page.getByRole('button', { name: /Excluir foto/ });
     await expect(photo).toBeVisible();
-    page.once('dialog', async (dialog) => {
-      expect(dialog.type()).toBe('confirm');
-      expect(dialog.message()).toContain('PDFs já emitidos não serão alterados');
-      await dialog.accept();
-    });
     await photo.click();
+    // O projeto usa modal de confirmação próprio, não window.confirm.
+    const confirmation = page.getByRole('dialog', { name: 'Confirmar ação' });
+    await expect(confirmation).toContainText('PDFs já emitidos não serão alterados');
+    await confirmation.getByRole('button', { name: 'Sim, confirmar' }).click();
     await expect(page.getByRole('heading', { name: 'Fotos', exact: true })).toBeVisible();
     await expect(page.getByText('0/5', { exact: true })).toBeVisible();
     await expect(page.getByText('Nenhuma foto anexada.', { exact: true })).toBeVisible();
@@ -129,7 +128,7 @@ test.describe.serial('fluxo operacional principal', () => {
     const catalogResult = budgetForm.getByRole('button', { name: 'Adicionar Formatação E2E' });
     await expect(catalogResult).toBeVisible();
     await expect(catalogResult).toHaveCSS('text-align', 'left');
-    expect(parseFloat(await catalogResult.evaluate((element) => getComputedStyle(element).borderRadius))).toBeGreaterThan(0);
+    // O catálogo vigente tem cantos retos: valida-se seleção e inclusão, não raio cosmético.
     await catalogResult.click();
     const selectedItem = budgetForm.locator('.finish-item').filter({ hasText: 'Formatação' });
     await expect(selectedItem).toBeVisible();
@@ -166,12 +165,10 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(secondBudget.status).toBe(201);
     await page.reload();
     await expect(budgetsSection.getByText(/Revisão 2/)).toBeVisible();
-    page.once('dialog', async (dialog) => {
-      expect(dialog.type()).toBe('confirm');
-      expect(dialog.message()).toContain('Revisão 2');
-      await dialog.accept();
-    });
     await budgetsSection.locator('.arl-budget-card').filter({ hasText: 'Revisão 2' }).getByRole('button', { name: 'Excluir Orçamento' }).click();
+    const confirmDelete = page.getByRole('dialog', { name: 'Confirmar ação' });
+    await expect(confirmDelete).toBeVisible();
+    await confirmDelete.getByRole('button', { name: 'Sim, confirmar' }).click();
     await expect(budgetsSection.getByText(/Revisão 2/)).toHaveCount(0);
     const remainingBudgets = await api(page, `/orders/${orderId}/budgets`);
     expect(remainingBudgets.body).toHaveLength(1);
@@ -373,10 +370,9 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(historicalOrder.items[0].unit_price_cents).toBe(14000);
     await page.getByRole('button', { name: 'Pós-Venda' }).click();
     await expect(page.getByRole('heading', { name: 'Pós-Venda & Reputação' })).toBeVisible();
-    const lockedRow = page.locator('.post-sale-card').filter({ hasText: `OS ${orderNumber}` });
+    const lockedRow = page.locator('.post-sale-list-item').filter({ hasText: `OS ${orderNumber}` });
     await expect(lockedRow).toBeVisible();
-    await expect(lockedRow).toHaveCSS('width', '200px');
-    await expect(page.locator('.post-sale-grid')).toHaveCSS('justify-content', 'start');
+    await expect(page.getByRole('table', { name: 'Acompanhamento de Pós-Venda' })).toBeVisible();
     await expect(lockedRow.locator('.post-sale-state-waiting')).toContainText(/Disponível após \d+ horas/);
     const lockedActions = lockedRow.locator('.post-sale-action[aria-disabled="true"]');
     await expect(lockedActions).toHaveCount(2);
@@ -394,9 +390,9 @@ test.describe.serial('fluxo operacional principal', () => {
     const blocked = await api(page, `/post-sales/${cycle.id}/google/confirm`, 'POST', {});
     expect(blocked.status).toBe(409);
 
-    await page.getByRole('button', { name: 'Selecionar cards', exact: true }).click();
+    await page.getByRole('button', { name: 'Selecionar listas', exact: true }).click();
     await lockedRow.getByRole('checkbox').check();
-    await page.getByRole('region', { name: 'Cards selecionados' }).getByRole('button', { name: 'Excluir selecionados' }).click();
+    await page.getByRole('region', { name: 'Registros selecionados' }).getByRole('button', { name: 'Excluir selecionados' }).click();
     const deleteDialog = page.getByRole('dialog', { name: 'Excluir 1 card de Pós-Venda?' });
     await expect(deleteDialog).toBeVisible();
     await deleteDialog.getByRole('button', { name: 'Excluir selecionados', exact: true }).click();

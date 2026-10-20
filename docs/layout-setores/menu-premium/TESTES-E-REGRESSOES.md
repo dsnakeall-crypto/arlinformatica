@@ -1,0 +1,11 @@
+# Testes da gaveta Premium direita — 20/10
+- Backup antes da alteração, diffs/hashes SHA256: `C:\Users\Allan\OneDrive\Programacao APP\App Arl Informatica\Backups\01 - 20-10-26 - 03-50 - GAVETA-DIREITA-3D`.
+- Branch release/integracao-completa-20261018, HEAD inicial 8903365; checkout com 403 alterações preexistentes. Nenhum reset, clean, commit, push ou deploy.
+- npm run typecheck: PASS (0 erro).
+- npm run lint: PASS (0 erro).
+- npm run build: PASS.
+- Playwright direcionado conjunto: **8 PASS/0 FAIL** (menu direito 390/320, navegação ARL, dock compactado, Controle de Gastos e troca Web/Mobile).
+- Playwright extra com carregamento real dos chunks React: **1 PASS**, seis módulos (Ordens 9 controles, Serviços 7, Produtos 7, Fornecedores 4, Financeiro 13, Configurações 8), todos sem overflow horizontal (390px). Captação real em MODULO-*.png.
+- Modal com role dialog/aria-modal, Esc, toque fora, X, foco limitado via Tab e rolagem interna; sem chamadas novas de API. Body bloqueado somente enquanto menu aberto.
+- Cobertura Web/PC: modo desktop sem camada Premium (PASS).
+- **Ainda pendente:** regressão FULL E2E, todas as CI GitHub verdes, linha de base de latência fria/quente e aceite visual do proprietário. **Não homologar implantação**.

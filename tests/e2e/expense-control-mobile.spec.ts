@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
-import { api, login, password } from './helpers';
+import { api, login, password, openExpenseSection } from './helpers';
 
 const money = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value / 100);
 async function noOverflow(page: any) {
@@ -69,7 +69,7 @@ test('mobile gastos: cinco ícones, resumo correto das partes, instituição, m�
   const nav = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
   await expect(nav.locator('button')).toHaveCount(5);
   await expect(nav.locator('button .arl-nav-icon-disc')).toHaveCount(5);
-  await nav.getByRole('button', { name: 'Gestor de Gasto' }).click();
+  await nav.getByRole('button', { name: 'Gastos' }).click();
   await expect(page.getByRole('region', { name: 'Resumo financeiro mobile' })).toBeVisible();
   await expect(page.locator('.arl-expense-own-header').getByRole('button', { name: 'Ajustes' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Histórico', exact: true })).toHaveCount(0);
@@ -102,18 +102,17 @@ test('mobile gastos: cinco ícones, resumo correto das partes, instituição, m�
   await page.setViewportSize({ width: 320, height: 740 }); await noOverflow(page);
   await page.setViewportSize({ width: 768, height: 1024 }); await noOverflow(page);
   await page.screenshot({ path: 'output/controle-gasto/tablet-resumo.png', fullPage: true });
-  const expenseNav = page.getByRole('navigation', { name: 'Menu do Controle de Gastos' });
   for (const label of ['Gastos', 'Instituições', 'Projeção', 'Resumo']) {
-    await expenseNav.getByRole('button', { name: label, exact: true }).click();
+    await openExpenseSection(page, label);
     await expect(page.getByText('Atualizando informações…')).not.toBeVisible(); await noOverflow(page);
   }
-  await expenseNav.getByRole('button', { name: 'Gastos', exact: true }).click();
-  await page.getByRole('button', { name: 'Quitadas', exact: true }).click();
+  await openExpenseSection(page, 'Gastos');
+  await openExpenseSection(page, 'Quitadas');
   await noOverflow(page);
-  await expenseNav.getByRole('button', { name: 'Projeção', exact: true }).click();
-  await page.getByRole('button', { name: 'Pagamentos', exact: true }).click();
+  await openExpenseSection(page, 'Projeção');
+  await openExpenseSection(page, 'Pagamentos');
   await noOverflow(page);
-  await expenseNav.getByRole('button', { name: 'Resumo', exact: true }).click();
+  await openExpenseSection(page, 'Resumo');
   await page.setViewportSize({ width: 393, height: 851 });
   // The complete monthly invoice intentionally includes both people.
   await expect(institution.locator('strong > b')).toHaveText('R$ 600,00');
@@ -137,7 +136,7 @@ test('mobile gastos: cinco ícones, resumo correto das partes, instituição, m�
   await page.getByRole('button', { name: 'Fechar formulário de gasto' }).click();
   await page.getByRole('button', { name: 'Voltar à ARL' }).click();
   await page.getByRole('dialog', { name: 'Confirmar retorno para o aplicativo da ARL?', exact: true }).getByRole('button', { name: 'Confirmar retorno', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' })).toBeVisible();
+  await expect(page.locator('.arl-mobile-home-premium')).toBeVisible();
 });
 
 test('mobile gastos: nova dívida escolhe cadastro manual ou foto IA com revisão antes de salvar', async ({ page }) => {
@@ -206,7 +205,10 @@ test('mobile gastos: perfil exclusivo continua restrito e funcionário não ganh
       await expect(page.getByRole('button', { name: 'Nova OS', exact: true })).toHaveCount(0);
       expect((await api(page, '/orders')).status).toBe(403);
     } else {
-      await expect(page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).locator('button')).toHaveCount(3);
+      const nav = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
+      await expect(nav.locator('button')).toHaveCount(5);
+      await expect(nav.getByRole('button', { name: 'Gastos' })).toBeDisabled();
+      await expect(nav.getByRole('button', { name: 'Menu' })).toBeVisible();
       expect((await api(page, '/expense-control/summary?month=2026-10')).status).toBe(403);
     }
     await page.evaluate(async () => { await fetch('/logout', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '' } }); });

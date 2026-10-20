@@ -74,8 +74,11 @@ test('administrador simples tem preferências locais e acesso individual a gasto
   await logout();
   await login(page, loginName);
   const nav = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
-  await expect(nav.locator('button')).toHaveCount(4);
-  await expect(nav.getByRole('button', { name: 'Gestor de Gasto' })).toHaveCount(0);
+  await expect(nav.locator('button')).toHaveCount(5);
+  // Cinco posições por decisão do proprietário, mas acesso NÃO autorizado
+  // permanece desabilitado e a API ainda nega recursos confidenciais.
+  await expect(nav.getByRole('button', { name: /Gestor de Gasto/ })).toBeDisabled();
+  await expect(nav.getByRole('button', { name: 'Financeiro' })).toBeEnabled(); // Administrador Simples tem acesso ao financeiro empresarial.
   expect((await api(page, '/expense-control/configuration')).status).toBe(403);
   expect((await api(page, '/users')).status).toBe(403);
   expect((await api(page, '/backups')).status).toBe(403);
