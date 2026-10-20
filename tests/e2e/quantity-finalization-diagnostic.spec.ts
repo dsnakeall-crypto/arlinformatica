@@ -128,6 +128,8 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
   expect(pdfResponse.headers()['content-type']).toContain('application/pdf');
   expect((await pdfResponse.body()).byteLength).toBeGreaterThan(1000);
 
+  // Valida o link montado pela ARL sem depender da disponibilidade do site externo do WhatsApp.
+  await page.context().route(/^https:\/\/api\.whatsapp\.com\//, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>WhatsApp (E2E)</title>' }));
   const whatsappPagePromise = page.context().waitForEvent('page');
   await share.getByRole('button', { name: 'Enviar link ao cliente' }).click();
   const whatsappPage = await whatsappPagePromise;
