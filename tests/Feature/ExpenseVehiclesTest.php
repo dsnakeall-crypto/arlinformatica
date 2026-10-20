@@ -155,7 +155,7 @@ class ExpenseVehiclesTest extends TestCase
     {
         $this->actingAs($this->account('Usuário local'));
         $this->getJson('/api/expense-control/vehicles')->assertForbidden();
-        $this->postJson('/api/expense-control/vehicles',['name' => 'Carro secreto'])->assertForbidden();
-        $this->postJson('/api/expense-control/vehicle-events',$this->entry())->assertForbidden();
+        $this->postJson('/api/expense-control/vehicles', ['name' => 'Carro secreto'])->assertForbidden();
+        $this->postJson('/api/expense-control/vehicle-events', $this->entry())->assertForbidden();
     }
 }

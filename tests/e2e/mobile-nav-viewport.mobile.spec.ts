@@ -34,7 +34,7 @@ test('barra não acompanha o teclado iOS e retorna ao rodapé ao fechar', async 
     Number.parseFloat(element.style.getPropertyValue('--arl-mobile-keyboard-offset')),
   )).toBe(0);
   await expect.poll(async () => nav.evaluate(element =>
-    Math.abs(element.getBoundingClientRect().bottom - window.innerHeight),
+    Math.abs((window.innerHeight - element.getBoundingClientRect().bottom) - Number.parseFloat(getComputedStyle(element).bottom)),
   )).toBeLessThan(1.5);
 });
 
@@ -52,7 +52,7 @@ test('barra fixa: rolagens repetidas, rotas ARL, rotação, fim da página e vis
       await page.setViewportSize(viewport);
       for (const y of [0, 300, 900, 0, 900, 300, 0, 99999]) {
         await page.evaluate(y => window.scrollTo(0, y), y);
-        await expect.poll(() => nav.evaluate(element => Math.abs(element.getBoundingClientRect().bottom - (window.visualViewport!.offsetTop + window.visualViewport!.height)))).toBeLessThan(1.5);
+        await expect.poll(() => nav.evaluate(element => Math.abs((window.visualViewport!.offsetTop + window.visualViewport!.height - element.getBoundingClientRect().bottom) - Number.parseFloat(getComputedStyle(element).bottom)))).toBeLessThan(1.5);
         const metrics = await nav.evaluate(element => ({
           position: getComputedStyle(element).position,
           y: scrollY,
