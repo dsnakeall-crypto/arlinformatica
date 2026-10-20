@@ -18,7 +18,7 @@ test('Configurações importa CSV e mostra resumo, duplicidade e erros', async (
   await expect(card.getByRole('alert')).toContainText('Cabeçalho inválido');
   await page.setViewportSize({ width: 390, height: 844 });
   await setDeviceLayout(page, 'mobile');
-  await expect(page.getByRole('button', { name: 'Abrir menu', exact: true })).toBeVisible();
+  await expect(page.locator('.arl-global-mobile-nav').getByRole('button', { name: 'Menu', exact: true })).toBeVisible();
   await expect(page.locator('aside')).not.toHaveClass(/open/);
   await page.getByRole('navigation', { name: 'Categorias de Configurações' })
     .locator('[data-section="system"]').click();

@@ -48,7 +48,9 @@ test('marca dez cards, confirma uma exclusão em lote e preserva OS, PDFs e o ca
   await expect(toolbar).toContainText('10 registros selecionados');
   await expect(page.getByRole('checkbox', { name: `Marcar OS ${orders[10].number}`, exact: true })).not.toBeChecked();
   await search.fill('');
-  await page.screenshot({ path: testInfo.outputPath('post-sale-bulk-desktop.png'), fullPage: true });
+  // Full-page capture can temporarily resize Chromium to 1x1 and legitimately
+  // switch to Mobile, which does not expose Pós-Venda. Preserve the real viewport.
+  await page.screenshot({ path: testInfo.outputPath('post-sale-bulk-desktop.png') });
   let writes = 0;
   page.on('request', request => {
     if (request.url().endsWith('/api/post-sales/bulk-delete') && request.method() === 'POST') writes++;
@@ -65,7 +67,7 @@ test('marca dez cards, confirma uma exclusão em lote e preserva OS, PDFs e o ca
   expect(bounds).not.toBeNull();
   expect(bounds!.x).toBeGreaterThanOrEqual(0);
   expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(1180);
-  await page.screenshot({ path: testInfo.outputPath('post-sale-bulk-1180.png'), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('post-sale-bulk-1180.png') });
   await toolbar.getByRole('button', { name: 'Excluir selecionados' }).click();
   dialog = page.getByRole('dialog', { name: 'Excluir 10 cards de Pós-Venda?' });
   const removed = page.waitForResponse(response => response.url().endsWith('/api/post-sales/bulk-delete'));

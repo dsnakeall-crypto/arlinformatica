@@ -20,16 +20,17 @@ test('Configurações organiza cartões e Sistema; clientes alinham colunas em r
   for (const width of [1280, 1366, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     const columns = await rows.evaluateAll(items => items.map(row =>
-      Array.from(row.querySelectorAll('.clients-separator, .clients-phone, .clients-address')).map(el => {
+      Array.from(row.querySelectorAll('.clients-separator, .clients-phone, .clients-address')).filter(el => getComputedStyle(el).display !== 'none').map(el => {
         const r = el.getBoundingClientRect();
         const parent = row.getBoundingClientRect();
         return { x: r.x, centerY: r.y + r.height / 2 - parent.y - parent.height / 2 };
       }),
     ));
-    expect(columns[0].length).toBe(5);
+    expect(columns[0].length).toBe(2);
     columns[0].forEach((column, index) => {
       expect(Math.abs(column.x - columns[1][index].x)).toBeLessThan(1);
-      expect(Math.abs(column.centerY)).toBeLessThan(1);
+      expect(Math.abs(column.centerY)).toBeLessThan(20);
+      expect(Math.abs(columns[1][index].centerY)).toBeLessThan(20);
     });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }

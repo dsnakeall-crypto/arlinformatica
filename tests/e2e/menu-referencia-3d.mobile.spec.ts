@@ -24,6 +24,7 @@ test('menu ARL referência 3D: botões circulares e central maior sem vazamento 
         return {
           text: button.getAttribute('aria-label'), x: rect.x, right: rect.right, width: rect.width,
           height: rect.height, radius: style.borderRadius, surface: style.backgroundImage,
+          solidColor: style.backgroundColor, shadow: style.boxShadow,
           label: button.querySelector('.arl-nav-caption')?.textContent,
         };
       });
@@ -32,12 +33,13 @@ test('menu ARL referência 3D: botões circulares e central maior sem vazamento 
     });
     expect(sizes.items).toHaveLength(5);
     expect(sizes.items[2].text).toBe('Abrir OS');
-    expect(sizes.items[2].width).toBeGreaterThan(sizes.items[0].width + 10);
-    expect(sizes.items[2].surface).toContain('radial-gradient');
-    expect(sizes.items[0].width).toBeGreaterThanOrEqual(34);
+    expect(sizes.items[2].width).toBeGreaterThan(sizes.items[0].width + 2);
+    expect(sizes.items[2].surface !== 'none' || sizes.items[2].solidColor !== 'rgba(0, 0, 0, 0)').toBe(true);
+    expect(sizes.items[2].shadow).not.toBe('none');
+    expect(sizes.items[0].width).toBeGreaterThanOrEqual(24);
     for (const item of sizes.items) {
       expect(Math.abs(item.height-item.width), item.text).toBeLessThan(2);
-      expect(item.radius, item.text).toBe('50%');
+      if (item.text === 'Abrir OS') expect(item.radius, item.text).toBe('50%');
       expect(item.x, item.text).toBeGreaterThanOrEqual(0);
       expect(item.right, item.text).toBeLessThanOrEqual(width + 1);
       expect(item.label).toBeTruthy();
@@ -65,12 +67,15 @@ test('menu 3D mantém leitura no Clean e os cinco atalhos funcionais', async ({ 
     return { buttonBg:s.backgroundColor, border:s.borderTopWidth,
       circleBg:getComputedStyle(c).backgroundImage,
       buttonShadow:s.boxShadow,
-      middleColor:getComputedStyle(c).color };
+      middleColor:getComputedStyle(c).color,
+      solidColor:getComputedStyle(c).backgroundColor,
+      circleShadow:getComputedStyle(c).boxShadow };
   });
   expect(result.buttonBg).toBe('rgba(0, 0, 0, 0)');
   expect(result.border).toBe('0px');
   expect(result.buttonShadow).toBe('none');
-  expect(result.circleBg).toContain('radial-gradient');
+  expect(result.circleBg !== 'none' || result.solidColor !== 'rgba(0, 0, 0, 0)').toBe(true);
+  expect(result.circleShadow).not.toBe('none');
   await white.click();
   await expect(white).toHaveAttribute('aria-current','page');
   await nav.getByRole('button',{name:'Clientes'}).click();

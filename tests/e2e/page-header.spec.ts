@@ -47,12 +47,12 @@ test('ações e contador integram a linha compacta do título', async ({ page })
 test('cabeçalho se adapta ao modo Mobile / Tablet sem overflow', async ({ page }) => {
   await login(page);
   await setDeviceLayout(page, 'mobile');
-  const home = page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' });
+  const home = page.locator('.arl-mobile-home-premium');
   for (const width of [390, 768]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(page.getByTestId('page-header')).toHaveCount(0);
     await expect(home).toBeVisible();
-    await expect(home.getByRole('heading', { name: 'OS abertas', exact: true })).toBeVisible();
+    await expect(home.getByRole('heading', { name: 'Ordens de Serviço recentes', exact: true })).toBeVisible();
     const homeBox = await home.boundingBox();
     expect(homeBox).not.toBeNull();
     const viewport = await page.evaluate(() => document.documentElement.clientWidth);

@@ -80,3 +80,21 @@ Ajustes em progresso: teste legado adicional do Painel que ainda exigia closed_w
 - Etapa 2: diagnóstico amplo e otimizações ainda pendentes.
 - Etapa 3: CI integral ainda não corrigida/verificada.
 - Etapa 4: sem commit/push nesta anotação; não considerar missão concluída.
+
+### Validação adicional e revisão dos testes
+
+MySQL 8.4.3 do Laragon: **411 testes / 7.546 assertions PASS em 2 min 38,2 s**. Instância nova, exclusivamente loopback `127.0.0.1:33462`, datadir externo `mysql-isolado`, schema `arl_test_audit_20261020`, PHP 8.3.33. Host, porta, datadir e processo conferidos. Não foi usada a instância habitual da máquina nem qualquer conexão remota. Após a suíte e o EXPLAIN, somente essa instância foi encerrada com mysqladmin. Logs e identificação no backup externo.
+
+EXPLAIN MySQL do COUNT semanal: acesso `range` pelo índice existente `service_orders_completed_at_index`, `Using index condition; Using where`. Tabela vazia após rollback dos testes: estimativa de uma linha, sem valor como benchmark de volume. Nenhum índice ou migration foi alterado. O benchmark integrado de Pós-venda registrou 31 ms e quatro SELECTs; seu rótulo histórico contém SQLITE, mas esta execução usou MySQL conforme configuração explícita.
+
+Revisão independente dos testes financeiros examinados: valores, parcelas, pagamentos, saldos e histórico preservados. No teste de temas, a comparação do PDF real emitido substitui a antiga comparação de CSS print da moldura da SPA; não são coberturas equivalentes. No teste de segurança do popup mobile, hit-test de Salvar + POST real e navegação posterior substituem expectativas de pointer-events do dock antigo.
+
+Medição somente leitura do menu Original em 1280 px: lateral 240 px, clientWidth 238 px, botões de x=16 até x=222, contadores de cinco dígitos contidos. O scrollWidth de 282 px decorre exclusivamente da marca com `scale(1.55)` definido em `orders-reference-gold-20261014.css`; overflow-x é hidden e hit-test além da lateral retorna MAIN. O teste passa a exigir recorte efetivo, ausência de overflow da página e contenção dos controles, preservando o layout aprovado. Margens comparadas na caixa interna descontam a borda de dois pixels.
+
+Commits locais já criados: `7ce1e56` (Painel/agregado) e `2f732ae` (carregamento de telas). Sem push até esta anotação. Lint/typecheck passaram novamente após o lote de testes. Reteste direcionado em execução com outro SQLite e storage privados, ambos externos, porta 8070 e resultados separados da rodada integral diagnóstica. As duas execuções locais simultâneas não constituem benchmark de performance.
+
+Primeiro reteste direcionado concluído: **31 E2E PASS em 4 minutos**, incluindo saldos individuais, parcelas, quitação, isolamento de perfil, impressão PDF, popup financeiro, menu lateral e restauração do Maps entre temas. Commit local `d3ec46e` contém somente os nove arquivos de testes/helper validados. Acrescentada cobertura explícita do novo agregado para os perfis Controle de Gasto (403) e Usuário local (200): três testes do endpoint/17 assertions PASS e Pint aprovado; commit `eae9f32`.
+
+Causa de instabilidade de captura reproduzida em script somente leitura: screenshot fullPage com seleção de Pós-venda provoca resize transitório Chromium para **1×1**, seguido de 1280×720. O evento matchMedia mobile ativa o redirecionamento autorizado de Pós-venda ao Painel. Evidência `postsale-screenshot-repro.json`: URL `/post-sale` antes do evento e `/` depois, sem escrita de dados. As duas capturas intermediárias desse teste agora preservam o viewport; todas as verificações de cancelamento, exclusão única, OS, PDFs e card não selecionado permanecem. Reteste desse cenário: PASS em 28,8 s, sem aumentar timeout.
+
+Revisão adicional reforçou verificações de destino por URL em cada navegação responsiva, persistência Clean ao retornar ao desktop, palette e migração da preferência Premium. Identificado também teste preexistente que salvava capturas sobre um backup histórico de 19/10: as três imagens existentes foram copiadas e verificadas por SHA-256 na pasta externa atual antes de nova execução; destinos do teste passam a testInfo.outputPath, sem caminho pessoal fixo na CI.

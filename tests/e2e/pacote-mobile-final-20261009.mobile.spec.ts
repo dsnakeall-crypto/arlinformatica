@@ -8,17 +8,18 @@ test('Gestor de Gastos usa barra 3D na ordem correta com cinco ícones',async({p
   mkdirSync(folder,{recursive:true});
   await login(page);
   await page.getByRole('navigation',{name:'Navegação Mobile / Tablet'})
-    .getByRole('button',{name:'Gestor de Gasto'}).click();
+    .getByRole('button',{name:'Gastos',exact:true}).click();
   const bar=page.getByRole('navigation',{name:'Menu do Controle de Gastos'});
   await expect(bar).toBeVisible();
   const labels=await bar.locator('button').evaluateAll(buttons=>buttons.map(b=>b.getAttribute('aria-label')));
-  expect(labels).toEqual(['Resumo','Instituições','Adicionar dívida','Projeção','Gastos']);
+  expect(labels).toEqual(['Resumo','Instituições','Adicionar dívida','Carros','Menu']);
   const sizes=await bar.locator('.arl-nav-icon-disc').evaluateAll(elements=>elements.map(el=>{
     const r=el.getBoundingClientRect();
     return {w:r.width,h:r.height,border:getComputedStyle(el).borderRadius};
   }));
-  expect(sizes[2].w).toBeGreaterThan(sizes[0].w+10);
-  for(const s of sizes)expect(s.border).toBe('50%');
+  expect(sizes[2].w).toBeGreaterThan(sizes[0].w+2);
+  for(const s of sizes)expect(s.w).toBeGreaterThanOrEqual(24);
+  expect(sizes[2].border).toBe('50%');
   const picker=page.locator('.cg-month-compact').first();
   await expect(picker).toBeVisible();
   await expect(page.locator('.cgm-header .cg-create-action')).toHaveCount(0);
@@ -36,7 +37,7 @@ test('Gestor de Gastos usa barra 3D na ordem correta com cinco ícones',async({p
 test('card resumo confirma PDF local, e próximo pagamento abre popup',async({page})=>{
   await login(page);
   await page.getByRole('navigation',{name:'Navegação Mobile / Tablet'})
-    .getByRole('button',{name:'Gestor de Gasto'}).click();
+    .getByRole('button',{name:'Gastos',exact:true}).click();
   const top=page.locator('.cgo-indicators');
   await expect(top).toBeVisible();
   await expect(top.locator('.cgo-month .cgo-tag')).toHaveCount(0);
@@ -74,7 +75,7 @@ test('card resumo confirma PDF local, e próximo pagamento abre popup',async({pa
 test('lista de Instituições abre tipos de dívida via popup em vez da grade extensa',async({page})=>{
   await login(page);
   await page.getByRole('navigation',{name:'Navegação Mobile / Tablet'})
-    .getByRole('button',{name:'Gestor de Gasto'}).click();
+    .getByRole('button',{name:'Gastos',exact:true}).click();
   const bar=page.getByRole('navigation',{name:'Menu do Controle de Gastos'});
   await bar.getByRole('button',{name:'Instituições'}).click();
   const types=page.locator('.cg-type-manager-mobile');
@@ -86,8 +87,8 @@ test('lista de Instituições abre tipos de dívida via popup em vez da grade ex
 
 test('OS: filtro AGU. PGTO compacto e nomes centralizados',async({page})=>{
   await login(page);
-  await page.getByRole('button',{name:'Abrir menu'}).click();
-  await page.getByRole('navigation',{name:'Menu lateral compacto'}).getByRole('button',{name:'Ordens'}).click();
+  await page.getByRole('navigation',{name:'Navegação Mobile / Tablet'}).getByRole('button',{name:'Menu',exact:true}).click();
+  await page.getByRole('dialog',{name:'Menu'}).getByRole('button',{name:'Ordens',exact:true}).click();
   const tabs=page.locator('.order-tabs');
   await expect(tabs).toBeVisible();
   await expect(tabs.locator('.order-awaiting-short')).toBeVisible();

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { login } from './helpers';
+import { login, openExpenseSection } from './helpers';
 
 async function enablePremium(page: import('@playwright/test').Page) {
   await page.evaluate(async () => {
@@ -11,7 +11,7 @@ async function enablePremium(page: import('@playwright/test').Page) {
   await page.reload();
 }
 
-test('ARL premium mobile: logomarca, indicadores reais, menu e navegação', async ({ page }) => {
+test('ARL premium mobile: logomarca, indicadores reais, menu e navegação', async ({ page }, testInfo) => {
   await login(page);
   await enablePremium(page);
   const home = page.locator('.arl-mobile-home-premium');
@@ -28,7 +28,7 @@ test('ARL premium mobile: logomarca, indicadores reais, menu e navegação', asy
   await expect(menu.getByRole('button', {name:'Painel'}).locator('svg.lucide-house')).toBeVisible();
   const captions = await menu.locator('button').evaluateAll(items => items.map(i => i.getAttribute('aria-label')));
   expect(captions).toEqual(['Painel', 'Clientes', 'Abrir OS', 'Gastos', 'Menu']);
-  await page.screenshot({path:'C:/Users/Allan/OneDrive/Programacao APP/App Arl Informatica/Backups/01 - 19-10-26 - 02-15 - LAYOUT-MOBILE-PREMIUM/ARL-PAINEL-MOBILE-REAL.png',fullPage:false});
+  await page.screenshot({path:testInfo.outputPath('ARL-PAINEL-MOBILE-REAL.png'),fullPage:false});
   await menu.getByRole('button',{name:'Menu'}).click();
   const sheet = page.getByRole('dialog',{name:'Menu'});
   await expect(sheet).toBeVisible();
@@ -46,18 +46,18 @@ test('ARL premium mobile: logomarca, indicadores reais, menu e navegação', asy
   await expect(page.locator('[data-arl-new-order-react="1"]')).toBeVisible();
 });
 
-test('Gastos mobile: painel por pessoa e popup de instituições', async ({ page }) => {
+test('Gastos mobile: painel por pessoa e popup de instituições', async ({ page }, testInfo) => {
   await login(page);
   await enablePremium(page);
   const menu = page.getByRole('navigation',{name:'Navegação Mobile / Tablet'});
   await menu.getByRole('button',{name:'Gastos'}).click();
   await expect(page.locator('.cg-page')).toBeVisible();
-  await page.getByRole('navigation',{name:'Menu do Controle de Gastos'}).getByRole('button',{name:'Gastos'}).click();
+  await openExpenseSection(page,'Gastos');
   await expect(page.locator('.cg-gastos-people')).toBeVisible();
   await expect(page.locator('.cg-gastos-person-card')).toHaveCount(3);
   await expect(page.locator('.cg-gastos-person-card').first()).toBeEnabled({ timeout: 20000 });
-  await page.screenshot({path:'C:/Users/Allan/OneDrive/Programacao APP/App Arl Informatica/Backups/01 - 19-10-26 - 02-15 - LAYOUT-MOBILE-PREMIUM/GASTOS-TRES-CARDS-REAL.png',fullPage:false});
+  await page.screenshot({path:testInfo.outputPath('GASTOS-TRES-CARDS-REAL.png'),fullPage:false});
   await page.locator('.cg-gastos-person-card').first().click();
   await expect(page.getByRole('dialog',{name:/Dívidas de/i})).toBeVisible();
-  await page.screenshot({path:'C:/Users/Allan/OneDrive/Programacao APP/App Arl Informatica/Backups/01 - 19-10-26 - 02-15 - LAYOUT-MOBILE-PREMIUM/GASTOS-POPUP-INSTITUICOES-REAL.png',fullPage:false});
+  await page.screenshot({path:testInfo.outputPath('GASTOS-POPUP-INSTITUICOES-REAL.png'),fullPage:false});
 });

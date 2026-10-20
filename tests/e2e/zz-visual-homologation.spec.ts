@@ -23,10 +23,21 @@ async function waitForOfficialIcons(page: Page, sources: string[]) {
 async function waitForOfficialViewIcon(scope: ReturnType<Page['locator']>) {
   const button = scope.getByRole('button', { name: 'Ver OS' }).first();
   await expect(button).toBeVisible();
-  const eye = button.locator('svg.lucide-eye');
-  await expect(eye).toBeVisible();
-  await expect(eye.locator('path')).toHaveCount(1);
-  const box = await eye.boundingBox();
+  // Original paints the bitmap on ::before; Clean paints the button itself.
+  const background = await button.evaluate(element => [
+    getComputedStyle(element).backgroundImage,
+    getComputedStyle(element, '::before').backgroundImage,
+  ].find(image => image.includes('icon-web-eye-compact-2x.png')) || 'none');
+  expect(background).toContain('icon-web-eye-compact-2x.png');
+  const source = background.match(/url\(["']?([^"')]+)["']?\)/)?.[1];
+  expect(source).toBeTruthy();
+  await button.evaluate(async (_element, url) => {
+    const image = new Image();
+    image.src = String(url);
+    await image.decode();
+    if (!image.naturalWidth) throw new Error('Ícone oficial sem imagem decodificada');
+  }, source);
+  const box = await button.boundingBox();
   expect(box).not.toBeNull();
   expect(box!.width).toBeGreaterThan(0);
   expect(box!.height).toBeGreaterThan(0);

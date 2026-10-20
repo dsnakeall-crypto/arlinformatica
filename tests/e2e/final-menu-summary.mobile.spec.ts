@@ -2,19 +2,20 @@ import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { login } from './helpers';
 
-test('menu inferior: inatividade de três segundos, interação reinicia e toque fora fecha imediatamente', async ({ page }) => {
+test('menu Premium fecha explicitamente e resumo financeiro permanece responsivo', async ({ page }) => {
   await login(page);
-  await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
-  const rail = page.getByRole('navigation', { name: 'Menu lateral compacto' });
-  await expect(rail).toBeVisible();
-  await page.waitForTimeout(1700);
-  await rail.getByRole('button', { name: 'Painel', exact: true }).focus();
-  await page.waitForTimeout(1700);
-  await expect(rail).toBeVisible();
-  await expect(rail).not.toBeVisible({ timeout: 2000 });
-  await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
-  await page.getByRole('button', { name: 'Fechar menu lateral', exact: true }).click({ position: { x: 220, y: 300 } });
-  await expect(rail).not.toBeVisible({ timeout: 500 });
+  const nav=page.getByRole('navigation',{name:'Navegação Mobile / Tablet'});
+  await nav.getByRole('button',{name:'Menu',exact:true}).click();
+  const sheet=page.getByRole('dialog',{name:'Menu'});
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole('button',{name:'Ordens'}).focus();
+  await expect(sheet).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(sheet).toHaveCount(0);
+  await nav.getByRole('button',{name:'Menu',exact:true}).click();
+  await expect(sheet).toBeVisible();
+  await page.locator('.arl-premium-menu-backdrop').click({position:{x:10,y:100}});
+  await expect(sheet).toHaveCount(0);
   await page.goto('/expense-control');
   await expect(page.locator('.cgo-final-summary>.cgo-indicator')).toHaveCount(4);
   await expect(page.locator('.cg-loading')).not.toBeVisible();

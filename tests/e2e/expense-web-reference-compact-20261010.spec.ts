@@ -1,6 +1,6 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
-import { api, login } from './helpers';
+import { api, login, openExpenseSection, openArlSection } from './helpers';
 
 const shots='output/expense-web-reference-compact-20261010';
 const gridSelector='.cg-page.cg-expense-web-mirror .cg-bank-grid';
@@ -100,6 +100,17 @@ test('Web Gastos/Instituições se adapta em janelas estreitas e preserva layout
   const previousColumns=new Map<string,number>();
   for(const width of [1440,1220,950,760]){
     await page.setViewportSize({width,height:850});
+    if (width <= 1024) {
+      await expect(page.locator('.cg-page.cg-mobile')).toBeVisible();
+      await expect(page.locator('.cg-page.cg-expense-web-mirror')).toHaveCount(0);
+      await openExpenseSection(page, 'Gastos');
+      await expect(page.locator('.cg-gastos-person-card')).toHaveCount(3);
+      await openExpenseSection(page, 'Instituições');
+      await expect(page.getByRole('button', { name: 'Cadastrar instituição', exact: true })).toBeVisible();
+      await expect(page.locator('.cg-bank-grid > .cg-institution').filter({ hasText:'Banco compacto' }).first()).toBeVisible();
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+3);
+      continue;
+    }
     for(const tab of ['Gastos','Instituições']){
       await page.getByRole('tab',{name:tab,exact:true}).click();
       if(tab==='Gastos'){
@@ -153,8 +164,7 @@ test('Mobile não recebe nova camada Web e mantém sua navegação própria',asy
   await page.reload();
   const mobileNav=page.locator('.arl-expense-bottom');
   // Mobile depende do módulo real já aprovado, sem a classe exclusiva do Web.
-  const expenseBtn=page.getByRole('button',{name:/Gestor de Gasto|Controle de Gasto/i}).first();
-  if(await expenseBtn.count()) await expenseBtn.click();
+  await openArlSection(page, 'Controle de Gasto');
   await expect(page.locator('.cg-page.cg-mobile')).toBeVisible();
   await expect(page.locator('.cg-page.cg-expense-web-mirror')).toHaveCount(0);
   await expect(mobileNav).toBeVisible();

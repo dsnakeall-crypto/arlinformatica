@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { login, setDeviceLayout } from './helpers';
+import { login, setDeviceLayout, openArlSection } from './helpers';
 
 const desktopMenus = ['Painel','Ordens','Clientes','Serviços','Produtos','Fornecedores','Financeiro','Controle de Gasto','Pós-Venda','Configurações'];
+const destinations: Record<string, string> = {
+  Painel:'/', Ordens:'/orders', Clientes:'/clients', Serviços:'/services',
+  Produtos:'/products', Fornecedores:'/suppliers', Financeiro:'/finance',
+  'Controle de Gasto':'/expense-control', 'Pós-Venda':'/post-sale', Configurações:'/settings',
+};
 
 for (const profile of [
   { mode: 'original', widths: [1672,1366,960] },
@@ -18,11 +23,18 @@ for (const profile of [
     await expect(nav).toBeVisible();
     for (const width of profile.widths) {
       await page.setViewportSize({ width, height: 850 });
-      for (const name of desktopMenus) {
-        const button = nav.getByRole('button', { name, exact: true });
-        await expect(button).toBeVisible();
-        await button.click();
-        await expect(button).toHaveClass(/active/);
+      for (const name of desktopMenus.filter(name => width > 1024 || name !== 'Pós-Venda')) {
+        if (width > 1024) {
+          const button = nav.getByRole('button', { name, exact: true });
+          await expect(button).toBeVisible();
+          await button.click();
+          await expect(button).toHaveClass(/active/);
+        } else {
+          await expect(page.locator('.shell.layout-mobile')).toBeVisible();
+          await openArlSection(page, name);
+          await expect(page.locator('main h1').first()).toBeVisible();
+        }
+        await expect.poll(() => new URL(page.url()).pathname).toBe(destinations[name]);
         await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
         const geometry = await page.evaluate(() => ({ documentWidth: document.documentElement.scrollWidth, viewportWidth: innerWidth, main: document.querySelector('main')?.getBoundingClientRect().toJSON() }));
         expect(geometry.documentWidth - geometry.viewportWidth, profile.mode + ' ' + width + 'px - ' + name).toBeLessThanOrEqual(3);

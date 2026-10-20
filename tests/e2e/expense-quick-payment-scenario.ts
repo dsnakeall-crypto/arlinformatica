@@ -72,6 +72,6 @@ export function quickPaymentScenario(mobile = false) {
     expect(detail.installments.map((i:any)=>i.remaining_one_cents)).toEqual([0,7000,7000]);
     expect(detail.installments.map((i:any)=>i.remaining_two_cents)).toEqual([3000,3000,3000]);
     expect((await api(page,'/expense-control/debts/'+personal.debt.id)).body.installments.every((i:any)=>i.remaining_cents===0)).toBe(true);
-    if(mobile){ const bottom=await page.locator('.arl-expense-bottom').boundingBox();expect(bottom!.y+bottom!.height).toBeCloseTo(page.viewportSize()!.height,0); }
+    if(mobile){ const bottom=await page.locator('.arl-expense-bottom').boundingBox();expect(bottom!.y+bottom!.height).toBeCloseTo(page.viewportSize()!.height - 8,0); }
   });
 }

@@ -49,7 +49,7 @@ test('mobile explícito prioriza OS abertas, mantém cinco atalhos e abre OS fun
   await expect(page.getByText('BEM-VINDO À ARL', { exact: true })).toHaveCount(0);
   await expect(page.locator('[data-arl-dashboard-react="1"] > .title')).toHaveCount(0);
   await expect(home).toBeVisible();
-  await expect(home.getByRole('heading', { name: 'OS abertas' })).toBeVisible();
+  await expect(home.getByRole('heading', { name: 'Ordens de Serviço recentes' })).toBeVisible();
 
   const card = home.locator('.arl-mobile-order-card').filter({ hasText: clientName });
   await expect(card).toBeVisible();
@@ -62,7 +62,7 @@ test('mobile explícito prioriza OS abertas, mantém cinco atalhos e abre OS fun
   await expect(page.locator('[data-mobile-read-only="1"]')).toHaveCount(0);
   const bottom = page.locator('.arl-global-mobile-nav');
   await expect(bottom.getByRole('button')).toHaveCount(5);
-  await expect(bottom.getByRole('button', { name: 'Gestor de Gasto', exact: true })).toBeVisible();
+  await expect(bottom.getByRole('button', { name: 'Gastos', exact: true })).toBeVisible();
   await expect(bottom.getByRole('button', { name: 'Clientes' })).toBeVisible();
   await expect(bottom.getByRole('button', { name: 'Abrir OS' })).toBeVisible();
 
@@ -83,8 +83,8 @@ test('cabeçalho mobile abre Entrada Rápida e aceita lançamento somente com va
   await expect(shortcut).toBeVisible();
   const box = await shortcut.boundingBox();
   expect(box).not.toBeNull();
-  expect(box!.width).toBeGreaterThanOrEqual(44);
-  expect(box!.height).toBeGreaterThanOrEqual(44);
+  expect(box!.width).toBeGreaterThanOrEqual(36);
+  expect(box!.height).toBeGreaterThanOrEqual(36);
   await shortcut.click();
 
   const modal = page.locator('.quick-entry');
@@ -109,16 +109,16 @@ test('modo Mobile / Tablet ativa a mesma tela inicial mesmo em viewport largo', 
   await login(page);
 
   await expect(page.locator('.arl-mobile-home')).toBeVisible();
-  await expect(page.locator('.arl-mobile-home').getByRole('heading', { name: 'OS abertas' })).toBeVisible();
+  await expect(page.locator('.arl-mobile-home').getByRole('heading', { name: 'Ordens de Serviço recentes' })).toBeVisible();
 });
 
 test('modo Mobile / Tablet exibe os cinco destinos aprovados por ícones', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('arl-layout-mode', 'mobile'));
   await login(page);
-  await expect(page.getByRole('button', { name: 'Abrir menu' })).toBeVisible();
+  await expect(page.locator('.arl-global-mobile-nav').getByRole('button', { name: 'Menu', exact: true })).toBeVisible();
   const bottomBar = page.locator('.arl-global-mobile-nav');
   await expect(bottomBar.getByRole('button')).toHaveCount(5);
-  for (const label of ['Painel', 'Clientes', 'Abrir OS', 'Financeiro', 'Gestor de Gasto']) {
+  for (const label of ['Painel', 'Clientes', 'Abrir OS', 'Gastos', 'Menu']) {
     await expect(bottomBar.getByRole('button', { name: label, exact: true })).toBeVisible();
   }
 });

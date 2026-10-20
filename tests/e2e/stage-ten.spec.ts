@@ -65,9 +65,9 @@ test('layout detecta o aparelho sem preferência e preserva a escolha manual por
   // Seleção atual: Configurações > Layouts > cartões, sem o seletor antigo.
   await page.goto('/settings');
   await page.getByRole('tab', { name: 'Layouts', exact: true }).click();
-  await page.getByRole('button', { name: 'Mobile — barra inferior' }).click();
+  await page.getByRole('button', { name: 'Mobile Premium' }).click();
   await expect(shell).toHaveClass(/layout-mobile/);
-  await expect(page.getByLabel('Sair da conta')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).getByRole('button', { name: 'Menu', exact: true })).toBeVisible();
   await page.reload();
   await expect(shell).toHaveClass(/layout-mobile/);
   await expect(page.getByRole('navigation', { name: 'Categorias de Configurações' })).toBeVisible();

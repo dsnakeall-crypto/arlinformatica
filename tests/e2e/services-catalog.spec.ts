@@ -12,8 +12,8 @@ test('catálogos de serviços e produtos são separados e preservam produtos exi
 
   await expect(page.getByTestId('services-page')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Serviços', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Mais usados', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Serviços cadastrados', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Mais usados/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Serviços cadastrados/ })).toBeVisible();
 
   // O seletor global de layout foi removido; a escolha atual vive em Configurações.
   await expect(page.locator('.device-layout')).toHaveCount(0);

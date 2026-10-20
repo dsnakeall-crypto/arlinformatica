@@ -1,5 +1,5 @@
 import {expect,test} from '@playwright/test';
-import {login, api, uniqueDocument} from './helpers';
+import {login, api, uniqueDocument, openExpenseSection} from './helpers';
 import {createOwnerExample, openMonth} from './expense-indicators-fixture';
 import {mkdirSync} from 'node:fs';
 const out='output/mobile-referencia-fiel-20261009';
@@ -23,7 +23,7 @@ test('Controle de Gastos: resumo, projeção, pagamentos, instituições e quita
  expect(Math.abs(grid.month-grid.row)).toBeLessThanOrEqual(1);
  await page.screenshot({path:out+'/01-resumo-topo-390.png',fullPage:true});
  const bar=page.getByRole('navigation',{name:'Menu do Controle de Gastos'});
- await bar.getByRole('button',{name:'Projeção'}).click();
+ await openExpenseSection(page,'Projeção');
  await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
  await expect(page.getByRole('navigation',{name:'Submenus de gastos e projeção'}).getByRole('button',{name:'Projeção futura'})).toBeVisible();
  await page.screenshot({path:out+'/02-projecao-390.png',fullPage:true});
@@ -63,8 +63,8 @@ test('Ordens mobile: número, data e nomes curtos/longos centralizados sem alter
     manufacturer_id:null,equipment_description:'Notebook de teste',attendance_type:'bench',reported_problem:'Teste de centralização da OS',system_password_absent:true,checklist:[]});
   expect(order.status,JSON.stringify(order.body)).toBe(201);
  }
- await page.getByRole('button',{name:'Abrir menu'}).click();
- await page.getByRole('navigation',{name:'Menu lateral compacto'}).getByRole('button',{name:'Ordens'}).click();
+ await page.getByRole('navigation',{name:'Navegação Mobile / Tablet'}).getByRole('button',{name:'Menu',exact:true}).click();
+ await page.getByRole('dialog',{name:'Menu'}).getByRole('button',{name:'Ordens',exact:true}).click();
  const list=page.locator('.orders-order-list');
  await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
  await expect(list).toBeVisible();

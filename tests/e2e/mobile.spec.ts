@@ -4,7 +4,7 @@ import { api, login, uniqueDocument } from './helpers';
 
 test('mobile possui home própria, ações tocáveis e inputs sem zoom forçado', async ({ page }) => {
   await login(page);
-  const home = page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' });
+  const home = page.getByRole('region', { name: 'Painel mobile ARL Informática' });
   await expect(home).toBeVisible();
 
   const viewportSize = page.viewportSize();

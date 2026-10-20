@@ -94,7 +94,7 @@ test('home Mobile exibe atendimento externo com as cores de aguardando pagamento
   await expect(benchCard).toBeVisible();
   await expect(card.getByText(externalLabel, { exact: true })).toHaveClass(/status-awaiting_payment/);
   await expect(card).toHaveCSS('background-color', await backgroundOf(benchCard));
-  await expect(card.locator('.arl-mobile-order-info')).toHaveCSS('text-align', 'center');
-  await expect(card.locator('.arl-mobile-order-info')).toHaveCSS('justify-items', 'center');
+  await expect(card.locator('.arl-mobile-order-info')).toHaveCSS('text-align', 'left');
+  await expect(card.locator('.arl-mobile-order-info')).toHaveCSS('justify-items', 'start');
   await expect(benchCard.getByText(externalLabel, { exact: true })).toHaveCount(0);
 });

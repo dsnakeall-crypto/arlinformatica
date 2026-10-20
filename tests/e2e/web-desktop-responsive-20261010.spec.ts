@@ -13,15 +13,16 @@ for (const mode of variants) {
       localStorage.setItem('arl-appearance-v1', JSON.stringify({mode,color:'red'}));
     }, mode);
     await page.reload();
-    const shell = page.locator('.shell.layout-desktop');
+    const shell = page.locator('.shell');
     await expect(shell).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', mode);
     await expect(page.getByRole('group',{name:'Estilo do aplicativo'})).toHaveCount(0);
     const widths: Array<Record<string,unknown>> = [];
     for (const width of sizes) {
       await page.setViewportSize({width,height:850});
+      await expect(shell).toHaveClass(width <= 1024 ? /layout-mobile/ : /layout-desktop/);
       const result = await page.evaluate(() => {
-        const main=document.querySelector('.shell.layout-desktop>main')!;
+        const main=document.querySelector('.shell>main')!;
         const side=document.querySelector('#arl-main-sidebar')!;
         const shell=document.querySelector('.shell')!;
         const mr=main.getBoundingClientRect(),sr=side.getBoundingClientRect();
@@ -33,12 +34,15 @@ for (const mode of variants) {
         };
       });
       widths.push(result);
-      expect(result.layout,JSON.stringify(result)).toContain('layout-desktop');
-      expect(result.mainLeft,JSON.stringify(result)).toBeGreaterThanOrEqual(50);
+      expect(result.layout,JSON.stringify(result)).toContain(width <= 1024 ? 'layout-mobile' : 'layout-desktop');
+      expect(result.mainLeft,JSON.stringify(result)).toBeGreaterThanOrEqual(width <= 1024 ? 0 : 50);
       expect(result.mainRight,JSON.stringify(result)).toBeLessThanOrEqual(width+2);
       expect(result.rootWidth,JSON.stringify(result)).toBeLessThanOrEqual(width+2);
-      expect(result.asideVisible).toBe(true);
+      if (width > 1024) expect(result.asideVisible).toBe(true);
+      else await expect(page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' })).toBeVisible();
     }
+    await page.setViewportSize({width:1440,height:850});
+    await expect(shell).toHaveClass(/layout-desktop/);
     await page.reload();
     await expect(shell).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('data-arl-appearance',mode);
@@ -65,24 +69,28 @@ for (const mode of variants) {
     expect(saved.status,JSON.stringify(saved.body)).toBe(200);
     await page.reload();
     const side=page.locator('#arl-main-sidebar');
-    const shell=page.locator('.shell.layout-desktop.sidebar-pinned');
+    const shell=page.locator('.shell');
     await expect(shell).toBeVisible();
     const widths=[1440,1024,800,640,480,1440];
     const sideSizes=[];
     for (const width of widths) {
       await page.setViewportSize({width,height:900});
-      await expect(shell).toBeVisible();
+      await expect(shell).toHaveClass(width <= 1024 ? /layout-mobile/ : /layout-desktop/);
       const metrics=await page.evaluate(()=>{
-        const main=document.querySelector('.shell.layout-desktop>main')!.getBoundingClientRect();
+        const main=document.querySelector('.shell>main')!.getBoundingClientRect();
         const side=document.querySelector('#arl-main-sidebar')!.getBoundingClientRect();
         return { scroll:document.documentElement.scrollWidth,side:Math.round(side.width),left:Math.round(main.left),right:Math.round(main.right) };
       });
       sideSizes.push(metrics.side);
       expect(metrics.scroll,JSON.stringify(metrics)).toBeLessThanOrEqual(width+2);
       expect(metrics.right,JSON.stringify(metrics)).toBeLessThanOrEqual(width+2);
-      if(width<=800) expect(metrics.side).toBe(58);
-      else expect(metrics.side).toBeGreaterThan(180);
-      await expect(side.getByRole('navigation',{name:'Menu principal'}).getByRole('button',{name:'Ordens'})).toBeVisible();
+      if(width<=1024) {
+        await expect(side).toBeHidden();
+        await expect(page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' })).toBeVisible();
+      } else {
+        expect(metrics.side).toBeGreaterThan(180);
+        await expect(side.getByRole('navigation',{name:'Menu principal'}).getByRole('button',{name:'Ordens'})).toBeVisible();
+      }
     }
     expect(sideSizes[0]).toEqual(sideSizes[sideSizes.length-1]);
     expect(await page.evaluate(() => localStorage.getItem('arl-layout-mode'))).toBe('desktop');

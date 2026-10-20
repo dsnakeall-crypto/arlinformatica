@@ -19,24 +19,32 @@ test('Web oferece Original e Clean e a escolha persiste quando a janela muda de 
   await theme.getByRole('button', { name: 'Original' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', 'original');
   await page.setViewportSize({ width: 790, height: 650 });
-  await expect(shell).toHaveClass(/layout-desktop/);
-  await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', 'original');
+  await expect(shell).toHaveClass(/layout-mobile/);
+  await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', 'clean');
   await page.reload();
+  await expect(shell).toHaveClass(/layout-mobile/);
+  await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', 'clean');
+  await page.setViewportSize({ width: 1440, height: 900 });
   await expect(shell).toHaveClass(/layout-desktop/);
   await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', 'original');
-  await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole('navigation', { name: 'Menu principal' }).getByRole('button', { name: 'Configurações' }).click();
   await page.getByRole('tab', { name: 'Layouts' }).click();
   await page.getByRole('group', { name: 'Estilo do aplicativo' }).getByRole('button', { name: 'Clean' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', 'clean');
   await page.setViewportSize({ width: 790, height: 650 });
   await page.reload();
-  await expect(shell).toHaveClass(/layout-desktop/);
+  await expect(shell).toHaveClass(/layout-mobile/);
   await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', 'clean');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(shell).toHaveClass(/layout-desktop/);
   expect(await page.evaluate(() => localStorage.getItem('arl-layout-mode'))).toBe('desktop');
+  await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', 'clean');
 });
 
 test('Mobile mantém Clean sem seletor Original, mesmo após ampliar a janela', async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, 'userAgent', {
+    configurable: true, get: () => 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile Safari/604.1',
+  }));
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page);
   await page.evaluate(() => {

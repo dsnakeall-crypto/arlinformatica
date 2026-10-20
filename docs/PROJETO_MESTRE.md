@@ -1,5 +1,19 @@
 # ARL Informática — Projeto Mestre
 
+## ESTADO MAIS RECENTE — 20/10/2026 — PAINEL, DESEMPENHO E CI (LEIA PRIMEIRO)
+
+Este documento reúne a especificação funcional integral e o histórico do sistema ARL Informática. **As seções datadas abaixo descrevem decisões históricas e podem citar interfaces/HEADs antigos**; não prevalecem sobre mudanças mais recentes aprovadas. O estado operacional mais recente está em `docs/CONTINUIDADE_CHATGPT.md`, as evidências em `docs/AUDITORIA_PAINEL_PERFORMANCE_CI_20261020.md`, e a tarefa para o Codex Cloud em `docs/PROMPT-CODEX-CLOUD-ARL-CI-20261020.md`. Esses arquivos são atualizados por edição explícita após cada rodada, não se atualizam automaticamente.
+
+- Projeto oficial: `C:\Users\Allan\OneDrive\Programacao APP\www\arlinformatica`; GitHub `dsnakeall-crypto/arlinformatica`; branch `release/integracao-completa-20261018`.
+- Verificação de 20/10, ~17h34–17h53 (Brasília): HEAD local `eae9f32`, **quatro commits adiante** do último HEAD remoto localmente conhecido `8280da1`. Há dezenas de alterações E2E e documentos ainda sem commit; **preservar tudo**. Não atribuir essas alterações ao GitHub/KingHost sem push comprovado.
+- O Painel desktop foi alterado em `7ce1e56`: a seção **Fechadas recentemente** foi removida sem apagar ordens; `GET /api/orders/dashboard-summary` calcula apenas o contador semanal. Ordens permanecem em **Em Andamento**, **Aguardando PGTO**, **Finalizadas (quitadas)**, **Interrompidas** e **Todas**. O card **Concluídos** preservou sua contagem histórica de concluídas + interrompidas na semana; não é o mesmo total da aba Finalizadas.
+- Em `2f732ae`, o carregamento sob demanda dos componentes foi otimizado, preservando o design. Medições locais documentadas apontaram ganhos na primeira navegação em Ordens (563→264 ms), Serviços (564→233 ms), Clientes (580→271 ms), Financeiro (614→281 ms), Gastos (730→480 ms). Essas amostras **não comprovam** desempenho em KingHost, outra rede ou dados volumosos.
+- Commit `d3ec46e`: atualização direcionada de contratos E2E de gastos/navegação; `eae9f32`: testes de permissões do agregado do Painel. Os quatro commits estão **apenas no PC** no checkpoint; não há novo deploy autorizado.
+- Última CI remota confirmada/documentada: run `39425236328`, SHA `8280da1`, **backend, backend-mysql e frontend verdes; E2E vermelho (65 falhas)**. Diagnóstico integral local posterior (snapshot intermediário): **271 aprovados, 41 falhas (9 timeouts), 312 no total**. Outros ajustes de testes foram feitos após o início dessa rodada; é obrigatório retestar o snapshot final antes de afirmar número atualizado. Suíte PHP local 412/412 PASS, frontend 66/66 PASS; lote E2E direcionado 111 PASS/3 FAIL.
+- O job E2E de `ci.yml` roda no **GitHub Actions Ubuntu 22.04/PHP 8.2/Node 22/Playwright**, não na KingHost. Erro no GitHub CI **não comprova** falha no servidor KingHost; investigar diferenças de ambiente separadamente, sem acessar nem modificar produção sem autorização expressa.
+- Layout Premium 3D Web/Mobile e Controle de Gastos aprovados devem ser preservados, incluindo tipografia congelada e permissões. Não desativar testes, mascarar falhas, enviar dados de teste à produção ou tocar no banco oficial. Próxima etapa: transferir de forma controlada o checkpoint local completo à branch de trabalho de Cloud, resolver E2E e tornar os quatro jobs verdes antes de preparar qualquer deploy.
+
+---
 
 ## CHECKPOINT OPERACIONAL 18/10/2026 - CI DE INTEGRACAO
 

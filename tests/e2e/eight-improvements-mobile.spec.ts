@@ -18,7 +18,7 @@ test('mobile: atendimento selecionado persiste após blur e navegação respeita
   const nav = page.locator('.arl-global-mobile-nav');
   await expect(nav).toBeVisible();
   const rect = await nav.boundingBox();
-  expect(rect!.y + rect!.height).toBeCloseTo(page.viewportSize()!.height, 0);
+  expect(rect!.y + rect!.height).toBeCloseTo(page.viewportSize()!.height - 8, 0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   await page.screenshot({ path: 'output/oito-melhorias/atendimento-mobile.png', fullPage: true });
 });

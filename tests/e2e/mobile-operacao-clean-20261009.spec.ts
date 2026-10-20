@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login, api, uniqueDocument } from './helpers';
+import { login, api, uniqueDocument, openArlSection } from './helpers';
 import { mkdirSync } from 'node:fs';
 const out='output/mobile-arI-final-20261009';
 test('mobile: Clean obrigatório, sem Web/PC ou Pós-Venda, lateral ativo vermelho sem aro', async({page})=>{
@@ -8,8 +8,7 @@ test('mobile: Clean obrigatório, sem Web/PC ou Pós-Venda, lateral ativo vermel
   await login(page);
   const me=await api(page,'/me');expect(me.status).toBe(200);
   await page.evaluate((id)=>{
-    // A preferência é explícita: viewport estreita não pode sobrescrever Web escolhido.
-    // Aqui exercitamos o mobile realmente selecionado pelo usuário.
+    // Exercita a migração da preferência antiga no dispositivo móvel.
     localStorage.setItem('arl-layout-mode','mobile');
     localStorage.setItem('arl-mobile-nav-'+id,'compact');
     localStorage.setItem('arl-appearance-v1',JSON.stringify({mode:'original',color:'red'}));
@@ -21,33 +20,37 @@ test('mobile: Clean obrigatório, sem Web/PC ou Pós-Venda, lateral ativo vermel
     get: () => 'Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 Mobile Safari/537.36'
   }));
   await page.reload();
-  const shell=page.locator('.shell.layout-mobile.arl-mobile-compact-mode');
+  const shell=page.locator('.shell.layout-mobile.arl-mobile-premium-mode');
   await expect(shell).toBeVisible();
   expect(await page.locator('html').getAttribute('data-arl-appearance')).toBe('clean');
-  const sidebar=page.getByRole('navigation',{name:'Menu principal'});
+  const sidebar=page.getByRole('navigation',{name:'Navegação Mobile / Tablet'});
   await expect(sidebar.getByRole('button',{name:'Pós-Venda'})).toHaveCount(0);
   const active=sidebar.getByRole('button',{name:'Painel'});
-  await expect(active).toHaveClass(/active/);
-  const style=await active.locator('.nav-icon').evaluate(el=>{
+  await expect(active).toHaveAttribute('aria-current', 'page');
+  const style=await active.locator('.arl-nav-icon-disc').evaluate(el=>{
     const c=getComputedStyle(el);
-    return {border:c.borderWidth,shadow:c.boxShadow,color:c.color,icon:getComputedStyle(el.querySelector('svg')!).color};
+    const icon=getComputedStyle(el.querySelector('svg')!);
+    return {border:c.borderWidth,shadow:c.boxShadow,color:c.color,icon:icon.color,filter:icon.filter,width:icon.width};
   });
-  // A identidade web dourada foi estendida ao mobile e substituiu o antigo vermelho liso.
-  expect(parseFloat(style.border)).toBeLessThanOrEqual(1);
-  expect(style.shadow).not.toBe('none');
+  // O dock Premium aprovado usa ícone sem aro/sombra no invólucro;
+  // o acabamento de profundidade está no filtro do SVG.
+  expect(parseFloat(style.border)).toBe(0);
+  expect(style.shadow).toBe('none');
+  expect(style.filter).toContain('drop-shadow');
+  expect(style.width).toBe('20px');
   expect(style.icon).toMatch(/rgb\(\d+, \d+, \d+\)/);
-  await sidebar.getByRole('button',{name:'Configurações'}).click();
+  await openArlSection(page, 'Configurações');
   await page.getByRole('button',{name:/Layouts/}).click();
   await expect(page.getByRole('button',{name:'Web / PC'})).toHaveCount(0);
-  await expect(page.getByRole('button',{name:'Mobile — barra inferior'})).toBeVisible();
-  await expect(page.getByRole('button',{name:'Mobile — menu lateral compacto'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Mobile Premium'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Mobile — menu lateral compacto'})).toHaveCount(0);
   await page.screenshot({path:out+'/clean-menu-layouts-390.png'});
-  await page.getByRole('button',{name:'Mobile — barra inferior'}).click();
+  await page.getByRole('button',{name:'Mobile Premium'}).click();
   const bottom=page.getByRole('navigation',{name:'Navegação Mobile / Tablet'});
   await expect(bottom).toBeVisible();
   await expect(bottom.getByRole('button',{name:'Abrir OS'})).toBeVisible();
-  await page.getByRole('button',{name:'Abrir menu'}).click();
-  await expect(page.getByRole('navigation',{name:'Menu lateral compacto'}).getByRole('button',{name:'Pós-Venda'})).toHaveCount(0);
+  await bottom.getByRole('button',{name:'Menu',exact:true}).click();
+  await expect(page.getByRole('dialog',{name:'Menu',exact:true}).getByRole('button',{name:'Pós-Venda'})).toHaveCount(0);
   await page.goto('/post-sale');
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator('main[data-arl-post-sale-react="1"]')).toHaveCount(0);
@@ -113,8 +116,7 @@ test('ordens mobile: equipamento central, ícones sem caixas, web intacta',async
   const equipment=await api(page,'/catalogs/equipment');
   const order=await api(page,'/orders','POST',{client_id:client.body.id,equipment_type_id:equipment.body[0].id,manufacturer_id:null,equipment_description:'Notebook da cliente',reported_problem:'Não liga',attendance_type:'bench',system_password_absent:true,checklist:[]});
   expect(order.status).toBe(201);
-  await page.getByRole('button',{name:'Abrir menu'}).click();
-  await page.getByRole('navigation',{name:'Menu lateral compacto'}).getByRole('button',{name:'Ordens'}).click();
+  await openArlSection(page, 'Ordens');
   const row=page.locator('.orders-order-list tr.order-row').filter({hasText:client.body.name});
   await expect(row).toBeVisible();
   const device=row.locator('.order-device');
@@ -150,8 +152,7 @@ test('financeiro mobile: mês com calendário e setas; Web mantém filtro anteri
   mkdirSync(out,{recursive:true});
   await page.setViewportSize({width:390,height:844});
   await login(page);
-  const nav=page.getByRole('navigation',{name:'Navegação Mobile / Tablet'});
-  await nav.getByRole('button',{name:'Financeiro'}).click();
+  await openArlSection(page, 'Financeiro');
   const picker=page.getByRole('group',{name:'Mês exibido'});
   await expect(picker.getByRole('button',{name:'Mês anterior'})).toBeVisible();
   const input=picker.getByLabel('Mês exibido');

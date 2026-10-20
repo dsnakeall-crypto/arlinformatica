@@ -40,7 +40,7 @@ test('projeção abre detalhes, mantém mês principal e cabe em desktop e mobil
     await page.screenshot({ path: `output/controle-gasto/projecao-popup-${viewport.width}.png` });
     await dialog.getByRole('button', { name: 'Fechar projeção do mês' }).click();
     if (viewport.width < 1024) {
-      await expect(page.getByRole('navigation', { name: 'Menu do Controle de Gastos' }).getByRole('button', { name: 'Projeção', exact: true })).toHaveAttribute('aria-current', 'page');
+      await expect(page.getByRole('heading', { name: 'Compromissos futuros' })).toBeVisible();
     } else {
       await expect(page.getByRole('tab', { name: 'Projeção', exact: true })).toHaveAttribute('aria-selected', 'true');
     }

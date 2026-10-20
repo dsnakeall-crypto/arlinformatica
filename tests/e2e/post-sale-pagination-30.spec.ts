@@ -78,25 +78,24 @@ test("Pós-venda lista 30 por página sem perder busca ou seleção em lote", as
   await next.click();
   await expect(rows.first().getByRole("checkbox")).toBeChecked();
 
-  await page.setViewportSize({ width: 390, height: 844 });
-  const widthProbe = await page.evaluate(() => ({
-    viewport: innerWidth, total: document.documentElement.scrollWidth,
-    pager: document.querySelector(".post-sale-pagination")?.getBoundingClientRect().toJSON(),
-    culprits: [...document.querySelectorAll("body *")].filter(e => {
-      const rect = e.getBoundingClientRect();
-      return rect.right > innerWidth + 2 && rect.width > 0 && getComputedStyle(e).position !== "fixed";
-    }).slice(0, 12).map(e => ({ className: String(e.className).slice(0, 100), right: e.getBoundingClientRect().right }))
-  }));
-  console.log("POSVENDA_WIDTH_PROBE", JSON.stringify(widthProbe));
-  expect(widthProbe.pager && widthProbe.pager.right <= widthProbe.viewport + 1).toBe(true);
-  await expect(rows).toHaveCount(5);
-  await page.screenshot({ path: testInfo.outputPath("paginacao-30-mobile.png") });
-  await page.setViewportSize({ width: 1366, height: 850 });
   await page.getByRole("button", { name: /Desmarcar todos \(5\)/ }).click();
   await expect(page.getByRole("region", { name: "Registros selecionados" })).toContainText("30 registros selecionados");
   await previous.click();
   await expect(rows).toHaveCount(30);
   await expect(rows.first()).toContainText("Cliente Teste 031");
+  // A edição mobile Premium não expõe o Pós-Venda: verifica redirecionamento seguro
+  // sem perder cobertura funcional da paginação, busca e seleção acima no Web/PC.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator('.arl-mobile-home-premium')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' })).toBeVisible();
+  const widthProbe = await page.evaluate(() => ({
+    viewport: innerWidth, total: document.documentElement.scrollWidth,
+    nav: document.querySelector('.arl-global-mobile-nav')?.getBoundingClientRect().toJSON(),
+  }));
+  expect(widthProbe.nav).toBeTruthy();
+  expect(widthProbe.nav!.right).toBeLessThanOrEqual(widthProbe.viewport + 1);
+  expect(widthProbe.total).toBeLessThanOrEqual(widthProbe.viewport + 1);
+  await page.screenshot({ path: testInfo.outputPath("pos-venda-premium-mobile.png") });
 });
 
 test("Pós-venda ajusta a última página depois de excluir registros fictícios", async ({ page }) => {

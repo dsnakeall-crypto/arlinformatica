@@ -6,8 +6,11 @@
 - [OK] Textos remanescentes dos cards/tabela com computed styles idênticos antes/depois em 1280/1366/1920 px, incluindo resize na mesma sessão.
 - [OK] Experimento do carregador sob demanda reduziu o primeiro uso medido de Ordens/Serviços/Clientes/Financeiro para 233–281 ms no cenário local; nove E2E de carregamento/erro/mobile e 66 frontend aprovados. Limites detalhados no relatório.
 - [OK] Suíte PHP integral local no PHP 8.3.33 Laragon e SQLite em memória: 411 testes / 7.546 assertions aprovados.
+- [OK] Suíte PHP integral em MySQL 8.4.3 novo e isolado: 411 testes / 7.546 assertions; sem acesso à instância habitual ou produção. Teste adicional de autorização do agregado: três cenários/17 assertions aprovados no SQLite.
+- [OK] Reteste direcionado de temas, PDF, menu, permissões e operações financeiras: 31 E2E aprovados em 4 minutos; lint/typecheck e 66 frontend novamente aprovados.
 - [PENDENTE] Regressão ampliada desktop/mobile, desempenho geral antes/depois, testes integrais, revisão das alterações locais anteriores e quatro jobs verdes no HEAD final.
-- [PENDENTE] Commits/push desta missão; publicação KingHost proibida pelo escopo atual.
+- [OK] Commits locais separados do Painel, carregador e testes validados: `7ce1e56`, `2f732ae`, `d3ec46e`, `eae9f32`.
+- [PENDENTE] Push e quatro jobs verdes no HEAD final; publicação KingHost proibida pelo escopo atual.
 
 Evidências e limites: `docs/AUDITORIA_PAINEL_PERFORMANCE_CI_20261020.md`.
 

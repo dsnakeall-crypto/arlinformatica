@@ -6,7 +6,7 @@ import { login } from './helpers';
 test('barra ARL compacta preserva 5 ações e compensa teclado virtual', async ({ page }) => {
   await login(page);
   const bar = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
-  const labels = ['Painel', 'Clientes', 'Abrir OS', 'Financeiro', 'Gestor de Gasto'];
+  const labels = ['Painel', 'Clientes', 'Abrir OS', 'Gastos', 'Menu'];
   for (const width of [320, 390, 430]) {
     await page.setViewportSize({ width, height: 800 });
     await expect(bar.locator('button')).toHaveCount(5);
@@ -26,8 +26,8 @@ test('barra ARL compacta preserva 5 ações e compensa teclado virtual', async (
     expect(metrics.height).toBeLessThan(105);
     expect(metrics.left).toBeGreaterThanOrEqual(0);
     expect(metrics.right).toBeLessThanOrEqual(width + 1);
-    expect(metrics.bottomGap).toBeGreaterThanOrEqual(-2);
-    expect(metrics.bottomGap).toBeLessThanOrEqual(2);
+    expect(metrics.bottomGap).toBeGreaterThanOrEqual(7);
+    expect(metrics.bottomGap).toBeLessThanOrEqual(9);
   }
 
   await bar.getByRole('button', { name: 'Abrir OS' }).click();

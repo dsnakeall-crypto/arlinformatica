@@ -1,46 +1,42 @@
 import { expect, test } from '@playwright/test';
-import { login } from './helpers';
+import { login, openExpenseSection } from './helpers';
 
-test('barra inferior abre drawer mobile transparente e fecha ao tocar fora', async ({ page }) => {
+test('barra inferior Premium abre gaveta acessível à direita e fecha ao tocar fora', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await login(page);
   const menu = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' });
   await expect(menu).toBeVisible();
-  await page.getByRole('button', { name: 'Abrir menu' }).click();
-  const drawer = page.getByRole('navigation', { name: 'Menu lateral compacto' });
+  await menu.getByRole('button', { name: 'Menu', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Menu' });
   await expect(drawer).toBeVisible();
   await expect(page.locator('.layout-mobile > aside#arl-main-sidebar')).toBeHidden();
-  const backdrop = page.getByRole('button', { name: 'Fechar menu lateral' });
-  await expect(backdrop).toBeVisible();
-  const appearance = await drawer.evaluate(el => ({
-    radius: getComputedStyle(el).borderTopRightRadius,
-    background: getComputedStyle(el).backgroundImage,
-    width: el.getBoundingClientRect().width,
-  }));
-  expect(appearance.radius).not.toBe('0px');
-  expect(appearance.background).toContain('linear-gradient');
-  expect(appearance.width).toBeLessThan(72);
-  await backdrop.click({ position: { x: 390, y: 460 } });
-  await expect(drawer).toBeHidden({ timeout: 500 });
+  await expect.poll(async () => { const rect = await drawer.boundingBox(); return rect ? Math.round(rect.x + rect.width) : 9999; }).toBeLessThanOrEqual(394);
+  const bounds = await drawer.boundingBox();
+  expect(bounds).not.toBeNull();
+  expect(bounds!.x).toBeGreaterThanOrEqual(0);
+  await expect(drawer.getByRole('button', { name: 'Ordens' })).toBeVisible();
+  await expect(drawer.getByRole('button', { name: 'Configurações' })).toBeVisible();
+  await page.locator('.arl-premium-menu-backdrop').click({ position: { x: 10, y: 100 } });
+  await expect(drawer).toHaveCount(0);
   await expect(menu).toBeVisible();
 });
 
-test('submenus financeiros mobile permanecem visíveis ao alternar telas', async ({ page }) => {
+test('submenus financeiros mobile funcionam pela gaveta, sem perder projeção e histórico', async ({ page }) => {
   await login(page);
   await page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' })
-    .getByRole('button', { name: 'Gestor de Gasto' }).click();
-  const bottom = page.getByRole('navigation', { name: 'Menu do Controle de Gastos' });
-  await bottom.getByRole('button', { name: 'Projeção' }).click();
-  const subnav = page.getByRole('navigation', { name: 'Submenus de gastos e projeção' });
-  for (const name of ['Quitadas', 'Pagamentos', 'Projeção futura', 'Histórico de gastos']) {
-    await expect(subnav.getByRole('button', { name })).toBeVisible();
-  }
-  await subnav.getByRole('button', { name: 'Histórico de gastos' }).click();
-  await expect(subnav.getByRole('button', { name: 'Histórico de gastos' })).toHaveAttribute('aria-pressed', 'true');
-  await subnav.getByRole('button', { name: 'Pagamentos' }).click();
-  await expect(subnav.getByRole('button', { name: 'Pagamentos' })).toHaveAttribute('aria-pressed', 'true');
-  await subnav.getByRole('button', { name: 'Quitadas' }).click();
-  await expect(subnav.getByRole('button', { name: 'Quitadas' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(subnav.locator('button')).toHaveCount(4);
+    .getByRole('button', { name: 'Gastos', exact: true }).click();
+  await openExpenseSection(page, 'Projeção');
+  const projection = page.getByRole('navigation', { name: 'Submenus de gastos e projeção' });
+  await expect(projection.getByRole('button', { name: 'Projeção futura' })).toBeVisible();
+  await expect(projection.getByRole('button', { name: 'Histórico de gastos' })).toBeVisible();
+  await projection.getByRole('button', { name: 'Histórico de gastos' }).click();
+  await expect(projection.getByRole('button', { name: 'Histórico de gastos' })).toHaveAttribute('aria-pressed', 'true');
+  await projection.getByRole('button', { name: 'Projeção futura' }).click();
+  await expect(page.getByRole('heading', { name: 'Compromissos futuros' })).toBeVisible();
+  await openExpenseSection(page, 'Pagamentos');
+  await expect(page.locator('.cg-payment-institutions')).toBeVisible();
+  await openExpenseSection(page, 'Quitadas');
+  await expect(page.getByRole('heading', { name: 'Dívidas quitadas' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 

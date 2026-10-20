@@ -4,6 +4,11 @@ import { login } from './helpers';
 test('Painel Mobile evita consultas duplicadas', async ({ page }) => {
   let deskRequests = 0;
   let closedWeekRequests = 0;
+  let summaryRequests = 0;
+  await page.route('**/api/orders/dashboard-summary', async route => {
+    summaryRequests++;
+    await route.continue();
+  });
 
   await page.route('**/api/orders/desk', async route => {
     deskRequests++;
@@ -21,5 +26,6 @@ test('Painel Mobile evita consultas duplicadas', async ({ page }) => {
   // Uma requisição da Home mobile; o Dashboard React não duplica nem busca encerradas.
   expect(deskRequests).toBe(1);
   expect(closedWeekRequests).toBe(0);
+  expect(summaryRequests).toBe(0);
 
 });

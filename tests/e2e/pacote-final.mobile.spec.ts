@@ -22,9 +22,9 @@ test('iPhone: retorno confirmado, pesquisas neutras e menu junto à base', async
     await page.goto(url);
     const search = page.getByRole('textbox', { name: label, exact: true }).or(page.getByRole('searchbox', { name: label, exact: true }));
     await search.fill('teste');
-    await expect(search).toHaveCSS('outline-color', 'rgb(121, 137, 156)');
+    await expect(search).toHaveCSS('outline-color', 'rgb(195, 148, 49)');
     const parent = await search.evaluate(el => ({ border: getComputedStyle(el.parentElement!).borderColor, outline: getComputedStyle(el).outlineColor }));
-    expect(parent.outline).toBe('rgb(121, 137, 156)');
+    expect(parent.outline).toBe('rgb(195, 148, 49)');
     await page.screenshot({ path: 'output/pacote-final/foco-'+(url === '/clients' ? 'clientes' : 'servicos')+'.png' });
   }
 });

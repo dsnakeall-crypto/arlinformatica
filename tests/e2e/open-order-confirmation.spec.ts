@@ -15,9 +15,11 @@ test('Alterar status no Painel atualiza as listas uma vez, sem recarga duplicada
   page.on('request', request => {
     const url = new URL(request.url());
     if (url.pathname === '/api/orders/desk') desk++;
-    if (url.pathname === '/api/orders' && url.searchParams.get('tab') === 'closed_week') closed++;
+    if (url.pathname === '/api/orders/dashboard-summary') closed++;
   });
+  const changed = page.waitForResponse(response => new URL(response.url()).pathname === `/api/orders/${order.body.id}/status` && response.request().method() === 'PATCH');
   await row.getByRole('combobox').selectOption('waiting_part');
+  expect((await changed).status()).toBe(200);
   await expect(row.getByRole('combobox')).toHaveValue('waiting_part');
   expect(desk).toBe(1);
   expect(closed).toBe(1);
@@ -66,7 +68,7 @@ test('Retorno da aba verifica sessão em uma consulta e Painel fresco não repet
   page.on('request', request => {
     const url = new URL(request.url());
     if (url.pathname === '/api/orders/desk') desk++;
-    if (url.pathname === '/api/orders' && url.searchParams.get('tab') === 'closed_week') closed++;
+    if (url.pathname === '/api/orders/dashboard-summary') closed++;
     if (url.pathname === '/api/me') identity++;
     if (url.pathname === '/session/csrf-token') token++;
   });

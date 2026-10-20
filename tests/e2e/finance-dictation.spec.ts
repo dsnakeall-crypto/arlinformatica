@@ -75,8 +75,10 @@ test('Ditado acrescenta texto sem salvar, evita duplicação e libera o microfon
   await page.getByRole('button', { name: 'Ditar laudo', exact: true }).click();
   await page.evaluate(() => (window as any).testRecognition.onerror({ error: 'not-allowed' }));
   await expect(page.getByRole('status')).toContainText('Permita o microfone');
-  page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Painel', exact: true }).click();
+  const unsaved = page.getByRole('dialog', { name: 'Confirmar ação' });
+  await expect(unsaved).toContainText('alterações não salvas');
+  await unsaved.getByRole('button', { name: 'Sim, confirmar' }).click();
   await expect.poll(() => page.evaluate(() => sessionStorage.getItem('testRecognitionAborted'))).toBe('true');
   await page.addInitScript(() => { (window as any).SpeechRecognition = undefined; (window as any).webkitSpeechRecognition = undefined; });
   await page.goto(`/orders/${order.body.id}`);
