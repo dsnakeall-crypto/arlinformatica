@@ -20,6 +20,23 @@ class DashboardSummaryTest extends TestCase
         $this->getJson('/api/orders/dashboard-summary')->assertUnauthorized();
     }
 
+    public function test_summary_preserves_module_permissions_for_restricted_profiles(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        foreach (['Controle de Gasto' => 403, 'Usuário local' => 200] as $role => $status) {
+            $user = User::create([
+                'role_id' => Role::where('name', $role)->value('id'),
+                'name' => 'Perfil fictício', 'login' => 'summary-role-'.$status,
+                'password' => 'Senha#123', 'active' => true,
+            ]);
+            $response = $this->actingAs($user)->getJson('/api/orders/dashboard-summary');
+            $response->assertStatus($status);
+            if ($status === 200) {
+                $response->assertJsonStructure(['completed_week']);
+            }
+        }
+    }
+
     public function test_weekly_count_matches_legacy_filter_without_loading_orders_or_payments(): void
     {
         $this->seed(DatabaseSeeder::class);
