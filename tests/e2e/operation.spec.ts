@@ -217,6 +217,8 @@ test.describe.serial('fluxo operacional principal', () => {
     expect(blockedBudget.status).toBe(409);
     expect(blockedBudget.body?.message).toBe('Não é possível criar orçamento para uma OS fechada.');
     const finalShareResponsePromise = page.waitForResponse((response) => response.url().endsWith(`/api/orders/${orderId}/final-share`) && response.request().method() === 'POST');
+    // O teste valida o link montado pela ARL, não a disponibilidade do site externo do WhatsApp.
+    await page.context().route(/^https:\/\/api\.whatsapp\.com\//, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>WhatsApp (E2E)</title>' }));
     const popupPromise = page.context().waitForEvent('page');
     await page.getByRole('status', { name: 'Compartilhar fechamento da OS' }).getByRole('button', { name: 'Enviar link ao cliente' }).click();
     const whatsappPage = await popupPromise;
