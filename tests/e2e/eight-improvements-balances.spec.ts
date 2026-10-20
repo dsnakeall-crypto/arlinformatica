@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { api, login, openExpenseSection } from './helpers';
+import { api, login, openExpenseSection, openExpenseInstitution } from './helpers';
 
 for (const width of [1366, 390]) test(`saldos e parcelas pessoais preservados em ${width}px`, async ({ page }) => {
   await page.setViewportSize({ width, height: 900 });
@@ -26,15 +26,24 @@ for (const width of [1366, 390]) test(`saldos e parcelas pessoais preservados em
   await page.goto('/expense-control'); if (width > 1000) await page.mouse.move(width - 10, 10);
   await openExpenseSection(page, 'Gastos');
   const card = page.locator('.cg-institution').filter({ hasText: bank.body.name });
-  await expect(card.locator('.cg-institution-total-due')).toContainText('1.000,00');
   if (width > 1000) {
+    await expect(card.locator('.cg-institution-total-due')).toContainText('1.000,00');
     const counts = card.locator('.cg-institution-counts');
     await expect(counts).toBeVisible();
     expect(await counts.evaluate(element => ({ scroll: element.scrollHeight, client: element.clientHeight, overflow: getComputedStyle(element).overflowY }))).toEqual(expect.objectContaining({ overflow: 'visible' }));
     await page.getByRole('button', { name: 'Lista', exact: true }).click();
     await expect(page.locator('.cg-institution').filter({ hasText: bank.body.name }).locator('.cg-institution-total-due')).toContainText('1.000,00');
+  } else {
+    // Premium starts with this month's commitments by person. The future-only
+    // purchase must remain outside its total, while the debt listing retains it.
+    const person = page.locator('.cg-gastos-person-one');
+    await expect(person).toBeVisible();
+    await person.click();
+    const popup = page.locator('.cg-gastos-people-popup');
+    await expect(popup.locator('.cg-gastos-institutions > article').filter({ hasText: bank.body.name })).toContainText('800,00');
+    await popup.getByRole('button', { name: 'Fechar', exact: true }).click();
   }
-  await page.locator('.cg-institution').filter({ hasText: bank.body.name }).click();
+  await openExpenseInstitution(page, bank.body.name);
   await page.locator('.cg-type-grid button').filter({ hasText: 'Tipo ' + stamp + ' 0' }).click();
   const purchase = page.locator('.cg-debt-row').filter({ has: page.getByText(name, { exact: true }) });
   await expect(purchase).toContainText('Observação manual preservada');

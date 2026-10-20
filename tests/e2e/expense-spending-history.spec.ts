@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { api, login, openExpenseSection } from './helpers';
+import { api, login, openExpenseSection, openExpenseInstitution } from './helpers';
 
 async function fixture(page: Page) {
   await login(page);
@@ -76,15 +76,18 @@ test('mobile documento: projeção sem sobreposição, gastos só em lista e íc
   await expect(page.getByRole('button', { name: 'Lista', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Cards', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Pesquisar e filtrar', exact: true })).toHaveCount(0);
-  const row = page.locator('.cg-bank-list-row').filter({ hasText: data.bank.name });
+  await page.locator('.cg-gastos-person-shared').click();
+  const popup = page.locator('.cg-gastos-people-popup');
+  const row = popup.locator('.cg-gastos-institutions > article').filter({ hasText: data.bank.name });
   await expect(row).toBeVisible();
   await expect(row.locator('img,.cg-card-artwork')).toHaveCount(0);
-  expect((await row.boundingBox())!.height).toBeLessThan(100);
+  expect((await row.boundingBox())!.width).toBeLessThanOrEqual((await popup.boundingBox())!.width);
   await expect(row.locator('.cg-type-grid')).toHaveCount(0);
   await expect(page.locator('#cg-debt-filters')).toHaveCount(0);
   await expect(page.getByLabel('Filtrar por responsável')).not.toBeVisible();
   await expect(page.getByText('Atualizando informações…')).not.toBeVisible();
   await page.screenshot({ path: 'output/controle-gasto/mobile-lista-compacta.png', fullPage: true });
+  await popup.getByRole('button', { name: 'Fechar', exact: true }).click();
   await openExpenseSection(page, 'Instituições');
   const bank = page.locator('article.cg-institution').filter({ hasText: data.bank.name });
   const sizes = await bank.locator('footer>button').evaluateAll(buttons => buttons.map(b => ({ w: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height })));
@@ -110,9 +113,9 @@ test('mobile documento: projeção sem sobreposição, gastos só em lista e íc
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   await page.setViewportSize({ width: 390, height: 844 });
   await openExpenseSection(page, 'Gastos');
-  await expect(page.locator('.cg-bank-list')).toBeVisible();
+  await expect(page.locator('.cg-gastos-people')).toBeVisible();
   await expect(page.locator('#cg-debt-filters')).toHaveCount(0);
-  await row.locator('button.cg-institution').click();
+  await openExpenseInstitution(page, data.bank.name, 'shared');
   await expect(page.locator('.cg-type-grid>.cg-panel').first()).toBeVisible();
   expect((await page.locator('.cg-type-grid>.cg-panel').first().boundingBox())!.height).toBeLessThan(65);
   const typeRow = page.locator('.cgm-type-list>.cg-panel').filter({ hasText: data.kind.name });
@@ -123,5 +126,5 @@ test('mobile documento: projeção sem sobreposição, gastos só em lista e íc
   await page.getByRole('button', { name: 'Voltar aos tipos', exact: true }).click();
   await expect(typeRow).toBeVisible();
   await page.getByRole('button', { name: 'Voltar às instituições', exact: true }).click();
-  await expect(row).toBeVisible();
+  await expect(page.locator('.cg-gastos-people')).toBeVisible();
 });

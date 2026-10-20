@@ -140,7 +140,26 @@ test('Web Original: estilo próprio não recebe regra Clean para Maps',async({pa
   await nav.getByRole('button',{name:'Ordens'}).click();
   const maps=page.locator('.orders-order-list .order-actions .order-maps').first();
   await expect(maps).toBeVisible();
-  // Original mantém regra histórica distinta de 0px/transparent.
-  const border=await maps.evaluate(el=>getComputedStyle(el).borderTopWidth);
-  expect(border).not.toBe('0px');
+  // O Maps compartilhado já é transparente no Original. Alternar o tema
+  // deve preservar seu destino e restaurar integralmente o estilo original.
+  const original = await maps.evaluate(el => {
+    const style = getComputedStyle(el);
+    return { border: style.borderTopWidth, background: style.backgroundColor,
+      shadow: style.boxShadow, width: style.width, height: style.height,
+      href: el.getAttribute('href') };
+  });
+  expect(original.href).toMatch(/^https:\/\/(?:www\.)?(?:google\.[^/]+\/maps|maps\.google\.)/);
+  await expect(maps.locator('img')).toHaveAttribute('src', /icon-maps/);
+  for (const mode of ['clean', 'original']) {
+    await page.evaluate(mode => localStorage.setItem('arl-appearance-v1', JSON.stringify({mode, color:'red'})), mode);
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-arl-appearance', mode);
+    await expect(maps).toBeVisible();
+  }
+  expect(await maps.evaluate(el => {
+    const style = getComputedStyle(el);
+    return { border: style.borderTopWidth, background: style.backgroundColor,
+      shadow: style.boxShadow, width: style.width, height: style.height,
+      href: el.getAttribute('href') };
+  })).toEqual(original);
 });

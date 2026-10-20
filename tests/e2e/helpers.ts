@@ -16,7 +16,12 @@ export async function login(page: Page, login = 'e2e.master') {
   expect(result.status, JSON.stringify(result.body)).toBe(200);
   await page.reload();
   await expect(page.locator('main')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Notificações', exact: true })).toBeVisible();
+  if (result.body.user?.role?.name === 'Controle de Gasto') {
+    await expect(page.getByRole('heading', { name: 'Controle de Gasto', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Notificações', exact: true })).toHaveCount(0);
+  } else {
+    await expect(page.getByRole('button', { name: 'Notificações', exact: true })).toBeVisible();
+  }
 }
 
 export async function api(page: Page, path: string, method = 'GET', body?: unknown) {
@@ -105,6 +110,23 @@ export async function setDeviceLayout(page: Page, next: 'desktop' | 'mobile') {
 }
 
 /** Select current Expense Control navigation in desktop or mobile UI. */
+export async function openArlSection(page: Page, name: string) {
+  if (name !== 'Controle de Gasto' && await page.locator('.cg-page.cg-mobile').isVisible()) {
+    await page.getByRole('button', { name: 'Voltar à ARL', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Confirmar retorno para o aplicativo da ARL?', exact: true })
+      .getByRole('button', { name: 'Confirmar retorno', exact: true }).click();
+  }
+  const desktop = page.getByRole('navigation', { name: 'Menu principal', exact: true }).getByRole('button', { name, exact: true });
+  if (await desktop.isVisible()) { await desktop.click(); return; }
+  const nav = page.getByRole('navigation', { name: 'Navegação Mobile / Tablet', exact: true });
+  await expect(nav).toBeVisible();
+  const direct = nav.getByRole('button', { name: name === 'Controle de Gasto' ? 'Gastos' : name, exact: true });
+  if (await direct.isVisible()) { await direct.click(); return; }
+  await nav.getByRole('button', { name: 'Menu', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Menu', exact: true }).getByRole('button', { name, exact: true }).click();
+}
+
+/** Select current Expense Control navigation in desktop or mobile UI. */
 export async function openExpenseSection(page: Page, name: string) {
   // ExpenseControlPage is lazy loaded; do not inspect navigation before mount.
   await expect(page.locator('.cg-page')).toBeVisible();
@@ -134,6 +156,20 @@ export async function openExpenseSection(page: Page, name: string) {
   await drawer.getByRole('button', { name: target, exact: true }).click();
   if (name === 'Histórico') {
     await page.getByRole('button', { name: 'Histórico de gastos', exact: true }).click();
+  }
+}
+
+/** Follow the current institution flow; Premium first selects a person's month. */
+export async function openExpenseInstitution(page: Page, name: string, scope: 'one' | 'two' | 'shared' = 'one') {
+  if (await page.locator('.cg-page.cg-mobile').isVisible()) {
+    await page.locator(`.cg-gastos-person-${scope}`).click();
+    const popup = page.locator('.cg-gastos-people-popup');
+    await expect(popup).toBeVisible();
+    const institution = popup.locator('.cg-gastos-institutions > article').filter({ hasText: name });
+    await institution.getByRole('button', { name: 'Ver dívidas', exact: true }).click();
+    await expect(popup).toHaveCount(0);
+  } else {
+    await page.locator('.cg-institution').filter({ hasText: name }).click();
   }
 }
 

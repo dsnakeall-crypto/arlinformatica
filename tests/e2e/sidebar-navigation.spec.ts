@@ -34,11 +34,11 @@ test('menu agrupa destinos, destaca Nova OS e mostra contadores vindos do backen
   await setDeviceLayout(page, 'mobile');
   await page.setViewportSize({ width: 390, height: 844 });
   // Layout atual usa barra inferior e também botão para acessar o menu completo.
-  await expect(page.getByRole('button', { name: 'Abrir menu' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeVisible();
   const bottomBar = page.locator('.arl-global-mobile-nav');
   expect((await api(page, '/me/sidebar', 'PATCH', { sidebar_pinned: false })).status).toBe(200);
   await expect(bottomBar.getByRole('button')).toHaveCount(5);
-  for(const name of ['Painel', 'Clientes', 'Abrir OS', 'Financeiro', 'Gestor de Gasto']) {
+  for(const name of ['Painel', 'Clientes', 'Abrir OS', 'Gastos', 'Menu']) {
     await expect(bottomBar.getByRole('button', { name, exact: true })).toBeVisible();
   }
 });
@@ -114,6 +114,8 @@ for (const width of [1280, 1920]) {
     await page.route('**/api/navigation-summary', route => route.fulfill({ json: { open_orders: 12345, available_post_sales: 9876 } }));
     await login(page);
     const aside = page.locator('aside');
+    expect((await api(page, '/me/sidebar', 'PATCH', { sidebar_pinned: false })).status).toBe(200);
+    await page.reload();
     await aside.getByRole('button', { name: 'Fixar menu lateral', exact: true }).click();
     await expect(page.locator('.shell')).toHaveClass(/sidebar-pinned/);
     await aside.hover();
@@ -126,11 +128,14 @@ for (const width of [1280, 1920]) {
       const buttons = [...el.querySelectorAll('.nav-group button')];
       return {
         width: box.width,
-        overflow: el.scrollWidth > el.clientWidth,
+        overflowX: getComputedStyle(el).overflowX,
+        pageOverflow: document.documentElement.scrollWidth > innerWidth + 1,
+        // A marca aprovada usa scale(1.55), recortada pela lateral.
+        logoLeaks: el.contains(document.elementFromPoint(box.right + 5, el.querySelector('.logo img')!.getBoundingClientRect().top + 10)),
         logoRatio: el.querySelector('.logo img')!.getBoundingClientRect().width / (el.clientWidth - 28),
         rows: buttons.map(button => {
           const r = button.getBoundingClientRect();
-          return { left: r.left - box.left, right: box.right - r.right,
+          return { left: r.left - box.left - el.clientLeft, right: box.left + el.clientLeft + el.clientWidth - r.right,
             overflow: button.scrollWidth > button.clientWidth,
             children: [...button.children].filter(child => getComputedStyle(child).display !== 'none').every(child => {
               const c = child.getBoundingClientRect(); return c.left >= r.left + 1 && c.right <= r.right - 1;
@@ -139,7 +144,9 @@ for (const width of [1280, 1920]) {
       };
     });
     expect(geometry.width).toBe(240);
-    expect(geometry.overflow).toBe(false);
+    expect(geometry.overflowX).toBe('hidden');
+    expect(geometry.pageOverflow).toBe(false);
+    expect(geometry.logoLeaks).toBe(false);
     expect(geometry.logoRatio).toBeGreaterThan(.95);
     for (const row of geometry.rows) {
       expect(row.left).toBeGreaterThanOrEqual(14);
@@ -153,7 +160,8 @@ for (const width of [1280, 1920]) {
     expect((await aside.boundingBox())?.width).toBe(58);
     expect((await page.getByRole('main').boundingBox())?.x).toBe(58);
     await expect(aside.locator('.nav-count').first()).toBeVisible();
-    expect(await aside.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+    expect(await aside.evaluate(el => getComputedStyle(el).overflowX)).toBe('hidden');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     expect(await page.getByRole('main').evaluate(el => getComputedStyle(el).transitionDuration)).toBe('0s');
     await page.screenshot({ path: testInfo.outputPath('sidebar-closed.png') });
   });

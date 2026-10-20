@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { api, login, openNewExpenseDebt } from './helpers';
+import { api, login, openNewExpenseDebt, openArlSection } from './helpers';
 
 for (const width of [1366, 390]) test(`divisão por valores e popup manual em ${width}px`, async ({ page }) => {
   await page.setViewportSize({ width, height: width === 390 ? 844 : 768 });
@@ -7,7 +7,7 @@ for (const width of [1366, 390]) test(`divisão por valores e popup manual em ${
   const stamp = Date.now();
   const bank = (await api(page, '/expense-control/catalogs/institutions', 'POST', { name: 'Valores ' + stamp, active: true, due_day: 10, color: '#123456' })).body;
   const type = (await api(page, '/expense-control/catalogs/types', 'POST', { name: 'Cartão valores ' + stamp, active: true })).body;
-  await page.getByRole('navigation', { name: width === 390 ? 'Navegação Mobile / Tablet' : 'Menu principal', exact: true }).getByRole('button', { name: width === 390 ? 'Gestor de Gasto' : 'Controle de Gasto', exact: true }).click();
+  await openArlSection(page, 'Controle de Gasto');
   await openNewExpenseDebt(page);
   const dialog = page.getByRole('dialog', { name: 'Cadastrar nova dívida', exact: true });
   await dialog.getByLabel('Nome da dívida ou compra').fill('Compra dividida ' + stamp);

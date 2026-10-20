@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login, password, setDeviceLayout } from './helpers';
+import { api, login, password, setDeviceLayout, uniqueDocument } from './helpers';
 
 test('Clean troca sete cores, persiste e restaura Original sem mudar geometria', async ({ page }) => {
   await login(page);
@@ -81,15 +81,31 @@ test('Clean cobre módulos, popups e Controle de Gasto mobile', async ({ page })
 
 test('Original é restaurado também no conteúdo e Clean não altera impressão', async ({ page }) => {
   await login(page);
+  await expect(page.locator('.dashboard-orders table')).toBeVisible();
+  // Print uses emitted PDF documents, not the sidebar/application shell.
+  const client = await api(page, '/clients', 'POST', {
+    name: 'Impressão fictícia de temas', document: uniqueDocument(), phone: '35999990000',
+    postal_code: '37160000', street: 'Rua Teste', number: '1', district: 'Centro', city: 'Cidade', state: 'MG',
+  });
+  expect(client.status).toBe(201);
+  const equipment = await api(page, '/catalogs/equipment');
+  const order = await api(page, '/orders', 'POST', {
+    client_id: client.body.id, equipment_type_id: equipment.body[0].id,
+    attendance_type: 'bench', reported_problem: 'Verificação da impressão por tema', checklist: [],
+  });
+  expect(order.status).toBe(201);
+  const documentUrl = `/api/orders/${order.body.id}/term`;
+  const originalDocument = await page.request.get(documentUrl);
+  expect(originalDocument.status()).toBe(200);
+  expect(originalDocument.headers()['content-type']).toContain('application/pdf');
+  const originalPdf = await originalDocument.body();
+  expect(originalPdf.subarray(0, 5).toString()).toBe('%PDF-');
   const styles = () => page.evaluate(() => ['body','aside','main','.status-cards article','.primary'].map(selector => {
     const element = document.querySelector(selector)!; const css=getComputedStyle(element); const rect=element.getBoundingClientRect();
     return {selector,bg:css.background,color:css.color,shadow:css.boxShadow,border:css.border,radius:css.borderRadius,x:rect.x,y:rect.y,width:rect.width,height:rect.height};
   }));
   await expect(page.locator('.status-cards article')).toHaveCount(4);
   const original=await styles();
-  await page.emulateMedia({media:'print'});
-  const originalPrint=await styles();
-  await page.emulateMedia({media:'screen'});
   await page.getByRole('button',{name:'Configurações',exact:true}).click();
   await page.getByRole('tab',{name:'Identidade',exact:true}).click();
   await page.getByRole('button',{name:'Clean Verde',exact:true}).click();
@@ -99,9 +115,9 @@ test('Original é restaurado também no conteúdo e Clean não altera impressão
   // e viewport sem overflow, em vez de dimensões idênticas entre os temas.
   expect(clean.every(({width,height})=>width>0&&height>0)).toBe(true);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2)).toBe(true);
-  await page.emulateMedia({media:'print'});
-  expect(await styles()).toEqual(originalPrint);
-  await page.emulateMedia({media:'screen'});
+  const cleanDocument = await page.request.get(documentUrl);
+  expect(cleanDocument.status()).toBe(200);
+  expect(await cleanDocument.body()).toEqual(originalPdf);
   await page.getByRole('button',{name:'Configurações',exact:true}).click();
   await page.getByRole('tab',{name:'Identidade',exact:true}).click();
   await page.getByRole('button',{name:'Original',exact:true}).click();

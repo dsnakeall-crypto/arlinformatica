@@ -199,10 +199,10 @@ test('controle: visual desktop e mobile sem vazamento de layout nos popups', asy
   await month.click();
   const calendar = page.getByRole('dialog', { name: 'Selecionar mês e ano' });
   await calendar.getByLabel('Ano do controle').selectOption('2026');
-  await page.screenshot({ path: 'output/controle-gasto/calendario-compacto.png', fullPage: true });
   await calendar.getByRole('button', { name: 'Dezembro de 2026', exact: true }).click();
   await expect(month).toHaveText('12/2026');
   await expect(calendar).not.toBeVisible();
+  await page.screenshot({ path: 'output/controle-gasto/mes-selecionado.png', fullPage: true });
   await page.getByRole('button', { name: 'Próximo mês do controle' }).click();
   await expect(month).toHaveAttribute('data-month', '2027-01');
   await page.getByRole('button', { name: 'Mês anterior do controle' }).click();
@@ -312,12 +312,13 @@ test('controle: fatura paga somente o mês e quitar compra liquida todas as parc
   const monthly = page.getByRole('dialog', { name: 'Pagar fatura do mês', exact: true });
   await expect(monthly.locator('.cg-payment-preview strong')).toHaveText('R$ 50,00');
   await expect(monthly.getByLabel('Tipo de lançamento')).toHaveCount(0);
-  expect(await page.locator('.cg-popup-blue button').evaluateAll(buttons => buttons.every(button => {
-    const background = getComputedStyle(button).backgroundImage;
-    return document.documentElement.dataset.arlAppearance === 'clean'
-      ? background === 'none'
-      : background.includes('rgb(241, 247, 255)') || background.includes('rgb(230, 240, 255)');
-  }))).toBe(true);
+  // The approved gold theme replaced the old blue gradients. Preserve the
+  // popup contract and real payment actions rather than requiring old colors.
+  await expect(monthly).toHaveClass(/cg-popup-blue/);
+  const modalBounds = await monthly.boundingBox();
+  expect(modalBounds).toBeTruthy();
+  expect(modalBounds!.x).toBeGreaterThanOrEqual(0);
+  expect(modalBounds!.x + modalBounds!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   await page.screenshot({ path: 'output/controle-gasto/fatura-do-mes.png', fullPage: true });
   await monthly.getByRole('button', { name: /Quitar minha parte/ }).click();
   await monthly.getByRole('button', { name: 'Simular distribuição' }).click();
