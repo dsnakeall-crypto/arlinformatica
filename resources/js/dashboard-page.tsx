@@ -3,15 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { CACHE_POLICIES, sessionCache } from './session-memory-cache';
 import { orderListPresentation } from './cache-requests';
 import PageHeader from "./page-header";
-import { ClipboardList, LayoutDashboard, Plus, Search, Wallet, Wrench, CheckCircle2, PackageSearch, LockKeyholeOpen, LockKeyhole } from "lucide-react";
+import { ClipboardList, LayoutDashboard, Plus, Search, Wallet, Wrench, CheckCircle2, PackageSearch, LockKeyholeOpen } from "lucide-react";
 import { Order, api, status } from './app-shared';
 import { OrderTable, InterruptionModal } from './order-list-components';
 import { QuickEntry } from './lazy-pages';
 
 export function Dashboard({ go, desk = false, role, mobileLayout = false, onCountersChanged }: any) {
-  const [initial] = useState(() => sessionCache.read<{ items: Order[]; closedItems: Order[]; completed: number }>('dashboard'));
+  const [initial] = useState(() => sessionCache.read<{ items: Order[]; completed: number }>('dashboard'));
   const [items, setItems] = useState<Order[]>(initial?.value.items ?? []),
-    [closedItems, setClosedItems] = useState<Order[]>(initial?.value.closedItems ?? []),
     [completed, setCompleted] = useState(initial?.value.completed ?? 0),
     [quick, setQuick] = useState(false),
     [loading, setLoading] = useState(!initial),
@@ -21,8 +20,8 @@ export function Dashboard({ go, desk = false, role, mobileLayout = false, onCoun
   const load = (force = false) => {
     if (!sessionCache.ready) return;
     dashboardRequest.current?.abort();
-    const cached = sessionCache.read<{ items: Order[]; closedItems: Order[]; completed: number }>('dashboard');
-    if (cached) { setItems(cached.value.items); setClosedItems(cached.value.closedItems); setCompleted(cached.value.completed); setLoading(false); }
+    const cached = sessionCache.read<{ items: Order[]; completed: number }>('dashboard');
+    if (cached) { setItems(cached.value.items); setCompleted(cached.value.completed); setLoading(false); }
     if (cached?.fresh && !force) return;
     const controller = new AbortController();
     dashboardRequest.current = controller;
@@ -30,22 +29,22 @@ export function Dashboard({ go, desk = false, role, mobileLayout = false, onCoun
     if (!cached) setLoading(true);
     void Promise.all([
       api('/orders/desk', { signal: controller.signal }),
-      api('/orders?tab=closed_week&per_page=100&panel_light=1', { signal: controller.signal }),
-    ]).then(([open, closed]) => {
-      const value = { items: orderListPresentation({ data: open }).data as Order[], closedItems: orderListPresentation(closed).data as Order[], completed: closed.total };
+      api('/orders/dashboard-summary', { signal: controller.signal }),
+    ]).then(([open, summary]) => {
+      const value = { items: orderListPresentation({ data: open }).data as Order[], completed: summary.completed_week };
       if (controller.signal.aborted || !sessionCache.write(ticket, value, CACHE_POLICIES.orders)) return;
-      setItems(open); setClosedItems(closed.data); setCompleted(closed.total); setLoadError('');
+      setItems(value.items); setCompleted(value.completed); setLoadError('');
     }).catch(error => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setLoadError(error.message); })
       .finally(() => { if (!controller.signal.aborted && sessionCache.accepts(ticket)) setLoading(false); });
   };
   useEffect(() => {
     // Na Home Mobile, a lista visível é carregada por mobile-home.ts.
-    // Evitar solicitar novamente /orders/desk e closed_week de um
+    // Evitar solicitar novamente /orders/desk e o resumo semanal de um
     // componente cujas listas ficam ocultas neste layout.
     const needsDashboardData = !mobileLayout || desk;
     if (needsDashboardData) load();
     const unsubscribe = sessionCache.subscribe(event => {
-      if (event.type === 'revoke' && event.resources.includes('dashboard')) { dashboardRequest.current?.abort(); setItems([]); setClosedItems([]); setCompleted(0); setLoading(false); }
+      if (event.type === 'revoke' && event.resources.includes('dashboard')) { dashboardRequest.current?.abort(); setItems([]); setCompleted(0); setLoading(false); }
       else if (needsDashboardData && event.type === 'invalidate' && event.resources.includes('dashboard')) load(true);
       else if (needsDashboardData && event.type === 'session' && sessionCache.ready) load();
     });
@@ -187,30 +186,6 @@ export function Dashboard({ go, desk = false, role, mobileLayout = false, onCoun
           />
         )}
       </section>
-      {closedItems.length > 0 && (
-        <>
-          <div className="dashboard-section-divider" aria-hidden="true" />
-          <section className="panel dashboard-orders dashboard-closed-orders">
-            <div className="dashboard-list-head">
-              <div>
-                <h2><span className="dashboard-title-icon" aria-hidden="true"><LockKeyhole /></span>Fechadas recentemente</h2>
-                <p>OS concluídas e interrompidas desta semana.</p>
-              </div>
-              <button type="button" onClick={() => go("orders", undefined, undefined, "finalized")}>
-                Ver finalizadas
-              </button>
-            </div>
-            <OrderTable
-              items={closedItems}
-              open={go}
-              dashboard
-              onStatus={changeStatus}
-              onDelete={remove}
-              role={role}
-            />
-          </section>
-        </>
-      )}
       </>}
       {mobileLayout && loadError && <p role="alert">{loadError}</p>}
       <QuickEntry open={quick} onClose={() => setQuick(false)} />

@@ -84,6 +84,16 @@ class ServiceOrderController extends Controller
         return response()->json([...$orders->toArray(), 'summary' => $summary, 'tab_counts' => $this->tabCounts()]);
     }
 
+    public function dashboardSummary(): JsonResponse
+    {
+        // Preserve the former closed_week total, including interrupted orders
+        // and the model's soft-delete scope, without loading rows or payments.
+        $query = ServiceOrder::query();
+        $this->applyTabFilter($query, 'closed_week');
+
+        return response()->json(['completed_week' => $query->count()]);
+    }
+
     public function desk(): JsonResponse
     {
         $orders = ServiceOrder::query()

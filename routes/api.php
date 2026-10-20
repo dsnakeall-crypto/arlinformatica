@@ -145,6 +145,7 @@ Route::middleware('auth')->group(function () {
     });
     Route::get('/orders', [ServiceOrderController::class, 'index']);
     Route::get('/orders/desk', [ServiceOrderController::class, 'desk']);
+    Route::get('/orders/dashboard-summary', [ServiceOrderController::class, 'dashboardSummary']);
     Route::post('/orders', [ServiceOrderController::class, 'store']);
     Route::get('/orders/{order}', [ServiceOrderController::class, 'show']);
     Route::get('/orders/{order}/system-password', [ServiceOrderPasswordController::class, 'show'])->middleware('role:Master,Administrador');

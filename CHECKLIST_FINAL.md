@@ -1,3 +1,16 @@
+# Missão Painel, performance e CI — 20/10/2026
+
+- [OK] Removida a seção Fechadas recentemente e o carregamento dos registros fechados; contador semanal mantém a regra anterior por COUNT autenticado.
+- [OK] Classificação das cinco condições operacionais, histórico e pagamento: seis cenários E2E aprovados; agregado/ausência da seção: dois cenários aprovados após corrigir corrida do teste com reload.
+- [OK] Oito testes PHP/65 assertions no PHP 8.3.33 Laragon + SQLite em memória; Pint, 66 testes frontend, lint, typecheck e build aprovados nesta etapa.
+- [OK] Textos remanescentes dos cards/tabela com computed styles idênticos antes/depois em 1280/1366/1920 px, incluindo resize na mesma sessão.
+- [PENDENTE] Regressão ampliada desktop/mobile, desempenho geral antes/depois, testes integrais, revisão das alterações locais anteriores e quatro jobs verdes no HEAD final.
+- [PENDENTE] Commits/push desta missão; publicação KingHost proibida pelo escopo atual.
+
+Evidências e limites: `docs/AUDITORIA_PAINEL_PERFORMANCE_CI_20261020.md`.
+
+---
+
 # PR #59 — correção E2E da importação CSV Mobile — 11/10/2026
 
 - [OK] Teste E2E navega pelo card Sistema após reload Mobile e verifica acesso Master à importação; Administrador segue sem o formulário.

@@ -153,22 +153,20 @@ for (const [index, status] of statuses.entries()) {
     const history = await api(page, `/orders/${order.id}`);
     expect(history.body.histories.some((entry: any) => entry.to_status === status.code), `Histórico preservado não registrou ${status.label}`).toBe(true);
 
+    // Every operational state belongs to exactly one tab; Todas preserves it.
+    const expectedTab = status.code === 'completed' ? 'finalized' : status.code === 'interrupted' ? 'interrupted' : 'progress';
+    for (const tab of ['progress', 'awaiting_payment', 'finalized', 'interrupted', 'all']) {
+      const list = await api(page, `/orders?tab=${tab}&q=${encodeURIComponent(clientName)}`);
+      expect(list.status).toBe(200);
+      expect(list.body.data.some((row: any) => row.id === order.id), `Classificação ${status.code} em ${tab}`).toBe(tab === expectedTab || tab === 'all');
+    }
+    await page.getByRole('button', { name: 'Painel', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Ordens em andamento', exact: true })).toBeVisible();
+    await expect(page.locator('.dashboard-closed-orders, .dashboard-section-divider')).toHaveCount(0);
+    await expect(page.getByText('Fechadas recentemente', { exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Ver finalizadas', exact: true })).toHaveCount(0);
     if (['completed', 'interrupted'].includes(status.code)) {
-      await page.getByRole('button', { name: 'Painel', exact: true }).click();
-      const closedPanel = page.locator('.dashboard-closed-orders');
-      const closedRow = closedPanel.locator('.order-row').filter({ hasText: clientName });
-      await expect(closedPanel.locator('.dashboard-list-head h2')).toHaveText('Fechadas recentemente');
-      await expect(closedPanel.getByText('OS concluídas e interrompidas desta semana.', { exact: true })).toBeVisible();
-      await expect(closedRow).toBeVisible();
-      if (status.code === 'interrupted') {
-        await expect(closedRow.getByText('Interrompida', { exact: true })).toBeVisible();
-      } else {
-        await expect(closedRow.getByText('Interrompida', { exact: true })).toHaveCount(0);
-        await closedPanel.getByRole('button', { name: 'Ver finalizadas', exact: true }).click();
-        const tabs = page.getByRole('tablist', { name: 'Filtrar ordens' });
-        await expect(tabs.getByRole('button', { name: 'Finalizadas', exact: true })).toHaveClass(/active/);
-        await expect(page).toHaveURL(/\/orders\?tab=finalized$/);
-      }
+      await expect(page.locator('.dashboard-orders .order-row').filter({ hasText: clientName })).toHaveCount(0);
     }
   });
 }
