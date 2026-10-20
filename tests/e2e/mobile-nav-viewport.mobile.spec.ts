@@ -56,8 +56,8 @@ test('barra fixa: rolagens repetidas, rotas ARL, rotação, fim da página e vis
         const metrics = await nav.evaluate(element => ({
           position: getComputedStyle(element).position,
           y: scrollY,
-          radius: getComputedStyle(element.querySelector('.arl-nav-icon-disc')!).borderRadius,
-          shadow: getComputedStyle(element.querySelector('.arl-nav-icon-disc')!).boxShadow,
+          radius: getComputedStyle(element.querySelector('.primary-shortcut .arl-nav-icon-disc')!).borderRadius,
+          shadow: getComputedStyle(element.querySelector('.primary-shortcut .arl-nav-icon-disc')!).boxShadow,
         }));
         scrolled ||= metrics.y > 200;
         expect(metrics.position).toBe('fixed');
