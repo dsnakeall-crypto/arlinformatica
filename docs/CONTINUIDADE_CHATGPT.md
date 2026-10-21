@@ -1,5 +1,15 @@
 # Continuidade do projeto ARL Informática no ChatGPT
 
+## CHECKPOINT 20/10/2026 (noite) — QUATRO JOBS VERDES (LEIA PRIMEIRO)
+
+- Branch `release/integracao-completa-20261018`, HEAD validado `750c9b6` (seguido apenas deste commit de documentação).
+- GitHub Actions run `39518902945` em `750c9b6`: **backend, backend-mysql, frontend e e2e SUCCESS** (302 E2E + 2 iPhone/WebKit, sem retries).
+- O checkpoint do PC (4 commits + 42 arquivos E2E sem commit) foi transferido com árvore conferida idêntica; os SHAs mudaram (`7ce1e56→aeabf02`, `2f732ae→373f91c`, `d3ec46e→0a9dfed`, `eae9f32→73b5ba8`, WIP→`a2a9807`).
+- As 6 falhas restantes eram contratos de teste/dependência externa, não defeitos do app. Detalhes, causas e diferenças PC × CI: `docs/RESULTADO-CI-E2E-VERDE-20261020.md`.
+- Pendências: alinhar o PC ao GitHub sem perder arquivos não rastreados; apagar a branch `work` criada por engano; KingHost continua sem autorização de publicação.
+
+---
+
 
 ## CHECKPOINT OPERACIONAL 18/10/2026 - CI DE INTEGRACAO
 

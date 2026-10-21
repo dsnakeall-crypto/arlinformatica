@@ -1,3 +1,15 @@
+# Missão CI E2E — 20/10/2026 (noite)
+
+- [OK] Checkpoint local transferido ao GitHub com árvore idêntica (`a2a9807` = alterações E2E locais).
+- [OK] Suíte integral em ambiente Linux compatível: 292/302 aprovados; 6 falhas classificadas individualmente e corrigidas nos testes (nenhum defeito do aplicativo).
+- [OK] Lint, typecheck, 61 testes frontend, build, Pint e 412 testes PHP aprovados.
+- [OK] GitHub Actions run `39518902945` (`750c9b6`): backend, backend-mysql, frontend e e2e verdes no mesmo commit.
+- [PENDENTE] Alinhar o PC ao GitHub; apagar a branch `work`; publicação KingHost não autorizada.
+
+Evidências: `docs/RESULTADO-CI-E2E-VERDE-20261020.md`.
+
+---
+
 # Missão Painel, performance e CI — 20/10/2026
 
 - [OK] Removida a seção Fechadas recentemente e o carregamento dos registros fechados; contador semanal mantém a regra anterior por COUNT autenticado.

@@ -1,5 +1,9 @@
 # ARL Informática — Projeto Mestre
 
+## ATUALIZAÇÃO 20/10/2026 (noite) — CI VERDE
+
+- `release/integracao-completa-20261018` em `750c9b6`: os quatro jobs do GitHub Actions (backend, backend-mysql, frontend, e2e) **verdes no mesmo commit** (run `39518902945`). Os commits locais do PC foram transferidos com novos SHAs e conteúdo idêntico. Resultado, matriz das últimas falhas e diferenças PC × CI: `docs/RESULTADO-CI-E2E-VERDE-20261020.md`. Os itens abaixo que dizem "apenas no PC" ou "E2E vermelho" ficaram superados por esta atualização.
+
 ## ESTADO MAIS RECENTE — 20/10/2026 — PAINEL, DESEMPENHO E CI (LEIA PRIMEIRO)
 
 Este documento reúne a especificação funcional integral e o histórico do sistema ARL Informática. **As seções datadas abaixo descrevem decisões históricas e podem citar interfaces/HEADs antigos**; não prevalecem sobre mudanças mais recentes aprovadas. O estado operacional mais recente está em `docs/CONTINUIDADE_CHATGPT.md`, as evidências em `docs/AUDITORIA_PAINEL_PERFORMANCE_CI_20261020.md`, e a tarefa para o Codex Cloud em `docs/PROMPT-CODEX-CLOUD-ARL-CI-20261020.md`. Esses arquivos são atualizados por edição explícita após cada rodada, não se atualizam automaticamente.
