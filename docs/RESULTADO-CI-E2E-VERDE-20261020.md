@@ -52,6 +52,10 @@ Nenhuma das 6 falhas era defeito do aplicativo. Os demais itens da matriz de 65 
 5. **Caminhos absolutos do Windows:** alguns specs gravam evidências em `C:/Users/Allan/...`; no Linux isso cria uma pasta `C:` dentro do projeto (sem efeito no resultado; está fora do Git).
 6. **GitHub Actions não executa nada na KingHost.** Um erro na CI não prova falha no servidor de produção, e um problema relatado no ambiente remoto (KingHost) **não foi reproduzido aqui** porque produção não foi acessada (fora do escopo autorizado). Se o problema remoto persistir, é preciso investigá-lo à parte, com autorização, logs do servidor e backup validado.
 
+## Rodada integral de confirmação (nuvem, 2 vCPU)
+
+Com todas as correções (`750c9b6`): **300 aprovados, 2 reprovados por tempo** — `zz-visual-homologation.spec.ts:46` e `visual-fiel-imagens.mobile.spec.ts:6`. Os dois passam isolados (23,8s e 15,9s) e passaram na CI do GitHub; estouram 30s só quando a máquina é lenta, porque fazem várias capturas de página inteira. **Risco de instabilidade:** se voltarem a falhar na CI, a correção indicada é dividir cada um em testes menores, sem aumentar o tempo limite.
+
 ## Pendências
 
 - Apagar no GitHub a branch `work`, criada por engano (cópia idêntica de `750c9b6`). O proxy desta sessão não permite apagar branches.
