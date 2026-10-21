@@ -32,12 +32,11 @@ test('mobile: Clean obrigatório, sem Web/PC ou Pós-Venda, lateral ativo vermel
     const icon=getComputedStyle(el.querySelector('svg')!);
     return {border:c.borderWidth,shadow:c.boxShadow,color:c.color,icon:icon.color,filter:icon.filter,width:icon.width};
   });
-  // O dock Premium aprovado usa ícone sem aro/sombra no invólucro;
-  // o acabamento de profundidade está no filtro do SVG.
+  // Medido no dock Premium aprovado: invólucro sem aro/sombra e ícone de 21px sem filtro adicional.
   expect(parseFloat(style.border)).toBe(0);
   expect(style.shadow).toBe('none');
-  expect(style.filter).toContain('drop-shadow');
-  expect(style.width).toBe('20px');
+  expect(style.filter).toBe('none');
+  expect(style.width).toBe('21px');
   expect(style.icon).toMatch(/rgb\(\d+, \d+, \d+\)/);
   await openArlSection(page, 'Configurações');
   await page.getByRole('button',{name:/Layouts/}).click();

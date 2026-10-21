@@ -98,17 +98,18 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await expect(page.getByRole('heading', { name: 'Gestão de Clientes' })).toBeVisible();
   await page.getByLabel('Buscar clientes').fill('Cliente Homologação Visual');
   await expect(page.getByText('Cliente Homologação Visual', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(`Cliente Nº ${clientResponse.body.id}`, { exact: true })).toBeVisible();
-  await expect(page.getByText('Rua das Flores, 320 · Centro', { exact: true })).toBeVisible();
-  await expect(page.getByText('Araguari - MG · CEP 38400-000', { exact: true })).toBeVisible();
+  // A lista aprovada identifica o cliente pelo código "#id"; "Cliente Nº" fica no histórico do cliente.
+  const visualClientRow = page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' });
+  await expect(visualClientRow.locator('.clients-id')).toHaveText(`#${clientResponse.body.id}`);
+  await expect(visualClientRow.getByText('Rua das Flores, 320 · Centro', { exact: true })).toBeVisible();
+  await expect(visualClientRow.getByText('Araguari - MG · CEP 38400-000', { exact: true })).toBeVisible();
   await waitForOfficialIcons(page, [
     '/arl-assets/icons/icon-whatsapp.png',
     '/arl-assets/icons/icon-maps.png',
     '/arl-assets/icons/icon-editar.png',
     '/arl-assets/icons/icon-lixeira.png',
   ]);
-  const visualClientRow = page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' });
-  await expect(visualClientRow.getByRole('button', { name: 'Visualizar' }).locator('svg.clients-action-eye')).toBeVisible();
+  await expect(visualClientRow.getByRole('button', { name: 'Visualizar' }).locator('img.clients-action-eye[src="/arl-assets/icons/icon-web-eye-compact-2x.png"]')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-lista-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Novo cliente' }).click();
   const clientModal = page.locator('.clients-modal-card');
@@ -148,7 +149,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   await page.setViewportSize({ width: 390, height: 844 });
   await setDeviceLayout(page, 'mobile');
   await page.getByRole('navigation', { name: 'Navegação Mobile / Tablet' }).getByRole('button', { name: 'Painel' }).click();
-  const mobileHome = page.getByRole('region', { name: 'Início mobile com Ordens de Serviço abertas' });
+  const mobileHome = page.getByRole('region', { name: 'Painel mobile ARL Informática' });
   await expect(mobileHome).toBeVisible();
   await expect(mobileHome.getByText(`OS #${orderResponse.body.number} · Em Análise`, { exact: true })).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/01-painel-mobile.png', fullPage: true });
@@ -225,7 +226,7 @@ test('gera evidências para homologação visual desktop, mobile e PDF', async (
   ]);
   // Excluir não é exibido nos cartões mobile; a ação segue disponível no Desktop.
   await expect(page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' }).getByRole('button', { name: /Excluir cliente/ })).toHaveCount(0);
-  await expect(page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' }).getByRole('button', { name: 'Visualizar' }).locator('svg.clients-action-eye')).toBeVisible();
+  await expect(page.locator('.client-list article').filter({ hasText: 'Cliente Homologação Visual' }).getByRole('button', { name: 'Visualizar' }).locator('img.clients-action-eye[src="/arl-assets/icons/icon-web-eye-compact-2x.png"]')).toBeVisible();
   await page.screenshot({ path: 'visual-artifacts/02-clientes-mobile.png', fullPage: true });
 
   await page.getByRole('button', { name: 'Novo cliente' }).click();

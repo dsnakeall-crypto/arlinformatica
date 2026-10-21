@@ -129,11 +129,11 @@ test('finalização persiste quantidade pendente antes de gerar snapshot, financ
   expect((await pdfResponse.body()).byteLength).toBeGreaterThan(1000);
 
   // Valida o link montado pela ARL sem depender da disponibilidade do site externo do WhatsApp.
-  await page.context().route(/^https:\/\/api\.whatsapp\.com\//, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>WhatsApp (E2E)</title>' }));
+  await page.context().route(/^https:\/\/(wa\.me|api\.whatsapp\.com)\//, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>WhatsApp (E2E)</title>' }));
   const whatsappPagePromise = page.context().waitForEvent('page');
   await share.getByRole('button', { name: 'Enviar link ao cliente' }).click();
   const whatsappPage = await whatsappPagePromise;
-  await expect.poll(() => whatsappPage.url()).toMatch(/api\.whatsapp\.com\/send/);
+  await expect.poll(() => whatsappPage.url()).toMatch(/^https:\/\/(wa\.me\/\d+|api\.whatsapp\.com\/send)/);
   const whatsappText = decodeURIComponent(new URL(whatsappPage.url()).searchParams.get('text') ?? '');
   expect(whatsappText).toContain(`- Valor: ${expectedMoney}`);
   expect(whatsappText).toMatch(/\/share\/final\/[a-f0-9]{64}/);
